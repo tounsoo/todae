@@ -40,6 +40,7 @@ function DialogClose(props: ButtonActionProps) {
 
 // Built by a call, so bundlers can drop it with Dialog: esbuild keeps a top-level object that reads `styles`.
 const dialogShell = (): DialogShell => ({
+  part: 'Dialog',
   className: styles.dialog,
   panelClassName: styles.panel,
   exitMs: DIALOG_EXIT_MS,

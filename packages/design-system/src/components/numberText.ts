@@ -22,7 +22,10 @@ export type NumberTextOptions = {
   formatOptions?: NumberFormatOptions;
 };
 
-const cache = /* @__PURE__ */ new Map<string, Intl.NumberFormat>();
+// A formatter, and the decimals its text shows, which `resolvedOptions` works out
+// afresh on every call, so a NumberInput that asks for them on every render reads them once.
+type Formatter = { format: Intl.NumberFormat; shown?: { decimals: number | undefined } };
+const cache = /* @__PURE__ */ new Map<string, Formatter>();
 
 // A decimal number keeps the digits it has, where Intl would round to three.
 function withDigits(options: NumberFormatOptions = {}): NumberFormatOptions {
@@ -37,14 +40,14 @@ function withDigits(options: NumberFormatOptions = {}): NumberFormatOptions {
 // What a locale and its format options key the caches by.
 const keyOf = (options: NumberTextOptions) => `${options.locale ?? ''}|${JSON.stringify(options.formatOptions ?? {})}`;
 
-function formatterFor(options: NumberTextOptions) {
+function formatterFor(options: NumberTextOptions): Formatter {
   const key = keyOf(options);
-  let format = cache.get(key);
-  if (!format) {
-    format = new Intl.NumberFormat(options.locale, withDigits(options.formatOptions));
-    cache.set(key, format);
+  let found = cache.get(key);
+  if (!found) {
+    found = { format: new Intl.NumberFormat(options.locale, withDigits(options.formatOptions)) };
+    cache.set(key, found);
   }
-  return format;
+  return found;
 }
 
 /**
@@ -53,7 +56,7 @@ function formatterFor(options: NumberTextOptions) {
  * digits; a plain number shows all the digits it has.
  */
 export function formatNumber(value: number, options: NumberTextOptions = {}): string {
-  return formatterFor(options).format(value);
+  return formatterFor(options).format.format(value);
 }
 
 type Symbols = {
@@ -237,11 +240,17 @@ const roundersByDigits = /* @__PURE__ */ new Map<number, Intl.NumberFormat>();
 
 /** The decimals the text shows, as the value's own: a percent shows two fewer than the fraction has. Undefined where the text keeps every digit. */
 export function shownDecimals(options: NumberTextOptions = {}): number | undefined {
-  const resolved = formatterFor(options).resolvedOptions();
+  const formatter = formatterFor(options);
+  if (formatter.shown) return formatter.shown.decimals;
+  const resolved = formatter.format.resolvedOptions();
   // Significant digits round by magnitude, not by decimals, and are not supported.
   const digits = resolved.maximumFractionDigits;
-  if (resolved.maximumSignificantDigits !== undefined || digits === undefined || digits >= 20) return undefined;
-  return Math.min(100, digits + (options.formatOptions?.style === 'percent' ? 2 : 0));
+  const decimals =
+    resolved.maximumSignificantDigits !== undefined || digits === undefined || digits >= 20
+      ? undefined
+      : Math.min(100, digits + (options.formatOptions?.style === 'percent' ? 2 : 0));
+  formatter.shown = { decimals };
+  return decimals;
 }
 
 // Rounded by Intl, as the text is, so 1.005 is 1.01 in both: `toFixed` reads the binary value and would say 1.00.

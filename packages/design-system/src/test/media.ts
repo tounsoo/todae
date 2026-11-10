@@ -1,11 +1,11 @@
-import { commands, server } from '@vitest/browser/context';
+import { commands, server } from 'vitest/browser';
 
 type MediaFeature =
   | { name: 'prefers-reduced-motion'; value: 'reduce' | 'no-preference' }
   | { name: 'forced-colors'; value: 'active' | 'none' }
   | { name: 'prefers-color-scheme'; value: 'light' | 'dark' };
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     emulateMedia: (features: MediaFeature[]) => Promise<void>;
   }

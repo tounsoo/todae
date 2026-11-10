@@ -15,7 +15,7 @@ import {
 import { useControlledState } from '../hooks/useControlledState.js';
 import { frontModal } from '../overlay/modalStack.js';
 import { useSurfaceClosed } from '../overlay/surfaceContext.js';
-import { handledOrComposing, useEscapeKey } from '../overlay/useEscapeKey.js';
+import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { canFocusNow, firstTabbable } from '../overlay/tabbables.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { useStrings } from '../providers/StringsProvider.js';
@@ -218,7 +218,7 @@ function Root({ value, defaultValue = EMPTY, onValueChange, escape = 'back', chi
     if (target === viewport.ownerDocument.body) return inFrontSurface(surface);
     return surface.contains(target);
   }, []);
-  useEscapeKey(escape === 'back' && stack.length > 1, takes, goBack, viewportRef, { popup: false, passesKey: handledOrComposing });
+  useEscapeKey(escape === 'back' && stack.length > 1, takes, goBack, viewportRef, { popup: false, passesKey: handledInside });
 
   const ctx = useMemo<DrilldownContextValue>(
     () => ({

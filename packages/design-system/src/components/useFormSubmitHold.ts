@@ -1,4 +1,5 @@
 import { FORM_ROOTS } from './Form.model.js';
+import { listenOnRoot } from '../internal/rootListeners.js';
 import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
 /** What a submit finds in the input: text no number (`flag` marks it; a check that runs blocks the submit, and where none will run, a `noValidate` form that is not Form.Root or a submitter with `formNoValidate`, the submit is cancelled here and focus moves to the text), or a draft the submit commits. */
@@ -21,26 +22,25 @@ const COUNT = 'data-todae-commits';
 function watch(node: HTMLElement, held: Held, behind: (node: HTMLElement) => boolean, end: () => void) {
   const root = node.getRootNode();
   // Not a copy of the input's listener: that one is removed when the input's effects turn off (an Activity or a Suspense boundary hides it), and the watcher still has to fold then.
-  const onSubmit = (event: Event) => {
-    if (event.target !== held.form) return;
-    fold(held, event);
-  };
+  // It joins the inputs' shared listener on the root, after the inputs mounted so far, as a listener of its own would.
+  const stop = listenOnRoot(root, 'submit', (event) => (event.target === held.form ? fold(held, event) : undefined));
   const observer = new MutationObserver(() => {
     if (node.isConnected && behind(node)) return;
-    root.removeEventListener('submit', onSubmit, true);
+    stop();
     observer.disconnect();
     end();
     if (held.form.isConnected) send(held);
   });
-  root.addEventListener('submit', onSubmit, true);
   observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: [COUNT] });
 }
 
 // A later submit of the form joins the held one: cancelled, and the newest submitter is the one that is sent.
-function fold(held: Held, event: Event) {
+function fold(held: Held, event: Event): 'stop' {
   event.preventDefault();
   event.stopImmediatePropagation();
   held.submitter = (event as SubmitEvent).submitter;
+  // The other handlers on the shared listener don't hear it either.
+  return 'stop';
 }
 
 /**
@@ -116,8 +116,8 @@ export function useFormSubmitHold(
   useLayoutEffect(() => {
     const node = input.current;
     if (!node) return;
-    const root = node.getRootNode();
-    const onSubmit = (event: Event) => {
+    // Every input on the root shares one listener (rootListeners.ts); `'stop'` keeps the handlers after this one from hearing the submit.
+    const onSubmit = (event: Event): 'stop' | void => {
       if (event.target !== node.form) return;
       // A submit while one is held joins it.
       if (held.current) return fold(held.current, event);
@@ -147,9 +147,9 @@ export function useFormSubmitHold(
         if (held.current === hold) held.current = null;
       });
       draft?.commit();
+      return 'stop';
     };
-    root.addEventListener('submit', onSubmit, true);
-    return () => root.removeEventListener('submit', onSubmit, true);
+    return listenOnRoot(node.getRootNode(), 'submit', onSubmit);
   }, [input, waiting, behind]);
 
   return {

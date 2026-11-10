@@ -81,6 +81,17 @@ describe('Popover', () => {
     hide.mockRestore();
   });
 
+  it('stays open on an Escape that cancels an IME composition in a field inside it', () => {
+    const onOpenChange = vi.fn();
+    render(<Harness open onOpenChange={onOpenChange} />);
+    const field = document.createElement('input');
+    screen.getByLabelText('Menu').append(field);
+    fireEvent.keyDown(field, { key: 'Escape', isComposing: true });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+  });
+
   it('stays non-modal and does not write top or left', () => {
     const onOpenChange = vi.fn();
     render(<Harness open onOpenChange={onOpenChange} />);

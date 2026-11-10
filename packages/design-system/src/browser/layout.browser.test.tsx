@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';

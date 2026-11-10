@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';

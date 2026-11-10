@@ -23,6 +23,24 @@ function Layer({
 }
 
 describe('useEscapeKey', () => {
+  it('closes no layer on an Escape that belongs to an IME composition, and leaves it to the field', () => {
+    const popup = vi.fn();
+    const stay = vi.fn();
+    render(
+      <>
+        <Layer onEscape={stay} />
+        <Layer onEscape={popup} />
+      </>,
+    );
+    const composing = new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(composing);
+    expect(popup).not.toHaveBeenCalled();
+    expect(stay).not.toHaveBeenCalled();
+    expect(composing.defaultPrevented).toBe(false);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(popup).toHaveBeenCalledTimes(1);
+  });
+
   it('only the most recently activated layer handles Escape', () => {
     const outer = vi.fn();
     const inner = vi.fn();

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { useStableComposedRef } from '../internal/props.js';
+import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
 import { observeMutations } from '../internal/sharedMutations.js';
 import { observeSize } from '../internal/sharedObservers.js';
 import { isReachable } from '../overlay/tabbables.js';
@@ -111,8 +112,6 @@ export type UseRovingFocusResult = {
   ) => Omit<P, keyof RovingItemWire> & RovingItemWire;
 };
 
-const TYPEAHEAD_RESET_MS = 500;
-
 type KnownItems = { read: boolean; enabled: string[]; reachable: string[] };
 
 const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
@@ -189,7 +188,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   // during render, so a new `active` takes the tab stop in the same render.
   const [known, setKnown] = useState<KnownItems>(NO_ITEMS);
   const containerRef = useRef<HTMLElement | null>(null);
-  const buffer = useRef({ text: '', at: 0 });
+  const buffer = useRef(emptyTypeahead());
 
   // Enabled items, by attribute alone. These decide the tab stop, so a group
   // that renders while hidden still has one when it is shown.
@@ -389,8 +388,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
 
   // A space only joins a search already under way; otherwise it activates.
   const isTypingAhead = useCallback(
-    (event: { timeStamp: number }) =>
-      typeahead && buffer.current.text !== '' && event.timeStamp - buffer.current.at <= TYPEAHEAD_RESET_MS,
+    (event: { timeStamp: number }) => typeahead && typingAhead(buffer.current, event.timeStamp),
     [typeahead],
   );
 
@@ -408,7 +406,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       const isMove = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key);
       // Shift with a move key is left to the owner, say to extend a selection.
       if (isMove && event.shiftKey) return;
-      if (!isMove && !(typeahead && [...event.key].length === 1)) return;
+      if (!isMove && !(typeahead && isTypeaheadKey(event.key))) return;
       // A found item counts while focused even once it is disabled, as one
       // with the attribute does.
       const container = containerRef.current;
@@ -465,26 +463,16 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         next = nodes[0];
       } else if (event.key === 'End') {
         next = nodes.at(-1);
-      } else if (typeahead && [...event.key].length === 1 && (event.key !== ' ' || isTypingAhead(event))) {
-        const state = buffer.current;
-        const now = event.timeStamp;
-        state.text = now - state.at > TYPEAHEAD_RESET_MS ? event.key : state.text + event.key;
-        state.at = now;
-        const query = state.text.toLowerCase();
-        const text = (node: HTMLElement) =>
-          (node.getAttribute('data-todae-roving-text') ?? spokenText(node)).trim().toLowerCase();
-        // One letter, or the same letter repeated, cycles through the items
-        // that start with it; a longer prefix keeps matching the current item.
-        const chars = [...query];
-        const cycling = chars.every((char) => char === chars[0]);
-        const needle = cycling ? (chars[0] ?? query) : query;
-        const start = cycling || index < 0 ? after : index;
-        const ordered = [...nodes.slice(start), ...nodes.slice(0, start)];
-        next = ordered.find((node) => text(node).startsWith(needle));
-        // A Space that joined the search is the search's, match or not.
+      } else if (typeahead && isTypeaheadKey(event.key) && (event.key !== ' ' || isTypingAhead(event))) {
+        const text = (at: number) => {
+          const node = nodes[at]!;
+          return (node.getAttribute('data-todae-roving-text') ?? spokenText(node)).trim().toLowerCase();
+        };
+        const found = findTypeahead(buffer.current, event.key, event.timeStamp, nodes.length, text, index, after);
+        next = found >= 0 ? nodes[found] : undefined;
+        // A Space that joined the search is the search's, match or not. A
+        // failed search ends, so a Space right after it chooses again.
         if (!next) {
-          // A failed search ends, so a Space right after it chooses again.
-          state.text = '';
           if (event.key === ' ') event.preventDefault();
           return;
         }
