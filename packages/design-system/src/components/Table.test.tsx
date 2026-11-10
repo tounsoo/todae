@@ -106,13 +106,22 @@ describe('Table.SortButton', () => {
     );
   }
 
-  it('is a button named by the column label, with its glyph hidden from assistive technology', () => {
+  it('is a button named by the column label, with its glyphs hidden from assistive technology', () => {
     render(<Sortable />);
     const button = screen.getByRole('button', { name: 'Name' });
     expect(button.getAttribute('type')).toBe('button');
-    const glyph = button.querySelector('[data-todae-glyph]');
-    expect(glyph?.getAttribute('aria-hidden')).toBe('true');
-    expect(glyph?.querySelector('svg')).not.toBeNull();
+    const glyphs = [...button.querySelectorAll('[data-todae-glyph]')];
+    expect(glyphs).toHaveLength(2);
+    for (const glyph of glyphs) {
+      expect(glyph.getAttribute('aria-hidden')).toBe('true');
+      expect(glyph.querySelector('svg')).not.toBeNull();
+    }
+  });
+
+  it('draws a different shape for an unsorted column than for a sorted one', () => {
+    render(<Sortable />);
+    const [arrow, unsorted] = [...screen.getByRole('button', { name: 'Name' }).querySelectorAll('[data-todae-glyph]')];
+    expect(unsorted!.innerHTML).not.toBe(arrow!.innerHTML);
   });
 
   it('announces the new sort once after a click, in the strings of the provider', async () => {

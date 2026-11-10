@@ -116,9 +116,12 @@ function Sorting({ initial }: { initial: TableSort }) {
 }
 
 describe('Table.SortButton in a browser', () => {
-  const glyph = (name: string) => screen.getByRole('button', { name }).querySelector<HTMLElement>('[data-todae-glyph]')!;
+  const glyphs = (name: string) => [...screen.getByRole('button', { name }).querySelectorAll<HTMLElement>('[data-todae-glyph]')];
+  const arrow = (name: string) => glyphs(name)[0]!;
+  const unsorted = (name: string) => glyphs(name)[1]!;
+  const shown = (glyph: HTMLElement) => getComputedStyle(glyph).display !== 'none' && getComputedStyle(glyph).visibility === 'visible';
 
-  it('hides the glyph of an unsorted column without moving the label, and shows it on hover and focus', async () => {
+  it('shows only the unsorted glyph on an unsorted column, hidden until hover or focus, without moving the label', async () => {
     render(
       <Themed>
         <Sorting initial="none" />
@@ -126,18 +129,20 @@ describe('Table.SortButton in a browser', () => {
     );
     const button = screen.getByRole('button', { name: 'Name' });
     const before = button.getBoundingClientRect().width;
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('hidden');
+    expect(getComputedStyle(arrow('Name')).display).toBe('none');
+    expect(getComputedStyle(unsorted('Name')).visibility).toBe('hidden');
     await userEvent.hover(button);
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
+    expect(shown(unsorted('Name'))).toBe(true);
+    expect(shown(arrow('Name'))).toBe(false);
     await userEvent.unhover(button);
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('hidden');
+    expect(getComputedStyle(unsorted('Name')).visibility).toBe('hidden');
     await userEvent.tab();
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
+    expect(shown(unsorted('Name'))).toBe(true);
     expect(button.getBoundingClientRect().width).toBe(before);
     expect(getComputedStyle(button).outlineStyle).toBe('solid');
   });
 
-  it('hides the glyph in a header cell without sort until hover', async () => {
+  it('shows the unsorted glyph in a header cell without sort until hover', async () => {
     render(
       <Themed>
         <Table.Root>
@@ -151,22 +156,29 @@ describe('Table.SortButton in a browser', () => {
         </Table.Root>
       </Themed>,
     );
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('hidden');
+    expect(getComputedStyle(unsorted('Name')).visibility).toBe('hidden');
     await userEvent.hover(screen.getByRole('button', { name: 'Name' }));
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
+    expect(shown(unsorted('Name'))).toBe(true);
+    expect(shown(arrow('Name'))).toBe(false);
   });
 
-  it('shows the glyph on a sorted column and turns it when descending', async () => {
+  it('shows the arrow on a sorted column, turns it when descending, and keeps the column width', async () => {
     render(
       <Themed>
-        <Sorting initial="ascending" />
+        <Sorting initial="none" />
       </Themed>,
     );
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
-    expect(getComputedStyle(glyph('Name')).rotate).toBe('none');
-    await userEvent.click(screen.getByRole('button', { name: 'Name' }));
-    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
-    expect(getComputedStyle(glyph('Name')).rotate).toBe('180deg');
-    expect(getComputedStyle(glyph('Amount')).visibility).toBe('hidden');
+    const button = screen.getByRole('button', { name: 'Name' });
+    const before = button.getBoundingClientRect().width;
+    await userEvent.click(button);
+    expect(shown(arrow('Name'))).toBe(true);
+    expect(getComputedStyle(unsorted('Name')).display).toBe('none');
+    expect(getComputedStyle(arrow('Name')).rotate).toBe('none');
+    expect(button.getBoundingClientRect().width).toBe(before);
+    await userEvent.click(button);
+    expect(shown(arrow('Name'))).toBe(true);
+    expect(getComputedStyle(arrow('Name')).rotate).toBe('180deg');
+    expect(getComputedStyle(arrow('Amount')).display).toBe('none');
+    expect(getComputedStyle(unsorted('Amount')).visibility).toBe('hidden');
   });
 });
