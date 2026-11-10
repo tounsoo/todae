@@ -341,7 +341,9 @@ describe('useMentions in a browser', () => {
     }
     render(<Lang />);
     const layer = document.querySelector('[data-kind="@"]')!.parentElement!;
-    expect(layer.getAttribute('lang')).toBe('ja');
+    // The layer copies the textarea's lang in the shared layout batch, a
+    // microtask after the commit and still before paint.
+    await expect.poll(() => layer.getAttribute('lang')).toBe('ja');
     expect(layer.getAttribute('translate')).toBe('no');
   });
 

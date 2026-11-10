@@ -1,5 +1,6 @@
 import { isValidElement, useCallback, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { useComposedRefs } from '../internal/props.js';
+import { observeMutations, type MutationWatch } from '../internal/sharedMutations.js';
 
 /**
  * Two or more letters or digits name the button, such as "Got it" or "닫기";
@@ -30,29 +31,9 @@ export function spokenText(node: Node): string {
   return [...node.childNodes].map(spokenText).join('');
 }
 
-type Watched = [Element, MutationObserverInit][];
-
-/**
- * Calls `onChange` when any of the elements `find` returns changes as its
- * options say. The elements are found again after each change, so a replaced
- * one is followed; `refresh` finds them again on demand. Returns both, and
- * the cleanup. Without MutationObserver it does nothing.
- */
-function watchElements(find: () => Watched, onChange: () => void) {
-  const observer = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => {
-    onChange();
-    refresh();
-  });
-  function refresh() {
-    if (!observer) return;
-    observer.disconnect();
-    for (const [element, options] of find()) observer.observe(element, options);
-  }
-  refresh();
-  return { refresh, stop: () => observer?.disconnect() };
-}
-
-const BUTTON_CHANGES: MutationObserverInit = {
+// What can change the button's spoken text. Every button's watch shares one
+// observer (sharedMutations.ts), where each had its own.
+const BUTTON_CHANGES: MutationWatch = {
   childList: true,
   subtree: true,
   characterData: true,
@@ -93,7 +74,7 @@ export function useButtonName(
     const button = buttonRef.current;
     if (watched.current?.button === button) return;
     watched.current?.stop();
-    watched.current = button ? { button, stop: watchElements(() => [[button, BUTTON_CHANGES]], read).stop } : null;
+    watched.current = button ? { button, stop: observeMutations(button, BUTTON_CHANGES, read).stop } : null;
   });
   useLayoutEffect(
     () => () => {
