@@ -1,4 +1,4 @@
-import { StrictMode, useRef, useState, type ReactNode } from 'react';
+import { StrictMode, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -263,6 +263,43 @@ describe('Button tip holds', () => {
     fireEvent.pointerEnter(button);
     advance(1000);
     fireEvent.pointerLeave(button, { relatedTarget: document.body });
+    advance(1000);
+    expect(tipOpen()).toBe(false);
+  });
+});
+
+describe('Button tip on a button that focuses itself', () => {
+  // A panel a key opened, whose icon-only close button takes focus as it
+  // mounts: the focus lands inside the commit, before Root's own effects.
+  const panel = (open: boolean, how: 'autoFocus' | 'ref') =>
+    open ? (
+      <Button.Root
+        aria-label="Close"
+        {...(how === 'autoFocus' ? { autoFocus: true } : { ref: (el: HTMLElement | null) => el?.focus() })}
+      >
+        <Button.Icon>x</Button.Icon>
+      </Button.Root>
+    ) : (
+      <span />
+    );
+
+  it.each([
+    ['autoFocus', false],
+    ['ref', false],
+    ['autoFocus', true],
+    ['ref', true],
+  ] as const)('tips an icon-only button that takes keyboard focus as it mounts (%s, StrictMode %s)', (how, strict) => {
+    const wrap = (el: ReactElement) => (strict ? <StrictMode>{el}</StrictMode> : el);
+    const { rerender } = render(wrap(panel(false, how)));
+    fireEvent.keyDown(document.body, { key: 'Enter' });
+    act(() => {
+      rerender(wrap(panel(true, how)));
+    });
+    const button = screen.getByRole('button', { name: 'Close' });
+    expect(document.activeElement).toBe(button);
+    advance(1000);
+    expect(tipOpen()).toBe(true);
+    act(() => button.blur());
     advance(1000);
     expect(tipOpen()).toBe(false);
   });

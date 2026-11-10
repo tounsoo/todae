@@ -3,6 +3,7 @@ import {
   isValidElement,
   useCallback,
   useEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -273,8 +274,8 @@ function Root({
 
   const textName = iconOnly ? null : direct.text;
   // An icon-only button's tip turns on once the pointer or keys have reached
-  // the button, as icon-only or not, and stays on, so a button held while
-  // it turns icon-only keeps its tip.
+  // it wanting a tip, as icon-only or with a cut label, and stays on, so a
+  // button held while it turns icon-only keeps its tip.
   const [reachedOnce, setReachedOnce] = useState(false);
   const tipText = !tooltip
     ? null
@@ -298,7 +299,12 @@ function Root({
   // The holds the person has on the button while no tip is on, the pointer
   // and the element focus reached, which the tip takes as it mounts; leaving
   // and blurring drop them.
-  const waiting = useRef<Waiting>({ hover: false, focus: null });
+  const waiting = useRef<Waiting>(noHolds());
+  // Commits so far, counted before any element in a commit takes focus.
+  const commits = useRef(0);
+  useInsertionEffect(() => {
+    commits.current += 1;
+  });
   const reach = (hover: boolean, focus: Element | null) => {
     let wanted = iconOnly && iconName != null;
     if (!iconOnly) for (const el of labels.current) wanted ||= el.scrollWidth > el.clientWidth;
@@ -311,6 +317,7 @@ function Root({
       if (hover) waiting.current.hover = true;
       // Focus a press put there takes no hold, now or when the tip mounts.
       else waiting.current.focus = focus && !pointerFocus(focus) ? focus : null;
+      waiting.current.commit = commits.current;
       if (!iconOnly) setCutText(textName);
     } else if (tipped) setCutText(null);
   };
@@ -323,13 +330,15 @@ function Root({
   }, []);
 
   // While no tip is mounted, or Root stops listening for leave and blur,
-  // holds still waiting are dropped on every render, so a later tip takes only
+  // holds still waiting are dropped on every commit, so a later tip takes only
   // new ones. A reach sets its tip state in the same batch as its hold, so the
-  // render that follows it has a tip and keeps the hold.
+  // commit that follows it has a tip and keeps the hold. A hold taken during
+  // this commit, as a button that focuses itself as it mounts does, waits for
+  // the next one, which carries the reach's tip state.
   const listens = tooltip && (iconOnly || Boolean(textName));
   const idle = !listens || tipText == null;
   useLayoutEffect(() => {
-    if (idle) waiting.current = { hover: false, focus: null };
+    if (idle && waiting.current.commit !== commits.current) waiting.current = noHolds();
   });
 
   const base = { ref: refs as Ref<HTMLElement | null>, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
@@ -398,7 +407,8 @@ function Root({
 }
 
 type TipHolds = Pick<TooltipInternalResult, 'holdHover' | 'releaseHover' | 'holdFocus' | 'releaseFocus'>;
-type Waiting = { hover: boolean; focus: Element | null };
+type Waiting = { hover: boolean; focus: Element | null; commit: number };
+const noHolds = (): Waiting => ({ hover: false, focus: null, commit: -1 });
 
 type ButtonTipProps = {
   target: RefObject<HTMLElement | null>;
@@ -457,7 +467,7 @@ function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
   }, [holdFocus, holdHover, holds, releaseFocus, releaseHover, triggerRef, waiting]);
   // Once open, the tip has taken them, and a later tip takes only new ones.
   useLayoutEffect(() => {
-    if (tip.open) waiting.current = { hover: false, focus: null };
+    if (tip.open) waiting.current = noHolds();
   }, [tip.open, waiting]);
   return (
     <Tooltip.Root {...tip.getTooltipProps()} aria-hidden="true">
