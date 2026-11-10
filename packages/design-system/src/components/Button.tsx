@@ -418,6 +418,8 @@ function Root({
 type TipHolds = Pick<TooltipInternalResult, 'holdHover' | 'releaseHover' | 'holdFocus' | 'releaseFocus'>;
 type Waiting = { hover: boolean; focus: Element | null; commit: number };
 const noHolds = (): Waiting => ({ hover: false, focus: null, commit: -1 });
+type Holds = { hover: boolean; focus: Element | null };
+const noHeld = (): Holds => ({ hover: false, focus: null });
 
 type ButtonTipProps = {
   target: RefObject<HTMLElement | null>;
@@ -463,28 +465,61 @@ function ButtonTip({ target, anchor, text, holds, waiting }: ButtonTipProps) {
     },
     [anchor],
   );
+  // What the tip holds, and what its last unmount let go, so StrictMode's
+  // second mount can hold that again; a leave or blur since takes it back.
+  const held = useRef<Holds>(noHeld());
+  const dropped = useRef<Holds>(noHeld());
   const mine = useMemo<TipHolds>(
-    () => ({ holdHover, releaseHover, holdFocus, releaseFocus }),
+    () => ({
+      holdHover: () => {
+        held.current.hover = true;
+        holdHover();
+      },
+      releaseHover: (relatedTarget) => {
+        held.current.hover = false;
+        dropped.current.hover = false;
+        releaseHover(relatedTarget);
+      },
+      holdFocus: (el) => {
+        held.current.focus = el;
+        holdFocus(el);
+      },
+      releaseFocus: (relatedTarget) => {
+        held.current.focus = null;
+        dropped.current.focus = null;
+        releaseFocus(relatedTarget);
+      },
+    }),
     [holdFocus, holdHover, releaseFocus, releaseHover],
   );
   // The holds stay set while a Suspense fallback or a hidden Activity hides
   // the tip, which cleans up its effects without unmounting it, so a leave or
   // blur meanwhile still releases it; Root clears them once the tip is gone.
-  // The holds waiting from a reach are taken as the tip mounts, again by
-  // StrictMode's second run in the same commit, and dropped once that commit
-  // is over, so a hidden tip that shows again takes none.
+  // The holds waiting from a reach are taken as the tip mounts and dropped
+  // once its passive effects have run. StrictMode's second mount runs in the
+  // same flush right after them, which can be a task after the commit, and
+  // holds again what its first unmount let go; a hidden tip that shows again
+  // later takes nothing.
+  const remounting = useRef(false);
   useLayoutEffect(() => {
     holds.current = mine;
-    const taken = waiting.current;
+    const taken = remounting.current ? dropped.current : waiting.current;
     if (taken.hover) mine.holdHover();
     // Focus a product handler moved on takes no hold.
     if (taken.focus?.matches(':focus')) mine.holdFocus(taken.focus);
-    if (taken.hover || taken.focus) {
-      queueMicrotask(() => {
-        if (waiting.current === taken) waiting.current = noHolds();
-      });
-    }
+    return () => {
+      dropped.current = held.current;
+      held.current = noHeld();
+    };
   }, [holds, mine, waiting]);
+  useEffect(() => {
+    if (waiting.current.hover || waiting.current.focus) waiting.current = noHolds();
+    remounting.current = true;
+    queueMicrotask(() => {
+      remounting.current = false;
+      dropped.current = noHeld();
+    });
+  }, [waiting]);
   useLayoutEffect(
     () => () => {
       triggerRef.current = null;
