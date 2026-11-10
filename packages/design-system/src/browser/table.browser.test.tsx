@@ -118,7 +118,7 @@ function Sorting({ initial }: { initial: TableSort }) {
 describe('Table.SortButton in a browser', () => {
   const glyph = (name: string) => screen.getByRole('button', { name }).querySelector<HTMLElement>('[data-todae-glyph]')!;
 
-  it('hides the glyph of an unsorted column without moving the label, and shows it on hover and focus', async () => {
+  it('hides the glyph of an unsorted column without moving the label, shows it on hover and focus, and keeps the width once sorted', async () => {
     render(
       <Themed>
         <Sorting initial="none" />
@@ -135,6 +135,10 @@ describe('Table.SortButton in a browser', () => {
     expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
     expect(button.getBoundingClientRect().width).toBe(before);
     expect(getComputedStyle(button).outlineStyle).toBe('solid');
+    await userEvent.keyboard('{Enter}');
+    expect(button.closest('th')!.dataset.sort).toBe('ascending');
+    expect(getComputedStyle(glyph('Name')).visibility).toBe('visible');
+    expect(button.getBoundingClientRect().width).toBe(before);
   });
 
   it('hides the glyph in a header cell without sort until hover', async () => {

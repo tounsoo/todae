@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -113,6 +115,18 @@ describe('Table.SortButton', () => {
     const glyph = button.querySelector('[data-todae-glyph]');
     expect(glyph?.getAttribute('aria-hidden')).toBe('true');
     expect(glyph?.querySelector('svg')).not.toBeNull();
+  });
+
+  // Browser tests can't emulate a screen that can't hover, so this reads the sheet.
+  it('hides the glyph of an unsorted column on every screen, and shows it on hover only where a pointer can hover', () => {
+    const css = readFileSync(join(import.meta.dirname, 'Table.module.css'), 'utf8');
+    // Two spaces in: the hiding rule sits in the layer itself, outside any media query.
+    const hiding = /\n {2}\.sortButton:not\(:is\(\[data-sort='ascending'\], \[data-sort='descending'\]\) \*, :focus-visible\) > \.sortGlyph \{\s*visibility: hidden;/;
+    const showing = /@media \(hover: hover\) \{\s*\.sortButton:hover > \.sortGlyph \{\s*visibility: visible;/;
+    expect(css).toMatch(hiding);
+    expect(css).toMatch(showing);
+    // The two rules tie on specificity, so hover shows the glyph only while it comes after the hiding rule.
+    expect(css.search(showing)).toBeGreaterThan(css.search(hiding));
   });
 
   it('announces the new sort once after a click, in the strings of the provider', async () => {
