@@ -15,7 +15,12 @@ import {
   type ReactNode,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import {
+  useRovingFocus,
+  type RovingItemUserProps,
+  type RovingItemWire,
+  type UseRovingFocusResult,
+} from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
@@ -61,30 +66,44 @@ export type TreeGroupProps = {
 
 export type TreeIconProps = ComponentPropsWithRef<'span'>;
 
+// What changes as the tree is used (selection, open items, the tab stop)
+// is its own context, read only by Tree.Item. A change renders each item
+// once, without its label, group or content, and in the same pass as the
+// root, so one commit carries it and a render React throws away leaves
+// nothing behind.
+type TreeState = { selected: string | null; expanded: ReadonlySet<string>; tabStop: string | null };
+
+const TreeStateContext = /* @__PURE__ */ createContext<TreeState | null>(null);
+
+// Every field keeps its identity across the root's renders, so the parts
+// that read only this render only when their own item does.
 type TreeContextValue = {
   selectable: boolean;
-  selected: string | null;
   select: (value: string) => void;
-  isExpanded: (value: string) => boolean;
   setExpanded: (value: string, open: boolean) => void;
   /** Opens or closes a branch from the latest write, so two presses before a render cancel out. */
   toggleExpanded: (value: string) => void;
-  roving: UseRovingFocusResult;
+  /** The roving item props, whose tab stop the item takes from the tree state. */
+  itemProps: <P extends RovingItemUserProps>(value: string, props: P) => Omit<P, keyof RovingItemWire> & RovingItemWire;
+  isTypingAhead: UseRovingFocusResult['isTypingAhead'];
 };
 
 const TreeContext = /* @__PURE__ */ createContext<TreeContextValue | null>(null);
 
+// Holds nothing that changes as the tree is used.
 type ItemContextValue = {
   value: string;
   labelId: string;
   branch: boolean;
-  expanded: boolean;
   disabled: boolean;
   /** Tree.Group calls this while it is mounted, which makes the item a branch. */
   registerGroup: () => () => void;
 };
 
 const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
+
+// Whether the nearest item is open, for its group.
+const OpenContext = /* @__PURE__ */ createContext(false);
 
 // Depth of the items rendered here: 1 at the root, one more inside each group.
 const LevelContext = /* @__PURE__ */ createContext(1);
@@ -133,12 +152,12 @@ function Root({
     defaultExpanded ?? EMPTY,
     onExpandedChange,
   );
-  // Builds on the latest write, not the render, so two toggles before a render both count.
+  // Builds on the latest write, so it keeps its identity across renders.
   const setExpanded = useCallback(
     (value: string, open: boolean) => {
-      const now = latestExpanded();
-      if (now.includes(value) === open) return;
-      setExpandedList(open ? [...now, value] : now.filter((v) => v !== value));
+      const list = latestExpanded();
+      if (list.includes(value) === open) return;
+      setExpandedList(open ? [...list, value] : list.filter((v) => v !== value));
     },
     [latestExpanded, setExpandedList],
   );
@@ -146,7 +165,7 @@ function Root({
     (value: string) => setExpanded(value, !latestExpanded().includes(value)),
     [latestExpanded, setExpanded],
   );
-  const isExpanded = useCallback((value: string) => expanded.includes(value), [expanded]);
+  const open = useMemo(() => new Set(expanded), [expanded]);
   // The tab stop is the selected item, except while focus moves inside the
   // tree: then it is the focused item. Leaving the tree returns it to the
   // selected item, so focus enters on the selected item.
@@ -158,34 +177,50 @@ function Root({
     onActiveValueChange: setNavigating,
     onExpandedChange: setExpanded,
   });
+  const tabStop = roving.activeValue;
+  const state = useMemo(() => ({ selected, expanded: open, tabStop }), [selected, open, tabStop]);
+  // getItemProps changes with the tab stop, which each item reads from the
+  // tree state instead, so items call the latest one through a stable function.
+  // The rest of what it returns keeps its value across renders.
+  const latestRoving = useRef(roving);
+  useLayoutEffect(() => {
+    latestRoving.current = roving;
+  });
+  const itemProps = useCallback(
+    <P extends RovingItemUserProps>(value: string, props: P) => latestRoving.current.getItemProps(value, {}, props),
+    [],
+  );
+  const { isTypingAhead } = roving;
   const focusLeave = useFocusLeave(useCallback(() => setNavigating(null), []));
   const container = roving.getContainerProps({ ref, onKeyDown });
   const ctx = useMemo(
-    () => ({ selectable, selected, select: setSelected, isExpanded, setExpanded, toggleExpanded, roving }),
-    [isExpanded, roving, selectable, selected, setExpanded, setSelected, toggleExpanded],
+    () => ({ selectable, select: setSelected, setExpanded, toggleExpanded, itemProps, isTypingAhead }),
+    [isTypingAhead, itemProps, selectable, setExpanded, setSelected, toggleExpanded],
   );
   return (
     <TreeContext.Provider value={ctx}>
-      <LevelContext.Provider value={1}>
-        <ul
-          {...props}
-          {...container}
-          role="tree"
-          className={cx(styles.root, className)}
-          onFocus={(event: FocusEvent<HTMLUListElement>) => {
-            onFocus?.(event);
-            focusLeave.onFocus();
-          }}
-          // The tab stop must return to the selected item whatever the
-          // consumer's handler does, so this runs even if it prevented the event.
-          onBlur={(event: FocusEvent<HTMLUListElement>) => {
-            onBlur?.(event);
-            focusLeave.onBlur(event);
-          }}
-        >
-          {children}
-        </ul>
-      </LevelContext.Provider>
+      <TreeStateContext.Provider value={state}>
+        <LevelContext.Provider value={1}>
+          <ul
+            {...props}
+            {...container}
+            role="tree"
+            className={cx(styles.root, className)}
+            onFocus={(event: FocusEvent<HTMLUListElement>) => {
+              onFocus?.(event);
+              focusLeave.onFocus();
+            }}
+            // The tab stop must return to the selected item whatever the
+            // consumer's handler does, so this runs even if it prevented the event.
+            onBlur={(event: FocusEvent<HTMLUListElement>) => {
+              onBlur?.(event);
+              focusLeave.onBlur(event);
+            }}
+          >
+            {children}
+          </ul>
+        </LevelContext.Provider>
+      </TreeStateContext.Provider>
     </TreeContext.Provider>
   );
 }
@@ -203,7 +238,8 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
   const labelId = `${id}-label`;
   const [groups, setGroups] = useState<number | null>(null);
   const branch = groups === null ? hasGroupChild(children) : groups > 0;
-  const expanded = branch && tree.isExpanded(value);
+  const state = useContext(TreeStateContext)!;
+  const expanded = branch && state.expanded.has(value);
   const registerGroup = useCallback(() => {
     setGroups((n) => (n ?? 0) + 1);
     return () => setGroups((n) => (n ?? 1) - 1);
@@ -217,41 +253,44 @@ function Item({ value, disabled = false, children, className, style, onKeyDown, 
     const active = li.ownerDocument.activeElement;
     if (active && active !== li && li.contains(active)) li.focus();
   }, [expanded]);
-  const { ref, ...item } = tree.roving.getItemProps(value, {}, props);
+  const { ref, ...item } = tree.itemProps(value, props);
   const refs = useComposedRefs(node, ref);
   const ctx = useMemo(
-    () => ({ value, labelId, branch, expanded, disabled, registerGroup }),
-    [branch, disabled, expanded, labelId, registerGroup, value],
+    () => ({ value, labelId, branch, disabled, registerGroup }),
+    [branch, disabled, labelId, registerGroup, value],
   );
-  const selected = tree.selected === value;
+  const selected = state.selected === value;
   return (
     <ItemContext.Provider value={ctx}>
-      <li
-        {...item}
-        ref={refs}
-        role="treeitem"
-        aria-labelledby={labelId}
-        aria-expanded={branch ? expanded : undefined}
-        aria-selected={tree.selectable ? selected : undefined}
-        aria-disabled={disabled || undefined}
-        data-selected={selected ? '' : undefined}
-        data-disabled={disabled ? '' : undefined}
-        className={cx(styles.item, className)}
-        style={{ ...style, '--_level': level } as CSSProperties}
-        onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLLIElement>) => {
-          // Keys from an item nested inside belong to that item.
-          if (event.target !== event.currentTarget) return;
-          if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-          if (event.key !== 'Enter' && event.key !== ' ') return;
-          // A Space that joins a typeahead search is the search's.
-          if (event.key === ' ' && tree.roving.isTypingAhead(event)) return;
-          event.preventDefault();
-          if (!disabled && tree.selectable) tree.select(value);
-          if (branch) tree.toggleExpanded(value);
-        })}
-      >
-        {children}
-      </li>
+      <OpenContext.Provider value={expanded}>
+        <li
+          {...item}
+          tabIndex={state.tabStop === value ? 0 : -1}
+          ref={refs}
+          role="treeitem"
+          aria-labelledby={labelId}
+          aria-expanded={branch ? expanded : undefined}
+          aria-selected={tree.selectable ? selected : undefined}
+          aria-disabled={disabled || undefined}
+          data-selected={selected ? '' : undefined}
+          data-disabled={disabled ? '' : undefined}
+          className={cx(styles.item, className)}
+          style={{ ...style, '--_level': level } as CSSProperties}
+          onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLLIElement>) => {
+            // Keys from an item nested inside belong to that item.
+            if (event.target !== event.currentTarget) return;
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            // A Space that joins a typeahead search is the search's.
+            if (event.key === ' ' && tree.isTypingAhead(event)) return;
+            event.preventDefault();
+            if (!disabled && tree.selectable) tree.select(value);
+            if (branch) tree.toggleExpanded(value);
+          })}
+        >
+          {children}
+        </li>
+      </OpenContext.Provider>
     </ItemContext.Provider>
   );
 }
@@ -282,12 +321,13 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
 
 function Group({ children, className, ...props }: TreeGroupProps) {
   const item = useItem('Group');
+  const expanded = useContext(OpenContext);
   const level = useContext(LevelContext);
   const { registerGroup } = item;
   useLayoutEffect(registerGroup, [registerGroup]);
   return (
     <LevelContext.Provider value={level + 1}>
-      <ul {...props} role="group" hidden={!item.expanded} className={cx(styles.group, className)}>
+      <ul {...props} role="group" hidden={!expanded} className={cx(styles.group, className)}>
         {children}
       </ul>
     </LevelContext.Provider>
