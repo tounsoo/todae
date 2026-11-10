@@ -81,12 +81,18 @@
     block-size: 100%;
   }
 
-  /* Where a pointer can hover, a glyph with no sorted header cell above it,
-     such as in a column whose sort is none or unset, hides until hover or
-     focus; on touch it stays, dimmed, so the column reads as sortable. */
+  /* A glyph with no sorted header cell above it, such as in a column whose
+     sort is none or unset, hides on every screen, so only a sorted column
+     shows an arrow. It keeps its box, so the column keeps its width when it
+     is sorted. Keyboard focus shows it, dimmed, and so does hover where a
+     pointer can hover; a tap on a touch screen sorts the column instead. */
+  .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *, :focus-visible) > .sortGlyph {
+    visibility: hidden;
+  }
+
   @media (hover: hover) {
-    .sortButton:not(:is([data-sort='ascending'], [data-sort='descending']) *, :hover, :focus-visible) > .sortGlyph {
-      visibility: hidden;
+    .sortButton:hover > .sortGlyph {
+      visibility: visible;
     }
   }
 
