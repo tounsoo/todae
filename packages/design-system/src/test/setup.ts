@@ -1,9 +1,11 @@
 import './temporal.js';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { resetInputModality } from '../internal/inputModality.js';
 import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
 
 afterEach(() => {
+  // A test that fakes timers and fails, or forgets, can't leave them faked for the tests after it.
+  vi.useRealTimers();
   resetTooltipWarmth();
   resetInputModality();
 });

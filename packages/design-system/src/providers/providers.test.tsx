@@ -7,7 +7,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ButtonVariant, ButtonVariants } from '../components/Button.js';
 import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider.js';
 import { ThemeProvider, useAppearance } from './ThemeProvider.js';
-import { THEME_OVERRIDE_KEYS, type ThemeColorValue, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
+import { THEME_OVERRIDE_KEYS, type ThemeColorValue, cssVarName, parseThemeColor, parseThemeValue, themeColorCss, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -372,6 +372,21 @@ describe('motion, font family, shadow and text transform overrides', () => {
     expect(parseThemeColor('oklch(50% 0.1 30)')).toBeNull();
     expect(parseThemeValue('border.width', '16px')).toBeNull();
     expect(parseThemeColor('oklch(0.5 0.1 30 / 1.5)')).toBeNull();
+  });
+
+  it('writes a color as oklch, with its alpha only when it is not opaque', () => {
+    expect(themeColorCss({ colorSpace: 'oklch', components: [0.5, 0.1, 30] })).toBe('oklch(0.5 0.1 30)');
+    expect(themeColorCss({ colorSpace: 'oklch', components: [0.5, 0.1, 30], alpha: 1 })).toBe('oklch(0.5 0.1 30)');
+    expect(themeColorCss({ colorSpace: 'oklch', components: [0.5, 0.1, 30], alpha: 0.4 })).toBe('oklch(0.5 0.1 30 / 0.4)');
+    for (const text of ['oklch(0.62 0.19 259.8)', 'oklch(0 0 0 / 0.25)']) {
+      expect(themeColorCss(parseThemeColor(text)!)).toBe(text);
+    }
+  });
+
+  it("names a token's custom property, the one its override is written to", () => {
+    expect(cssVarName('color.fg.default')).toBe('--todae-color-fg-default');
+    expect(cssVarName('motion.duration.fast')).toBe('--todae-motion-duration-fast');
+    expect(Object.keys(themeOverrideStyle({ 'motion.duration.fast': { value: 90, unit: 'ms' } }))).toEqual([cssVarName('motion.duration.fast')]);
   });
 });
 
