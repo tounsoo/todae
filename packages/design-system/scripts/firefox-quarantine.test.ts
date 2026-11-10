@@ -185,18 +185,25 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
   const taintedModules = new Set<ts.SourceFile>();
   const uses = (node: ts.Node | undefined, tree: ts.SourceFile) => {
     if (!node) return false;
-    if (namesFirefox(node.getText(tree))) return true;
     let found = false;
-    each(node, (child) => {
-      if (found) return;
-      if (ts.isIdentifier(child)) {
+    const visit = (child: ts.Node): void => {
+      // A type that spells out 'firefox' among the engines a value may be decides nothing at run time.
+      if (found || ts.isTypeNode(child)) return;
+      let leaf = true;
+      child.forEachChild((grandchild) => {
+        leaf = false;
+        visit(grandchild);
+      });
+      if (leaf && namesFirefox(child.getText(tree))) found = true;
+      else if (ts.isIdentifier(child)) {
         const symbol = symbolOf(child);
         found = !!symbol && tainted.has(symbol);
       } else if (ts.isCallExpression(child) && child.expression.kind === ts.SyntaxKind.ImportKeyword && child.arguments[0] && ts.isStringLiteral(child.arguments[0])) {
         const target = ts.resolveModuleName(child.arguments[0].text, tree.fileName, options, host).resolvedModule;
         found = !!target && [...taintedModules].some((module) => module.fileName === target.resolvedFileName);
       }
-    });
+    };
+    visit(node);
     return found;
   };
   /** The names a declaration binds or an assignment writes, through any destructuring. */
@@ -205,7 +212,9 @@ function firefoxLinesIn(files: { file: string; source: string }[]) {
     if (ts.isObjectBindingPattern(target) || ts.isArrayBindingPattern(target)) return target.elements.flatMap((el) => (ts.isOmittedExpression(el) ? [] : names(el.name)));
     if (ts.isParenthesizedExpression(target) || ts.isNonNullExpression(target) || ts.isAsExpression(target) || ts.isSpreadElement(target) || ts.isSpreadAssignment(target)) return names(target.expression);
     // `cfg.skip = …` taints `cfg`, since that is where the value is read back.
-    if (ts.isPropertyAccessExpression(target) || ts.isElementAccessExpression(target)) return names(target.expression);
+    // The property too, so `this.ff = …` in a constructor reaches `this.ff` in a method.
+    if (ts.isPropertyAccessExpression(target)) return [...names(target.expression), target.name];
+    if (ts.isElementAccessExpression(target)) return names(target.expression);
     if (ts.isArrayLiteralExpression(target)) return target.elements.flatMap(names);
     if (ts.isObjectLiteralExpression(target)) return target.properties.flatMap(names);
     if (ts.isShorthandPropertyAssignment(target)) return [target.name];
@@ -368,6 +377,12 @@ it('follows a value into each callback, switch case, count and method call that 
   expect(lines(['const waits: number[] = [];', "waits.push(server.browser === 'firefox' ? 50 : 0);", 'await wait(waits[0]);'])).toEqual([1, 2, 3]);
   expect(lines(['const cfg = { skip: false };', "Object.assign(cfg, { skip: server.browser === 'firefox' });", "it.skipIf(cfg.skip)('a', () => {});"])).toEqual([1, 2, 3]);
   expect(lines(['let tolerance = 1;', "server.browser === 'firefox' && (tolerance = 2);", 'expect(delta).toBeLessThan(tolerance);'])).toEqual([1, 2, 3]);
+});
+
+it('follows a property set in a constructor, and ignores a Firefox that only appears in a type', () => {
+  const lines = (source: string[]) => firefoxLines(source.join('\n')).map(({ line }) => line);
+  expect(lines(['class P {', '  ff: boolean;', '  constructor() {', "    this.ff = server.browser === 'firefox';", '  }', '  run() {', "    it.skipIf(this.ff)('a', () => {});", '  }', '}'])).toContain(7);
+  expect(lines(["function offsetFor(engine: 'firefox' | 'chromium' | 'webkit') {", '  return engine.length;', '}', "expect(offsetFor('chromium')).toBe(8);"])).toEqual([1]);
 });
 
 it('follows a default export and a dynamic import into another file', () => {
