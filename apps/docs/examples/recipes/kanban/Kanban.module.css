@@ -55,8 +55,13 @@
    icon-only button and sit the button's own padding in from the card's inner
    edges, so their icons are the same distance from each side, the menu's
    hover fill and focus ring stay inside the card, and the title and label sit
-   one gap inside both. Both icons are centered on the title's first line. */
+   one gap inside both. Both icons are centered on the title's first line.
+   The card sets the title's font size and line height, so the button and the
+   grip measure the same line as the title, whatever line height the page
+   has. */
 .card {
+  font-size: var(--todae-text-font-size);
+  line-height: var(--todae-text-leading-default);
   --kanban-control: calc(1lh + 2 * (var(--todae-button-padding-y) + var(--todae-button-border-width)));
 }
 
@@ -73,8 +78,6 @@
   margin-block: calc(-1 * var(--todae-card-padding));
   margin-inline-start: calc(var(--todae-button-padding-y) - var(--todae-card-padding));
   padding-block: var(--todae-card-padding);
-  font-size: var(--todae-text-font-size);
-  line-height: var(--todae-text-leading-default);
   color: var(--todae-color-fg-muted);
   cursor: grab;
   touch-action: none;
