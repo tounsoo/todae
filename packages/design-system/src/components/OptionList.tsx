@@ -121,10 +121,21 @@ function OptionListOption({
     console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
+  // The text only feeds typeahead, read on a key, so a new label updates the
+  // entry in place. Re-registering would hand the list a new entry and render
+  // it a second time on every label change.
+  const entry = useRef<OptionEntry | null>(null);
+  const text = useRef(label);
+  useLayoutEffect(() => {
+    text.current = label;
+    if (entry.current) entry.current.text = label;
+  }, [label]);
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
-    return register({ value, text: label, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
-  }, [disabled, label, register, unavailable, value]);
+    const next = { value, text: text.current, disabled: Boolean(disabled), unavailable, node: nodeRef.current };
+    entry.current = next;
+    return register(next);
+  }, [disabled, register, unavailable, value]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
   return (
