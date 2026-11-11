@@ -57,8 +57,8 @@ function BoardCard({
   return (
     <li ref={handoff} {...reorder.getItemProps(index)} className={styles.card}>
       <Card.Root>
-        {/* The grip is a narrow column down the card's leading edge, its icon on the title's
-            first line. The title leads with the menu beside it, and the label sits under it. */}
+        {/* The grip runs down the card's leading edge and the menu sits at its trailing edge,
+            both with their icons on the title's first line. The label sits under the title. */}
         <Stack.Root direction="row" gap="condensed">
           <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
             <GripVertical size="1em" />
@@ -70,6 +70,7 @@ function BoardCard({
                 <Menu.Trigger
                   ref={task.id === landed ? landing : undefined}
                   variant="ghost"
+                  className={styles.menu}
                   aria-label={`Move ${task.title}`}
                 >
                   <Button.Icon>

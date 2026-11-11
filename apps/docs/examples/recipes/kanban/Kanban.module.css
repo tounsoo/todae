@@ -51,16 +51,24 @@
   inset-block-end: calc(-0.5 * (var(--todae-space-2) + var(--todae-focus-ring-width)));
 }
 
-/* The grip runs down the card's leading edge, over the card's padding, so the
-   whole strip is easy to hit (WCAG 2.2 SC 2.5.8) and the text loses little
-   width. Its single row is one line of the title tall, so the icon sits on the
-   title's first line. It rests muted and turns full contrast while the card is
-   hovered or holds focus, and stays visible, since touch has no hover. */
+/* The grip and the menu button mirror each other: both are as wide as an
+   icon-only button and sit flush against the card's inner edges, so their
+   icons are the same distance from each side, and the title and label sit
+   one gap inside them. Both icons are centered on the title's first line. */
+.card {
+  --kanban-control: calc(1lh + 2 * (var(--todae-button-padding-y) + var(--todae-button-border-width)));
+}
+
+/* The grip runs the card's height over its leading padding, so it is easy to
+   hit (WCAG 2.2 SC 2.5.8). Its one row is a line of the title tall, which puts
+   its icon on the title's first line. It rests muted and turns full contrast
+   while the card is hovered or holds focus, and stays visible, since touch has
+   no hover. */
 .grip {
   display: grid;
   grid-template-rows: 1lh;
   place-items: center;
-  inline-size: 1.5rem;
+  inline-size: var(--kanban-control);
   margin-block: calc(-1 * var(--todae-card-padding));
   margin-inline-start: calc(-1 * var(--todae-card-padding));
   padding-block: var(--todae-card-padding);
@@ -73,6 +81,14 @@
 
 .card:is(:hover, :focus-within) .grip {
   color: var(--todae-color-fg-default);
+}
+
+/* The menu button reaches over the card's trailing padding to its inner edge,
+   and over the title's line above and below, so its icon is centered on the
+   title's first line. */
+.menu {
+  margin-block: calc(-1 * (var(--todae-button-padding-y) + var(--todae-button-border-width)));
+  margin-inline-end: calc(-1 * var(--todae-card-padding));
 }
 
 /* Forced colors replace backgrounds, so the drop line takes the system's

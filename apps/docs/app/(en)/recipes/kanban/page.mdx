@@ -14,7 +14,7 @@ Drag a card by its grip, or open its menu and move it to another column.
 
 Each column is a `section` named by its heading, with its cards in an `ol` that the same heading names, since a card's place in the column is its priority. The count beside the heading is a [Badge](/badge). A column with no cards says so in text instead of showing an empty list. The board is a grid of columns at least 11rem wide in a [ScrollArea](/scroll-area) with `axis="inline"`, so on a narrow screen the board scrolls sideways and the cards keep their width.
 
-Each card's grip is a narrow column down its leading edge, with its icon on the title's first line. Next to it, the card leads with its title, as most boards do, with its menu beside the title's first line and its label under the title. A long word in the title wraps rather than push the menu out. The board sits in a `DensityProvider` with `density="compact"`, since cards on a board are dense.
+Each card leads with its title, as most boards do, with its label under the title. The grip runs down the card's leading edge and the menu button sits at its trailing edge. Both are as wide as an icon-only button and sit against the card's inner edges, so their icons mirror each other, and both icons are centered on the title's first line. A long word in the title wraps rather than push the menu out. The board sits in a `DensityProvider` with `density="compact"`, since cards on a board are dense.
 
 Key each card by its task's id, not its index, so a card's menu moves with it and focus follows it.
 
