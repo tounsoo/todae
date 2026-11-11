@@ -63,7 +63,7 @@ function BoardCard({
           <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
             <GripVertical size="1em" />
           </span>
-          <Stack.Root gap="condensed" style={{ flex: 1, minInlineSize: 0 }}>
+          <Stack.Root style={{ flex: 1, minInlineSize: 0 }}>
             <Stack.Root direction="row" align="start" gap="condensed">
               <Text.Root style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere' }}>{task.title}</Text.Root>
               <Menu.Root>
@@ -103,9 +103,10 @@ function BoardCard({
                 </Menu.Content>
               </Menu.Root>
             </Stack.Root>
-            <div>
+            {/* A row keeps the label at its own width, one stack gap under the title. */}
+            <Stack.Root direction="row">
               <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
-            </div>
+            </Stack.Root>
           </Stack.Root>
         </Stack.Root>
       </Card.Root>
