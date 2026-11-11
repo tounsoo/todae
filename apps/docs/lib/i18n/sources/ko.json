@@ -759,6 +759,17 @@
     "## When to use": "99b196ff7fc6",
     "(section order)": "808446d2e9ad"
   },
+  "recipes/kanban": {
+    "(top)": "71acfd2a0690",
+    "# Kanban": "22c5dd4aa19f",
+    "## Columns and cards": "ea7467977ae3",
+    "## The move menu": "4c7e3f09bc24",
+    "## Dragging": "ddf1b80a2f1d",
+    "## Saving the board": "c74bdf1783e2",
+    "## Accessible composition": "e26857e8dc4b",
+    "## When to use": "69ed21d4e222",
+    "(section order)": "4a1a03297ee1"
+  },
   "recipes/message-actions": {
     "(top)": "e6aebc3720e6",
     "# Message actions": "9499c3178053",

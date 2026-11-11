@@ -152,6 +152,7 @@ export const SITE_GROUPS = [
       ['/recipes/file-upload', 'File upload'],
       ['/recipes/filter-bar', 'Filter bar'],
       ['/recipes/inline-edit', 'Inline edit'],
+      ['/recipes/kanban', 'Kanban'],
       ['/recipes/message-actions', 'Message actions'],
       ['/recipes/message-parts', 'Message parts'],
       ['/recipes/product-tour', 'Product tour'],
