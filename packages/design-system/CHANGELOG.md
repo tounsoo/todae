@@ -1,5 +1,30 @@
 # @tounsoo/todae
 
+## 0.11.0
+
+### Minor Changes
+
+- Every package entry now loads with `require()` as well as `import`, `@tounsoo/todae/package.json` is exported, and the repo-only token scripts and files no longer ship. ([#437](https://github.com/tounsoo/todae/pull/437))
+  
+  - `engines.node` is now `^20.19.0 || >=22.12.0`. Use Node 20.19, 22.12 or later.
+  - `todae-tokens self` is gone. It rebuilt Todae's own files inside the installed package; use `todae-tokens build --resolver <file>` for your tokens.
+
+### Patch Changes
+
+- Repeated parts cost less each: number inputs, step and close buttons, Disclosure, OptionList, scroll areas, chip inputs and Toolbar share their observers and page listeners, a highlighted Field.Textarea batches its style reads, and ThemeProvider leaves its development contrast check out of production builds. ([#438](https://github.com/tounsoo/todae/pull/438))
+
+- Button.Root now mounts its tooltip only when one can show, the first time the pointer or keys reach an icon-only button or find a label cut, so a Button the person never reaches holds no tooltip state; its tip is hidden from screen readers and no longer joins aria-describedby, so the name is read once. ([#449](https://github.com/tounsoo/todae/pull/449))
+
+- Tree and Toast.Region render less as they are used. A click or key in a Tree renders each item once, and only the group of an item that opens or closes. A new or changed toast renders only that toast. ([#445](https://github.com/tounsoo/todae/pull/445))
+
+- Calendar makes each date formatter once per locale instead of on every render, and in development `Calendar.Root` logs an error when a new `isDateDisabled` on each render keeps a range's far days out of reach. ([#435](https://github.com/tounsoo/todae/pull/435))
+
+- Popover, Menu, Tooltip and Coachmark stay open on an Escape that cancels an IME composition; Dialog, Drawer and BottomSheet log a development error when open with no name, and a blank `aria-labelledby` falls back to the Title; OptionList gets typeahead, leaves modified keys to the page and leaves keys pressed in a field inside it to that field; useCombobox leaves Shift, Ctrl and Meta with the arrow, Home and End keys to the input; Tree keeps two toggles made before a render; Splitter drags when pointer capture fails. ([#439](https://github.com/tounsoo/todae/pull/439))
+
+- Table.SortButton no longer shows an arrow on an unsorted column on touch screens. ([#451](https://github.com/tounsoo/todae/pull/451))
+
+- `parseDateTime`, `parseDate` and `parseTime` are faster: they work out each digit's value only once, and `parseDateTime` splits each part of the text into words once, however many ways it tries to cut it. ([#448](https://github.com/tounsoo/todae/pull/448))
+
 ## 0.10.1
 
 ### Patch Changes
