@@ -762,9 +762,9 @@
   "recipes/kanban": {
     "(top)": "71acfd2a0690",
     "# Kanban": "22c5dd4aa19f",
-    "## Columns and cards": "936b1219148c",
+    "## Columns and cards": "2e29409e693d",
     "## The move menu": "4c7e3f09bc24",
-    "## Dragging": "52dc35153586",
+    "## Dragging": "6649f60774d6",
     "## Saving the board": "c74bdf1783e2",
     "## Accessible composition": "e26857e8dc4b",
     "## When to use": "69ed21d4e222",

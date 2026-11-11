@@ -51,13 +51,14 @@
   inset-block-end: calc(-0.5 * (var(--todae-space-2) + var(--todae-focus-ring-width)));
 }
 
-/* The grip spans the height of the card's top row, with padding beside the
-   icon, so it is easy to hit: at least 24 by 24 CSS pixels (WCAG 2.2 SC 2.5.8). */
+/* The grip is at least 24 by 24 CSS pixels, so it is easy to hit (WCAG 2.2
+   SC 2.5.8). */
 .grip {
   display: flex;
   align-items: center;
-  align-self: stretch;
-  padding-inline: var(--todae-space-control-x);
+  justify-content: center;
+  min-block-size: 1.5rem;
+  min-inline-size: 1.5rem;
   color: var(--todae-color-fg-muted);
   cursor: grab;
   touch-action: none;

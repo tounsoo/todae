@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   categoryTone,
+  DensityProvider,
   Menu,
   ScrollArea,
   Stack,
@@ -56,16 +57,11 @@ function BoardCard({
   return (
     <li ref={handoff} {...reorder.getItemProps(index)} className={styles.card}>
       <Card.Root>
-        {/* The grip, label and menu share a row above the title, so the title
-            takes the card's full width in a narrow column. */}
+        {/* As on most boards, the title leads with the menu beside its first line,
+            and the label and grip sit under it, so the title takes the card's width. */}
         <Stack.Root gap="condensed">
-          <Stack.Root direction="row" align="center" gap="condensed">
-            <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
-              <GripVertical size="1em" />
-            </span>
-            <Stack.Root align="start" style={{ flex: 1 }}>
-              <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
-            </Stack.Root>
+          <Stack.Root direction="row" align="start" gap="condensed">
+            <Text.Root style={{ flex: 1 }}>{task.title}</Text.Root>
             <Menu.Root>
               <Menu.Trigger
                 ref={task.id === landed ? landing : undefined}
@@ -102,7 +98,12 @@ function BoardCard({
               </Menu.Content>
             </Menu.Root>
           </Stack.Root>
-          <Text.Root>{task.title}</Text.Root>
+          <Stack.Root direction="row" align="center" justify="between" gap="condensed">
+            <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
+            <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
+              <GripVertical size="1em" />
+            </span>
+          </Stack.Root>
         </Stack.Root>
       </Card.Root>
     </li>
@@ -183,21 +184,24 @@ export function KanbanBoard({
     announce(`${task.title} moved to ${column.name}, position ${to + 1} of ${column.tasks.length}`);
   };
 
+  // Cards on a board are dense, so the board uses the compact density.
   return (
-    <ScrollArea.Root axis="inline">
-      <div className={styles.board}>
-        {columns.map((column, columnIndex) => (
-          <BoardColumn
-            key={column.id}
-            columnIndex={columnIndex}
-            columns={columns}
-            move={move}
-            landing={landing}
-            landed={landed}
-          />
-        ))}
-      </div>
-    </ScrollArea.Root>
+    <DensityProvider density="compact">
+      <ScrollArea.Root axis="inline">
+        <div className={styles.board}>
+          {columns.map((column, columnIndex) => (
+            <BoardColumn
+              key={column.id}
+              columnIndex={columnIndex}
+              columns={columns}
+              move={move}
+              landing={landing}
+              landed={landed}
+            />
+          ))}
+        </div>
+      </ScrollArea.Root>
+    </DensityProvider>
   );
 }
 

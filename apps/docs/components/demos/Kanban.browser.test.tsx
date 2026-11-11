@@ -103,7 +103,7 @@ it('says a column has no cards once its last card leaves', async () => {
 it('moves a card dragged by its grip within its column and announces where it went', async () => {
   setup();
   const card = (name: string) => trigger(name).closest('li')!;
-  const grip = card('Export invoices as CSV').querySelector('[aria-hidden]')!;
+  const grip = card('Export invoices as CSV').querySelector('.lucide-grip-vertical')!.parentElement!;
   const rect = card('Fix chart colors in dark mode').getBoundingClientRect();
   await userEvent.dragAndDrop(grip, card('Fix chart colors in dark mode'), {
     targetPosition: { x: 40, y: rect.height - 2 },
