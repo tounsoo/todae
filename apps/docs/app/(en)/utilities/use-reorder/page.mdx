@@ -1,4 +1,5 @@
 import ReorderExample from '../../../../examples/recipes/reorder/ReorderExample';
+import BetweenListsExample from '../../../../examples/utilities/use-reorder/BetweenListsExample';
 
 # useReorder
 
@@ -26,7 +27,7 @@ Drag a row by its grip. The [Reorder](/recipes/reorder) recipe pairs the hook wi
 
 <Example of={ReorderExample} />
 
-A press on a handle makes its item draggable, so an item drags only by its handle and text in the items stays selectable. While an item is dragged, `dragging` is its index and `drop` says which item it would land beside and on which side, `before` or `after`, or is `null` where a drop would not move it. The items carry the same state as `data-dragging` and `data-drop`, for styles. A drop calls `onMove` only when the order changes, and a drop outside the items calls nothing. `from` is where the dragged item is when it is dropped, so a list that changes during a drag still moves that item, and a drag whose item is removed ends. Drags that didn't start from this list's handles, such as files, selected text or another list's items, are ignored, so they can't be dropped there. Both getters take your own props as a second argument and run your handlers before their own; a handler of yours that calls `preventDefault()` skips the hook's, as in every Todae part.
+A press on a handle makes its item draggable, so an item drags only by its handle and text in the items stays selectable. While an item is dragged, `dragging` is its index and `drop` says which item it would land beside and on which side, `before` or `after`, or is `null` where a drop would not move it. The items carry the same state as `data-dragging` and `data-drop`, for styles. A drop calls `onMove` only when the order changes, and a drop outside the items calls nothing. `from` is where the dragged item is when it is dropped, so a list that changes during a drag still moves that item, and a drag whose item is removed ends. Drags that didn't start from this list's handles, such as files, selected text or another list's items, are ignored, so they can't be dropped there, unless the lists share a group, as Between lists says. The getters take your own props as a second argument and run your handlers before their own; a handler of yours that calls `preventDefault()` skips the hook's, as in every Todae part.
 
 With `orientation="horizontal"`, `before` is the side the text starts from, so it is the right side in a right-to-left page.
 
@@ -36,11 +37,37 @@ Escape cancels a drag and leaves the order as it was. During a mouse drag the br
 
 Browsers on touch screens differ: some start the browser's drag after a long press and some never do. So a finger or a pen on a handle drags with pointer events instead, the same way everywhere: the item drags once the finger or pen moves, `drop` follows the item under it, and lifting it drops the item. A tap drags nothing, and a pen drag selects no text. The handle needs `touch-action: none`: without it the browser takes a finger or a pen to scroll the page, which cancels the drag. The page doesn't scroll during a touch drag, so in a list taller than the screen the menu is the way to move an item far.
 
+## Between lists
+
+`useReorderGroup({ onMove })` lets lists take each other's items, such as the columns of a board. Pass its group to each list's `useReorder`, with a `list` key of your own for that list, such as the column's index or id. A drop in another list of the group calls the group's `onMove(from, to)`, where each is `{ list, index }`: the list and index the item leaves, and the list and index it ends at. A drop inside one list still calls that list's own `onMove(from, to)`.
+
+```tsx
+import { useReorder, useReorderGroup } from '@tounsoo/todae';
+
+const group = useReorderGroup({ onMove: (from, to) => moveCard(from.list, from.index, to.list, to.index) });
+
+// In each column:
+const reorder = useReorder({ group, list: columnIndex, onMove: (from, to) => moveCard(columnIndex, from, columnIndex, to) });
+
+<section {...reorder.getListProps()}>
+  <h3>{column.name}</h3>
+  <ol>{/* items, as above */}</ol>
+</section>
+```
+
+Spread `getListProps()` on the element around the items. A drop on it but not on an item, such as in a gap, below the last item or in a list with no items, lands among the items by the pointer: before the first item the pointer is before, or after the last one, so a list with no items takes the item at index 0. `data-drop-target` marks that element while the dragged item would land in its list, which is the only mark an empty list gets. Each list's `drop` says where the item would land in that list, so only the list under the pointer shows a line, and `dragging` stays on the list the item left. A list with `disabled` takes no item from another. Touch drags move between the lists of a group the same way.
+
+Move a channel to the other list by its grip, or from its menu.
+
+<Example of={BetweenListsExample} />
+
+The menu is still the way to move an item from the keyboard. A move to another list puts a new element in that list, so the old one goes away holding focus: the example hands it to the moved row's trigger with [`useFocusHandoff`](/utilities/use-focus-handoff), and announces the row's list and position.
+
 ## Accessible composition
 
-**Todae handles:** Dragging an item only by its handle, with a mouse, a finger or a pen. Working out the item and side a drop lands on, and the index the dragged item ends at. Ignoring drags from elsewhere. Cancelling a drag on Escape.
+**Todae handles:** Dragging an item only by its handle, with a mouse, a finger or a pen. Working out the item and side a drop lands on, and the index the dragged item ends at, in its own list or another of its group. Ignoring drags from elsewhere. Cancelling a drag on Escape.
 
-**You supply:** Another way to move an item that needs no dragging and works from the keyboard, such as the Reorder recipe's menu: the browser's drag and drop has no keyboard path. A handle hidden from screen readers with `aria-hidden`, since that other way is the one they use. Keys from each item's id. The announcement of a move, and how the drop line and the dragged item look.
+**You supply:** Another way to move an item that needs no dragging and works from the keyboard, such as the Reorder recipe's menu: the browser's drag and drop has no keyboard path. A handle hidden from screen readers with `aria-hidden`, since that other way is the one they use. Keys from each item's id. For a move to another list, a place for the focus the moved item's old element held. The announcement of a move, and how the drop line and the dragged item look.
 
 **Watch for:** Drag as the only way to reorder (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A handle that is a button or a tab stop: it does nothing from the keyboard. A handle smaller than 24 by 24 CSS pixels, such as a bare icon (SC 2.5.8). A handle without `touch-action: none`, which a press on a touch screen scrolls instead of dragging. Touch dragging is tested with Chromium's touch input, was checked with pointer events in Firefox and WebKit, and hasn't been checked on a phone.
 
@@ -48,8 +75,10 @@ Browsers on touch screens differ: some start the browser's drag after a long pre
 
 **When:** Letting a person drag the items of a list they order themselves, beside a way to move them without dragging.
 
-**When not:** Dropping files → [`useDropzone`](/utilities/use-dropzone). Moving items between lists → your product's own drag and drop.
+**When not:** Dropping files → [`useDropzone`](/utilities/use-dropzone). Moving items between lists → `useReorderGroup`, with a way to move them without dragging too.
 
 ## Props
 
 <PropsTable name="useReorder" />
+
+<PropsTable name="useReorderGroup" />

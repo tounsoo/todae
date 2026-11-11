@@ -34,12 +34,15 @@ import {
   useMentions,
   useModalLayer,
   useReorder,
+  useReorderGroup,
   useRovingFocus,
   useSelection,
   useSheetPresentation,
   useStrings,
   type ComboboxOption,
   type MentionTrigger,
+  type ReorderGroup,
+  type ReorderPlace,
 } from '@tounsoo/todae';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -493,6 +496,70 @@ function ReorderItem({ index, tick }: ItemProps) {
   );
 }
 
+const LANES = [
+  ['general', 'design'],
+  ['releases', 'support'],
+];
+
+/** One lane of a ReorderGroupItem: a list in the group, with its own handles. */
+function Lane({ lane, rows, group, move }: { lane: number; rows: string[]; group: ReorderGroup<number>; move: (from: ReorderPlace<number>, to: ReorderPlace<number>) => void }) {
+  const reorder = useReorder({ group, list: lane, onMove: (from, to) => move({ list: lane, index: from }, { list: lane, index: to }) });
+  return (
+    <ol {...reorder.getListProps()}>
+      {rows.map((row, position) => (
+        <li key={row} {...reorder.getItemProps(position)}>
+          <span aria-hidden data-bench-handle {...reorder.getHandleProps(position)}>
+            ::
+          </span>{' '}
+          {row}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Two lists in one group, so a row can move from one to the other. */
+function ReorderGroupItem({ index, tick }: ItemProps) {
+  const [lanes, setLanes] = useState(LANES);
+  const move = (from: ReorderPlace<number>, to: ReorderPlace<number>) =>
+    setLanes((all) => {
+      const next = all.map((lane) => [...lane]);
+      next[to.list]!.splice(to.index, 0, next[from.list]!.splice(from.index, 1)[0]!);
+      return next;
+    });
+  const group = useReorderGroup<number>({ onMove: move });
+  return (
+    <div aria-label={`Lanes ${index} ${tick}`} role="group">
+      {lanes.map((rows, lane) => (
+        <Lane key={lane} lane={lane} rows={rows} group={group} move={move} />
+      ))}
+    </div>
+  );
+}
+
+/** Mouse down on the first lane's first handle, then drag it to the lower half of the other lane's last row and drop. */
+function dragToOtherLane(container: HTMLElement) {
+  const handle = first<HTMLElement>(container, '[data-bench-handle]');
+  const lanes = handle.closest('[role="group"]')!.querySelectorAll('ol');
+  const stored = new Set<string>();
+  const dataTransfer = {
+    get types() {
+      return [...stored];
+    },
+    setData: (type: string) => void stored.add(type),
+    effectAllowed: 'none',
+    dropEffect: 'none',
+  };
+  const drag = (type: string, target: Element, clientY = 0) =>
+    target.dispatchEvent(Object.assign(new Event(type, { bubbles: true, cancelable: true }), { dataTransfer, clientX: 0, clientY }));
+  flushSync(() => handle.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 })));
+  const target = lanes[1]!.querySelectorAll('li')[1]!;
+  const box = target.getBoundingClientRect();
+  drag('dragstart', handle.closest('li')!);
+  drag('dragover', target, box.top + box.height * 0.75);
+  drag('drop', target, box.top + box.height * 0.75);
+}
+
 /** Mouse down on the first row's handle, then drag it to the lower half of the third row and drop. */
 function dragFirstRowDown(container: HTMLElement) {
   const handle = first<HTMLElement>(container, '[data-bench-handle]');
@@ -749,6 +816,14 @@ export const HOOKS = {
       Case: many(ReorderItem),
       // The hook has no keyboard path (the docs pair it with a menu), so this drives its drag.
       interact: dragFirstRowDown,
+    },
+  ],
+  useReorderGroup: [
+    {
+      id: 'use-reorder-group',
+      title: 'useReorderGroup on two lists of two rows with handles',
+      Case: many(ReorderGroupItem),
+      interact: dragToOtherLane,
     },
   ],
   useSelection: [

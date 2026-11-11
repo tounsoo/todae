@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { cdp, server, userEvent } from 'vitest/browser';
 import { useState, type PointerEvent } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { Dialog, useReorder } from '../index.js';
+import { Dialog, useReorder, useReorderGroup, type ReorderGroup, type ReorderPlace } from '../index.js';
 
 afterEach(cleanup);
 
@@ -655,4 +655,111 @@ it.runIf(server.browser === 'chromium')('moves an item a real touch drags in Chr
   }
   await expect.poll(() => onMove.mock.calls).toEqual([[0, 2]]);
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
+});
+
+// Two lists of one group, side by side, each with room below its items.
+type Key = 'left' | 'right';
+
+function GroupList({ group, list, items, onMove }: { group: ReorderGroup<Key>; list: Key; items: string[]; onMove: (from: number, to: number) => void }) {
+  const reorder = useReorder({ group, list, onMove });
+  return (
+    <ul data-testid={`list-${list}`} {...reorder.getListProps()} style={{ inlineSize: 200, minBlockSize: 200, padding: 0, margin: 0, listStyle: 'none' }}>
+      {items.map((name, index) => (
+        <li key={name} {...reorder.getItemProps(index)} style={{ blockSize: 40, display: 'flex' }}>
+          <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)} style={{ inlineSize: 24 }}>
+            ::
+          </span>
+          <span>{name}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Board({ onMove, right = ['X', 'Y'] }: { onMove: (from: ReorderPlace<Key>, to: ReorderPlace<Key>) => void; right?: string[] }) {
+  const [lists, setLists] = useState<Record<Key, string[]>>({ left: ['A', 'B', 'C'], right });
+  const move = (from: ReorderPlace<Key>, to: ReorderPlace<Key>) =>
+    setLists((current) => {
+      const next = { left: [...current.left], right: [...current.right] };
+      const [moved] = next[from.list].splice(from.index, 1);
+      next[to.list].splice(to.index, 0, moved!);
+      return next;
+    });
+  const group = useReorderGroup<Key>({
+    onMove: (from, to) => {
+      onMove(from, to);
+      move(from, to);
+    },
+  });
+  return (
+    <div style={{ display: 'flex', gap: 40, alignItems: 'start' }}>
+      {(['left', 'right'] as const).map((list) => (
+        <GroupList key={list} group={group} list={list} items={lists[list]} onMove={(from, to) => move({ list, index: from }, { list, index: to })} />
+      ))}
+    </div>
+  );
+}
+
+const orderIn = (list: Key) => [...screen.getByTestId(`list-${list}`).querySelectorAll('li')].map((node) => node.textContent?.replace('::', ''));
+
+it('moves an item dragged to another list of its group, beside an item or below the last one', async () => {
+  const onMove = vi.fn();
+  render(<Board onMove={onMove} />);
+  await userEvent.dragAndDrop(screen.getByTestId('handle-A'), item('X'), { targetPosition: bottom });
+  expect(onMove).toHaveBeenLastCalledWith({ list: 'left', index: 0 }, { list: 'right', index: 1 });
+  expect(orderIn('left')).toEqual(['B', 'C']);
+  expect(orderIn('right')).toEqual(['X', 'A', 'Y']);
+
+  await userEvent.dragAndDrop(screen.getByTestId('handle-C'), screen.getByTestId('list-right'), { targetPosition: { x: 100, y: 180 } });
+  expect(onMove).toHaveBeenLastCalledWith({ list: 'left', index: 1 }, { list: 'right', index: 3 });
+  expect(orderIn('right')).toEqual(['X', 'A', 'Y', 'C']);
+  for (const node of screen.getAllByRole('listitem')) {
+    expect(node).not.toHaveAttribute('data-dragging');
+    expect(node).not.toHaveAttribute('data-drop');
+  }
+});
+
+it('drops an item in an empty list of its group', async () => {
+  const onMove = vi.fn();
+  render(<Board onMove={onMove} right={[]} />);
+  await userEvent.dragAndDrop(screen.getByTestId('handle-B'), screen.getByTestId('list-right'), { targetPosition: { x: 100, y: 20 } });
+  expect(onMove).toHaveBeenCalledExactlyOnceWith({ list: 'left', index: 1 }, { list: 'right', index: 0 });
+  expect(orderIn('right')).toEqual(['B']);
+  expect(screen.getByTestId('list-right')).not.toHaveAttribute('data-drop-target');
+});
+
+it('shows the line only in the list of the group the drag is over', () => {
+  render(<Board onMove={() => {}} />);
+  const d = drag('A');
+  d.over('B', 'end');
+  expect(item('B')).toHaveAttribute('data-drop', 'after');
+  d.over('Y', 'start');
+  expect(item('B')).not.toHaveAttribute('data-drop');
+  expect(item('Y')).toHaveAttribute('data-drop', 'before');
+  expect(screen.getByTestId('list-right')).toHaveAttribute('data-drop-target', '');
+  d.end();
+  expect(item('Y')).not.toHaveAttribute('data-drop');
+  expect(screen.getByTestId('list-right')).not.toHaveAttribute('data-drop-target');
+});
+
+it.runIf(server.browser === 'chromium')('moves an item a real touch drags to another list of its group in Chromium', async () => {
+  const onMove = vi.fn();
+  render(
+    <div style={{ touchAction: 'none' }}>
+      <Board onMove={onMove} />
+    </div>,
+  );
+  const s = session();
+  const from = centre(screen.getByTestId('handle-B'), 'start');
+  const to = centre(item('Y'));
+  try {
+    await s.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...from, id: 1 }] });
+    await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: from.x, y: from.y + 20, id: 1 }] });
+    await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...to, id: 1 }] });
+    await expect.poll(() => item('Y').getAttribute('data-drop')).toBe('after');
+  } finally {
+    await s.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  }
+  await expect.poll(() => onMove.mock.calls).toEqual([[{ list: 'left', index: 1 }, { list: 'right', index: 2 }]]);
+  expect(orderIn('right')).toEqual(['X', 'Y', 'B']);
 });
