@@ -1,10 +1,10 @@
-/* Columns sit side by side at 13rem or wider, and the board scrolls sideways
+/* Columns sit side by side at 11rem or wider, and the board scrolls sideways
    when they don't fit. */
 .board {
   display: grid;
-  grid-auto-columns: minmax(13rem, 1fr);
+  grid-auto-columns: minmax(11rem, 1fr);
   grid-auto-flow: column;
-  gap: var(--todae-space-4);
+  gap: var(--todae-space-3);
   align-items: start;
 }
 
