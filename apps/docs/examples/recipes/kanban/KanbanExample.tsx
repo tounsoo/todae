@@ -58,10 +58,10 @@ function BoardCard({
     <li ref={handoff} {...reorder.getItemProps(index)} className={styles.card}>
       <Card.Root>
         {/* As on most boards, the title leads with the menu beside its first line,
-            and the label and grip sit under it, so the title takes the card's width. */}
+            and the label and grip sit under it, so the title gets all the width the menu leaves. */}
         <Stack.Root gap="condensed">
           <Stack.Root direction="row" align="start" gap="condensed">
-            <Text.Root style={{ flex: 1 }}>{task.title}</Text.Root>
+            <Text.Root style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere' }}>{task.title}</Text.Root>
             <Menu.Root>
               <Menu.Trigger
                 ref={task.id === landed ? landing : undefined}
