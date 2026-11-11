@@ -1,8 +1,0 @@
-{
-  "overlay": {
-    "$description": "The scrim a modal overlay dims the page with.",
-    "scrim": {
-      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/scrim/$value" } }
-    }
-  }
-}
