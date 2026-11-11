@@ -14,7 +14,7 @@ Drag a card by its grip, or open its menu and move it to another column.
 
 Each column is a `section` named by its heading, with its cards in an `ol` that the same heading names, since a card's place in the column is its priority. The count beside the heading is a [Badge](/badge). A column with no cards says so in text instead of showing an empty list. The board is a grid of columns at least 11rem wide in a [ScrollArea](/scroll-area) with `axis="inline"`, so on a narrow screen the board scrolls sideways and the cards keep their width.
 
-Each card leads with its title, with its menu beside the title's first line, and puts its label and grip on a row under the title, as most boards do. The title then gets all the width the menu leaves, even in a narrow column, and a long word wraps rather than push the menu out. The board sits in a `DensityProvider` with `density="compact"`, since cards on a board are dense.
+Each card's grip is a narrow column down its leading edge, with its icon on the title's first line. Next to it, the card leads with its title, as most boards do, with its menu beside the title's first line and its label under the title. A long word in the title wraps rather than push the menu out. The board sits in a `DensityProvider` with `density="compact"`, since cards on a board are dense.
 
 Key each card by its task's id, not its index, so a card's menu moves with it and focus follows it.
 
@@ -28,7 +28,7 @@ A move inside a column moves the card's element, and the menu hands focus back t
 
 Each column calls `useReorder` for its own list. Spread `getItemProps(index)` on each card's `li` and `getHandleProps(index)` on its grip: a press on the grip makes that card draggable, so the text on the cards stays selectable and a card drags only by its grip. The hook puts `data-dragging` on the dragged card and `data-drop` on the card it would land beside, and the example's stylesheet draws the drop line in the gap from those. A drop calls the same move function as the menu, so a drag is announced too.
 
-`useReorder` reorders one list, and a drag from another list isn't its own, so a card moves to another column through its menu. The grip is `aria-hidden` and not a tab stop, since dragging has no keyboard path: the menu is the way to move a card from the keyboard (WCAG 2.2 SC 2.1.1) and with a single pointer and no dragging (SC 2.5.7). The grip is at least 24 by 24 CSS pixels (SC 2.5.8) and has `touch-action: none`, so a finger on it drags the card instead of scrolling the page. Escape cancels a drag and leaves the board as it was.
+`useReorder` reorders one list, and a drag from another list isn't its own, so a card moves to another column through its menu. The grip is `aria-hidden` and not a tab stop, since dragging has no keyboard path: the menu is the way to move a card from the keyboard (WCAG 2.2 SC 2.1.1) and with a single pointer and no dragging (SC 2.5.7). The grip runs the card's height over its leading padding, so it is easy to hit and more than 24 by 24 CSS pixels (SC 2.5.8). It stays visible, since touch has no hover, in a muted color that turns full contrast while the card is hovered or holds focus. It has `touch-action: none`, so a finger on it drags the card instead of scrolling the page. Escape cancels a drag and leaves the board as it was.
 
 ## Saving the board
 

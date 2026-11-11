@@ -51,17 +51,28 @@
   inset-block-end: calc(-0.5 * (var(--todae-space-2) + var(--todae-focus-ring-width)));
 }
 
-/* The grip is at least 24 by 24 CSS pixels, so it is easy to hit (WCAG 2.2
-   SC 2.5.8). */
+/* The grip runs down the card's leading edge, over the card's padding, so the
+   whole strip is easy to hit (WCAG 2.2 SC 2.5.8) and the text loses little
+   width. Its single row is one line of the title tall, so the icon sits on the
+   title's first line. It rests muted and turns full contrast while the card is
+   hovered or holds focus, and stays visible, since touch has no hover. */
 .grip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-block-size: 1.5rem;
-  min-inline-size: 1.5rem;
+  display: grid;
+  grid-template-rows: 1lh;
+  place-items: center;
+  inline-size: 1.5rem;
+  margin-block: calc(-1 * var(--todae-card-padding));
+  margin-inline-start: calc(-1 * var(--todae-card-padding));
+  padding-block: var(--todae-card-padding);
+  font-size: var(--todae-text-font-size);
+  line-height: var(--todae-text-leading-default);
   color: var(--todae-color-fg-muted);
   cursor: grab;
   touch-action: none;
+}
+
+.card:is(:hover, :focus-within) .grip {
+  color: var(--todae-color-fg-default);
 }
 
 /* Forced colors replace backgrounds, so the drop line takes the system's

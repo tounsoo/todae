@@ -57,52 +57,54 @@ function BoardCard({
   return (
     <li ref={handoff} {...reorder.getItemProps(index)} className={styles.card}>
       <Card.Root>
-        {/* As on most boards, the title leads with the menu beside its first line,
-            and the label and grip sit under it, so the title gets all the width the menu leaves. */}
-        <Stack.Root gap="condensed">
-          <Stack.Root direction="row" align="start" gap="condensed">
-            <Text.Root style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere' }}>{task.title}</Text.Root>
-            <Menu.Root>
-              <Menu.Trigger
-                ref={task.id === landed ? landing : undefined}
-                variant="ghost"
-                aria-label={`Move ${task.title}`}
-              >
-                <Button.Icon>
-                  <EllipsisVertical />
-                </Button.Icon>
-              </Menu.Trigger>
-              <Menu.Content>
-                <Menu.Item
-                  disabled={index === 0}
-                  onSelect={() => move(columnIndex, index, columnIndex, index - 1)}
+        {/* The grip is a narrow column down the card's leading edge, its icon on the title's
+            first line. The title leads with the menu beside it, and the label sits under it. */}
+        <Stack.Root direction="row" gap="condensed">
+          <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
+            <GripVertical size="1em" />
+          </span>
+          <Stack.Root gap="condensed" style={{ flex: 1, minInlineSize: 0 }}>
+            <Stack.Root direction="row" align="start" gap="condensed">
+              <Text.Root style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere' }}>{task.title}</Text.Root>
+              <Menu.Root>
+                <Menu.Trigger
+                  ref={task.id === landed ? landing : undefined}
+                  variant="ghost"
+                  aria-label={`Move ${task.title}`}
                 >
-                  Move up
-                </Menu.Item>
-                <Menu.Item
-                  disabled={index === last}
-                  onSelect={() => move(columnIndex, index, columnIndex, index + 1)}
-                >
-                  Move down
-                </Menu.Item>
-                <Menu.Separator />
-                {columns.map((column, target) => (
+                  <Button.Icon>
+                    <EllipsisVertical />
+                  </Button.Icon>
+                </Menu.Trigger>
+                <Menu.Content>
                   <Menu.Item
-                    key={column.id}
-                    disabled={target === columnIndex}
-                    onSelect={() => move(columnIndex, index, target, column.tasks.length)}
+                    disabled={index === 0}
+                    onSelect={() => move(columnIndex, index, columnIndex, index - 1)}
                   >
-                    Move to {column.name}
+                    Move up
                   </Menu.Item>
-                ))}
-              </Menu.Content>
-            </Menu.Root>
-          </Stack.Root>
-          <Stack.Root direction="row" align="center" justify="between" gap="condensed">
-            <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
-            <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
-              <GripVertical size="1em" />
-            </span>
+                  <Menu.Item
+                    disabled={index === last}
+                    onSelect={() => move(columnIndex, index, columnIndex, index + 1)}
+                  >
+                    Move down
+                  </Menu.Item>
+                  <Menu.Separator />
+                  {columns.map((column, target) => (
+                    <Menu.Item
+                      key={column.id}
+                      disabled={target === columnIndex}
+                      onSelect={() => move(columnIndex, index, target, column.tasks.length)}
+                    >
+                      Move to {column.name}
+                    </Menu.Item>
+                  ))}
+                </Menu.Content>
+              </Menu.Root>
+            </Stack.Root>
+            <div>
+              <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
+            </div>
           </Stack.Root>
         </Stack.Root>
       </Card.Root>
