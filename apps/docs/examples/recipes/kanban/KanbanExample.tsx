@@ -56,49 +56,53 @@ function BoardCard({
   return (
     <li ref={handoff} {...reorder.getItemProps(index)} className={styles.card}>
       <Card.Root>
-        <Stack.Root direction="row" align="center" gap="condensed">
-          <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
-            <GripVertical size="1em" />
-          </span>
-          <Stack.Root gap="condensed" align="start" style={{ flex: 1 }}>
-            <Text.Root>{task.title}</Text.Root>
-            <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
-          </Stack.Root>
-          <Menu.Root>
-            <Menu.Trigger
-              ref={task.id === landed ? landing : undefined}
-              variant="ghost"
-              aria-label={`Move ${task.title}`}
-            >
-              <Button.Icon>
-                <EllipsisVertical />
-              </Button.Icon>
-            </Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item
-                disabled={index === 0}
-                onSelect={() => move(columnIndex, index, columnIndex, index - 1)}
+        {/* The grip, label and menu share a row above the title, so the title
+            takes the card's full width in a narrow column. */}
+        <Stack.Root gap="condensed">
+          <Stack.Root direction="row" align="center" gap="condensed">
+            <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
+              <GripVertical size="1em" />
+            </span>
+            <Stack.Root align="start" style={{ flex: 1 }}>
+              <Badge.Root tone={categoryTone(task.label)}>{task.label}</Badge.Root>
+            </Stack.Root>
+            <Menu.Root>
+              <Menu.Trigger
+                ref={task.id === landed ? landing : undefined}
+                variant="ghost"
+                aria-label={`Move ${task.title}`}
               >
-                Move up
-              </Menu.Item>
-              <Menu.Item
-                disabled={index === last}
-                onSelect={() => move(columnIndex, index, columnIndex, index + 1)}
-              >
-                Move down
-              </Menu.Item>
-              <Menu.Separator />
-              {columns.map((column, target) => (
+                <Button.Icon>
+                  <EllipsisVertical />
+                </Button.Icon>
+              </Menu.Trigger>
+              <Menu.Content>
                 <Menu.Item
-                  key={column.id}
-                  disabled={target === columnIndex}
-                  onSelect={() => move(columnIndex, index, target, column.tasks.length)}
+                  disabled={index === 0}
+                  onSelect={() => move(columnIndex, index, columnIndex, index - 1)}
                 >
-                  Move to {column.name}
+                  Move up
                 </Menu.Item>
-              ))}
-            </Menu.Content>
-          </Menu.Root>
+                <Menu.Item
+                  disabled={index === last}
+                  onSelect={() => move(columnIndex, index, columnIndex, index + 1)}
+                >
+                  Move down
+                </Menu.Item>
+                <Menu.Separator />
+                {columns.map((column, target) => (
+                  <Menu.Item
+                    key={column.id}
+                    disabled={target === columnIndex}
+                    onSelect={() => move(columnIndex, index, target, column.tasks.length)}
+                  >
+                    Move to {column.name}
+                  </Menu.Item>
+                ))}
+              </Menu.Content>
+            </Menu.Root>
+          </Stack.Root>
+          <Text.Root>{task.title}</Text.Root>
         </Stack.Root>
       </Card.Root>
     </li>

@@ -1,8 +1,8 @@
-/* Columns sit side by side at 16rem or wider, and the board scrolls sideways
+/* Columns sit side by side at 13rem or wider, and the board scrolls sideways
    when they don't fit. */
 .board {
   display: grid;
-  grid-auto-columns: minmax(16rem, 1fr);
+  grid-auto-columns: minmax(13rem, 1fr);
   grid-auto-flow: column;
   gap: var(--todae-space-4);
   align-items: start;
@@ -51,8 +51,8 @@
   inset-block-end: calc(-0.5 * (var(--todae-space-2) + var(--todae-focus-ring-width)));
 }
 
-/* The grip spans the card's row, with padding beside the icon, so it is easy
-   to hit: at least 24 by 24 CSS pixels (WCAG 2.2 SC 2.5.8). */
+/* The grip spans the height of the card's top row, with padding beside the
+   icon, so it is easy to hit: at least 24 by 24 CSS pixels (WCAG 2.2 SC 2.5.8). */
 .grip {
   display: flex;
   align-items: center;
