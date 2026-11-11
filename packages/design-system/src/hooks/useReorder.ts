@@ -310,8 +310,12 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     group.members.set(id, member);
     return () => {
       group.members.delete(id);
-      if (group.drag?.list === id) group.drag = null;
       if (group.shown === id) group.shown = null;
+      // A list that goes away mid-drag ends its drag, with any line it left in another list.
+      if (group.drag?.list === id) {
+        group.drag = null;
+        display(group, null, null);
+      }
     };
   }, [group, id]);
 
@@ -374,16 +378,18 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     /** The list of the group under x, y and where in it a drop lands, or null where nothing takes it. */
     const target = (x: number, y: number): { list: string; at: ReorderDrop } | null => {
       const { members } = groupRef.current;
-      const root = sourceRef.current!.getRootNode() as Document | ShadowRoot;
-      // The innermost item or list of this group under the point. An item of a list in another group,
-      // such as one nested in an item, isn't this group's.
+      const dragged = sourceRef.current!;
+      const root = dragged.getRootNode() as Document | ShadowRoot;
+      // The innermost item or list of this group under the point that takes the item. An item of a
+      // list in another group, such as one nested in an item, isn't this group's. A disabled list, or one
+      // inside the dragged item, leaves the drop to the list around it, as in the browser's drag.
       for (let node = root.elementFromPoint(x, y); node; node = node.parentElement) {
         const item = node.getAttribute(LIST);
         const list = node.getAttribute(ROOT);
         const key = item !== null && members.has(item) ? item : list !== null && members.has(list) ? list : null;
-        if (key === null) continue;
+        if (key === null || (node !== dragged && dragged.contains(node))) continue;
         const into = members.get(key)!.current;
-        if (into.disabled) return null;
+        if (into.disabled) continue;
         const at =
           key === item
             ? { index: indexOf(node)!, position: sideOf(node, x, y, into.orientation) }
@@ -442,6 +448,8 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   const source = (event: DragEvent<HTMLElement>): Source | null => {
     const drag = group.drag;
     if (drag === null || !event.dataTransfer.types.includes(type)) return null;
+    // An item can't go into a list inside itself.
+    if (drag.node !== event.currentTarget && drag.node.contains(event.currentTarget)) return null;
     const owner = group.members.get(drag.list)?.current;
     if (owner === undefined || !drag.node.isConnected) {
       if (owner) owner.end();
@@ -466,13 +474,14 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
 
   const take = (event: DragEvent<HTMLElement>, locate: Locate) => {
     if (handled.has(event.nativeEvent) || group.drag === null || !event.dataTransfer.types.includes(type)) return;
-    handled.add(event.nativeEvent);
-    const from = source(event);
+    // The drop is the group's own drag, so the browser does nothing else with it, such as open a link.
     event.preventDefault();
-    if (from !== null) return commit(group, from, id, locate(event));
-    // Refused, as by a list disabled during the drag: the drag ends in its own list and here.
-    if (group.drag) group.members.get(group.drag.list)?.current.end();
-    end();
+    const from = source(event);
+    // A list that can't take it, such as one disabled during the drag, leaves it to the list around
+    // it. Where none takes it, the drag ends with dragend in its own list.
+    if (from === null) return hide();
+    handled.add(event.nativeEvent);
+    commit(group, from, id, locate(event));
   };
 
   const getItemProps = <P extends UseReorderItemUserProps>(index: number, props?: P) => {

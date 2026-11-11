@@ -1280,9 +1280,9 @@
   },
   "utilities/use-reorder": {
     "(top)": "a98b70dcfcf0",
-    "# useReorder": "a2963e3bfe4d",
+    "# useReorder": "82802c6ad052",
     "## Touch": "55459a623454",
-    "## Between lists": "053190e4346a",
+    "## Between lists": "d29cfb5356d7",
     "## Accessible composition": "ca0b01ac5bf3",
     "## When to use": "0d34d15d0e85",
     "## Props": "48fcb5146827",
