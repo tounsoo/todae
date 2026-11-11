@@ -1,0 +1,136 @@
+@layer todae.components {
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-option-list-gap);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* `display: flex` above beats the UA [hidden] rule, so restate it. */
+  .list[hidden] {
+    display: none;
+  }
+
+  .list:hover,
+  .list:active {
+    background: transparent;
+  }
+
+  .list:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-option-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .option {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: var(--todae-option-padding-y) var(--todae-option-padding-x);
+    border: 0;
+    border-radius: var(--todae-option-radius);
+    background: var(--todae-option-bg-default);
+    color: var(--todae-option-fg-default);
+    font-size: var(--todae-option-font-size);
+    font-weight: var(--todae-option-font-weight);
+    line-height: var(--todae-option-leading);
+    text-align: start;
+    cursor: default;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .option[data-highlighted]:not([data-selected]) {
+    background: var(--todae-option-bg-hover);
+  }
+
+  .option[data-selected] {
+    background: var(--todae-option-bg-selected);
+    color: var(--todae-option-fg-selected);
+  }
+
+  .option[data-selected][data-highlighted] {
+    background: var(--todae-option-bg-selected-highlighted);
+  }
+
+  @media (hover: hover) {
+    .option:hover:not([aria-disabled='true']):not([data-selected]) {
+      background: var(--todae-option-bg-hover);
+    }
+
+    .option[data-selected]:hover {
+      background: var(--todae-option-bg-selected-highlighted);
+    }
+  }
+
+  .option[aria-disabled='true'] {
+    color: var(--todae-option-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .list[data-selection-mode='multiple'] .option {
+    padding-inline-start: calc(var(--todae-option-padding-x) + (var(--todae-option-check-scale) + var(--todae-option-check-gap)) * 1em);
+  }
+
+  .list[data-selection-mode='multiple'] .option::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: var(--todae-option-padding-x);
+    width: calc(var(--todae-option-check-scale) * 1em);
+    height: calc(var(--todae-option-check-scale) * 1em);
+    box-sizing: border-box;
+    border: var(--todae-option-check-border-width) solid var(--todae-option-check-border);
+    border-radius: var(--todae-option-check-radius);
+    background: transparent;
+  }
+
+  .list[data-selection-mode='multiple'] .option[data-selected]::before {
+    background: var(--todae-option-bg-selected);
+  }
+
+  .list[data-selection-mode='single'] .option[data-selected] {
+    padding-inline-start: calc(var(--todae-option-padding-x) + (var(--todae-option-check-scale) + var(--todae-option-check-gap)) * 1em);
+  }
+
+  /* A selected option's check glyph, inside the box in a multiple list. */
+  .check {
+    position: absolute;
+    inset-inline-start: var(--todae-option-padding-x);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: calc(var(--todae-option-check-scale) * 1em);
+    block-size: calc(var(--todae-option-check-scale) * 1em);
+    color: var(--todae-option-check-fg);
+    line-height: 1;
+  }
+
+  .check > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Forced colors drop backgrounds: outline the highlighted option. Selection
+     keeps its check mark, a glyph in the text color. */
+  @media (forced-colors: active) {
+    .option[data-highlighted] {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+
+    @media (hover: hover) {
+      .option:hover:not([aria-disabled='true']) {
+        outline: var(--todae-focus-ring-width) solid Highlight;
+        outline-offset: calc(-1 * var(--todae-focus-ring-width));
+      }
+    }
+  }
+}

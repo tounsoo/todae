@@ -1,0 +1,59 @@
+import CardPlan from '../../../examples/card/CardPlan';
+import CardRow from '../../../examples/card/CardRow';
+
+# Card
+
+요금제, 설정, 요약처럼 관련된 내용을 묶는 테두리 있는 표면입니다. 배경, 테두리, 모서리, 패딩, 간격은 `card` contract 토큰에서 가져오며, 패딩과 간격은 밀도를 따릅니다. 회사의 카드와 패널을 만드는 기반입니다.
+
+<Example of={CardPlan} />
+
+Server Components는 `@tounsoo/todae/card`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
+
+모든 파트는 role이 없는 `div`입니다. 페이지에 맞는 제목 수준을 고르세요. 머리글 바로 안의 제목이나 문단은 바깥 여백이 없어집니다. 랜드마크가 되어야 하는 카드에는 다른 `div`처럼 `role="region"`과 이름을 주세요. 카드는 버튼이나 링크가 아닙니다. 동작은 `Card.Footer`나 본문 안에 넣으세요.
+
+`Card.Body`는 카드에 남은 높이를 채웁니다. 그리드 항목처럼 한 줄의 카드가 같은 높이로 늘어나면 모든 푸터가 아래쪽 끝에 놓여 동작이 나란히 정렬됩니다.
+
+<Example of={CardRow} />
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 레이아웃과 색만 맡습니다. 모든 파트는 role이 없는 `div`이고, 전달한 role이나 ARIA는 그 `div`에 그대로 넘깁니다.
+
+**직접 제공할 것:** `Card.Header` 안의 제목. 수준은 카드가 놓인 자리에 맞추세요. 랜드마크인 카드라면 `role="region"`과 이름을 주고, 이름은 `aria-labelledby`로 그 제목에서 가져오는 것이 가장 좋습니다. 재사용하는 카드는 제목 수준을 고정하지 말고 prop으로 받아야 합니다.
+
+```tsx
+import { useId, type ReactNode } from 'react';
+import { Card, Text, type TextHeading } from '@tounsoo/todae';
+
+type PanelProps = { title: string; level: TextHeading; children: ReactNode };
+
+export function Panel({ title, level, children }: PanelProps) {
+  const id = useId();
+  return (
+    <Card.Root role="region" aria-labelledby={id}>
+      <Card.Header>
+        <Text.Root as={level} id={id}>{title}</Text.Root>
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
+    </Card.Root>
+  );
+}
+```
+
+**주의할 점:** 카드 전체를 누를 수 있게 하려고 `Card.Root`에 `onClick`을 거는 것. `div`는 포커스를 받지 않고 role도 없으니, 안에 실제 버튼이나 링크를 넣으세요. 카드 전체를 감싸는 링크는 카드의 모든 내용을 링크 이름으로 만들고, 그 안의 버튼은 인터랙티브 콘텐츠를 중첩합니다. 긴 목록의 모든 카드에 `role="region"`을 주는 것. 카드마다 랜드마크가 하나씩 늘어납니다.
+
+## 언제 쓰나
+
+**쓸 때:** 하나의 단위로 읽히고 비슷한 것들 옆에 놓이는 내용 묶음: 요금제, 설정 섹션, 요약 타일.
+
+**쓰지 않을 때:** 작업을 멈추게 하는 내용 → Dialog. 페이지에 대한 메시지 → Alert. 표면 없이 간격만 필요할 때 → Stack.
+
+## Props
+
+<PropsTable name="Card.Root" />
+
+<PropsTable name="Card.Header" />
+
+<PropsTable name="Card.Body" />
+
+<PropsTable name="Card.Footer" />

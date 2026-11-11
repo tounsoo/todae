@@ -1,0 +1,50 @@
+import LinkCurrent from '../../../examples/link/LinkCurrent';
+import LinkInText from '../../../examples/link/LinkInText';
+
+# Link
+
+`Link.Root` is a native `<a>` styled from the `link` contract tokens. A link keeps the text color and stands out by its underline, which darkens on hover, so it suits a neutral ink palette. An `<a>` without `href` is not a link and gets no link style.
+
+```tsx
+<Link.Root href="/billing">Billing</Link.Root>
+```
+
+<Example of={LinkInText} />
+
+Server Components can import it from `@tounsoo/todae/link`. Restyle every link through the `link.fg.*`, `link.decoration.*`, `link.decoration-thickness.*`, `link.decoration-offset`, `link.ring.focus` and `link.ring-radius` tokens. The `link.fg.current`, `link.decoration.current` and `link.decoration-thickness.current` tokens style the current link.
+
+## Router links
+
+A router's link component renders its own `<a>`. Pass it through `render`: `Link.Root` calls it with every prop it would have put on the `<a>`, its class included. Hand them to the router link, with the destination in the prop it takes. With Next.js, which needs an `href`, a link without one stays a plain `<a>`:
+
+```tsx
+<Link.Root href="/billing" render={({ href, ...props }) => (href ? <NextLink href={href} {...props} /> : <a {...props} />)}>
+  Billing
+</Link.Root>
+```
+
+In a Server Component, import `Link` from `@tounsoo/todae/link` to pass `render`. `@tounsoo/todae` is a client module, and a Server Component can't pass it a function.
+
+## Current page
+
+Mark the link to the page you are on with `aria-current="page"`, or another `aria-current` value such as `step`. Its underline turns thicker, so it stands out without a hover. Your router sets the attribute: Next.js and React Router both let you pass it, and React Router's `NavLink` adds it for you.
+
+<Example of={LinkCurrent} />
+
+## Accessible composition
+
+**Todae handles:** Style only, on a native `<a>` with `href`: an underline that marks the link while its color stays the text color, a focus ring on `:focus-visible` from `link.ring.focus`, and a thicker underline for any `aria-current` other than empty or `false`. The browser gives the link its role, its Enter key and its place in the tab order.
+
+**You supply:** An `href`, so the element is a link at all. Link text that says where it goes. `aria-current` on the current link, from your router. A `render` function that passes every prop it gets to an `<a>`, so `aria-current`, `aria-label`, `ref` and the class reach it.
+
+**Watch for:** A class that sets `text-decoration: none` or `outline: none`: without the underline a link looks like the text around it, as it has the same color. A `Link.Root` with `onClick` and no `href`, which has no link role and no keyboard. A link that does something on this page instead of going somewhere.
+
+## When to use
+
+**When:** Moving to another page or place: inline in text, in navigation, or as an action in an Alert.
+
+**When not:** Doing something on this page, such as saving or opening a dialog → Button. A list of actions → Menu.
+
+## Props
+
+<PropsTable name="Link.Root" />

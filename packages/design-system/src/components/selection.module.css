@@ -1,0 +1,243 @@
+@layer todae.components {
+  .root {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--todae-selection-gap);
+    font-size: var(--todae-selection-font-size);
+    font-weight: var(--todae-selection-font-weight);
+    color: var(--todae-selection-fg-default);
+  }
+
+  .input {
+    position: absolute;
+    opacity: 0;
+    width: var(--todae-selection-size);
+    height: var(--todae-selection-size);
+    margin: 0;
+  }
+
+  .indicator {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    width: var(--todae-selection-size);
+    height: var(--todae-selection-size);
+    border: var(--todae-selection-border-width) solid var(--todae-selection-border-default);
+    border-radius: var(--todae-selection-radius);
+    background: var(--todae-selection-bg-default);
+    /* Its growing check, dot and sliding thumb paint over the input; clicks
+       still belong to the input. */
+    pointer-events: none;
+    transition-property: background-color, border-color;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  .root[data-control='radio'] .indicator {
+    border-radius: 50%;
+  }
+
+  .root[data-control='switch'] .indicator {
+    width: calc(var(--todae-selection-size) * 1.8);
+    border-radius: calc(var(--todae-selection-size) / 2);
+    background: var(--todae-selection-track-bg);
+  }
+
+  .input:checked + .indicator {
+    background: var(--todae-selection-bg-checked);
+    border-color: var(--todae-selection-border-checked);
+  }
+
+  .root[data-indeterminate] .indicator {
+    background: var(--todae-selection-bg-checked);
+    border-color: var(--todae-selection-border-checked);
+  }
+
+  .input:focus-visible + .indicator {
+    outline: var(--todae-focus-ring-width) solid var(--todae-selection-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .root[data-invalid] .indicator {
+    border-color: var(--todae-selection-border-invalid);
+  }
+
+  .root[data-invalid] .input:focus-visible + .indicator {
+    outline-color: var(--todae-selection-ring-invalid);
+  }
+
+  .root[data-disabled] {
+    color: var(--todae-selection-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .root[data-disabled] .input {
+    cursor: inherit;
+  }
+
+  .root[data-disabled] .indicator {
+    background: var(--todae-selection-bg-disabled);
+    border-color: var(--todae-selection-border-disabled);
+  }
+
+  /* The check glyph fills the box and shows while the input is checked or mixed. A
+     text or icon-font glyph takes the box's size as its font size. */
+  .glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+    color: var(--todae-selection-indicator-fg);
+    font-size: calc(var(--todae-selection-size) * 0.75);
+    line-height: 1;
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  .glyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .input:checked + .indicator > .glyph {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .root[data-indeterminate] .indicator > .glyph {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* Only showing animates: a mixed box that unchecks swaps its dash for the
+     check in the same render, so a fade out would flash the check. */
+  .input:checked + .indicator > .glyph,
+  .root[data-indeterminate] .indicator > .glyph {
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  .indicator > [data-todae-glyph] {
+    scale: 0.5;
+  }
+
+  .input:checked + .indicator > [data-todae-glyph],
+  .root[data-indeterminate] .indicator > [data-todae-glyph] {
+    scale: 1;
+  }
+
+  .root[data-control='radio'] .indicator::after {
+    content: '';
+    display: block;
+    width: 40%;
+    height: 40%;
+    margin: 30% auto 0;
+    border-radius: 50%;
+    background: var(--todae-selection-indicator-fg);
+    opacity: 0;
+    scale: 0;
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  .root[data-control='radio'] .input:checked + .indicator::after {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* The thumb's edge draws it against the off track, which is close to its fill. */
+  .root[data-control='switch'] .indicator::after {
+    content: '';
+    display: block;
+    box-sizing: border-box;
+    width: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2 * var(--todae-selection-thumb-inset));
+    height: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2 * var(--todae-selection-thumb-inset));
+    margin: var(--todae-selection-thumb-inset);
+    border: var(--todae-selection-border-width) solid var(--todae-selection-thumb-border);
+    border-radius: 50%;
+    background: var(--todae-selection-thumb-bg);
+    transform: translateX(0);
+    transition: transform var(--todae-selection-motion-duration) var(--todae-selection-motion-easing);
+  }
+
+  .root[data-control='switch'] .input:checked + .indicator::after {
+    transform: translateX(calc(var(--todae-selection-size) * 0.8));
+  }
+
+  /* The thumb starts at the inline start, so it travels the other way in rtl. */
+  .root[data-control='switch']:dir(rtl) .input:checked + .indicator::after {
+    transform: translateX(calc(var(--todae-selection-size) * -0.8));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .indicator > [data-todae-glyph] {
+      scale: 1;
+    }
+
+    .root[data-control='radio'] .indicator::after {
+      scale: 1;
+      transition-property: opacity;
+    }
+
+    .root[data-control='switch'] .indicator::after {
+      transition: none;
+    }
+  }
+
+  .label {
+    min-width: 0;
+  }
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-selection-gap);
+  }
+
+  .group[data-orientation='horizontal'] {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Forced colors drop author backgrounds but keep system colors, so paint the
+     dot, thumb and on-track with system colors. The thumb's edge takes its
+     fill's color, so the thumb draws as one solid disc. The check is a glyph in
+     the text color, which forcing keeps. Forcing stays on, so focus rings and
+     other states are still forced. */
+  @media (forced-colors: active) {
+    .root[data-control='radio'] .input:checked + .indicator::after,
+    .root[data-control='switch'] .indicator::after {
+      background: CanvasText;
+      border-color: CanvasText;
+    }
+
+    .root[data-control='switch'] .input:checked + .indicator {
+      background: Highlight;
+      border-color: Highlight;
+    }
+
+    .root[data-control='switch'] .input:checked + .indicator::after {
+      background: HighlightText;
+      border-color: HighlightText;
+    }
+
+    .root[data-disabled][data-control='radio'] .input:checked + .indicator::after,
+    .root[data-disabled][data-control='switch'] .indicator::after,
+    .root[data-disabled][data-control='switch'] .input:checked + .indicator::after {
+      background: GrayText;
+      border-color: GrayText;
+    }
+
+    .root[data-disabled][data-control='switch'] .input:checked + .indicator {
+      background: Canvas;
+      border-color: GrayText;
+    }
+
+    .root[data-disabled] .glyph {
+      color: GrayText;
+    }
+  }
+}

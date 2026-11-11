@@ -1,0 +1,61 @@
+import CitationsExample from '../../../../examples/recipes/citations/CitationsExample';
+
+export const description = "A recipe for citations in a reply: a numbered Link to the reply's sources, with an interactive Tooltip that previews each source.";
+
+# Citations
+
+A recipe, not a package namespace. A citation in a reply is a numbered [Link](/link) to the reply's list of sources, and an interactive [Tooltip](/tooltip) on that link previews the source. Your markdown renderer maps each citation in the reply to the marker. There is no `Citation.*` export.
+
+Hover over a number or move focus to it to preview its source. Follow it to jump to the list.
+
+<Example of={CitationsExample} block />
+
+## The marker
+
+Each marker is its own [useTooltip](/utilities/use-tooltip) with `interactive: true`, so the preview can hold the source's link and the pointer can cross onto it. Spread `getTriggerProps` on the marker's `Link.Root`, which points at the source's item in the list. The visible text is the number in brackets at the text's own size, about 18 to 22 by 20 CSS pixels in Todae's base theme. That is under the 24 by 24 of WCAG 2.2's Target Size (Minimum), which exempts a target in a sentence, so the marker meets it through that exception. The brackets are `aria-hidden`, so the link's name stays "Source 1" from the visually hidden word in front; keep them hidden if you restyle the marker. `Tooltip.Root` renders a `<span>`, so the marker and its preview sit inside the paragraph your renderer writes. Keep the preview's content to phrasing elements, such as a link, `<br />` and `Text.Root as="span"`; in development, Todae logs an error for a `<p>` or `<div>` in a tip.
+
+## The sources list
+
+List the sources after the reply's text, in a numbered `<ol>` inside [Prose](/prose), so the list's own numbers match the markers. Give each item an id the markers link to, made from one `useId()` per message, since a conversation holds many replies with a "source 1". Name the list from its heading with `aria-labelledby`.
+
+```tsx
+const id = useId();
+
+<Message.Root aria-label="Assistant">
+  <Message.Content>
+    <Prose.Root>
+      <p>
+        A tooltip is drawn in the top layer through the Popover API
+        <Citation number={1} source={sources[0]} href={`#${id}-source-1`} />.
+      </p>
+      <Text.Root id={`${id}-sources`} weight="bold">
+        Sources
+      </Text.Root>
+      <ol aria-labelledby={`${id}-sources`}>
+        {sources.map((source, index) => (
+          <li key={source.url} id={`${id}-source-${index + 1}`}>
+            <Link.Root href={source.url}>{source.title}</Link.Root>{' '}
+            <Text.Root as="span" tone="muted">
+              {source.site}
+            </Text.Root>
+          </li>
+        ))}
+      </ol>
+    </Prose.Root>
+  </Message.Content>
+</Message.Root>
+```
+
+## Accessible composition
+
+**Todae handles:** `useTooltip` opens the preview on hover after the `tooltip.delay.show` token and on keyboard focus at once, and adds the preview to the marker's `aria-describedby` while it is open. `Tooltip.Root` renders where you put it, so with it right after the marker, Tab moves from the marker into the preview's link. Escape closes it, and from inside it sends focus back to the marker. `Tooltip.Root` with `interactive` is a non-modal `role="dialog"` with no focus trap.
+
+**You supply:** A name for each marker, such as "Source 1", since a bare number says nothing out of context. A name for each preview, here its title through `aria-labelledby`. Ids for the list items that are unique on the page. A heading that names the sources list.
+
+**Watch for:** On a touch screen a tap follows the marker to the list and opens no preview, so keep everything the preview shows in the list too. Each marker adds a second Tab stop, its preview's link, while the preview is open. The list's numbers are the browser's list markers, so a CSS reset that removes them, such as Tailwind's preflight, leaves the list unnumbered. Links only in the preview: copy and other buttons belong in the list or in [Message actions](/recipes/message-actions). Markers shown apart from the sentence, such as a row of source chips under the reply, aren't in a sentence, so the exception doesn't cover them: give each one a target of at least 24 by 24 CSS pixels, or space them so that 24 pixel circles centered on each touch neither another target nor each other. Markers inside a reply that is still streaming: render a marker once its source is known, so its number and link don't change under the pointer.
+
+## When to use
+
+**When:** A reply that cites its sources inline, from search results, documents or tool output.
+
+**When not:** A list of sources with no markers in the text → the list alone. Footnotes on a docs page that need no preview → plain links to an `<ol>`. Attached files in a message → [Attachment](/attachment).

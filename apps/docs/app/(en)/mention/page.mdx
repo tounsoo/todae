@@ -1,0 +1,83 @@
+import { Table } from '@tounsoo/todae/table';
+import { ScrollRegion } from '../../../components/ScrollRegion';
+import ChatComposer from '../../../examples/recipes/chat-composer-mentions/ChatComposer';
+
+# Mention
+
+`defineMentionSource` describes a mention once. Pass that object to `useMentions` for suggestions, and to `MentionText` for the sent message. `renderPeek` is the only content of the peek. Todae draws it in a [Popover](/popover). The chat card that uses it, with a peek while the caret rests in a mention, is the [chat composer mentions](/recipes/chat-composer-mentions) recipe.
+
+```tsx
+const people = defineMentionSource({
+  char: '@',
+  options,
+  resolve: (id, signal) => loadPerson(id, signal),
+  peekLabel: (person) => person.name,
+  renderPeek: (person, peek) => (
+    <button type="button" onClick={peek.close}>
+      {person.name}
+    </button>
+  ),
+});
+```
+
+<Example of={ChatComposer} />
+
+## Keyboard
+
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Key</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Suggestion list</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Mention</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">ArrowDown / ArrowUp</Table.HeaderCell>
+      <Table.Cell>Move the active option</Table.Cell>
+      <Table.Cell />
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Enter or Tab</Table.HeaderCell>
+      <Table.Cell>Pick the option. Enter does not send</Table.Cell>
+      <Table.Cell>On a link, Enter follows the link</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Escape</Table.HeaderCell>
+      <Table.Cell>Close the list</Table.Cell>
+      <Table.Cell>Close the peek. Focus stays on the mention</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Space</Table.HeaderCell>
+      <Table.Cell />
+      <Table.Cell>Toggle the peek</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
+
+Todae has no caret peek of its own. While the caret is inside a token and the list is closed, `useMentions` returns `caretPeekAnchorName`, and the recipe opens a peek there that does not take focus and describes the textarea. Escape closes the list first, then that peek.
+
+## Peek
+
+A peek with a focusable control is a dialog named by `peekLabel`, or by the mention text. A text-only peek is the trigger's description and has no role. `peek.mode` is `interactive` on a sent mention. A caret peek you build passes `caret`, as the recipe does. On a sent mention, `peek.close()` closes the peek and returns focus to the mention.
+
+Hover or focus opens the peek and leaves focus where it is, so it closes when the pointer leaves or focus moves on. A click, or Space on a link, pins the peek open, moves focus into a dialog peek, and returns focus to the mention when it closes. The peek renders a `<span>`, so a mention can sit inside a paragraph, such as a `Text.Root`; its content renders from its first open and stays as it closes, so the card fades out with what it showed.
+
+## When to use
+
+A sent message should show a mention as a real button or link, with the same peek the composer recipe shows while the caret is in that mention.
+
+## When not
+
+A suggestion list that is not a mention → [useCombobox](/utilities/use-combobox). Painted tokens with no peek → [useMentions](/utilities/use-mentions) and `Field.Textarea`.
+
+## Props
+
+<PropsTable name="defineMentionSource" />
+
+<PropsTable name="Mention.Root" />
+
+<PropsTable name="MentionText" />

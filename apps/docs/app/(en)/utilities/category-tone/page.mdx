@@ -1,0 +1,43 @@
+import CategoryToneTags from '../../../../examples/utilities/category-tone/CategoryToneTags';
+
+export const description = 'categoryTone returns one of eight category tones for a string such as a user id or tag name, the same one on the server and in every browser.';
+
+# categoryTone
+
+`categoryTone(key)` returns one of the eight category tones, `category-1` to `category-8`, for a string such as a user id or a tag name. The same key returns the same tone on the server and in every browser, so a person or a tag keeps its color across pages and visits. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take the tone as `tone`, and [ChipList](/chip-list) takes `getTone`, such as `(value) => categoryTone(value)`.
+
+<Example of={CategoryToneTags} />
+
+## Keys and tones
+
+The tone comes from a hash of the key, so it can't be chosen and two keys can share one; with eight tones, a list of more than a few keys will repeat some. Text in a composed and a decomposed form, such as two ways of writing `é`, gets the same tone. Pass a key that stays the same, such as an id, rather than a display name someone can change.
+
+`CATEGORY_TONES` is the tuple of the eight names, and `CategoryTone` is one member of it:
+
+```tsx
+import { Avatar, CATEGORY_TONES, categoryTone, type CategoryTone } from '@tounsoo/todae';
+
+const tones: readonly CategoryTone[] = CATEGORY_TONES;
+
+<Avatar.Root label={name} tone={categoryTone(userId)} />
+```
+
+[Tokens](/tokens) has the `color.category` tokens the tones read.
+
+## Accessible composition
+
+**Todae handles:** Text on each tone's fill that meets Lc 75 in every appearance, which the token build checks.
+
+**You supply:** The category in text, such as the tag's name on the badge or the person's name on the avatar.
+
+**Watch for:** A tone as the only sign of a category: tones repeat and aren't named, so color alone can't tell two apart.
+
+## When to use
+
+**When:** A category tone that stays the same for a key, such as a user id or a tag name.
+
+**When not:** A tone that means something, such as a status → pick it yourself, such as `success` or `critical`.
+
+## Props
+
+<PropsTable name="categoryTone" />

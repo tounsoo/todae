@@ -1,0 +1,891 @@
+@layer todae.components {
+  .shell {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--todae-field-gap);
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: var(--todae-field-border-width) solid var(--todae-field-border-default);
+    border-radius: var(--todae-field-radius);
+    background: var(--todae-field-bg-default);
+    color: var(--todae-field-fg-default);
+    font-size: var(--todae-field-font-size);
+  }
+
+  .shell:hover:not([data-disabled]) {
+    border-color: var(--todae-field-border-hover);
+  }
+
+  .shell:has(> .textarea) {
+    padding: 0;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  .shell:has(:is(input:not([data-todae-value-input], [data-todae-one-time-code]), textarea, .swatch, .picker, [data-todae-field-control]:not([data-todae-one-time-code]), [data-todae-field-control] *):focus-visible) {
+    border-color: var(--todae-field-border-focus);
+    outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .shell[data-invalid] {
+    border-color: var(--todae-field-border-invalid);
+  }
+
+  .shell[data-invalid]:has(:is(input:not([data-todae-value-input], [data-todae-one-time-code]), textarea, .swatch, .picker, [data-todae-field-control]:not([data-todae-one-time-code]), [data-todae-field-control] *):focus-visible) {
+    outline-color: var(--todae-field-ring-invalid);
+  }
+
+  .shell[data-disabled] {
+    background: var(--todae-field-bg-disabled);
+    color: var(--todae-field-fg-disabled);
+    border-color: var(--todae-field-border-disabled);
+    cursor: not-allowed;
+  }
+
+  .shell[data-disabled] :disabled {
+    cursor: inherit;
+  }
+
+  .input {
+    flex: 1 1 var(--todae-field-min-width);
+    min-width: var(--todae-field-min-width);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    outline: none;
+  }
+
+  .input::placeholder {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .input:disabled {
+    color: var(--todae-field-fg-disabled);
+  }
+
+  /* Field.NumberInput's figures line up, and so do those of a legacy type="number" TextInput. */
+  .input[data-todae-number-input],
+  .input[type='number'] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Field.Increment and Field.Decrement: a press steps the number and leaves
+     focus in the input. They are no taller than a line of field text, so they
+     leave the field's height alone. */
+  .stepButton {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--todae-field-stepper-size);
+    block-size: var(--todae-field-stepper-size);
+    margin-block: calc((1lh - var(--todae-field-stepper-size)) / 2);
+    padding: 0;
+    border: 0;
+    border-radius: var(--todae-field-stepper-radius);
+    background: transparent;
+    color: var(--todae-field-stepper-fg);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .stepButton:hover:not(:disabled) {
+    background: var(--todae-field-stepper-bg-hover);
+  }
+
+  .stepButton:active:not(:disabled) {
+    background: var(--todae-field-stepper-bg-active);
+  }
+
+  .stepButton:disabled {
+    color: var(--todae-field-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .stepGlyph {
+    display: inline-flex;
+  }
+
+  .stepGlyph > :is(svg, img) {
+    inline-size: var(--todae-field-icon-size);
+    block-size: var(--todae-field-icon-size);
+  }
+
+  /* The hover and pressed fill is all that shows them. */
+  @media (forced-colors: active) {
+    .stepButton:is(:hover, :active):not(:disabled) {
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  .textarea {
+    --_pad-block: calc(2 * var(--todae-field-padding-y));
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    outline: none;
+    overflow-y: auto;
+    resize: vertical;
+    border-end-end-radius: calc(var(--todae-field-radius) - var(--todae-field-border-width));
+    height: calc(var(--_text-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    height: calc(var(--_text-rows) * 1lh + var(--_pad-block));
+    min-height: calc(var(--_text-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block));
+  }
+
+  .textarea[data-max-rows] {
+    max-height: calc(var(--_max-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    max-height: calc(var(--_max-rows) * 1lh + var(--_pad-block));
+  }
+
+  .textarea[data-auto-grow] {
+    resize: none;
+  }
+
+  @supports (field-sizing: content) {
+    .textarea[data-auto-grow] {
+      field-sizing: content;
+      height: auto;
+      min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block));
+    }
+  }
+
+  .textarea::placeholder {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .textarea:disabled {
+    color: var(--todae-field-fg-disabled);
+  }
+
+  /* Highlights: a copy of the text, without color, behind the textarea, that
+     draws tokens. The textarea keeps its own text, caret and selection on top. */
+  .shell:has(> .highlights) {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .textarea[data-highlighted] {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Without anchor positioning the layer can't follow the textarea's box, so it isn't drawn. */
+  .highlights {
+    display: none;
+  }
+
+  @supports (top: anchor(top)) {
+    .highlights {
+      display: block;
+      position: absolute;
+      top: anchor(top);
+      bottom: anchor(bottom);
+      left: anchor(left);
+      right: anchor(right);
+      z-index: 0;
+      margin: 0;
+      border-style: solid;
+      border-color: transparent;
+      overflow: hidden;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      text-shadow: none;
+      pointer-events: none;
+      user-select: none;
+    }
+  }
+
+  /* Only a background: padding or a border would move the text after it. */
+  .token {
+    border-radius: var(--todae-field-token-radius);
+    background: var(--todae-field-token-bg);
+    box-decoration-break: clone;
+  }
+
+  .token[data-kind] {
+    background: var(--todae-mention-composing-bg);
+  }
+
+  @media (forced-colors: active) {
+    /* The textarea's forced background would hide the layer, so it goes on top and draws outlines only. */
+    .highlights {
+      z-index: 2;
+      forced-color-adjust: none;
+    }
+
+    .token {
+      background: none;
+      box-shadow: 0 0 0 1px CanvasText;
+    }
+  }
+
+  /* An icon from a library renders an svg: it takes the field's icon size. */
+  .icon > :is(svg, img),
+  .selectGlyph > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-field-icon-size);
+    block-size: var(--todae-field-icon-size);
+  }
+
+  /* An icon-only Button.Root in a field's line, such as a password's show
+     button: one line of field text tall, so the field keeps its height. Beside
+     chips that wrap it stays on the first line (the shell aligns to the start),
+     as an icon does. Not beside a textarea, whose shell has no padding and no
+     single line. The selector outweighs Button's own icon-only padding
+     (.root[data-icon-only]) whatever order the sheets load in. The press
+     rule for these buttons is lineButtonOf in Field.tsx. */
+  .shell:not(:has(> .textarea)) > :is(button, a)[data-icon-only] {
+    box-sizing: border-box;
+    flex: none;
+    inline-size: var(--todae-field-action-size);
+    block-size: var(--todae-field-action-size);
+    /* Centered on the field's line, which is the input's, not the button's own. */
+    margin-block: calc((var(--todae-field-font-size) * var(--todae-field-leading) - var(--todae-field-action-size)) / 2);
+    padding: 0;
+  }
+
+  .adornment {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    height: 1lh;
+    color: var(--todae-field-fg-adornment);
+  }
+
+  .shell:has(> .textarea) > .adornment {
+    align-self: start;
+    height: 1lh;
+    margin-top: var(--todae-field-padding-y);
+  }
+
+  .shell:has(> .textarea) > .adornment:has(~ .textarea) {
+    padding-inline-start: var(--todae-field-padding-x);
+  }
+
+  .shell:has(> .textarea) > .textarea ~ .adornment {
+    padding-inline-end: var(--todae-field-padding-x);
+  }
+
+  .shell:has(> .adornment ~ .textarea) > .textarea {
+    padding-inline-start: var(--todae-field-gap);
+  }
+
+  .shell:has(> .textarea ~ .adornment) > .textarea {
+    padding-inline-end: var(--todae-field-gap);
+  }
+
+  .shell:has(> [data-todae-counter]) {
+    flex-wrap: wrap;
+    row-gap: var(--todae-field-messages-gap);
+  }
+
+  .shell:has(> [data-todae-counter]) > :is(.input, .textarea) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shell:has(> [data-todae-counter]) > .adornment {
+    flex-shrink: 0;
+  }
+
+  .shell:has(> [data-todae-counter]) > [data-todae-counter] {
+    flex: 0 0 100%;
+    order: 1;
+    text-align: end;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .shell:has(> .textarea):has(> [data-todae-counter]) {
+    row-gap: 0;
+  }
+
+  .shell:has(> .textarea):has(> [data-todae-counter]) > [data-todae-counter] {
+    align-self: end;
+    padding: 0 var(--todae-field-padding-x) var(--todae-field-padding-y);
+  }
+
+  .counter {
+    font-size: var(--todae-field-description-font-size);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--todae-field-description-font-weight);
+    color: var(--todae-field-description-fg);
+  }
+
+  .counter[data-limit] {
+    color: var(--todae-field-fg-default);
+    font-weight: var(--todae-field-counter-emphasis-weight);
+  }
+
+  .counter[data-over],
+  .counter[data-invalid] {
+    color: var(--todae-field-error-fg);
+  }
+
+  .counter[data-over] {
+    font-weight: var(--todae-field-counter-emphasis-weight);
+  }
+
+  .counter[data-disabled] {
+    color: var(--todae-field-fg-disabled);
+  }
+
+  .flow {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 0;
+    gap: var(--todae-field-gap);
+    width: 100%;
+    --_chip-row-h: calc(var(--todae-field-font-size) * var(--todae-field-leading));
+  }
+
+  .flow > span {
+    box-sizing: border-box;
+    height: var(--_chip-row-h);
+    padding-block: 0;
+  }
+
+  /* Clips the rows past maxRows. Like ChipList's clip, it pads by a focus
+     ring's room and gives it back with a matching negative margin, so a chip's
+     ring at the edge is never cut. Border-box, so the width and max-height add
+     the room the padding takes; useChipMeasure plans with the content width.
+     The row layout's clip below repeats these declarations. */
+  .flow[data-max-rows] {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    box-sizing: border-box;
+    flex-basis: calc(100% + 2 * var(--_ring-room));
+    width: calc(100% + 2 * var(--_ring-room));
+    max-height: calc(
+      var(--_chip-row-h) * var(--_chip-rows) +
+        var(--todae-field-gap) * (var(--_chip-rows) - 1) + 2 * var(--_ring-room)
+    );
+    margin: calc(-1 * var(--_ring-room));
+    padding: var(--_ring-room);
+    overflow: hidden;
+    align-content: flex-start;
+  }
+
+  .flow[data-max-rows]:not([data-measured]) > :not(input) {
+    visibility: hidden;
+  }
+
+  .measure {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    width: 100%;
+    display: flex;
+    visibility: hidden;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .measure > span {
+    flex: none;
+    max-width: none;
+  }
+
+  /* Outside the shell: a label or caption, the control, then Description and ErrorMessage.
+     Closed popovers are display: none and open ones sit in the top layer, so neither takes a gap. */
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-field-label-gap);
+  }
+
+  /* The gap already spaces the messages, so their own top margins step aside. */
+  .group > :is([data-todae-description], [data-todae-error]) {
+    margin-block-start: 0;
+  }
+
+  /* An ErrorMessage after a Description is field.messages.gap below it, as outside a group. */
+  .group > [data-todae-description] + [data-todae-error] {
+    margin-block-start: calc(var(--todae-field-messages-gap) - var(--todae-field-label-gap));
+  }
+
+  .row {
+    box-sizing: border-box;
+    display: flex;
+    flex: 0 0 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--todae-field-gap);
+    min-width: 0;
+  }
+
+  .row:empty {
+    display: none;
+  }
+
+  .shell:has(> .row:not(:empty)) {
+    flex-wrap: wrap;
+  }
+
+  .shell:has(> .row:not(:empty)) > :is(.input, .textarea, .flow) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shell > .textarea ~ .row {
+    padding: 0 var(--todae-field-padding-x) var(--todae-field-padding-y);
+  }
+
+  .shell > .row:has(~ .textarea) {
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x) 0;
+  }
+
+  .shell > .textarea:has(~ .row:not(:empty)) {
+    border-end-end-radius: 0;
+  }
+
+  .row > [data-icon-only] {
+    box-sizing: border-box;
+    flex: none;
+    inline-size: var(--todae-field-row-control-size);
+    block-size: var(--todae-field-row-control-size);
+    padding: 0;
+  }
+
+  .flow > .row[data-max-rows] {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    box-sizing: border-box;
+    flex-basis: calc(100% + 2 * var(--_ring-room));
+    width: calc(100% + 2 * var(--_ring-room));
+    max-height: calc(
+      var(--_chip-row-h) * var(--_chip-rows) +
+        var(--todae-field-gap) * (var(--_chip-rows) - 1) + 2 * var(--_ring-room)
+    );
+    margin: calc(-1 * var(--_ring-room));
+    padding: var(--_ring-room);
+    overflow: hidden;
+    align-content: flex-start;
+  }
+
+  .flow > .row[data-max-rows]:not([data-measured]) > * {
+    visibility: hidden;
+  }
+
+  .flow > .row > span {
+    box-sizing: border-box;
+    height: var(--_chip-row-h);
+    padding-block: 0;
+  }
+
+  /* The select fills the shell, so a press anywhere opens it. An Icon or
+     Affix beside it keeps the shell's padding on its own side. */
+  .shell:has(> .select) {
+    padding-block: 0;
+  }
+
+  /* With no block padding on the shell, an Icon, Affix or line button beside
+     the select is centered on it, not set at the shell's top edge. */
+  .shell:has(> .select) > :is(.adornment, :is(button, a)[data-icon-only]) {
+    align-self: center;
+  }
+
+  .shell:has(> .select:first-child) {
+    padding-inline-start: 0;
+  }
+
+  .shell:has(> .select:last-child) {
+    padding-inline-end: 0;
+  }
+
+  /* Field.Picker's button with `swatch`: one line of field text tall, filled with its color. */
+  .swatch {
+    flex: none;
+    box-sizing: border-box;
+    inline-size: 1lh;
+    block-size: 1lh;
+    margin: 0;
+    padding: 0;
+    border: var(--todae-field-border-width) solid var(--todae-field-swatch-border);
+    border-radius: var(--todae-field-swatch-radius);
+    background: var(--_swatch);
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    cursor: pointer;
+    /* The shell draws the focus ring. */
+    outline: none;
+  }
+
+  .swatch:disabled {
+    cursor: not-allowed;
+  }
+
+  /* The swatch is the color, so forced colors must not replace it. */
+  @media (forced-colors: active) {
+    .swatch {
+      forced-color-adjust: none;
+    }
+  }
+
+  /* A press in the field opens the picker, unless a text input there takes it. */
+  .shell:not([data-disabled]):has(> .swatch):not(:has(> :is(.input, .textarea))) {
+    cursor: pointer;
+  }
+
+  /* With nothing beside it but its popover, the field is as wide as the swatch. */
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[data-todae-value-input]))) {
+    inline-size: fit-content;
+  }
+
+  /* Field.Picker's button, a glyph at the field's end. */
+  .picker {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-adornment);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    cursor: pointer;
+    /* The shell draws the focus ring. */
+    outline: none;
+  }
+
+  /* A calendar is a fixed size, six weeks at most, so the popover holds it
+     whole rather than scrolling it at the popover's list height. */
+  .pickerPopover:popover-open:has([data-todae-calendar-cell]) {
+    max-height: none;
+  }
+
+  .picker:disabled {
+    color: inherit;
+    cursor: not-allowed;
+  }
+
+  .pickerGlyph {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    block-size: 1lh;
+  }
+
+  .pickerGlyph > :is(svg, img) {
+    inline-size: var(--todae-field-icon-size);
+    block-size: var(--todae-field-icon-size);
+  }
+
+  /* A press in the field opens the picker, unless a typed input there takes it. */
+  .shell:not([data-disabled]):has(> .picker):not(:has(> :is(.input, .textarea))) {
+    cursor: pointer;
+  }
+
+  .select {
+    appearance: base-select;
+    flex: 1 1 var(--todae-field-min-width);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--todae-field-gap);
+    min-width: var(--todae-field-min-width);
+    width: 100%;
+    margin: 0;
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .select:disabled {
+    color: var(--todae-field-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  /* The chevron glyph from GlyphsProvider sits over the browser's picker icon,
+     which keeps its place. Only when the select ends the field: an Icon or
+     Affix after it would sit where the chevron goes. */
+  .selectGlyph {
+    display: none;
+  }
+
+  /* The select reaches the shell's edge, as when it is the last part. */
+  .shell:has(> .select + .selectGlyph:last-child) {
+    padding-inline-end: 0;
+  }
+
+  /* Only where the browser lets the picker icon be hidden: elsewhere the
+     select keeps its own arrow and the glyph stays hidden. */
+  @supports selector(::picker-icon) {
+    .shell:has(> .select + .selectGlyph:last-child) {
+      position: relative;
+    }
+
+    .select:has(+ .selectGlyph:last-child)::picker-icon {
+      visibility: hidden;
+    }
+
+    .select + .selectGlyph:last-child {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-end: var(--todae-field-padding-x);
+      display: flex;
+      align-items: center;
+      color: var(--todae-field-fg-placeholder);
+      font-size: var(--todae-field-icon-size);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .select:disabled + .selectGlyph {
+      color: var(--todae-field-fg-disabled);
+    }
+  }
+
+  .select::picker-icon {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .select::picker(select) {
+    appearance: base-select;
+    box-sizing: border-box;
+    margin-block: var(--todae-space-1);
+    padding: var(--todae-field-picker-padding-y) var(--todae-field-picker-padding-x);
+    border: var(--todae-field-border-width) solid var(--todae-field-picker-border);
+    border-radius: var(--todae-field-picker-radius);
+    background: var(--todae-field-picker-bg);
+    color: var(--todae-field-picker-fg);
+    box-shadow: var(--todae-field-picker-shadow);
+    max-height: var(--todae-field-picker-max-height);
+  }
+
+  .select option {
+    padding: var(--todae-option-padding-y) var(--todae-option-padding-x);
+    border-radius: var(--todae-option-radius);
+    background: var(--todae-option-bg-default);
+    color: var(--todae-option-fg-default);
+    font-size: var(--todae-option-font-size);
+    font-weight: var(--todae-option-font-weight);
+    line-height: var(--todae-option-leading);
+  }
+
+  .select option:is(:hover, :focus-visible):not(:disabled) {
+    background: var(--todae-option-bg-hover);
+    outline: none;
+  }
+
+  .select option:checked {
+    background: var(--todae-option-bg-selected);
+    color: var(--todae-option-fg-selected);
+  }
+
+  .select option::checkmark {
+    color: var(--todae-option-check-fg);
+  }
+
+  .select option:disabled {
+    color: var(--todae-option-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    /* As specific as the outline: none above, which it must beat. */
+    .select option:is(:hover, :focus-visible):not(:disabled) {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+  }
+
+  /* Field.OneTimeCode: the shell draws nothing around the code, since each box
+     draws its own border, background and focus ring. */
+  .shell:has(> .oneTimeCode) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  /* Fills the field's row, with the boxes at its start, so the transparent
+     input covers the room after the last box, where a press or a drop is past
+     the code. Left to right like the input, also in a right-to-left page, so
+     that room is after the code. */
+  .oneTimeCode {
+    position: relative;
+    display: flex;
+    direction: ltr;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  /* Transparent rather than hidden: it stays the focusable, clickable input,
+     and a browser's autofill color can't paint over the boxes. */
+  .oneTimeCodeInput {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    opacity: 0;
+    outline: none;
+  }
+
+  .oneTimeCodeInput:disabled {
+    cursor: not-allowed;
+  }
+
+  .slots {
+    --_ring: var(--todae-field-ring-focus);
+    display: flex;
+    min-inline-size: 0;
+    gap: var(--todae-field-code-gap);
+    pointer-events: none;
+  }
+
+  .slot {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 auto;
+    inline-size: var(--todae-field-code-slot-inline-size);
+    min-inline-size: 0;
+    block-size: var(--todae-field-code-slot-block-size);
+    border: var(--todae-field-border-width) solid var(--todae-field-border-default);
+    border-radius: var(--todae-field-code-slot-radius);
+    background: var(--todae-field-bg-default);
+    color: var(--todae-field-fg-default);
+    font-size: var(--todae-field-code-slot-font-size);
+    line-height: var(--todae-field-leading);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shell:hover:not([data-disabled]) .oneTimeCodeInput:not(:read-only) + .slots .slot {
+    border-color: var(--todae-field-border-hover);
+  }
+
+  .shell[data-invalid] .slots {
+    --_ring: var(--todae-field-ring-invalid);
+  }
+
+  .shell[data-invalid] .slot {
+    border-color: var(--todae-field-border-invalid);
+  }
+
+  .shell[data-disabled] .slot {
+    background: var(--todae-field-bg-disabled);
+    color: var(--todae-field-fg-disabled);
+    border-color: var(--todae-field-border-disabled);
+  }
+
+  /* Transparent until the row is the active part: it gives revealRing the room
+     of a ring around any box, the moment focus lands, before the active box
+     renders. */
+  .oneTimeCodeInput:focus-visible + .slots {
+    outline: var(--todae-focus-ring-width) solid transparent;
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  /* The caret after a full code is in no box, so the row shows the ring. */
+  .oneTimeCodeInput:focus-visible + .slots[data-active] {
+    outline: var(--todae-focus-ring-width) solid var(--_ring);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
+    border-color: var(--todae-field-border-focus);
+    outline: var(--todae-focus-ring-width) solid var(--_ring);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .shell[data-invalid] .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
+    border-color: var(--todae-field-border-invalid);
+  }
+
+  .oneTimeCodeInput:read-only + .slots .slot[data-caret]::after {
+    display: none;
+  }
+
+  .slot[data-caret]::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 0;
+    margin: auto;
+    inline-size: var(--todae-field-code-caret-width);
+    block-size: 1lh;
+    background: var(--todae-field-code-caret-color);
+    animation: todae-code-caret var(--todae-field-code-caret-motion-duration) steps(1) infinite;
+  }
+
+  @keyframes todae-code-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* A steady caret still shows where the next character goes. */
+  @media (prefers-reduced-motion: reduce) {
+    .slot[data-caret]::after {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    /* The row keeps its transparent outline, which revealRing measures, and
+       the boxes take the system colors. */
+    .slots {
+      forced-color-adjust: none;
+    }
+
+    .slot {
+      forced-color-adjust: auto;
+    }
+
+    .oneTimeCodeInput:focus-visible + .slots[data-active] {
+      outline-color: Highlight;
+    }
+
+    .oneTimeCodeInput:focus-visible + .slots .slot[data-active] {
+      border-color: Highlight;
+    }
+
+    .slot[data-caret]::after {
+      background: CanvasText;
+    }
+  }
+}

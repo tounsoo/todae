@@ -1,0 +1,106 @@
+import { fileURLToPath } from 'node:url';
+import { normalizePath } from 'vite';
+import { defineConfig, type Plugin } from 'vitest/config';
+import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
+
+// ICU reads LANG when the worker process starts, before Vitest applies test.env.
+if (process.env.VITEST) pinTestLocale();
+
+// Forward slashes on every platform, as in Vite's module ids.
+const src = (path: string) => normalizePath(fileURLToPath(new URL(`./src/${path}`, import.meta.url)));
+
+const entries = {
+  index: src('index.ts'),
+  // Server-safe parts: no hooks, no context, no 'use client'.
+  stack: src('server/stack.ts'),
+  text: src('server/text.ts'),
+  label: src('server/label.ts'),
+  badge: src('server/badge.ts'),
+  card: src('server/card.ts'),
+  'data-list': src('server/data-list.ts'),
+  'empty-state': src('server/empty-state.ts'),
+  message: src('server/message.ts'),
+  breadcrumbs: src('server/breadcrumbs.ts'),
+  grid: src('server/grid.ts'),
+  pagination: src('server/pagination.ts'),
+  link: src('server/link.ts'),
+  disclosure: src('server/disclosure.ts'),
+  separator: src('server/separator.ts'),
+  prose: src('server/prose.ts'),
+  table: src('server/table.ts'),
+  progress: src('server/progress.ts'),
+  meter: src('server/meter.ts'),
+  loader: src('server/loader.ts'),
+  skeleton: src('server/skeleton.ts'),
+  slider: src('server/slider.ts'),
+  code: src('server/code.ts'),
+  'code-block': src('server/code-block.ts'),
+  kbd: src('server/kbd.ts'),
+  'visually-hidden': src('server/visually-hidden.ts'),
+};
+
+function emitPackageCss(): Plugin {
+  const entryFiles = new Set(Object.values(entries));
+  return {
+    name: 'emit-package-css',
+    transform(code, id) {
+      if (!entryFiles.has(id)) return;
+      // A layer's place is fixed where it is first named, and the bundled CSS
+      // starts with whichever entry comes first, so every entry imports the
+      // layer order before any component CSS.
+      const layers = `import ${JSON.stringify(src('styles/layers.css'))};\n`;
+      if (id === entries.index) {
+        const body = code.replace(/^['"]use client['"];\s*/, '');
+        return `'use client';\n${layers}import './styles/todae.css';\n${body}`;
+      }
+      return `${layers}${code}`;
+    },
+    generateBundle(_opts, bundle) {
+      for (const item of Object.values(bundle)) {
+        if (item.type === 'chunk') {
+          item.code = item.code.replace(/import\s*["']\.\/todae\.css["'];?\n?/, '');
+        }
+      }
+    },
+  };
+}
+
+export default defineConfig({
+  esbuild: { jsx: 'automatic' },
+  css: {
+    modules: {
+      generateScopedName: 'todae_[local]_[hash:hex:6]',
+    },
+  },
+  plugins: [emitPackageCss()],
+  build: {
+    lib: {
+      entry: entries,
+      formats: ['es'],
+      fileName: (_format, name) => `${name}.js`,
+      cssFileName: 'todae',
+    },
+    rollupOptions: {
+      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      onwarn(warning, warn) {
+        // Handled by the banner below.
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.message.includes('"use client"')) return;
+        warn(warning);
+      },
+      output: {
+        // Rollup drops module-level directives when bundling, so the client
+        // boundary is written onto the main entry chunk itself.
+        banner: (chunk) => (chunk.isEntry && chunk.name === 'index' ? "'use client';" : ''),
+        chunkFileNames: 'chunks/[name]-[hash].js',
+      },
+    },
+    cssCodeSplit: false,
+  },
+  test: {
+    env: testLocaleEnv,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'scripts/**/*.test.ts'],
+    exclude: ['src/**/*.browser.test.tsx', '**/node_modules/**'],
+  },
+});

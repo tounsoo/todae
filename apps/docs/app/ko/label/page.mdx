@@ -1,0 +1,40 @@
+import FieldLabelStates from '../../../examples/field/FieldLabelStates';
+import LabelSibling from '../../../examples/label/LabelSibling';
+
+# Label
+
+컨트롤의 보이는 이름입니다. 복합 컴포넌트의 파트가 아니라 형제 요소입니다. `htmlFor`는 필수이며 컨트롤 id와 같아야 합니다. Field라면 `Field.Root`의 id입니다. Label 자체는 컨트롤이 아닙니다.
+
+Server Components에서는 `@tounsoo/todae/label`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`와 훅이 없습니다. 기본 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
+
+## Field와 함께
+
+Label에는 마진이 없습니다. 레이블, 컨트롤, 그리고 [Description](/description)이나 [ErrorMessage](/errormessage)를 `Field.Group`에 넣으세요. `Field.Group`은 레이블을 컨트롤 위 `field.label.gap`(0.4rem) 간격에 둡니다.
+
+<Example of={LabelSibling} block />
+
+필드 하나에 `Field.Group` 하나를 씁니다. 순서는 Label, 컨트롤, 그리고 Description과 ErrorMessage입니다. ErrorMessage가 Description 뒤에 오면 둘 사이 간격은 `field.messages.gap`(0.2rem)입니다. 여러 필드를 그룹 하나에 넣지 마세요. 그룹들을 `Stack.Root` 안에 넣으세요. `stack.gap`은 필드 사이의 밀도 간격이지, 레이블과 셸 사이의 간격이 아닙니다.
+
+## 상태
+
+비활성과 유효하지 않음 상태는 `Field.Root`에 있습니다. Label은 다시 칠해지지 않습니다. 필수 표시는 레이블 텍스트에 직접 씁니다.
+
+<Example of={FieldLabelStates} block />
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Label.Root`은 네이티브 `<label>`을 렌더링하고, 타입에서 `htmlFor`를 요구합니다. 나머지는 브라우저가 합니다. 텍스트가 컨트롤의 접근 가능한 이름이 되고, 레이블을 클릭하면 컨트롤에 포커스가 가거나 컨트롤이 토글됩니다. Label은 ARIA, 필수 표시, disabled나 invalid 스타일을 더하지 않습니다.
+
+**직접 제공할 것:** `htmlFor`에 컨트롤의 id를 넣으세요. Field라면 `Field.Root`의 id이며, Root가 그 id를 입력에 넘깁니다. 필수 표시는 텍스트에 쓰고, `required`는 입력 자체에 설정하세요. Field에서는 `Field.Root`가 아니라 `Field.TextInput` 같은 입력 파트입니다. 레이블을 화면에서만 숨기려면 레이블 안의 텍스트를 [VisuallyHidden](/visually-hidden)으로 감싸세요. 그래도 컨트롤의 이름이 됩니다.
+
+**주의할 점:** `htmlFor`는 입력, select, textarea처럼 레이블을 붙일 수 있는 요소만 이름 짓습니다. `role="radiogroup"` div나 자체 role을 가진 [useField](/utilities/use-field) 컨트롤은 이름을 얻지 못합니다. 그럴 때는 `aria-labelledby`를 쓰세요. Checkbox, Radio, Switch는 이미 children을 label로 감싸므로 Label을 따로 붙이지 마세요. placeholder 텍스트는 레이블이 아닙니다.
+
+## 언제 쓰나요
+
+**언제:** 형제 요소로 배치하는 컨트롤의 보이는 이름. `htmlFor` = 컨트롤 id(Field라면 `Field.Root`의 id). 필수 표시는 텍스트에 넣습니다.
+
+**쓰지 않을 때:** `Field.Root` 안. Checkbox / Radio / Switch(자식이 레이블입니다). 그룹 캡션 → RadioGroup의 `aria-label` / `aria-labelledby`. 힌트 텍스트 → Description.
+
+## Props
+
+<PropsTable name="Label.Root" />

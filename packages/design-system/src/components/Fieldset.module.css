@@ -1,0 +1,20 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--todae-fieldset-gap);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .legend {
+    margin: 0 0 var(--todae-fieldset-legend-gap);
+    padding: 0;
+    font-size: var(--todae-fieldset-legend-font-size);
+    font-weight: var(--todae-fieldset-legend-font-weight);
+    color: var(--todae-fieldset-legend-fg);
+  }
+}

@@ -1,0 +1,500 @@
+import { act, render, screen, waitFor } from '@testing-library/react';
+import { server } from 'vitest/browser';
+import axe from 'axe-core';
+import { useEffect, useState } from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
+import { Alert, Conversation, Message } from '../index.js';
+import { emulateMedia } from '../test/media.js';
+
+const politeRegion = () => document.querySelector<HTMLElement>('body > [data-todae-announcer] > [aria-live="polite"]');
+
+const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+// Once every animation on the page has run, such as a new message growing in,
+// and the viewport has followed the size it ends at.
+const settled = async () => {
+  await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+  await frame();
+};
+
+afterEach(() => {
+  for (const node of document.querySelectorAll('[data-todae-announcer]')) node.remove();
+});
+
+function Thread({ count, streaming = false, failed = false }: { count: number; streaming?: boolean; failed?: boolean }) {
+  return (
+    <div data-appearance="light" data-density="comfortable">
+      <Conversation.Root style={{ blockSize: '200px', inlineSize: '400px' }}>
+        <Conversation.Viewport data-testid="viewport">
+          <Conversation.Content>
+            {Array.from({ length: count }, (_, i) => (
+              <Message.Root key={i} streaming={streaming && i === count - 1} aria-label={`Message ${i + 1}`}>
+                <Message.Content style={{ blockSize: '60px' }}>Message {i + 1}</Message.Content>
+                {failed && i === count - 1 && <Alert.Root tone="critical">Failed</Alert.Root>}
+              </Message.Root>
+            ))}
+          </Conversation.Content>
+        </Conversation.Viewport>
+        <Conversation.ScrollButton data-testid="scroll" />
+      </Conversation.Root>
+    </div>
+  );
+}
+
+const distanceToEnd = (el: HTMLElement) => el.scrollHeight - el.clientHeight - el.scrollTop;
+
+describe('Conversation in a browser', () => {
+  it('opens at the end, as a region named Conversation', () => {
+    render(<Thread count={10} />);
+    const viewport = screen.getByRole('region', { name: 'Conversation' });
+    expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    expect(screen.getByTestId('scroll').hidden).toBe(true);
+  });
+
+  it('follows the end while the content grows', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    rerender(<Thread count={14} />);
+    await settled();
+    expect(distanceToEnd(screen.getByTestId('viewport'))).toBeLessThanOrEqual(1);
+  });
+
+  it('stops following when the reader scrolls up, and shows the scroll button', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    await frame();
+    rerender(<Thread count={14} />);
+    await frame();
+    expect(viewport.scrollTop).toBe(0);
+    await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+    expect(screen.getByTestId('scroll').getAttribute('aria-label')).toBe('Scroll to latest message');
+  });
+
+  it('scrolls to the end from the button, and hands its focus to the viewport', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      render(<Thread count={10} />);
+      const viewport = screen.getByTestId('viewport');
+      await frame();
+      viewport.scrollTop = 0;
+      const button = await waitFor(() => {
+        const el = screen.getByTestId('scroll');
+        expect(el.hidden).toBe(false);
+        return el;
+      });
+      button.focus();
+      act(() => button.click());
+      await frame();
+      expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+      expect(button.hidden).toBe(true);
+      expect(document.activeElement).toBe(viewport);
+    } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('lands the glide by conversation.motion.duration.glide', async () => {
+    // A glide given no time lands in the press, where the default would take
+    // a share of the way in this frame.
+    document.documentElement.style.setProperty('--_todae-conversation-motion-duration-glide', '0ms');
+    try {
+      render(<Thread count={40} />);
+      const viewport = screen.getByTestId('viewport');
+      await frame();
+      viewport.scrollTop = 0;
+      await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+      act(() => screen.getByTestId('scroll').click());
+      expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    } finally {
+      document.documentElement.style.removeProperty('--_todae-conversation-motion-duration-glide');
+    }
+  });
+
+  it('reaches the end from the button while a message keeps growing', async () => {
+    function Growing() {
+      const [count, setCount] = useState(40);
+      const [grow, setGrow] = useState(false);
+      useEffect(() => {
+        if (!grow) return;
+        const timer = setInterval(() => setCount((c) => c + 1), 16);
+        return () => clearInterval(timer);
+      }, [grow]);
+      return (
+        <>
+          <Thread count={count} />
+          <button type="button" data-testid="grow" onClick={() => setGrow(true)}>
+            Grow
+          </button>
+        </>
+      );
+    }
+    render(<Growing />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+    // Read the distance once the conversation has handled each resize, since
+    // resize observers run in the order they were made. A task between a new
+    // message and that handling sees the end one message away, and with a
+    // message every 16ms on a slow run, nearly every task falls there.
+    let left = Infinity;
+    const after = new ResizeObserver(() => {
+      left = distanceToEnd(viewport);
+    });
+    after.observe(screen.getAllByRole('article')[0]!.parentElement!);
+    try {
+      act(() => screen.getByTestId('grow').click());
+      act(() => screen.getByTestId('scroll').click());
+      await waitFor(() => expect(left).toBeLessThanOrEqual(1), { timeout: 2000 });
+    } finally {
+      after.disconnect();
+    }
+    expect(screen.getByTestId('scroll').hidden).toBe(true);
+  });
+
+  it('stops following when the reader scrolls up a pixel or two at a time', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    for (let i = 0; i < 3; i++) {
+      viewport.scrollTop -= 1;
+      await frame();
+    }
+    const top = viewport.scrollTop;
+    rerender(<Thread count={14} />);
+    await frame();
+    expect(viewport.scrollTop).toBe(top);
+    expect(screen.getByTestId('scroll').hidden).toBe(false);
+  });
+
+  it('follows again once the end comes to the reader', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+    rerender(<Thread count={1} />);
+    await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(true));
+    rerender(<Thread count={12} />);
+    await settled();
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+  });
+
+  it('draws the scroll button over positioned parts of a message, and keeps focus clear of it', async () => {
+    render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    for (const content of viewport.querySelectorAll<HTMLElement>('article > div')) content.style.position = 'relative';
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
+    // The button's height reaches the scroll padding in the frame it shows.
+    await frame();
+    const box = button.getBoundingClientRect();
+    expect(button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))).toBe(true);
+    const padding = parseFloat(getComputedStyle(viewport).scrollPaddingBottom);
+    expect(padding).toBeGreaterThanOrEqual(viewport.getBoundingClientRect().bottom - box.top);
+  });
+
+  it('announces when a message starts and finishes arriving', async () => {
+    const { rerender } = render(<Thread count={3} />);
+    rerender(<Thread count={4} streaming />);
+    await waitFor(() => expect(politeRegion()?.textContent).toBe('New message'));
+    rerender(<Thread count={4} />);
+    await waitFor(() => expect(politeRegion()?.textContent).toBe('Message complete'));
+  });
+
+  it('leaves a failed message to its alert', async () => {
+    const { rerender } = render(<Thread count={3} streaming />);
+    rerender(<Thread count={4} streaming />);
+    await waitFor(() => expect(politeRegion()?.textContent).toBe('New message'));
+    rerender(<Thread count={4} failed />);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(politeRegion()?.textContent).toBe('New message');
+  });
+
+  it('reads only the start when one message finishes as another starts', async () => {
+    function Turns({ step }: { step: number }) {
+      return (
+        <Conversation.Root style={{ blockSize: '200px' }}>
+          <Conversation.Viewport>
+            <Conversation.Content>
+              <Message.Root streaming={step === 1} aria-label="Tool">
+                <Message.Content>Tool</Message.Content>
+              </Message.Root>
+              {step === 2 && (
+                <Message.Root streaming aria-label="Reply">
+                  <Message.Content>Reply</Message.Content>
+                </Message.Root>
+              )}
+            </Conversation.Content>
+          </Conversation.Viewport>
+        </Conversation.Root>
+      );
+    }
+    const { rerender } = render(<Turns step={0} />);
+    rerender(<Turns step={1} />);
+    await waitFor(() => expect(politeRegion()?.textContent).toBe('New message'));
+    act(() => politeRegion()!.replaceChildren());
+    rerender(<Turns step={2} />);
+    await waitFor(() => expect(politeRegion()?.textContent).toBe('New message'));
+  });
+
+  it('shows the chevron when its children render nothing', async () => {
+    render(
+      <Conversation.Root style={{ blockSize: '100px' }}>
+        <Conversation.Viewport>
+          <Conversation.Content>
+            <div style={{ blockSize: '400px' }} />
+          </Conversation.Content>
+        </Conversation.Viewport>
+        <Conversation.ScrollButton data-testid="scroll">{false}</Conversation.ScrollButton>
+      </Conversation.Root>,
+    );
+    const button = screen.getByTestId('scroll');
+    expect(button.querySelector('[data-todae-glyph] svg')).not.toBeNull();
+    expect(button.getAttribute('aria-label')).toBe('Scroll to latest message');
+  });
+
+  it.each([
+    ['[false, false]', [false, false]],
+    ['true', true],
+  ])('shows the chevron when its children are %s', (_, children) => {
+    render(
+      <Conversation.Root>
+        <Conversation.Viewport>
+          <Conversation.Content />
+        </Conversation.Viewport>
+        <Conversation.ScrollButton data-testid="scroll">{children}</Conversation.ScrollButton>
+      </Conversation.Root>,
+    );
+    const button = screen.getByTestId('scroll');
+    expect(button.querySelector('[data-todae-glyph] svg')).not.toBeNull();
+    expect(button.getAttribute('aria-label')).toBe('Scroll to latest message');
+  });
+
+  it('keeps following when content above shrinks as the end grows', async () => {
+    function Collapsing({ step }: { step: number }) {
+      return (
+        <Conversation.Root style={{ blockSize: '200px' }}>
+          <Conversation.Viewport data-testid="viewport">
+            <Conversation.Content>
+              <div style={{ blockSize: step ? '20px' : '120px' }} />
+              {Array.from({ length: 10 }, (_, i) => (
+                <div key={i} style={{ blockSize: '60px' }} />
+              ))}
+              <div style={{ blockSize: step ? '160px' : '60px' }} />
+            </Conversation.Content>
+          </Conversation.Viewport>
+          <Conversation.ScrollButton data-testid="scroll" />
+        </Conversation.Root>
+      );
+    }
+    const { rerender } = render(<Collapsing step={0} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Collapsing step={1} />);
+    viewport.dispatchEvent(new Event('scroll'));
+    await frame();
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    expect(screen.getByTestId('scroll').hidden).toBe(true);
+  });
+
+  it('keeps the reader in place while hidden and shown again', async () => {
+    function Hideable({ hidden }: { hidden: boolean }) {
+      return (
+        <div hidden={hidden}>
+          <Thread count={10} />
+        </div>
+      );
+    }
+    const { rerender } = render(<Hideable hidden={false} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 100;
+    // Read back: an engine may snap the offset to a device pixel, and put it back to the nearest one.
+    const kept = viewport.scrollTop;
+    await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+    rerender(<Hideable hidden />);
+    await frame();
+    rerender(<Hideable hidden={false} />);
+    await frame();
+    expect(Math.abs(viewport.scrollTop - kept)).toBeLessThanOrEqual(1);
+    expect(screen.getByTestId('scroll').hidden).toBe(false);
+  });
+
+  it.each([
+    ['the density changes', (root: HTMLElement) => root.setAttribute('data-density', 'spacious')],
+    ['its inset changes', (root: HTMLElement) => root.style.setProperty('--todae-conversation-scroll-button-inset', '120px')],
+  ])('keeps the scroll padding past the shown button when %s', async (_, change) => {
+    const { container } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
+    await frame();
+    change(container.querySelector<HTMLElement>('[data-density]')!);
+    await frame();
+    const cover = viewport.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
+    expect(parseFloat(getComputedStyle(viewport).scrollPaddingBottom)).toBeGreaterThanOrEqual(cover - 0.5);
+  });
+
+  it('measures a scroll button that mounts after the root', async () => {
+    function Late({ ready }: { ready: boolean }) {
+      return (
+        <div data-appearance="light" data-density="comfortable">
+          <Conversation.Root style={{ blockSize: '200px', inlineSize: '400px' }}>
+            <Conversation.Viewport data-testid="viewport">
+              <Conversation.Content>
+                <div style={{ blockSize: '800px' }} />
+              </Conversation.Content>
+            </Conversation.Viewport>
+            {ready && <Conversation.ScrollButton data-testid="scroll" />}
+          </Conversation.Root>
+        </div>
+      );
+    }
+    const { rerender } = render(<Late ready={false} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Late ready />);
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
+    await frame();
+    const cover = viewport.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
+    expect(parseFloat(getComputedStyle(viewport).scrollPaddingBottom)).toBeGreaterThanOrEqual(cover - 0.5);
+  });
+
+  it('turns scroll anchoring off in the same task that following starts', async () => {
+    render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    await waitFor(() => expect(viewport.hasAttribute('data-following')).toBe(false));
+    viewport.scrollTop = viewport.scrollHeight;
+    viewport.dispatchEvent(new Event('scroll'));
+    expect(getComputedStyle(viewport).overflowAnchor).toBe('none');
+  });
+
+  // WebKit and Firefox can't animate a height to auto yet, so there it only fades.
+  const grows = CSS.supports('interpolate-size', 'allow-keywords');
+
+  it.runIf(grows)('grows a message added at the end into place, so the messages above slide up', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    const previous = screen.getByRole('article', { name: 'Message 10' });
+    const start = previous.getBoundingClientRect().top;
+    rerender(<Thread count={11} />);
+    const added = screen.getByRole('article', { name: 'Message 11' });
+    await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+    const [growth] = added.getAnimations();
+    expect(growth).toBeDefined();
+    growth!.pause();
+    growth!.currentTime = Number(growth!.effect!.getComputedTiming().duration) / 2;
+    await frame();
+    // Halfway, clipped, adding no scroll range for the part not yet shown,
+    // while the viewport keeps the end in view.
+    expect(added.offsetHeight).toBeGreaterThan(0);
+    expect(added.offsetHeight).toBeLessThan(added.scrollHeight);
+    expect(getComputedStyle(added).overflowY).toBe('clip');
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    expect(previous.getBoundingClientRect().top).toBeLessThan(start);
+    growth!.play();
+    await settled();
+    expect(added.hasAttribute('data-todae-entering')).toBe(false);
+    expect(getComputedStyle(added).overflowY).toBe('visible');
+    expect(added.offsetHeight).toBe(added.scrollHeight);
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+  });
+
+  it.skipIf(grows)('fades a message added at the end in at full size where a height cannot animate to auto', async () => {
+    const { rerender } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Thread count={11} />);
+    const added = screen.getByRole('article', { name: 'Message 11' });
+    await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+    const animations = added.getAnimations();
+    expect(animations).toHaveLength(1);
+    const properties = animations[0]!.effect instanceof KeyframeEffect ? animations[0]!.effect.getKeyframes().flatMap(Object.keys) : [];
+    expect(properties).toContain('opacity');
+    expect(properties).not.toContain('blockSize');
+    expect(getComputedStyle(added).overflowY).toBe('visible');
+    await settled();
+    expect(added.hasAttribute('data-todae-entering')).toBe(false);
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+  });
+
+  it('fades a new message in at full size under reduced motion', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      const { rerender } = render(<Thread count={10} />);
+      await frame();
+      rerender(<Thread count={11} />);
+      const added = screen.getByRole('article', { name: 'Message 11' });
+      await waitFor(() => expect(added.hasAttribute('data-todae-entering')).toBe(true));
+      const animations = added.getAnimations();
+      expect(animations).toHaveLength(1);
+      const properties = animations[0]!.effect instanceof KeyframeEffect ? animations[0]!.effect.getKeyframes().flatMap(Object.keys) : [];
+      expect(properties).toContain('opacity');
+      expect(properties).not.toContain('blockSize');
+      expect(getComputedStyle(added).overflowY).toBe('visible');
+      await settled();
+      expect(added.hasAttribute('data-todae-entering')).toBe(false);
+    } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('fades the scroll button in and out', async () => {
+    render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
+    // Read from style rather than the running animation, which a slow run can see end.
+    expect(getComputedStyle(button).animationName).toContain('todae-conversation-arrive');
+    await settled();
+    act(() => button.click());
+    await waitFor(() => expect(button.hidden).toBe(true));
+    if (server.browser === 'firefox') {
+      // Firefox can't keep a hidden element drawn while it fades yet, so it hides at once.
+      expect(getComputedStyle(button).display).toBe('none');
+      return;
+    }
+    // Still drawn while it fades out, but presses go through it.
+    expect(button.getAnimations().filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')).toHaveLength(1);
+    expect(getComputedStyle(button).display).not.toBe('none');
+    expect(getComputedStyle(button).pointerEvents).toBe('none');
+    await settled();
+    expect(getComputedStyle(button).display).toBe('none');
+  });
+
+  it('passes axe', async () => {
+    render(
+      <main>
+        <Thread count={10} />
+      </main>,
+    );
+    const results = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations).toEqual([]);
+  });
+});

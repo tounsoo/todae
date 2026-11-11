@@ -1,0 +1,60 @@
+import AvatarTones from '../../../examples/avatar/AvatarTones';
+import AvatarBesideName from '../../../examples/avatar/AvatarBesideName';
+import AvatarStates from '../../../examples/avatar/AvatarStates';
+import AvatarSizes from '../../../examples/avatar/AvatarSizes';
+
+# Avatar
+
+A picture of a person or a team, with a fallback such as initials. `Avatar.Fallback` shows while `Avatar.Image` loads, and stays when the image fails or there is none. The image draws over the fallback, which is removed once the image has loaded.
+
+<Example of={AvatarStates} />
+
+## Naming
+
+With `label`, the avatar is one image named by `label`, whichever of the image and the fallback shows, so a screen reader reads "Ada Lovelace" rather than "AL". `Avatar.Image` takes no `alt` for that reason.
+
+When the name is written next to the avatar, leave out `label`. The avatar is then decorative and hidden from assistive technology, so the name is not read twice.
+
+<Example of={AvatarBesideName} />
+
+## Sizes
+
+Avatar has no `size` prop. Todae does not ship a size scale. An avatar draws at `avatar.size`, 2rem. To change one, set `--todae-avatar-size`, or `inline-size` and `block-size`, on the avatar or on an ancestor with no `[data-appearance]` or `[data-density]` element and no scoped theme root between them. A ThemeProvider or a DensityProvider carries one of those attributes. Such an element, or a scoped theme root, in between declares the token again and drops the ancestor's value. The fallback text scales with `--todae-avatar-size` through `avatar.font.scale`.
+
+<Example of={AvatarSizes} />
+
+To change every avatar in a product, set `avatar.size` in your theme or in `ThemeProvider` overrides.
+
+Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape through `avatar.radius`.
+
+## Colors
+
+`tone` sets the avatar's colors, which show behind the fallback. `neutral`, the default, reads `avatar.bg` and `avatar.fg`. `category-1` to `category-8` read the `avatar.category-<n>` contract tokens, from `color.category.<n>`. To give each person a color that stays the same, pass a stable key such as a user id to [categoryTone](/utilities/category-tone):
+
+<Example of={AvatarTones} />
+
+## Stacked avatars
+
+A few avatars stacked, such as assignees, are the [Avatar group](/recipes/avatar-group) recipe: a `div` with `role="group"`, some `Avatar.Root`s, and CSS you copy.
+
+## Accessible composition
+
+**Todae handles:** With `label`, `Avatar.Root` is `role="img"` named by `aria-label`, and `Avatar.Image` renders `alt=""`, so the image and the initials share one name. Without `label`, the root is `aria-hidden`. The types leave out `role`, `aria-label` and `aria-labelledby` on the root and `alt` on the image, so a wrapper cannot add a second name by mistake.
+
+**You supply:** The choice between the two. A wrapper that shows a person should pass `label` when the avatar stands alone, such as in a row of participants, and leave it out when the name is written next to it. The name comes from your data; Todae does not read it from the fallback.
+
+**Watch for:** An avatar with no `label` as the only content of a button, a link or a [Menu](/menu) trigger: the avatar is hidden, so the control has no name. Give the control `aria-label`, or the avatar `label`. A presence dot or ring the wrapper adds shows status by color alone; put the status in text as well.
+
+## When to use
+
+**When:** A person, team or workspace shown in a list, a header or next to a message.
+
+**When not:** A picture with content of its own → `<img>` with real `alt` text. A status or count → [Badge](/badge). A control that opens a profile menu → put the avatar inside a [Menu](/menu) trigger, which carries the name.
+
+## Props
+
+<PropsTable name="Avatar.Root" />
+
+<PropsTable name="Avatar.Image" />
+
+<PropsTable name="Avatar.Fallback" />

@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "allowJs": false,
+    "types": ["node"],
+    "noUncheckedSideEffectImports": false,
+    "paths": {
+      "@tounsoo/todae": ["../../packages/design-system/src/index.ts"]
+    }
+  },
+  "include": ["src", "app", "vitest.config.ts", "../../packages/design-system/src/css.d.ts"]
+}

@@ -1,0 +1,63 @@
+{
+  "toast": {
+    "$description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones.",
+    "width": { "$type": "dimension", "$value": { "value": 22, "unit": "rem" } },
+    "inset": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+    "stack-gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+    "peek": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+    "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
+    },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+    },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+    "title": {
+      "font": {
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      }
+    },
+    "info": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/info/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/info/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/info/border/$value" } }
+    },
+    "success": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/success/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/success/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/success/border/$value" } }
+    },
+    "warning": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/warning/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/warning/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/warning/border/$value" } }
+    },
+    "critical": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/critical/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/critical/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/critical/border/$value" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+    },
+    "motion": {
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/notice/duration/enter/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/notice/duration/exit/$value" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      },
+      "offset": { "$type": "dimension", "$description": "How far a toast rises into place as it appears.", "$value": { "$ref": "#/space/2/$value" } }
+    }
+  }
+}

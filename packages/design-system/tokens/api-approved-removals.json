@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "removals": [
+    {
+      "path": "dialog.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "dialog.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "disclosure.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "disclosure.ring.radius",
+      "approved": "Renamed to disclosure.ring-radius, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "drawer.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "drawer.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "field.code.caret.blink-duration",
+      "approved": "Renamed to field.code.caret.motion.duration, so the caret's blink is named as every other loop's cycle is. Ben approved the rename on 2026-11-07 ('Do both'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of this path."
+    },
+    {
+      "path": "field.date-time.gap",
+      "approved": "Removed with DateTimeCalendar, which became a Calendar and OptionList recipe inside Field.Picker. Ben asked on 2026-11-09 ('Stop making HOC when it can be composited'), answering whether to drop DateTimeCalendar and these two tokens, under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "field.date-time.list.max-height",
+      "approved": "Removed with DateTimeCalendar, which became a Calendar and OptionList recipe inside Field.Picker. Ben asked on 2026-11-09 ('Stop making HOC when it can be composited'), answering whether to drop DateTimeCalendar and these two tokens, under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "focus.ring.color",
+      "approved": "Renamed to focus.ring, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "focus.ring.offset",
+      "approved": "Renamed to focus.ring-offset, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "focus.ring.width",
+      "approved": "Renamed to focus.ring-width, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "form.summary.link.decoration.offset",
+      "approved": "Renamed to form.summary.link.decoration-offset, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "form.summary.link.decoration.thickness",
+      "approved": "Renamed to form.summary.link.decoration-thickness, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "form.summary.link.ring.radius",
+      "approved": "Renamed to form.summary.link.ring-radius, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "link.decoration.current-thickness",
+      "approved": "Renamed to link.decoration-thickness.current, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "link.decoration.offset",
+      "approved": "Renamed to link.decoration-offset, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "link.decoration.thickness",
+      "approved": "Renamed to link.decoration-thickness.default, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "link.ring.radius",
+      "approved": "Renamed to link.ring-radius, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "message.actions.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "motion.modal.duration.enter",
+      "approved": "Renamed to motion.window.duration.enter and exit before any release: the motion role pull request (345) merged the centered window's role as modal, and Ben said 'Do what is best' on 2026-11-04 when asked whether to rename it, since Drawer and BottomSheet are modal too. His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "motion.modal.duration.exit",
+      "approved": "Renamed to motion.window.duration.enter and exit before any release: the motion role pull request (345) merged the centered window's role as modal, and Ben said 'Do what is best' on 2026-11-04 when asked whether to rename it, since Drawer and BottomSheet are modal too. His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "nav.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "overlay.motion.easing.enter",
+      "approved": "Folded into the core motion.easing.enter: each overlay's own motion.easing.enter points there, as every other component's does. Ben approved this on 2026-11-07 ('Do all 4', answering the overlay motion survey's four changes), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "overlay.motion.easing.exit",
+      "approved": "Folded into the core motion.easing.exit: each overlay's own motion.easing.exit points there, as every other component's does. Ben approved this on 2026-11-07 ('Do all 4', answering the overlay motion survey's four changes), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "picker.thumb.border.color",
+      "approved": "Renamed to picker.thumb.border, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "picker.thumb.border.width",
+      "approved": "Renamed to picker.thumb.border-width, so a sub-property no longer sits in a state slot. Ben approved renaming these on 2026-11-03 ('Go with your leans', answering the lean to rename to the focus.ring-width style), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "sheet.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "sheet.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "sheet.motion.resize",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "toast.enter-offset",
+      "approved": "Renamed to toast.motion.offset, beside its timing, as dialog.motion.offset is. Ben approved this on 2026-11-07 ('Do all 4', answering the overlay motion survey's four changes), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "toast.motion.enter",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "toast.motion.exit",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    },
+    {
+      "path": "tree.motion.duration",
+      "approved": "Renamed to motion.duration.enter and exit (sheet: duration.resize) for the motion gap item Ben started on 2026-11-03 ('Start this'), under his 0.x rule of 2026-11-02 ('clean it up without worrying about product use'). His merge of this pull request is the approval of these paths."
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+import { useLayoutEffect, useRef, type ChangeEvent, type InputHTMLAttributes, type Ref } from 'react';
+import { activeIn } from '../internal/activeElement.js';
+import { cx, useComposedRefs } from '../internal/props.js';
+import styles from './Field.module.css';
+import { useField } from './useField.js';
+import { useTextControl } from './useTextControl.js';
+import { warnOnce } from '../internal/warnOnce.js';
+
+/**
+ * Input types that take a string value. A number is `Field.NumberInput`, a
+ * time `Field.TimeInput`, a date `Field.DateInput`, a range of dates
+ * `Field.DateRangeInput` and both `Field.DateTimeInput`.
+ */
+export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password';
+
+export type FieldTextInputProps = {
+  value: string;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onValueChange?: (value: string) => void;
+  placeholder?: string;
+  type?: FieldTextInputType;
+  ref?: Ref<HTMLInputElement>;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange'>;
+
+export function TextInput({
+  value,
+  onChange,
+  onValueChange,
+  type = 'text',
+  className,
+  maxLength,
+  readOnly,
+  ref,
+  'aria-describedby': describedBy,
+  ...props
+}: FieldTextInputProps) {
+  const field = useField();
+  // Its own handle on the input, so a change of type, such as a password's show button switching
+  // to text, keeps the caret where it was rather than where the browser puts it.
+  const own = useRef<HTMLInputElement>(null);
+  const composedRef = useComposedRefs(own, ref);
+  const shownType = useRef(type);
+  useLayoutEffect(() => {
+    if (shownType.current === type) return;
+    shownType.current = type;
+    const input = own.current;
+    if (!input || activeIn(input) !== input) return;
+    // The selection is still the input's here: the caret it had, or the end of a value this commit
+    // wrote. Chromium puts the caret at the start when it next renders a focused input whose type
+    // changed, after anything set now, so put it back in the next frame.
+    const { selectionStart: start, selectionEnd: end, selectionDirection: direction } = input;
+    if (start == null || end == null) return;
+    const text = input.value;
+    const frame = requestAnimationFrame(() => {
+      if (activeIn(input) !== input || input.value !== text) return;
+      try {
+        input.setSelectionRange(start, end, direction ?? undefined);
+      } catch {
+        // A type with no selection, such as email.
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [type]);
+  // The type is gone from the union, but a product's cast or plain JavaScript can still pass it.
+  const legacyNumber = (type as string) === 'number';
+  if (legacyNumber) {
+    warnOnce('text-input-number', 'Field.TextInput no longer supports type="number"; use Field.NumberInput, which reads and writes a number in the locale\'s format.');
+  }
+  // Browsers ignore maxLength on a native number input, so that path shows and announces no limit, as it always did.
+  const limit = typeof maxLength === 'number' && !legacyNumber ? maxLength : undefined;
+  const text = useTextControl({ value, limit, describedBy, onChange, onValueChange, readOnly });
+  return (
+    <input
+      {...field.getControlProps({ ...props, ref: composedRef, 'aria-describedby': text.describedBy })}
+      maxLength={maxLength}
+      value={value}
+      type={type}
+      className={cx(styles.input, className)}
+      onChange={text.onChange}
+      readOnly={text.readOnly}
+    />
+  );
+}

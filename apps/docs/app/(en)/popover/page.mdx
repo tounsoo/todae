@@ -1,0 +1,83 @@
+import PopoverMenu from '../../../examples/utilities/use-popover/PopoverMenu';
+import PopoverVeto from '../../../examples/popover/PopoverVeto';
+import { Code } from '@tounsoo/todae/code';
+import { Table } from '@tounsoo/todae/table';
+
+# Popover
+
+[usePopover](/utilities/use-popover) is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover.Root`. `Popover.Root` is surface chrome only: `children`, `className`, `style`, and, with `role="dialog"`, an accessible name. There is no `Popover.Trigger` or `Popover.Content`. ARIA prohibits a name on an element with no role, so a role-less popover takes none: the type rejects `aria-label` and `aria-labelledby` there, and the element drops them. Name what is inside instead, such as the `OptionList.Root` of a menu or combobox. With `role="dialog"`, the type requires `aria-label` or `aria-labelledby`.
+
+`haspopup` sets the trigger's `aria-haspopup`: `dialog` by default, `listbox` for an OptionList in a role-less popover, `menu` for an action menu. For action menus, use [Menu](/menu).
+
+Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
+
+The surface is always in the page, so ids that point at it resolve, but what it holds mounts on the first open and stays mounted after it. A page of closed comboboxes, chip lists and coachmarks renders none of their content until one opens, and the content keeps its state between opens. Code or tests that read the content before the first open should open the popover first, and a form around a popover that never opened does not submit the fields inside it.
+
+No focus trap, no `aria-modal`, no scroll lock, and no inert while open. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
+
+Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRef` does the same when the trigger is not the anchor (Combobox Field). Content uses `position-anchor` and `top: calc(anchor(bottom) + var(--todae-popover-offset))`. The gap is the `popover.offset` token (`--todae-popover-offset`), which points at `space.1` (`0.25rem`). Flip is `@position-try --todae-popover-flip-block` plus `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`. There is no JS pin, no `getBoundingClientRect` follow, and no rAF scroll glue.
+
+A browser without CSS anchors does not place the surface next to its trigger. The surface resets the UA popover centering, so it sits near the top-left corner of the viewport, and it does not follow scroll or flip. Todae does not polyfill that. Safari 26+ has anchors. Safari 26 documents `position-try` with `position-area` names. `flip-block` is Chrome’s tactic. iOS before 26 has `popover` and no CSS anchors.
+
+The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `OptionList.Option` selects on `click` so closing the list cannot leave a leftover click on the page.
+
+The surface fades in while it grows from 96% (`popover.motion.scale`) out of the corner of its trigger, and fades and shrinks back as it closes, with the `popover.motion.*` duration and easing tokens. Menu opens and closes the same way, and the field pickers open the same way and go at once as they close. It moves the same way in Safari. While it closes it stays drawn but is inert, so no press or focus lands in it, and content that resets on close, such as a Drilldown, resets once the fade ends. A tooltip whose trigger is inside waits for the growth to settle before it opens, since it is placed against the trigger's unscaled box. Under reduced motion it only fades.
+
+## Examples
+
+A fruit picker: [usePopover](/utilities/use-popover) opens a `Popover.Root` that holds an option list.
+
+<Example of={PopoverMenu} />
+
+Veto outside clicks. Escape still closes. `onOpenChange` still receives `reason` so Combobox and this veto can ignore `outside`.
+
+<Example of={PopoverVeto} />
+
+`anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks. It also excludes that element from outside dismiss. Do not spread `getTriggerProps` and also pass `anchorRef` — dual-wire is a QA fail.
+
+Selecting in `OptionList` does not close the popover. The fruit demo closes on single select in the consumer.
+
+## What goes where
+
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Concern</Table.HeaderCell>
+      <Table.HeaderCell scope="col">API</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Behavior</Table.HeaderCell>
+      <Table.Cell>
+        <LocalizedLink href="/utilities/use-popover"><Code.Root>usePopover</Code.Root></LocalizedLink> — <Code.Root>open</Code.Root> / <Code.Root>defaultOpen</Code.Root> / <Code.Root>onOpenChange</Code.Root>, <Code.Root>haspopup</Code.Root>, <Code.Root>anchorRef</Code.Root>, focus refs, <Code.Root>enabled</Code.Root>, <Code.Root>id</Code.Root>
+      </Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Chrome</Table.HeaderCell>
+      <Table.Cell>
+        <Code.Root>Popover</Code.Root> — <Code.Root>children</Code.Root>, <Code.Root>className</Code.Root>, <Code.Root>style</Code.Root>, accessible name
+      </Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+
+## Accessible composition
+
+**Todae handles:** `getTriggerProps` sets `aria-expanded`, `aria-controls` and `aria-haspopup`; the surface is always mounted, so `aria-controls` always points at it. On open, focus moves to `initialFocusRef`, else the first tabbable element inside, else the surface itself. Escape and an outside press ask to close. On close, focus goes to `restoreFocusRef`, else back to what had focus before it opened, unless the person already moved it elsewhere. With `role="dialog"` the type requires a name, and Todae never sets `aria-modal`. When the surface scrolls past its max height, arrows show at the cut-off edges and scroll while a pointer rests on them, as on [ScrollArea](/scroll-area#arrows-at-a-cut-off-edge); they are hidden from assistive technology and never take focus, and `arrows={false}` turns them off.
+
+**You supply:** A trigger that is a real button, such as `Button.Root`: `getTriggerProps` adds `onClick` and ARIA, not a role, a tab stop or key handling. A `haspopup` that matches what opens: `dialog` with `role="dialog"` and a name on `Popover.Root`, or `listbox` with a named `OptionList.Root` in a role-less popover. For an action menu, use [Menu](/menu).
+
+**Watch for:** A role-less popover left on the default `haspopup` tells screen readers a dialog opened when none did. Pass your own `onClick` and `ref` through `getTriggerProps(props)`: put after the spread, they replace the hook's. There is no focus trap, and Tab can move out while the popover stays open, so don't use it for work that must keep focus; that is a Dialog.
+
+## When to use
+
+**When:** Non-modal anchored surface (listbox pickers, Combobox desktop list, light panels). Use [usePopover](/utilities/use-popover) + surface-only `Popover` — open/dismiss on the hook, chrome on the surface. Outside click + Escape dismiss. No focus trap.
+
+**When not:** Action menu → [Menu](/menu). Modal / focus-trapped work → Dialog. Mobile full-bleed picker → BottomSheet. Text-only hover hint → Tooltip.
+
+## Props
+
+The open machine's props are on [usePopover](/utilities/use-popover).
+
+<PropsTable name="Popover.Root" />

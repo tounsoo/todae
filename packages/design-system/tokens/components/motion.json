@@ -1,0 +1,40 @@
+{
+  "motion": {
+    "$description": "Motion roles: how long each kind of thing that appears and goes takes to enter and exit. A component's motion.duration.enter and exit point at one role, and the roles point at the core motion.duration scale, so a theme retimes a whole role in one place. A change between two states that both stay on screen points at the core scale instead, and a loop keeps its own cycle length.",
+    "reveal": {
+      "$description": "Content that opens in place inside the page.",
+      "duration": {
+        "enter": { "$type": "duration", "$description": "How long inline content takes to open.", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+        "exit": { "$type": "duration", "$description": "How long inline content takes to close.", "$value": { "$ref": "#/motion/duration/normal/$value" } }
+      }
+    },
+    "popup": {
+      "$description": "A surface anchored to its trigger.",
+      "duration": {
+        "enter": { "$type": "duration", "$description": "How long an anchored popup takes to grow in.", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
+        "exit": { "$type": "duration", "$description": "How long an anchored popup takes to shrink out.", "$value": { "$ref": "#/motion/duration/normal/$value" } }
+      }
+    },
+    "window": {
+      "$description": "A window centered over the page.",
+      "duration": {
+        "enter": { "$type": "duration", "$description": "How long a centered window takes to rise in.", "$value": { "$ref": "#/motion/duration/slow/$value" } },
+        "exit": { "$type": "duration", "$description": "How long a centered window takes to leave.", "$value": { "$ref": "#/motion/duration/normal/$value" } }
+      }
+    },
+    "panel": {
+      "$description": "A panel that slides in from an edge of the screen.",
+      "duration": {
+        "enter": { "$type": "duration", "$description": "How long an edge panel takes to slide in.", "$value": { "$ref": "#/motion/duration/slow/$value" } },
+        "exit": { "$type": "duration", "$description": "How long an edge panel takes to slide out.", "$value": { "$ref": "#/motion/duration/moderate/$value" } }
+      }
+    },
+    "notice": {
+      "$description": "A short-lived message that appears over the page on its own.",
+      "duration": {
+        "enter": { "$type": "duration", "$description": "How long a notice takes to appear.", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+        "exit": { "$type": "duration", "$description": "How long a notice takes to go.", "$value": { "$ref": "#/motion/duration/fast/$value" } }
+      }
+    }
+  }
+}

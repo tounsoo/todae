@@ -1,0 +1,83 @@
+import PopoverMenu from '../../../examples/utilities/use-popover/PopoverMenu';
+import PopoverVeto from '../../../examples/popover/PopoverVeto';
+import { Code } from '@tounsoo/todae/code';
+import { Table } from '@tounsoo/todae/table';
+
+# Popover
+
+[usePopover](/utilities/use-popover)가 열림 상태 머신입니다. 트리거에 `getTriggerProps`를 펼치세요. `Popover.Root`에 `getPopoverProps`를 펼치세요. `Popover.Root`는 표면 외형만 담당합니다. `children`, `className`, `style`, 그리고 `role="dialog"`일 때의 접근 가능한 이름입니다. `Popover.Trigger`나 `Popover.Content`는 없습니다. ARIA는 역할이 없는 요소에 이름을 금지하므로, 역할이 없는 팝오버는 이름을 받지 않습니다. 타입은 그곳의 `aria-label`과 `aria-labelledby`를 거부하고, 요소는 이를 버립니다. 대신 메뉴나 combobox의 `OptionList.Root`처럼 안에 있는 것에 이름을 붙이세요. `role="dialog"`일 때는 타입이 `aria-label`이나 `aria-labelledby`를 요구합니다.
+
+`haspopup`은 트리거의 `aria-haspopup`을 설정합니다. 기본값은 `dialog`이고, 역할이 없는 팝오버 안의 OptionList에는 `listbox`, 액션 메뉴에는 `menu`입니다. 액션 메뉴에는 [Menu](/menu)를 쓰세요.
+
+비모달 `popover="manual"`입니다. 바깥 클릭과 Escape는 `onOpenChange(false, reason)`을 호출합니다. `hidePopover()`는 `open`이 false가 된 뒤에만 실행되므로, 거부하면 계속 표시됩니다.
+
+표면은 항상 페이지에 있으므로 이를 가리키는 id는 찾을 수 있지만, 그 안의 내용은 처음 열릴 때 마운트되고 그 뒤로도 마운트된 채 남습니다. 닫힌 콤보박스, 칩 목록, 코치마크가 많은 페이지도 하나가 열리기 전까지는 그 내용을 렌더링하지 않으며, 내용은 열릴 때마다 상태를 유지합니다. 처음 열리기 전에 내용을 읽는 코드나 테스트는 먼저 팝오버를 열어야 하며, 한 번도 열리지 않은 팝오버를 감싼 폼은 그 안의 필드를 제출하지 않습니다.
+
+포커스 트랩, `aria-modal`, 스크롤 잠금이 없고, 열려 있는 동안 inert도 없습니다. 포털도 없습니다. 표면이 React 트리 안에 머물러 `ThemeProvider` 변수를 상속합니다.
+
+위치는 CSS 앵커로만 정합니다. `getTriggerProps`가 `anchor-name`을 설정합니다. 트리거가 앵커가 아닐 때(Combobox의 Field)는 `anchorRef`가 같은 일을 합니다. 콘텐츠는 `position-anchor`와 `top: calc(anchor(bottom) + var(--todae-popover-offset))`을 씁니다. 간격은 `popover.offset` 토큰(`--todae-popover-offset`)이며, `space.1`(`0.25rem`)을 가리킵니다. 뒤집기는 `@position-try --todae-popover-flip-block`과 `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`입니다. JS 고정, `getBoundingClientRect` 추적, rAF 스크롤 연결은 없습니다.
+
+CSS 앵커가 없는 브라우저는 표면을 트리거 옆에 놓지 않습니다. 표면은 UA의 팝오버 가운데 정렬을 초기화하므로 뷰포트 왼쪽 위 모서리 근처에 놓이고, 스크롤을 따라가거나 뒤집히지 않습니다. Todae는 이를 폴리필하지 않습니다. Safari 26 이상은 앵커를 지원합니다. Safari 26은 `position-try`를 `position-area` 이름과 함께 문서화합니다. `flip-block`은 Chrome의 방식입니다. 26 이전의 iOS는 `popover`는 있지만 CSS 앵커는 없습니다.
+
+표면은 최상위 레이어의 히트 대상입니다. `position: fixed; inset: unset; pointer-events: auto`입니다. 콘텐츠를 탭해도 아래로 통과하지 않습니다. `OptionList.Option`은 `click`에서 선택하므로, 목록이 닫혀도 페이지에 남은 클릭이 생기지 않습니다.
+
+표면은 트리거의 모서리에서 96%(`popover.motion.scale`)부터 커지며 나타나고, 닫힐 때는 작아지며 사라집니다. 시간과 곡선은 `popover.motion.*` 토큰을 씁니다. Menu도 같은 방식으로 열리고 닫히며, 필드 피커는 같은 방식으로 열리고 닫힐 때는 바로 사라집니다. Safari에서도 같은 방식으로 움직입니다. 닫히는 동안에는 화면에 그려지지만 비활성(inert) 상태라 누르거나 포커스가 들어가지 않고, Drilldown처럼 닫힐 때 초기화되는 콘텐츠는 페이드가 끝난 뒤에 초기화됩니다. 안에 트리거가 있는 툴팁은 트리거의 크기가 바뀌기 전 상자를 기준으로 배치되므로, 커지는 동작이 끝난 뒤에 열립니다. 동작 줄이기를 선호하면 페이드만 합니다.
+
+## 예시
+
+과일 선택기입니다. [usePopover](/utilities/use-popover)가 옵션 목록을 담은 `Popover.Root`를 엽니다.
+
+<Example of={PopoverMenu} />
+
+바깥 클릭을 거부합니다. Escape는 여전히 닫습니다. `onOpenChange`는 여전히 `reason`을 받으므로 Combobox와 이 거부 예시는 `outside`를 무시할 수 있습니다.
+
+<Example of={PopoverVeto} />
+
+트리거가 `getTriggerProps`가 표시하는 요소가 아닐 때는 `anchorRef`가 CSS 앵커입니다. 그 요소는 바깥 닫기에서도 제외됩니다. `getTriggerProps`를 펼치면서 `anchorRef`도 넘기지 마세요. 이중 연결은 QA 실패입니다.
+
+`OptionList`에서 선택해도 팝오버는 닫히지 않습니다. 과일 데모는 사용하는 쪽에서 단일 선택 시 닫습니다.
+
+## 무엇을 어디에 두나요
+
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">관심사</Table.HeaderCell>
+      <Table.HeaderCell scope="col">API</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">동작</Table.HeaderCell>
+      <Table.Cell>
+        <LocalizedLink href="/utilities/use-popover"><Code.Root>usePopover</Code.Root></LocalizedLink> — <Code.Root>open</Code.Root> / <Code.Root>defaultOpen</Code.Root> / <Code.Root>onOpenChange</Code.Root>, <Code.Root>haspopup</Code.Root>, <Code.Root>anchorRef</Code.Root>, 포커스 ref, <Code.Root>enabled</Code.Root>, <Code.Root>id</Code.Root>
+      </Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">외형</Table.HeaderCell>
+      <Table.Cell>
+        <Code.Root>Popover</Code.Root> — <Code.Root>children</Code.Root>, <Code.Root>className</Code.Root>, <Code.Root>style</Code.Root>, 접근 가능한 이름
+      </Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `getTriggerProps`는 `aria-expanded`, `aria-controls`, `aria-haspopup`을 설정합니다. 표면은 항상 마운트되어 있으므로 `aria-controls`는 언제나 표면을 가리킵니다. 열리면 포커스는 `initialFocusRef`로, 없으면 안쪽의 첫 번째 탭 가능한 요소로, 그것도 없으면 표면 자체로 갑니다. Escape와 바깥 누르기는 닫기를 요청합니다. 닫히면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 단, 사용자가 이미 다른 곳으로 옮겼다면 그대로 둡니다. `role="dialog"`일 때는 타입이 이름을 요구하고, Todae는 `aria-modal`을 설정하지 않습니다. 표면이 최대 높이를 넘어 스크롤되면 [ScrollArea](/scroll-area#arrows-at-a-cut-off-edge)에서처럼 잘린 가장자리에 화살표가 나타나고, 포인터를 올려 두는 동안 스크롤합니다. 화살표는 보조 기술에 드러나지 않고 포커스를 받지 않으며, `arrows={false}`로 끌 수 있습니다.
+
+**직접 제공할 것:** `Button.Root`처럼 진짜 버튼인 트리거입니다. `getTriggerProps`는 `onClick`과 ARIA를 더할 뿐, 역할, 탭 정지, 키 처리는 더하지 않습니다. 열리는 것과 맞는 `haspopup`도 필요합니다. `Popover.Root`에 `role="dialog"`와 이름을 줄 때는 `dialog`, 역할 없는 팝오버 안에 이름 붙은 `OptionList.Root`를 둘 때는 `listbox`입니다. 액션 메뉴에는 [Menu](/menu)를 쓰세요.
+
+**주의할 점:** 역할 없는 팝오버에 기본 `haspopup`을 그대로 두면, 스크린 리더는 없는 대화 상자가 열렸다고 알립니다. 직접 쓰는 `onClick`과 `ref`는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 훅의 것을 덮어씁니다. 포커스 트랩이 없고, 팝오버가 열린 채로 Tab으로 밖에 나갈 수 있습니다. 포커스를 붙잡아야 하는 작업에는 쓰지 마세요. 그런 작업은 Dialog입니다.
+
+## 언제 쓰나요
+
+**언제:** 앵커에 붙는 비모달 표면(listbox 선택기, Combobox 데스크톱 목록, 가벼운 패널). [usePopover](/utilities/use-popover) + 표면만 담당하는 `Popover`를 씁니다. 열기/닫기는 훅에, 외형은 표면에 둡니다. 바깥 클릭 + Escape로 닫습니다. 포커스 트랩은 없습니다.
+
+**쓰지 않을 때:** 액션 메뉴 → [Menu](/menu). 모달 / 포커스 트랩이 필요한 작업 → Dialog. 모바일 전체 폭 선택기 → BottomSheet. 텍스트만 있는 호버 힌트 → Tooltip.
+
+## Props
+
+열림 상태 머신의 props는 [usePopover](/utilities/use-popover)에 있습니다.
+
+<PropsTable name="Popover.Root" />

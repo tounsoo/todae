@@ -1,0 +1,60 @@
+# Keeps the commit-pinned actions in .github/workflows and .github/actions, and the npm packages in
+# pnpm-lock.yaml, current. Dependabot moves each action SHA and its version comment together. Version updates are
+# grouped and monthly, so a month brings at most four of them: one each for the workflows and the setup action,
+# and for npm one for minor and patch updates and one for majors. Security fixes, if the repository turns on
+# Dependabot security updates, come when an advisory is published, grouped into one npm pull request. That keeps
+# CI runs down. GitHub gives a Dependabot pull request no repository secrets, so Docs deploy builds no Vercel
+# preview for it; merging it deploys main as usual. Actions that only release.yml uses first run on main, so check
+# those bumps in the pull request before merging. A pull request that changes only the package's test-only
+# devDependencies needs no changeset; one that moves Vite, TypeScript or an @types package does, since they build
+# what ships (ci.yml, Changeset step).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
+
+  # The workspace root holds the one pnpm lockfile for every package.json in pnpm-workspace.yaml.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    # A release must be a week old before a version update proposes it, so a compromised or broken version has
+    # time to be pulled. Security updates don't wait.
+    cooldown:
+      default-days: 7
+    # Raises the range in package.json to the new version. Dependabot's default widens the ranges of a package it
+    # takes for a library, such as the published one, to ^4.1.12 || ^5.0.0.
+    versioning-strategy: increase
+    # Playwright's version must match the digest-pinned Docker image in ci.yml (apps/docs/test/image.test.ts),
+    # which Dependabot can't move, so Playwright is bumped by hand with the image.
+    ignore:
+      - dependency-name: playwright
+      - dependency-name: '@playwright/test'
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+        patterns:
+          - '*'
+      npm-major:
+        update-types:
+          - major
+        patterns:
+          - '*'
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - '*'
+    commit-message:
+      prefix: deps

@@ -1,0 +1,48 @@
+import FieldTimeInputPicker from '../../../../examples/field/time-input/FieldTimeInputPicker';
+import FieldTimeInputAlone from '../../../../examples/field/time-input/FieldTimeInputAlone';
+
+# Field.TimeInput
+
+`Field.TimeInput`은 [Field](/field) 안에서 하루 중 시각을 로캘의 방식대로 입력하는 텍스트 입력입니다. `value`는 `Temporal.PlainTime`이나 `null`입니다. 텍스트는 확정될 때, 즉 포커스를 잃을 때, Enter를 누를 때, 폼을 제출할 때 읽고, `formatTime`이 쓰는 대로 다시 쓴 뒤 그 시각으로 `onValueChange`를 호출합니다. 입력하는 것만으로는 아무것도 호출하지 않습니다. `onValueChange`가 없으면 입력은 읽기 전용입니다. [Field.DateInput](/field/date-input)처럼 동작하고, 뜻이 같은 props는 똑같이 받습니다.
+
+<Example of={FieldTimeInputPicker} block />
+
+여기서는 입력 옆의 [Field.Picker](/field/picker)가 [timeOptions](/utilities/time-options)로 만든 시각의 [OptionList](/optionlist)를 [Popover](/popover)로 엽니다. 입력과 목록이 같은 시각을 함께 쓰므로, `9:07`처럼 두 단계 사이에 입력한 시각도 목록의 제자리에 들어갑니다. 고르면 팝오버가 닫힙니다. `Field.TimeInput` 옆에서 선택기의 버튼은 시계 글리프를 보여 주고 `timePicker` 문자열로 이름이 붙습니다.
+
+## 입력한 시각 {/*#typed-times*/}
+
+`formatTime`은 시각을 `en-US`의 `9:30 PM`, `de`의 `21:30`처럼 로캘의 short 시각 스타일로 쓰고, `parseTime`은 `9:30 pm`이나 `2130`처럼 분과 로캘의 하루 중 때를 나타내는 단어가 있든 없든 입력한 시각을 읽습니다. 각각 무엇을 쓰고 읽는지는 [formatTime과 parseTime](/utilities/format-time)에 있습니다.
+
+`Field.TimeInput`은 자신의 `locale`로 텍스트를 `parseTime`으로 읽고 `formatTime`으로 씁니다. 빈 텍스트는 `null`로 확정됩니다. 시각이 아닌 텍스트는 입력한 그대로 남고, `onValueChange`는 호출되지 않으며, 확정하면서 읽으려다 실패한 뒤에는 필드가 유효하지 않음으로 표시됩니다. 텍스트가 시각이거나 비어 있을 때까지 폼은 제출되지 않습니다.
+
+## 단독으로
+
+단독으로 쓰면 `Field.TimeInput`이 버튼 없이 필드의 컨트롤입니다. 목록의 단계 사이에 있는 시각도 포함해 어떤 시각이든 입력할 수 있습니다.
+
+<Example of={FieldTimeInputAlone} block />
+
+시각은 텍스트 입력 옆의 네이티브 `<input type="time">`에 담겨, 필드의 `name`이나 입력 자체의 `name`으로, HTML이 쓰는 형식으로 폼과 함께 전송됩니다. 예: `09:30`, 초가 있으면 `09:30:15`. 텍스트 입력은 아무것도 보내지 않고, 네이티브 입력은 화면과 보조 기술에서 숨겨지며 탭 정지점이 아닙니다. `required`는 시각이 없는 폼을, `min`과 `max`는 그보다 이르거나 늦은 시각이 있는 폼을 유효하지 않게 합니다. `max`보다 늦은 `min`은 네이티브 시각 입력에서처럼 밤을 넘기는 범위입니다. 폼은 `min`부터 자정까지와 자정부터 `max`까지의 시각을 받고, [timeOptions](/utilities/time-options)도 같은 시각을 나열합니다. `max`와 `min` 사이의 빈 구간에 있는 시각은 범위를 벗어난 것이고, 메시지는 "Enter 10:00 PM or later"처럼 `min`을 말합니다. 브라우저가 네이티브 입력에서 세 가지를 모두 검사하고, 시각이 아닌 텍스트도 제출을 막습니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고 `min`이나 `max`는 `formatTime`이 시각을 쓰는 방식으로 표기되며, 포커스는 텍스트 입력으로 갑니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 텍스트 입력에 놓입니다.
+
+## Temporal
+
+Todae는 Temporal 폴리필을 포함하지 않습니다. 입력의 값과 `formatTime`, `parseTime`, `timeOptions`는 `Temporal.PlainTime`을 쓰므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 텍스트 입력은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 확정할 때 텍스트를 읽지 못하면 `aria-invalid`가, `required`가 있으면 `aria-required`가 붙습니다. [Field.Picker](/field/picker) 옆에서도 입력이 필드의 컨트롤이고, 선택기의 버튼은 [StringsProvider](/utilities/strings-provider)의 `timePicker` 문자열로 이름이 붙으며 [GlyphsProvider](/utilities/glyphs-provider)의 `clock` 글리프를 보여 줍니다. 팝오버는 같은 문자열로 이름이 붙은 `role="dialog"`입니다. 열리면 포커스가 목록으로 가고, 목록에서는 화살표 키, Home, End로 시각 사이를 옮기고 Enter나 Space로 고릅니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 시각 목록의 이름은 `OptionList.Root`의 `aria-label`로 주세요. 입력과 목록에는 같은 시각을, 입력과 `timeOptions`에는 같은 `locale`, `min`, `max`를 주세요.
+
+**주의할 점:** `value`가 있으면 서버는 그 시각을 서버의 로캘로 쓰므로, 서버에서 렌더링할 때는 `locale`을 넘기고 `timeOptions`에도 넘기세요. 레이블을 키로 쓰는 시각 목록도 조심하세요. 로캘마다 시각을 다르게 쓰므로, 옵션의 키는 `value`로 주세요.
+
+## 언제 쓰나요
+
+### Field.TimeInput
+
+**언제:** 영업시간, 매일 알림, 회의 시작처럼 하루 중 시각.
+
+**쓰지 않을 때:** 하나의 값인 날짜와 시각 → [Field.DateTimeInput](/field/date-time-input). 기간 → [Field.NumberInput](/field/number-input)과 단위를 보여 주는 `Affix`.
+
+## Props
+
+<PropsTable name="Field.TimeInput" />

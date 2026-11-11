@@ -1,0 +1,58 @@
+import ComboboxSheet from '../../../examples/recipes/combobox/ComboboxSheet';
+import BottomSheetBasic from '../../../examples/bottomsheet/BottomSheetBasic';
+
+# BottomSheet
+
+A modal sheet on a native `<dialog>` opened with `showModal()`. The browser puts it in the top layer, makes the page behind inert, keeps focus out of that page and sends Escape as a close request. The `::backdrop` is the scrim. Todae adds the scroll lock, the snap points and the drag. Mid and full snap. Drag from the grabber or from the body at `scrollTop === 0`. List scroll stays free.
+
+The sheet renders where you put it, so it takes the theme of its parent. That also means it takes the parent's native behavior: inside a `<form>` its inputs submit with that form, and inside `<fieldset disabled>` its controls are disabled. Render it outside forms, disabled fieldsets and hidden containers such as a closed popover or tab panel. In development, Todae logs an error when a sheet opens somewhere hidden.
+
+Enter slides up from below into the snap height (first-frame pose, not a height tween). Both overlays use `data-entered`; Dialog also keeps `@starting-style`. Exit slides off and unmounts on `transitionend` (240ms fallback). Drag keeps `transition: none`.
+
+<Example of={BottomSheetBasic} />
+
+The sheet renders where you place it, with no portal, so it inherits appearance, density and theme overrides like any other part. `dismissOnEscape={false}` sets `closedby="none"`, so the browser ignores Escape; otherwise Escape and a backdrop click call `onOpenChange(false, reason)`. A controlled sheet closes once you set `open` to false; an uncontrolled one closes right away. When something outside Todae closes the `<dialog>`, such as a script calling `close()`, `onOpenChange` gets the reason `native`.
+
+## In a combobox
+
+[useCombobox](/utilities/use-combobox) with `presentation: 'sheet'` shows its list in a BottomSheet. A `Button.Root` opens the sheet, and the search field and options sit inside it. The [Combobox](/recipes/combobox) recipe covers the rest of the combobox.
+
+<Example of={ComboboxSheet} />
+
+## Icons
+
+`BottomSheet.Close` with no content shows the `close` glyph, a cross unless a [GlyphsProvider](/utilities/glyphs-provider) sets one, and is named by the `close` string. To use a different icon for one close, put it in a `Button.Icon`.
+
+```tsx
+import { X } from 'lucide-react';
+
+<BottomSheet.Close>
+  <Button.Icon>
+    <X />
+  </Button.Icon>
+</BottomSheet.Close>
+```
+
+## Accessible composition
+
+**Todae handles:** The modal `<dialog>` behaviour above. `BottomSheet.Title` and `BottomSheet.Description` set `aria-labelledby` and `aria-describedby`, and `BottomSheet.Close` falls back to the `close` string when neither its own text nor an `aria-label` names it. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. When `snapPoints` include both heights, the grabber is a `<button>` named by the `resizeSheet` string ("Resize sheet") with `aria-expanded` true at `full`. A press, Enter or Space toggles between `mid` and `full`, so a screen reader, a switch or a tap resizes the sheet without a drag. ArrowUp snaps to `full`, ArrowDown steps down to `mid`, and from `mid` ArrowDown closes the sheet when `dismissOnDrag` is on. With one height there is nothing to resize, so the grabber is a decorative mark and not a tab stop. When the owner turns down a drag-dismiss, the sheet goes back to its snap height.
+
+**You supply:** A name: `BottomSheet.Title`, or `aria-label` on `BottomSheet.Root`. In development, an open sheet with no name logs an error. An `initialFocusRef` on the control the task starts with, such as a search field: otherwise focus starts on the first tabbable element, which is the default grabber when the sheet has two heights. A visible `BottomSheet.Close` or footer button, since a drag or a backdrop tap needs a pointer.
+
+**Watch for:** A placed `BottomSheet.Grabber` passes its `aria-label` to the button, when the sheet has two heights and the grabber is one; a wrapper that drops it leaves the `resizeSheet` string, English unless [StringsProvider](/utilities/strings-provider) sets it. With `dismissOnEscape`, `dismissOnBackdrop` and `dismissOnDrag` all false, a button inside the sheet is the only way out. A wrapper that renders its own heading instead of `BottomSheet.Title` must pass `aria-labelledby`.
+
+## When to use
+
+**When:** Modal sheet from the bottom (touch Combobox closed control, mobile pickers). Scrim, modal focus, snap mid/full.
+
+**When not:** Desktop anchored non-modal → Popover. Centered confirm/form → Dialog. Hover tip → Tooltip.
+
+## Props
+
+<PropsTable name="BottomSheet.Root" />
+
+<PropsTable name="BottomSheet.Grabber" />
+
+<PropsTable name="BottomSheet.Title" />
+
+<PropsTable name="BottomSheet.Close" />

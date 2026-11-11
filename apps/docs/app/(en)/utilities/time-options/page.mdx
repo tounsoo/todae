@@ -1,0 +1,37 @@
+import TimeOptionsList from '../../../../examples/utilities/time-options/TimeOptionsList';
+
+export const description = 'timeOptions returns a list of times every few minutes between a start and an end, with ISO values and labels for an OptionList of times.';
+
+# timeOptions
+
+`timeOptions({ step, min, max, value, locale })` returns the times for an [OptionList](/optionlist) of times: a time every `step` minutes from midnight, 30 by default, between `min` and `max`. Each one is an object with an ISO `value` such as `09:30:00` for an `OptionList.Option`, a `label` as [formatTime](/utilities/format-time) writes it in `locale`, and the `Temporal.PlainTime` itself as `time`.
+
+<Example of={TimeOptionsList} />
+
+## Picking from the list
+
+Give the `OptionList.Root` the picked time's `value.toString()` as its value and read a pick back with `Temporal.PlainTime.from`. Pass the same time as `value` to `timeOptions`: a time between two steps, such as `9:07` typed into a [Field.TimeInput](/field/time-input), is then in the list in its place, and stays picked. A `value` outside `min` and `max` is left out.
+
+Inside a [Field.Picker](/field/picker) beside a `Field.TimeInput`, the list picks the time and closes the picker. [Field.TimeInput](/field/time-input) shows it.
+
+## Overnight ranges
+
+A `min` later than `max` is an overnight range, as a native time input reads it: the list runs from `min` to midnight and from midnight to `max`, in order from midnight. With `min` at 22:00 and `max` at 02:00, it lists the times up to 2:00 AM first and 10:00 PM onwards last. For the times of one day beside a calendar, keep `min` before `max`.
+
+## Accessible composition
+
+**Todae handles:** Text for each time in the `locale` you pass, or the runtime's own when you pass none. `OptionList` handles the list's keys and selection.
+
+**You supply:** A name for the list, with `aria-label` or `aria-labelledby` on `OptionList.Root`. The same `locale`, `min` and `max` as the input the list sits beside.
+
+**Watch for:** Keying options by their labels: two locales write a time differently, so key them by `value`. On a server with no `locale`, the labels use the server's locale.
+
+## When to use
+
+**When:** A list of times to pick from, in an `OptionList.Root` inside a [Field.Picker](/field/picker) or on the page.
+
+**When not:** A few times that aren't evenly spaced, such as the slots a shop has free → your own `OptionList.Option`s.
+
+## Props
+
+<PropsTable name="timeOptions" />

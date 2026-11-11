@@ -1,0 +1,6 @@
+---
+description: Graft wiring lives at the repo root
+alwaysApply: true
+---
+Graft Cursor wiring (rules, MCP pin `@nanonets/graft@0.18.0`, hooks) lives at
+the repo-root `.cursor/`. Use that.

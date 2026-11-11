@@ -1,0 +1,204 @@
+@layer todae.components {
+  /* :where() so a host with one class, such as Pagination's item, wins the
+     tie on font and padding. A container that restyles its buttons, such as
+     ToggleGroup, sets the --_button-* inputs; unset, they fall back to the
+     variant's tokens. */
+  :where(.root) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    cursor: pointer;
+    background: var(--_button-bg-default, var(--todae-button-bg-default));
+    color: var(--_button-fg-default, var(--todae-button-fg-default));
+    border: var(--todae-button-border-width) solid var(--_button-border-default, var(--todae-button-border-default));
+    border-radius: var(--_button-radius, var(--todae-button-radius));
+    padding: var(--_button-padding-y, var(--todae-button-padding-y)) var(--_button-padding-x, var(--todae-button-padding-x));
+    font-size: var(--todae-button-font-size);
+    font-weight: var(--todae-button-font-weight);
+    letter-spacing: var(--todae-button-font-letter-spacing);
+    text-transform: var(--todae-button-font-text-transform);
+    gap: var(--todae-button-gap);
+    /* The variant's shadow, dropped while disabled and inside a joined group,
+       where it would paint over the next segment. */
+    --_lift: var(--todae-button-shadow);
+    box-shadow: var(--_lift);
+    max-width: 100%;
+    min-width: 0;
+    text-decoration: none;
+    /* The hover colors fade in and out. Every other state takes its colors at
+       once, below, and the focus ring never fades. */
+    transition-property: background-color, color, border-color;
+    transition-duration: var(--todae-control-motion-duration);
+    transition-timing-function: var(--todae-control-motion-easing);
+  }
+
+  .label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* A pressed toggle keeps the active colors and an inset ring, so the state
+     does not rest on color alone. Hover keeps them too, since a hover fill can
+     be lighter than the pressed one, and the ring stays when the toggle is
+     disabled. */
+  .root[aria-pressed='true'] {
+    background: var(--_button-bg-pressed, var(--todae-button-bg-active));
+    color: var(--_button-fg-pressed, var(--todae-button-fg-active));
+    border-color: var(--_button-border-pressed, var(--todae-button-border-active));
+    box-shadow:
+      inset 0 0 0 var(--_button-pressed-ring-width, var(--todae-button-pressed-ring-width)) currentColor,
+      var(--_lift);
+  }
+
+  .root:hover:not(:disabled, [aria-disabled='true'], a:not(:any-link)) {
+    background: var(--_button-bg-hover, var(--todae-button-bg-hover));
+    color: var(--_button-fg-hover, var(--todae-button-fg-hover));
+    border-color: var(--_button-border-hover, var(--todae-button-border-hover));
+  }
+
+  .root:active:not(:disabled, [aria-disabled='true'], a:not(:any-link)) {
+    background: var(--_button-bg-active, var(--todae-button-bg-active));
+    color: var(--_button-fg-active, var(--todae-button-fg-active));
+    border-color: var(--_button-border-active, var(--todae-button-border-active));
+  }
+
+  .root[aria-pressed='true']:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--_button-bg-pressed, var(--todae-button-bg-active));
+    color: var(--_button-fg-pressed, var(--todae-button-fg-active));
+    border-color: var(--_button-border-pressed, var(--todae-button-border-active));
+  }
+
+  .root:focus-visible {
+    background: var(--_button-bg-focus, var(--todae-button-bg-focus));
+    color: var(--_button-fg-focus, var(--todae-button-fg-focus));
+    border-color: var(--_button-border-focus, var(--todae-button-border-focus));
+    outline: var(--todae-focus-ring-width) solid var(--todae-button-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  /* A press, keyboard focus, a pressed toggle and a disabled button take their
+     colors at once; only hover fades. Leaving one of them fades back. */
+  .root:is(:active, :focus-visible, [aria-pressed='true'], :disabled, [aria-disabled='true'], a:not(:any-link)) {
+    transition: none;
+  }
+
+  /* Focus adds its ring but keeps a pressed toggle's colors. */
+  .root[aria-pressed='true']:where(:focus-visible:not(:disabled)) {
+    background: var(--_button-bg-pressed, var(--todae-button-bg-active));
+    color: var(--_button-fg-pressed, var(--todae-button-fg-active));
+    border-color: var(--_button-border-pressed, var(--todae-button-border-active));
+  }
+
+  /* A link drawn as a button with nowhere to go, an a without href, looks
+     disabled, since it can't be a :disabled button. So does a button with
+     aria-disabled, which keeps focus where disabled would drop it. */
+  .root:is(:disabled, [aria-disabled='true'], a:not(:any-link)),
+  .group > .root {
+    --_lift: 0 0 transparent;
+  }
+
+  .root:is(:disabled, [aria-disabled='true'], a:not(:any-link)) {
+    cursor: not-allowed;
+    background: var(--todae-button-bg-disabled);
+    color: var(--todae-button-fg-disabled);
+    border-color: var(--todae-button-border-disabled);
+  }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  /* An icon from a library renders an svg: it takes the button's icon size. */
+  .icon > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-button-icon-size);
+    block-size: var(--todae-button-icon-size);
+  }
+
+  /* Icon-only: a square as tall as a labeled button, its icon centered in a
+     box one line high. */
+  .root[data-icon-only] {
+    padding-inline: var(--_button-padding-y, var(--todae-button-padding-y));
+  }
+
+  .root[data-icon-only] > .icon {
+    min-inline-size: 1lh;
+    min-block-size: 1lh;
+  }
+
+  .group {
+    display: inline-flex;
+    align-items: stretch;
+  }
+
+  /* ToggleGroup sets --_button-join-gap from its gap. At 0 the items share a
+     border and the meeting corners are square. A wider gap separates them and
+     gives those corners back. */
+  .group > .root ~ .root {
+    margin-inline-start: min(0px, calc(var(--_button-join-gap, 0px) - var(--todae-button-border-width)));
+  }
+
+  /* Counted among the group's buttons, whatever their tag (a button or a
+     link through render), and past the tooltips they render beside them. */
+  .group > .root:nth-child(1 of .root):not(:nth-last-child(1 of .root)) {
+    border-start-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-end-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+  }
+
+  .group > .root:nth-last-child(1 of .root):not(:nth-child(1 of .root)) {
+    border-start-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-end-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+  }
+
+  .group > .root:not(:nth-child(1 of .root)):not(:nth-last-child(1 of .root)) {
+    border-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+  }
+
+  .group > .root:focus-visible {
+    z-index: 1;
+  }
+
+  /* Forced colors drop the fill and the inset ring, so a pressed toggle takes
+     the system's selected colors, which forced colors keep. They also win over
+     hover, press and focus, whose token colors would be forced to Canvas. */
+  @media (forced-colors: active) {
+    /* A theme may set the border to 0; forced colors still need an edge. */
+    .root {
+      border-width: max(1px, var(--todae-button-border-width));
+    }
+
+    /* Forcing puts the ring back to the browser's own color, which in Firefox is currentcolor: on a pressed
+       toggle that is HighlightText over Canvas, which can't be seen. */
+    .root:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .root[aria-pressed='true'],
+    .root[aria-pressed='true']:is(:hover, :active, :focus-visible):not(:disabled, [aria-disabled='true']) {
+      background: Highlight;
+      color: HighlightText;
+      border-color: Highlight;
+      box-shadow: none;
+    }
+
+    .root[aria-pressed='true']:is(:disabled, [aria-disabled='true']) {
+      background: GrayText;
+      color: Canvas;
+      border-color: GrayText;
+    }
+
+    /* A disabled button takes GrayText from the browser; an a without href
+       and an aria-disabled button don't. */
+    a.root:not(:any-link),
+    .root[aria-disabled='true'] {
+      color: GrayText;
+      border-color: GrayText;
+    }
+  }
+}

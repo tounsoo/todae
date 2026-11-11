@@ -1,0 +1,73 @@
+import ChipInputControlled from '../../../../examples/field/chip-input/ChipInputControlled';
+import ChipInputCommitKeys from '../../../../examples/field/chip-input/ChipInputCommitKeys';
+import ChipInputLabel from '../../../../examples/field/chip-input/ChipInputLabel';
+import ChipInputMaxRows from '../../../../examples/field/chip-input/ChipInputMaxRows';
+import ChipInputStates from '../../../../examples/field/chip-input/ChipInputStates';
+
+# Field.ChipInput
+
+Controlled chips plus input, inside a [Field](/field). The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label.Root htmlFor` or Root's `aria-label`.
+
+<Example of={ChipInputControlled} block />
+
+Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
+
+```tsx
+const field = useChipField();
+
+<Field.Root aria-label="Tags">
+  <Field.ChipInput {...field.getChipInputProps()} placeholder="Add a tag" />
+</Field.Root>
+```
+
+Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
+
+## Commit keys
+
+`commitKeys={['Enter', ',']}`. Unknown keys are dropped.
+
+<Example of={ChipInputCommitKeys} block />
+
+## Rows
+
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
+
+`maxRows={1}` and `{2}` under compact and comfortable.
+
+<Example of={ChipInputMaxRows} block />
+
+## States
+
+Disabled and invalid live on `Field.Root`.
+
+<Example of={ChipInputStates} block />
+
+<Example of={ChipInputLabel} block />
+
+## Icons
+
+Chip remove buttons show the `close` glyph unless you pass `chipRemoveIcon`, as on [Chip](/chip).
+
+## Required
+
+`required` makes a form with no chips invalid, whatever the input holds, since the input is emptied on every commit. The browser checks the chips on a native text input that the ChipInput renders beside its own. It is hidden from sight and from assistive technology, is not a tab stop, and is empty exactly when there are no chips. It has no `name`, so it sends nothing: a form sends the text in the input under the field's `name`, as before, and sending the chips is up to you. Inside a [Form.Root](/form), a problem shows in the field's `ErrorMessage.Root` and focus goes to the text input. The text input does not get `aria-required`, since it is not what must be filled: it is described by the `required` string in StringsProvider instead. A `required` on a ChipInput used to need text in the input itself; it now needs at least one chip.
+
+## Accessible composition
+
+**Todae handles:** The input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset); the chips follow the input's `disabled`. Each remove button is named after its chip, and focus returns to the input after a remove. A commit key with text in the input calls `onCommit` with the trimmed text and is kept from the input. When `onCommit` returns `false`, Enter and Tab go through, to the form or to the next control, and a character key is still kept from typing. Keys that belong to an IME composition, such as the Enter that ends a Korean word, are left to the input. A held commit key commits once: after the commit, Enter's repeats are kept from the form, and Tab's repeats move focus.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` on the Root. Chip strings in the product's language, through [StringsProvider](/utilities/strings-provider) or `chipRemoveLabel` and `overflowLabel`.
+
+**Watch for:** Adding `'Tab'` to `commitKeys` makes Tab commit typed text instead of moving focus.
+
+## When to use
+
+### Field.ChipInput
+
+**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads `getChipInputProps()` from [useChipField](/utilities/use-chip-field) to hold that state.
+
+**When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
+
+## Props
+
+<PropsTable name="Field.ChipInput" />

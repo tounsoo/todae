@@ -1,0 +1,61 @@
+.avatarGroup {
+  --_stack-size: var(--todae-avatar-size);
+
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  isolation: isolate;
+}
+
+/* Tooltip and Popover content carries [popover], and a dialog places itself:
+   they take no part in the stack. */
+.avatarGroup > :not([popover], dialog) {
+  flex: none;
+}
+
+/* A button or a link keeps the browser's padding, border and fill, which
+   would sit outside the avatar and throw the overlap off. */
+.avatarGroup > :is(button, a) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--todae-avatar-radius);
+}
+
+.avatarGroup > :not([popover], dialog) ~ :not([popover], dialog) {
+  margin-inline-start: calc(-0.25 * var(--_stack-size));
+}
+
+/* The avatar is inline-flex, so a button or a link builds a line box around
+   it and grows past the avatar. Flex takes that avatar out of the line. A
+   bare avatar stays inline-flex. */
+.avatarGroup :is(button, a) .avatar {
+  display: flex;
+}
+
+/* A box-shadow is not clipped by the avatar's overflow: hidden. Later avatars
+   paint over earlier ones in DOM order. */
+.avatarGroup .avatar {
+  box-shadow: 0 0 0 var(--todae-border-width) var(--avatar-group-ring, var(--todae-color-bg-surface));
+}
+
+.avatarGroup > :not([popover], dialog):is(:focus-visible, :has(:focus-visible)) {
+  z-index: 1;
+}
+
+/* Forced colors drop box-shadow, so the edge becomes a border in CanvasText. */
+@media (forced-colors: active) {
+  .avatarGroup .avatar {
+    border: var(--todae-border-width) solid CanvasText;
+  }
+}
+
+.small {
+  --todae-avatar-size: 1.5rem;
+}
+
+.large {
+  --todae-avatar-size: 2.5rem;
+}

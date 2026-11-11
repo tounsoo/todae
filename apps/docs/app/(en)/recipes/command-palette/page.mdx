@@ -1,0 +1,25 @@
+import CommandPalette from '../../../../examples/recipes/command-palette/CommandPalette';
+
+# Command palette
+
+A recipe, not a package namespace. [Dialog](/dialog) holds the palette, and [useCombobox](/utilities/use-combobox) owns the input, filtering, the active option and ids. There is no `CommandPalette.*` export.
+
+Use the `dialog` presentation and spread `getDialogProps()` on `Dialog.Root`. When the palette opens, the hook clears the input and makes the top row active, and a command chosen while the palette closes does not run again. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected. `filterOptions` ranks the list: commands that start with the text come first, so the top row, which Enter runs, is the likeliest one.
+
+<Example of={CommandPalette} />
+
+The shortcut is [useHotkey](/utilities/use-hotkey), which opens the palette on Ctrl+K or ⌘K. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened, or to the trigger when nothing had focus. The empty message sits in a `role="status"` region, so screen readers announce it.
+
+## Accessible composition
+
+**Todae handles:** `Dialog` is a native modal `<dialog>`, so the page behind it is inert while it is open, and it closes and returns focus as described above. [useCombobox](/utilities/use-combobox) makes the input a `role="combobox"` with `aria-activedescendant` on the active command, moves it with the arrow keys, Home and End, and chooses it with Enter. `getTriggerProps()` gives the trigger `aria-haspopup="dialog"`, `aria-expanded` and `aria-controls`.
+
+**You supply:** A name for the dialog: `getDialogProps()` sets `aria-label` from the `options` string ("Options" by default), so pass your own after the spread, as `aria-label="Commands"` does above. A name for the input, here `aria-label` on `Field.Root`, and one for the list, here the `aria-label` passed to `getListboxProps()`, since no visible label carries `getLabelProps()`. Visible trigger text, and `aria-keyshortcuts` for the shortcut. The empty message in a `role="status"` element that stays mounted. A result people can perceive after a command runs, such as a status message, when the command has no visible effect.
+
+**Watch for:** Your `aria-label` placed before `{...cb.getDialogProps()}`: the spread's name then wins. Unmounting the list when nothing matches; hide it with `hidden`, so `aria-controls` still points at it. A palette reachable only by the shortcut.
+
+## When to use
+
+**When:** One place to search and run actions across an app.
+
+**When not:** Picking a value for a form field → the [Combobox recipe](/recipes/combobox). A short, fixed list of actions → [Menu](/menu).

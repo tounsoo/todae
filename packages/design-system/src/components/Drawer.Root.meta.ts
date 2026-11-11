@@ -1,0 +1,54 @@
+import type { ComponentMeta } from '../meta.ts';
+
+export const meta = {
+  name: 'Drawer.Root',
+  description: 'Native modal dialog pinned to the start or end edge, full height. Built from Drawer parts.',
+  props: [
+    {
+      name: 'open',
+      type: 'boolean',
+      required: false,
+      description: 'Controlled open state. Leave it out for an uncontrolled drawer.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description: 'Shows the drawer on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean, reason: DialogCloseReason) => void',
+      required: false,
+      description: 'Dismiss requests, with the same reasons as Dialog.Root.',
+    },
+    {
+      name: 'side',
+      type: "'start' | 'end'",
+      required: false,
+      default: "'end'",
+      description: 'Inline edge it is pinned to. Follows text direction.',
+    },
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      required: false,
+      default: 'true',
+      description: 'Escape calls onOpenChange(false, "escape").',
+    },
+    {
+      name: 'dismissOnBackdrop',
+      type: 'boolean',
+      required: false,
+      default: 'true',
+      description: 'Scrim click calls onOpenChange(false, "backdrop").',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      required: false,
+      description: 'Name when Drawer.Title is omitted.',
+    },
+  ],
+} as const satisfies ComponentMeta;

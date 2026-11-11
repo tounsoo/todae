@@ -1,0 +1,32 @@
+import BadgeCount from '../../../examples/badge/BadgeCount';
+import BadgeTones from '../../../examples/badge/BadgeTones';
+
+# Badge
+
+행의 상태나 읽지 않은 메시지 수처럼 짧은 정적 레이블이나 개수입니다. `tone`은 기본값인 `neutral`, 네 가지 상태 톤 `info`, `success`, `warning`, `critical` 중 하나, 또는 여덟 가지 카테고리 톤 `category-1`부터 `category-8` 중 하나입니다. 각 톤은 `badge.<tone>` contract 토큰을 거쳐 색을 읽습니다. 상태 톤은 `color.status.<tone>`에서, 카테고리 톤은 `color.category.<n>`에서 가져옵니다.
+
+<Example of={BadgeTones} />
+
+Server Components는 `@tounsoo/todae/badge`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
+
+`Badge.Root`는 role이 없는 `span`이므로, 스크린 리더는 주변 텍스트의 일부로 읽습니다. 숫자만으로는 뜻이 전해지지 않으니, 나머지는 시각적으로 숨긴 텍스트로 더하세요.
+
+<Example of={BadgeCount} />
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 색만 맡습니다. `Badge.Root`는 role도 ARIA도 없는 `span`이고, `tone`은 `data-tone`을 설정하지만 이것을 읽어 주는 것은 없습니다. 스크린 리더는 Badge를 주변 텍스트와 한 줄로 읽습니다.
+
+**직접 제공할 것:** 그 줄에서 읽었을 때 뜻이 통하는 텍스트. 개수라면 위처럼 [VisuallyHidden](/visually-hidden)으로 명사를 더하세요. 연체와 결제 완료처럼 톤에 뜻이 있다면 그 뜻도 말로 적으세요.
+
+**주의할 점:** `onClick`으로 누를 수 있게 만든 Badge. `span`은 포커스를 받지 않고 role도 없으니 [Button](/button)이나 링크를 쓰세요. 새 메시지처럼 사용자가 기다리는 동안 바뀌는 개수. Badge는 이를 읽어 주지 않으므로 [useAnnouncer](/utilities/use-announcer)나 다른 라이브 영역을 쓰세요. 버튼이나 링크 안의 Badge는 그 이름의 일부가 되므로, 이름 전체가 자연스럽게 읽혀야 합니다.
+
+## 언제 쓰나
+
+**쓸 때:** 옆에 있는 것을 설명하는 상태나 개수: 결제된 청구서, 베타 기능, 읽지 않은 메시지.
+
+**쓰지 않을 때:** 사용자가 지울 수 있는 레이블 → Chip. 페이지나 작업에 대한 메시지 → Alert. 사용자가 누르는 것 → Button.Root. 읽어 줘야 하는 변화 → 라이브 영역. Badge는 라이브 영역이 아닙니다.
+
+## Props
+
+<PropsTable name="Badge.Root" />

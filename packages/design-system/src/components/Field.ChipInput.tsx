@@ -1,0 +1,202 @@
+import {
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type InputHTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from 'react';
+import { Chip } from './Chip.js';
+import { ChipCount, ChipCountChip } from './chipCount.js';
+import { isImeKeyEvent } from '../internal/ime.js';
+import { cx, useComposedRefs } from '../internal/props.js';
+import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
+import styles from './Field.module.css';
+import { useChipList } from '../hooks/useChipList.js';
+import { useField } from './useField.js';
+import { useDomId } from '../internal/domId.js';
+import { mergeDescribedBy } from './Field.context.js';
+import { FieldValueInput } from './Field.ValueInput.js';
+
+export type FieldChipInputProps = {
+  chips: readonly string[];
+  inputValue: string;
+  onInputValueChange: (value: string) => void;
+  /** Return `false` when there was nothing to commit: Enter then goes on to the form and Tab moves focus, while a character key such as `,` is still kept from typing. */
+  onCommit: (value: string) => boolean | void;
+  onChipRemove: (index: number, value: string) => void;
+  commitKeys?: readonly ChipCommitKey[];
+  maxRows?: number;
+  chipLayout?: 'inline' | 'row';
+  removeOnBackspace?: boolean;
+  chipRemoveLabel?: (value: string) => string;
+  /** Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross. */
+  chipRemoveIcon?: ReactNode;
+  overflowLabel?: (n: number) => string;
+  /** A form with no chips is invalid, whatever the input holds. */
+  required?: boolean;
+  ref?: Ref<HTMLInputElement>;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
+
+export function ChipInput({
+  chips,
+  inputValue,
+  onInputValueChange,
+  onCommit,
+  onChipRemove,
+  commitKeys,
+  maxRows,
+  chipLayout = 'inline',
+  removeOnBackspace = true,
+  chipRemoveLabel,
+  chipRemoveIcon,
+  overflowLabel,
+  required,
+  className,
+  onKeyDown: onKeyDownProp,
+  ref,
+  ...props
+}: FieldChipInputProps) {
+  const field = useField();
+  // Its own input, for chip measuring and refocus; the Root's inputRef may
+  // point at another control.
+  const ownInput = useRef<HTMLInputElement | null>(null);
+  const controlRef = useComposedRefs(ownInput, ref);
+  const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
+  const keySet = useMemo(() => new Set<string>(keys), [keys]);
+  const inRow = chipLayout === 'row';
+  const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
+  // A text box can't be required of its chips, so `aria-required` would be wrong; it is described as required instead.
+  const requiredId = useDomId();
+  const control = field.getControlProps({
+    ...props,
+    ref: controlRef,
+    'aria-describedby': mergeDescribedBy(props['aria-describedby'], required ? requiredId : undefined),
+  });
+  // The Root's disabled or the input's own: the chips follow the input.
+  const disabled = Boolean(control.disabled);
+  // The commit key whose press committed, while it may still be held.
+  const held = useRef<string | null>(null);
+
+  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!event.repeat) held.current = null;
+    onKeyDownProp?.(event);
+    if (event.defaultPrevented) return;
+    if (disabled) return;
+    if (isImeKeyEvent(event, keys)) return;
+    if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
+      const index = chips.length - 1;
+      const value = chips[index];
+      if (value === undefined) return;
+      event.preventDefault();
+      field.notifyValueChange();
+      onChipRemove(index, value);
+      return;
+    }
+    if (!keySet.has(event.key)) return;
+    // A held key commits once. After a commit, Enter's repeats are held back, since they
+    // would submit the emptied input's form; Tab's still move focus. A character key's
+    // repeats never type it.
+    if (event.repeat) {
+      if ((held.current === event.key && event.key !== 'Tab') || event.key.length === 1) event.preventDefault();
+      return;
+    }
+    const trimmed = inputValue.trim();
+    if (trimmed === '') return;
+    const committed = onCommit(trimmed) !== false;
+    if (committed) {
+      field.notifyValueChange();
+      held.current = event.key;
+    }
+    // With nothing committed, only a key that would type its character is held back.
+    if (committed || event.key.length === 1) event.preventDefault();
+  }
+
+  const chipNodes = list.visible.map((chip, index) => (
+    <Chip.Root
+      key={chip.key}
+      disabled={disabled}
+      removeLabel={chipRemoveLabel?.(chip.value)}
+      removeIcon={chipRemoveIcon}
+      data-ellipsis={chip.ellipsis ? '' : undefined}
+      style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
+      onRemove={() => {
+        field.notifyValueChange();
+        onChipRemove(index, chip.value);
+        ownInput.current?.focus();
+      }}
+    >
+      {chip.value}
+    </Chip.Root>
+  ));
+  const overflow = list.hidden > 0 ? <ChipCount count={list.hidden} label={overflowLabel} /> : null;
+  const input = (
+    <input
+      {...control}
+      value={inputValue}
+      type="text"
+      className={cx(styles.input, className)}
+      onChange={(event) => onInputValueChange(event.target.value)}
+      onKeyDown={onKeyDown}
+    />
+  );
+  // A form has only ever sent the text being typed, not the chips, so the input above sends it and this sends nothing. It is empty exactly when there are no chips, which `required` checks.
+  const carrier = (
+    <FieldValueInput
+      input={field.getValueInputProps({ type: 'text', value: chips.length ? '1' : '', required }, control)}
+      requiredId={required ? requiredId : undefined}
+    />
+  );
+  const measure =
+    maxRows != null ? (
+      <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
+        {chips.map((value, index) => (
+          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={disabled}>
+            {value}
+          </Chip.Root>
+        ))}
+        <Chip.Root onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={disabled}>
+          …
+        </Chip.Root>
+        <ChipCountChip count={chips.length || 1} />
+      </div>
+    ) : null;
+
+  if (inRow) {
+    return (
+      <div className={styles.flow} ref={list.listRef} data-chip-layout="row">
+        {chips.length > 0 ? (
+          <div
+            className={styles.row}
+            data-max-rows={maxRows ?? undefined}
+            data-measured={maxRows != null && list.measured ? '' : undefined}
+            style={maxRows != null ? ({ '--_chip-rows': maxRows } as CSSProperties) : undefined}
+          >
+            {chipNodes}
+            {overflow}
+          </div>
+        ) : null}
+        {input}
+        {carrier}
+        {measure}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={styles.flow}
+      ref={list.listRef}
+      data-max-rows={maxRows ?? undefined}
+      data-measured={maxRows != null && list.measured ? '' : undefined}
+      style={maxRows != null ? ({ '--_chip-rows': maxRows } as CSSProperties) : undefined}
+    >
+      {chipNodes}
+      {overflow}
+      {input}
+      {carrier}
+      {measure}
+    </div>
+  );
+}

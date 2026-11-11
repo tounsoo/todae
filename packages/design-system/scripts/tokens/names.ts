@@ -1,0 +1,343 @@
+import { cssVarOf, dependents, readsOf, type ConsumerFile, type CssVar, type Snapshot } from './consumers.ts';
+import { matchesGroup } from './rules.ts';
+import type { Layer, SlotRules } from './shared.ts';
+
+/** A name is component, up to three parts, the property, and an optional state. */
+const MAX_PARTS = 3;
+
+const WORD_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * The one state model. `states` are the words any stateful property takes,
+ * from tokens/name-schema.json. A component adds its own words by listing
+ * them in a slot for that property (`"option.bg": ["default", "selected"]`
+ * in tokens/resolver.json), and the build holds the group to that list.
+ * A state is another value of its property, so each stateful property
+ * names the `$type` its states hold: a word whose token has another type,
+ * or that is itself a property, is a sub-property, not a state.
+ */
+export type Schema = {
+  states: ReadonlySet<string>;
+  statefulProperties: ReadonlyMap<string, string>;
+  slots: SlotRules;
+};
+
+export type Rule = 'depth' | 'state' | 'property' | 'dead';
+
+export type Violation =
+  | { rule: 'depth'; path: string }
+  | { rule: 'state'; path: string; word: string }
+  | { rule: 'property'; path: string; word: string }
+  | { rule: 'dead'; path: string; cssVar: CssVar };
+
+export type Grandfather = ReadonlyMap<`${Rule}:${string}`, Violation>;
+
+export type RatchetInput = {
+  found: Violation[];
+  list: Grandfather;
+  base?: Grandfather | 'missing';
+};
+
+export type RatchetResult = {
+  unlisted: Violation[];
+  stale: Violation[];
+  added: Violation[];
+  note: string | null;
+};
+
+export const MISSING_BASE_NOTE = 'no grandfather list at base; skipping shrink check';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Whether `word` is a state of the stateful property group `group`. */
+function knownState(schema: Schema, group: string, word: string): boolean {
+  if (schema.states.has(word)) return true;
+  for (const [pattern, words] of Object.entries(schema.slots)) {
+    if (words.includes(word) && matchesGroup(pattern, group)) return true;
+  }
+  return false;
+}
+
+function isRule(value: string): value is Rule {
+  return value === 'depth' || value === 'state' || value === 'property' || value === 'dead';
+}
+
+export function violationKey(violation: { rule: Rule; path: string }): `${Rule}:${string}` {
+  return `${violation.rule}:${violation.path}`;
+}
+
+export function violationOrder(a: { rule: Rule; path: string }, b: { rule: Rule; path: string }): number {
+  if (a.rule !== b.rule) return a.rule < b.rule ? -1 : 1;
+  if (a.path !== b.path) return a.path < b.path ? -1 : 1;
+  return 0;
+}
+
+export function isConsumerPath(file: string): boolean {
+  const normalized = file.replaceAll('\\', '/');
+  const base = normalized.slice(normalized.lastIndexOf('/') + 1);
+  if (base.includes('.generated.')) return false;
+  return base.endsWith('.css') || base.endsWith('.ts') || base.endsWith('.tsx');
+}
+
+/** `slots` are the contract layer's slot rules, where components declare their own state words. */
+export function parseSchema(json: unknown, slots: SlotRules = {}): Schema {
+  if (!isRecord(json)) throw new Error('name schema must be an object');
+  if (json.version !== 2) throw new Error('name schema version must be 2');
+  if (!Array.isArray(json.states)) throw new Error('name schema states must be an array');
+  if (!isRecord(json.statefulProperties)) {
+    throw new Error('name schema statefulProperties must map each property to the $type of its states');
+  }
+  const states = new Set<string>();
+  for (const state of json.states) {
+    if (typeof state !== 'string' || !WORD_RE.test(state)) {
+      throw new Error(`name schema state "${String(state)}" must be a lowercase word`);
+    }
+    if (states.has(state)) throw new Error(`name schema repeats state "${state}"`);
+    states.add(state);
+  }
+  const statefulProperties = new Map<string, string>();
+  for (const [property, type] of Object.entries(json.statefulProperties)) {
+    if (!WORD_RE.test(property)) throw new Error(`name schema stateful property "${property}" must be a lowercase word`);
+    if (states.has(property)) throw new Error(`name schema "${property}" cannot be both a state and a property`);
+    if (typeof type !== 'string' || type.length === 0) {
+      throw new Error(`name schema stateful property "${property}" must name the $type of its states`);
+    }
+    statefulProperties.set(property, type);
+  }
+  return { states, statefulProperties, slots };
+}
+
+function deadVar(path: string): CssVar {
+  return cssVarOf(`--todae-${path.replaceAll('.', '-')}`);
+}
+
+function parseEntry(entry: unknown, index: number): Violation {
+  if (!isRecord(entry)) throw new Error(`name grandfather entry ${index} must be an object`);
+  if (typeof entry.rule !== 'string' || !isRule(entry.rule)) {
+    throw new Error(`name grandfather rule "${String(entry.rule)}" is unknown`);
+  }
+  if (typeof entry.path !== 'string' || entry.path.length === 0) {
+    throw new Error(`name grandfather entry ${index} needs a path`);
+  }
+  if (entry.rule === 'state' || entry.rule === 'property') {
+    if (typeof entry.word !== 'string' || entry.word.length === 0) {
+      throw new Error(`name grandfather ${entry.rule} entry ${entry.path} needs a word`);
+    }
+    return { rule: entry.rule, path: entry.path, word: entry.word };
+  }
+  if ('word' in entry) throw new Error(`name grandfather ${entry.rule} entry ${entry.path} cannot name a word`);
+  if (entry.rule === 'depth') return { rule: 'depth', path: entry.path };
+  return { rule: 'dead', path: entry.path, cssVar: deadVar(entry.path) };
+}
+
+export function parseGrandfather(json: unknown): Grandfather {
+  if (!isRecord(json)) throw new Error('name grandfather must be an object');
+  if (json.version !== 1) throw new Error('name grandfather version must be 1');
+  if (!Array.isArray(json.entries)) throw new Error('name grandfather entries must be an array');
+  const entries = json.entries.map((entry, index) => parseEntry(entry, index));
+  for (let index = 1; index < entries.length; index += 1) {
+    const previous = entries[index - 1];
+    const current = entries[index];
+    if (previous === undefined || current === undefined) continue;
+    const order = violationOrder(previous, current);
+    if (order === 0) throw new Error(`name grandfather repeats ${current.rule} ${current.path}`);
+    if (order > 0) throw new Error('name grandfather entries are not sorted');
+  }
+  return new Map(entries.map((entry) => [violationKey(entry), entry]));
+}
+
+export function formatGrandfather(found: readonly Violation[]): string {
+  const entries = [...found].sort(violationOrder).map((violation) => {
+    if (violation.rule === 'state' || violation.rule === 'property') return { rule: violation.rule, path: violation.path, word: violation.word };
+    return { rule: violation.rule, path: violation.path };
+  });
+  return `${JSON.stringify({ version: 1, entries }, null, 2)}\n`;
+}
+
+/**
+ * Splits a name at its first stateful property that has a word after it.
+ * That word is the state, and the name ends there.
+ */
+function stateOf(
+  segments: readonly string[],
+  schema: Schema,
+): { group: string; type: string; word: string; last: boolean } | null {
+  for (let index = 1; index < segments.length - 1; index += 1) {
+    const type = schema.statefulProperties.get(segments[index] ?? '');
+    if (type === undefined) continue;
+    return { group: segments.slice(0, index + 1).join('.'), type, word: segments[index + 1] ?? '', last: index + 2 === segments.length };
+  }
+  return null;
+}
+
+/** `type` is the token's `$type`; a state holds the same type as its property. */
+export function nameViolations(path: string, type: string, schema: Schema): Violation[] {
+  const segments = path.split('.');
+  const state = stateOf(segments, schema);
+  const violations: Violation[] = [];
+  if (state) {
+    const stem = state.group.split('.').length;
+    if (stem > MAX_PARTS + 2 || !state.last) violations.push({ rule: 'depth', path });
+    const subProperty = (state.last && type !== state.type) || schema.statefulProperties.has(state.word);
+    if (subProperty) violations.push({ rule: 'property', path, word: state.word });
+    else if (!knownState(schema, state.group, state.word)) violations.push({ rule: 'state', path, word: state.word });
+    return violations;
+  }
+  const stem = schema.states.has(segments[segments.length - 1] ?? '') ? segments.length - 1 : segments.length;
+  if (stem < 2 || stem > MAX_PARTS + 2) violations.push({ rule: 'depth', path });
+  return violations;
+}
+
+function representatives(snapshot: Snapshot): Map<string, { layer: Layer; type: string; cssVars: [CssVar, ...CssVar[]] }> {
+  const byPath = new Map<string, { layer: Layer; type: string; cssVars: [CssVar, ...CssVar[]] }>();
+  for (const row of snapshot.values()) {
+    const current = byPath.get(row.path);
+    if (current) current.cssVars.push(row.cssVar);
+    else byPath.set(row.path, { layer: row.layer, type: row.type, cssVars: [row.cssVar] });
+  }
+  return byPath;
+}
+
+function reachable(snapshot: Snapshot, read: ReadonlySet<CssVar>): Set<CssVar> {
+  const reverse = dependents(snapshot, snapshot);
+  const memo = new Map<CssVar, boolean>();
+  const stack = new Set<CssVar>();
+  const isLive = (cssVar: CssVar): boolean => {
+    const cached = memo.get(cssVar);
+    if (cached !== undefined) return cached;
+    if (read.has(cssVar)) {
+      memo.set(cssVar, true);
+      return true;
+    }
+    if (stack.has(cssVar)) return false;
+    stack.add(cssVar);
+    let live = false;
+    for (const next of reverse.get(cssVar) ?? []) {
+      if (!isLive(next)) continue;
+      live = true;
+      break;
+    }
+    stack.delete(cssVar);
+    memo.set(cssVar, live);
+    return live;
+  };
+  const live = new Set<CssVar>();
+  for (const row of snapshot.values()) {
+    if (isLive(row.cssVar)) live.add(row.cssVar);
+  }
+  return live;
+}
+
+function scaleOf(path: string): string {
+  return path.slice(0, path.lastIndexOf('.'));
+}
+
+export function deadTokens(snapshot: Snapshot, files: readonly ConsumerFile[]): Violation[] {
+  const read = new Set<CssVar>();
+  for (const file of files) {
+    for (const cssVar of readsOf(file.path, file.source)) read.add(cssVar);
+  }
+  const live = reachable(snapshot, read);
+  const rows = representatives(snapshot);
+  const isLive = (row: { cssVars: CssVar[] }) => row.cssVars.some((cssVar) => live.has(cssVar));
+  // A core, appearance or density token is a step of a scale (color.red.400,
+  // space.7, color.bg.canvas): it stays while another step of its scale is read.
+  const liveScales = new Set<string>();
+  for (const [path, row] of rows) {
+    if (row.layer !== 'contract' && isLive(row)) liveScales.add(scaleOf(path));
+  }
+  const dead: Violation[] = [];
+  for (const [path, row] of rows) {
+    if (isLive(row)) continue;
+    if (row.layer !== 'contract' && liveScales.has(scaleOf(path))) continue;
+    dead.push({ rule: 'dead', path, cssVar: row.cssVars[0] });
+  }
+  dead.sort(violationOrder);
+  return dead;
+}
+
+export function collectViolations(snapshot: Snapshot, schema: Schema, files: readonly ConsumerFile[]): Violation[] {
+  const names: Violation[] = [];
+  for (const [path, row] of representatives(snapshot)) {
+    if (row.layer !== 'contract') continue;
+    names.push(...nameViolations(path, row.type, schema));
+  }
+  names.sort(violationOrder);
+  return [...names, ...deadTokens(snapshot, files)];
+}
+
+export function hint(violation: Violation, schema: Schema): string {
+  if (violation.rule === 'property') {
+    const state = stateOf(violation.path.split('.'), schema);
+    const group = state?.group ?? violation.path;
+    const property = group.slice(group.lastIndexOf('.') + 1);
+    const fix = schema.statefulProperties.has(violation.word)
+      ? `If it is ${group}'s own value, name it ${group}.default, or ${group} when ${property} has no states`
+      : `Join a sub-property to its property with a hyphen (e.g. focus.ring-width, link.decoration-offset); if "${violation.word}" is a part, move it before the property (e.g. field.placeholder.fg)`;
+    return `${violation.path}: "${violation.word}" is not a state of ${group}, whose states are ${state?.type ?? 'one'} values of ${property}. ${fix}.`;
+  }
+  if (violation.rule === 'state') {
+    const group = stateOf(violation.path.split('.'), schema)?.group ?? violation.path;
+    return `${violation.path}: unknown state "${violation.word}". Every stateful property takes ${[...schema.states].join(', ')}. For a state of this component, list "${violation.word}" with the rest of ${group}'s states in its slots in tokens/resolver.json; if "${violation.word}" is a variant, move it before the property (e.g. option.selected.bg).`;
+  }
+  if (violation.rule === 'depth') {
+    const state = stateOf(violation.path.split('.'), schema);
+    if (state && !state.last) {
+      return `${violation.path}: a name ends at its state, and "${state.word}" follows ${state.group}. Move what comes after it before the property (e.g. tabs.selected.bg.hover), or fold it into one word.`;
+    }
+    return `${violation.path}: too deep. Names are a component, up to three parts, the property and an optional state; fold an extra segment into a part or the property (e.g. text.h3-font.size).`;
+  }
+  return `${violation.path} (${violation.cssVar}): no CSS var() or src string reads this token, directly or through an alias. Read it from a component stylesheet or don't add it.`;
+}
+
+export function staleLine(violation: { rule: Rule; path: string }): string {
+  return `grandfathered name ${violation.path} (${violation.rule}) is fixed; remove it from tokens/name-grandfather.json`;
+}
+
+export function addedLine(violation: { rule: Rule; path: string }): string {
+  return `grandfather list can only shrink; ${violation.path} (${violation.rule}) is new. Fix the name instead (see hint)`;
+}
+
+function sameViolation(listed: Violation, found: Violation): boolean {
+  if (listed.rule !== found.rule || listed.path !== found.path) return false;
+  if ((listed.rule === 'state' || listed.rule === 'property') && (found.rule === 'state' || found.rule === 'property')) {
+    return listed.word === found.word;
+  }
+  return true;
+}
+
+export function ratchet(input: RatchetInput): RatchetResult {
+  const foundByKey = new Map(input.found.map((violation) => [violationKey(violation), violation]));
+  const unlisted: Violation[] = [];
+  const stale: Violation[] = [];
+  for (const violation of input.found) {
+    const listed = input.list.get(violationKey(violation));
+    if (listed === undefined || !sameViolation(listed, violation)) unlisted.push(violation);
+  }
+  for (const listed of input.list.values()) {
+    const current = foundByKey.get(violationKey(listed));
+    if (current === undefined || !sameViolation(listed, current)) stale.push(listed);
+  }
+  const added: Violation[] = [];
+  let note: string | null = null;
+  if (input.base === 'missing') note = MISSING_BASE_NOTE;
+  else if (input.base) {
+    for (const listed of input.list.values()) {
+      if (!input.base.has(violationKey(listed))) added.push(listed);
+    }
+  }
+  unlisted.sort(violationOrder);
+  stale.sort(violationOrder);
+  added.sort(violationOrder);
+  return { unlisted, stale, added, note };
+}
+
+export function tallyLine(found: readonly Violation[], unlisted: readonly Violation[]): string {
+  const names = new Set(found.filter((violation) => violation.rule !== 'dead').map((violation) => violation.path));
+  const added = new Set(unlisted.filter((violation) => violation.rule !== 'dead').map((violation) => violation.path));
+  const dead = found.filter((violation) => violation.rule === 'dead').length;
+  const newDead = unlisted.filter((violation) => violation.rule === 'dead').length;
+  return `names: ${names.size} grandfathered, ${added.size} new; dead: ${dead} grandfathered, ${newDead} new`;
+}

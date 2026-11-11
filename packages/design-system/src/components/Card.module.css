@@ -1,0 +1,34 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-card-gap);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    padding: var(--todae-card-padding);
+    border: var(--todae-card-border-width) solid var(--todae-card-border);
+    border-radius: var(--todae-card-radius);
+    background: var(--todae-card-bg);
+    /* The fill scroll arrows inside take, so they hide the row they cover. */
+    --_scroll-surface: var(--todae-card-bg);
+    color: var(--todae-card-fg);
+    box-shadow: var(--todae-card-shadow);
+  }
+
+  .header > :where(h1, h2, h3, h4, h5, h6, p) {
+    margin: 0;
+  }
+
+  /* The body takes the card's free height, so in a row of equal-height cards
+     every footer sits at the bottom edge. */
+  .body {
+    flex-grow: 1;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-card-gap);
+    justify-content: flex-end;
+  }
+}

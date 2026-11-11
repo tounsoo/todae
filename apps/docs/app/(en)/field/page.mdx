@@ -1,0 +1,179 @@
+import ErrorMessageSibling from '../../../examples/errormessage/ErrorMessageSibling';
+import FieldLabelStates from '../../../examples/field/FieldLabelStates';
+import CounterBefore from '../../../examples/field/CounterBefore';
+import CounterDefault from '../../../examples/field/CounterDefault';
+import CounterInline from '../../../examples/field/CounterInline';
+import CounterNarrow from '../../../examples/field/CounterNarrow';
+import CounterOver from '../../../examples/field/CounterOver';
+import CounterPlain from '../../../examples/field/CounterPlain';
+import CounterTextarea from '../../../examples/field/CounterTextarea';
+import FieldAdornments from '../../../examples/field/FieldAdornments';
+import FieldLabelAdornments from '../../../examples/field/FieldLabelAdornments';
+import FieldStates from '../../../examples/field/FieldStates';
+import RowChipInput from '../../../examples/field/RowChipInput';
+import RowComposer from '../../../examples/field/RowComposer';
+import RowComposerDensity from '../../../examples/field/RowComposerDensity';
+
+# Field
+
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.NumberInput`, `Field.OneTimeCode`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.DateInput`, `Field.DateRangeInput`, `Field.TimeInput` or `Field.DateTimeInput`. `Field.Picker` is a button beside one of them that opens a panel to pick the value in. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
+
+<Example of={FieldStates} block />
+
+## Inputs
+
+Each input part has its own page:
+
+- [Field.TextInput](/field/text-input): a single line of text.
+- [Field.NumberInput](/field/number-input): a number typed in the locale's format or stepped, with `Field.Increment` and `Field.Decrement` buttons beside it.
+- [Field.OneTimeCode](/field/one-time-code): a sign-in or verification code drawn as boxes over one input.
+- [Field.Textarea](/field/textarea): multi-line text.
+- [Field.ChipInput](/field/chip-input): chips plus an input.
+- [Field.Select](/field/select): the native `<select>`. There is no JavaScript listbox. Children are `<option>` or `<optgroup>`, and a browser that supports it draws the control with `appearance: base-select`.
+- [Field.DateInput](/field/date-input): a date, typed in the locale's own way.
+- [Field.DateRangeInput](/field/date-range-input): a start and an end date, typed in the locale's own way.
+- [Field.TimeInput](/field/time-input): a time of day, typed in the locale's own way.
+- [Field.DateTimeInput](/field/date-time-input): a date and a time, typed in the locale's own way.
+- [Field.Picker](/field/picker): a button that opens a panel, such as a calendar, a list of times or a color picker, beside the input that holds the value.
+
+## Label
+
+`Label.Root` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `Field.Group`, which puts the label `field.label.gap` above the shell. See [Label](/label) for the API.
+
+<Example of={FieldLabelStates} block />
+
+Label works with Icon, Affix, and ChipInput.
+
+<Example of={FieldLabelAdornments} block />
+
+`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop. For a button in the field's line, such as a clear button or a password's show button, put an icon-only `Button.Root` before or after the input: in a one-line field it is one field line tall, so the field keeps its height. A press on it leaves focus where it is when focus is in the field, so an input's caret stays; Tab still reaches it. It is a button of its own, not the field's control, and `Field.Root`'s `disabled` doesn't reach it; pass `disabled` to it too. [Sign-in and sign-up](/recipes/sign-in) shows a show-password toggle.
+
+<Example of={FieldAdornments} block />
+
+## Messages
+
+[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
+
+<Example of={ErrorMessageSibling} block />
+
+That is the wiring by hand. Inside a [Form](/form), a `Field.Group` reads the browser's own validation, and an `ErrorMessage.Root` with no `id` shows the problem and does this wiring for you.
+
+## Counter
+
+`Field.Counter` shows a live count for `Field.TextInput` or `Field.Textarea`. It takes its own row. Write it after the input so the server HTML includes the count. One counter per `Field.Root`. The input stays controlled; `defaultValue` is not read.
+
+<Example of={CounterDefault} block />
+
+On the same row, set `flex-basis: auto` on the Counter and still write it last. On a textarea that inline count sits on the last line. The bare field under each pair is the height check.
+
+<Example of={CounterInline} block />
+
+A narrow field. An inline count wider than the row can wrap under the input.
+
+<Example of={CounterNarrow} block />
+
+A Counter written before the input still sits on the bottom row. Prefer writing it after the input so the count is in the server HTML.
+
+<Example of={CounterBefore} block />
+
+<Example of={CounterTextarea} block />
+
+Past `maxLength` the count uses the error color. The shell stays as it is.
+
+<Example of={CounterOver} block />
+
+Without `maxLength` the count is just the number.
+
+<Example of={CounterPlain} block />
+
+With `maxLength`, the Counter also tells screen readers the limit and, from 20 characters left, how many remain. That text comes from the `characterLimit`, `charactersLeft` and `characterLimitReached` strings of [StringsProvider](/utilities/strings-provider), English unless you set them.
+
+## Row
+
+A `Field.Row` is a full-width line. Write it before the input to sit above, or after to sit below. Put `Field.Counter` inside the Row when the field has a bottom row. For the prompt input of a chat, wrap the field in the [chat composer mentions](/recipes/chat-composer-mentions) recipe, as the example does, and use `autoGrow`. Don't put bare text in a Row; wrap it in `Field.Affix`. Push trailing items to the end with `style={{ marginInlineStart: 'auto' }}` on the first of them. For chips, set `chipLayout="row"`; ChipInput draws its own chip line. Don't hand-roll chips in a `Field.Row`.
+
+<Example of={RowComposer} block />
+
+The same composer at compact, comfortable, and spacious.
+
+<Example of={RowComposerDensity} block />
+
+<Example of={RowChipInput} block />
+
+## Custom controls
+
+Your own control, such as a rating, joins a `Field.Root` through [useField](/utilities/use-field).
+
+## Icons
+
+`Field.Icon` takes an icon from any library; an `svg` or `img` directly inside it takes the `field.icon.size` token. The glyphs that `Field.Select` and `Field.ChipInput` draw are on their own pages.
+
+```tsx
+import { Search } from 'lucide-react';
+
+<Field.Root aria-label="Search">
+	<Field.Icon>
+		<Search />
+	</Field.Icon>
+	<Field.TextInput />
+</Field.Root>
+```
+
+## Accessible composition
+
+**Todae handles:** `Field.Root` hands its `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` to the input. Other ARIA props stay on the shell `div`. The input gets native `disabled` and `aria-invalid` from the Root, or from a surrounding [Fieldset](/fieldset). A press on the shell focuses the input, and the shell draws the focus ring while the input is focus-visible. A decorative `Field.Icon` is `aria-hidden`. With `maxLength`, `Field.Counter` adds the limit to the input's description and, from 20 characters left, announces what remains.
+
+**You supply:** A name: a [Label](/label) whose `htmlFor` is the Root `id`, or `aria-label` / `aria-labelledby` on the Root. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in the Root's `aria-describedby`, and `invalid` while the error shows. A name for every button inside an interactive `Field.Icon`. Counter strings in the product's language, through [StringsProvider](/utilities/strings-provider).
+
+**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A `role` or `onClick` on `Field.Root` lands on the shell, which is not a control; open overlays from a real button. `invalid` marks the input invalid but does not say why, so show an ErrorMessage with it.
+
+## When to use
+
+### Field.Root
+
+**When:** Shared field chrome for one text, textarea, or chip input — focus ring, disabled/invalid, density. Value lives on the input part.
+
+**When not:** Selection controls (Checkbox / Radio / Switch). Overlay triggers that are buttons. Nesting another compound root inside.
+
+### Field.Icon
+
+**When:** Leading/trailing icon or icon control inside Root. Position = DOM order. Decorative → `interactive={false}` (aria-hidden).
+
+**When not:** Text adornments → Affix. A clear or show-password button → an icon-only `Button.Root` in the Root.
+
+### Field.Row
+
+**When:** Group parts on their own full-width line inside the field, such as chips above a `Field.ChipInput` or attach, `Field.Counter` and send below a `Field.Textarea`.
+
+**When not:** For a single Icon or Affix beside the input, compose it inline without a Row, and don't use a Row to lay out separate fields.
+
+### Field.Group
+
+**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption. Inside a [Form](/form) it is also a validation scope for the controls in it.
+
+**When not:** To space separate fields from each other, use `Stack.Root`. To group related controls under one legend, use [Fieldset](/fieldset).
+
+### Field.Affix
+
+**When:** Static text adornment (currency, unit) inside Root. Order = position.
+
+**When not:** Icons → Icon. Interactive controls — Affix is not clickable.
+
+### Field.Counter
+
+**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.
+**When not:** For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.
+
+## Props
+
+<PropsTable name="Field.Root" />
+
+<PropsTable name="Field.Icon" />
+
+<PropsTable name="Field.Affix" />
+
+<PropsTable name="Field.Row" />
+
+<PropsTable name="Field.Group" />
+
+<PropsTable name="Field.Counter" />

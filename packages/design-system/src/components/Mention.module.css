@@ -1,0 +1,27 @@
+@layer todae.components {
+  .root {
+    font: inherit;
+    font-weight: var(--todae-mention-font-weight);
+    color: var(--todae-mention-fg-default);
+    background: var(--todae-mention-bg-default);
+    border: 0;
+    border-radius: var(--todae-mention-radius);
+    padding: 0 var(--todae-mention-padding-x);
+    cursor: pointer;
+    line-height: inherit;
+  }
+
+  .root:hover {
+    color: var(--todae-mention-fg-hover);
+    background: var(--todae-mention-bg-hover);
+  }
+
+  .root:active {
+    background: var(--todae-mention-bg-pressed);
+  }
+
+  .root:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-mention-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+}

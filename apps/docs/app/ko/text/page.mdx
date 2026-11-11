@@ -1,0 +1,91 @@
+import TextTones from '../../../examples/text/TextTones';
+import TextLines from '../../../examples/text/TextLines';
+import TextLabel from '../../../examples/text/TextLabel';
+import TextHeadings from '../../../examples/text/TextHeadings';
+import { Text } from '@tounsoo/todae/text';
+
+# Text
+
+본문 텍스트는 `text.font.size`로 그려집니다. 기본값은 foundation `font.size.3`과 같습니다. Text에는 `size` prop이 없습니다. Todae는 텍스트 크기 단계를 제공하지 않습니다.
+
+텍스트 하나만 바꾸려면 그 요소나, 사이에 `[data-appearance]`나 `[data-density]` 요소와 스코프 테마의 루트가 없는 조상에 `--todae-text-font-size`를 지정하세요. ThemeProvider와 DensityProvider는 그 속성 중 하나를 가집니다. 사이에 그런 요소나 스코프 테마의 루트가 있으면 토큰을 다시 선언해서 조상의 값을 없앱니다. 제품의 본문 텍스트를 모두 바꾸려면 테마나 `ThemeProvider`의 overrides에서 `text.font.size`를 지정하세요. 한 요소만 다른 크기로 그리려면 자기 CSS에서 `font.size.*` 변수(`--todae-font-size-*`)로 `font-size`를 지정하세요. `todae.components` 레이어 밖의 규칙이 Text가 정한 크기보다 우선합니다.
+
+제목의 `as`는 그 요소를 렌더링하고, 요소는 `text.h1.font.size`부터 `text.h6.font.size`로 그려집니다. 기본값은 foundation `font.size.6`, `font.size.5`, `font.size.4`, 본문 `text.font.size`, 본문 `text.font.size`, `font.size.2`를 따릅니다. h4와 h5는 본문 토큰을 따르며, 테마는 둘 중 하나만 따로 지정할 수 있습니다. `variant="label"`은 아이브로와 메타데이터를 위한 역할이며, 아래 레이블에서 설명합니다.
+
+글꼴은 `font.family.sans`를 읽는 `text.font.family`에 있습니다. Todae는 본문 텍스트와 제목에 이 값으로 `font-family`를 지정하지 않으니, 원하는 곳에 `var(--todae-text-font-family)`를 적용하세요. 레이블 역할은 아래 레이블에서 설명하듯 자체 글꼴을 지정합니다.
+
+Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이 진입점에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 진입점은 클라이언트 모듈입니다.
+
+<Example of={TextTones} />
+
+`tone="accent"`는 `color.accent.default`를 따릅니다. Todae의 액센트는 중립적인 잉크이므로, 테마나 회사 토큰 패키지가 브랜드 액센트를 설정하기 전까지 accent 텍스트는 기본 텍스트처럼 보입니다.
+
+## 제목
+
+`as="h1"`부터 `as="h6"`까지는 제목을 렌더링합니다. 요소는 `text.hN.font.size`로 그려지고, 굵은 두께와 `text.leading.tight`를 쓰며, 줄바꿈을 균형 있게 맞춥니다. 문서 개요에 맞는 수준을 고르세요. h2는 `text.h2.font.size`를 유지합니다. 그 제목을 더 작게 그리려면 요소의 `font-size`를 지정하거나 그 수준의 토큰을 오버라이드하세요. 모양을 맞추려고 더 낮은 수준을 고르지 마세요.
+
+```tsx
+<Text.Root as="h2" className="section-title">
+  Still an h2
+</Text.Root>
+```
+
+```css
+.section-title {
+  font-size: var(--todae-font-size-3);
+}
+```
+
+<Example of={TextHeadings} block />
+
+## 레이블
+
+`variant="label"`은 다른 텍스트 위나 옆에 붙는 짧은 텍스트를 위한 역할입니다. 제목 위의 아이브로, 키커, 섹션 번호, 날짜 등이 해당합니다. 글꼴, 크기, 굵기, 행간, 자간, 대소문자, 색을 `text.label.*`에서 읽으므로, 모노스페이스에 대문자와 넓은 자간처럼 레이블의 모양은 각 회사가 정합니다. Graphite는 레이블을 담백하게 둡니다. `font.size.1`, `text.weight.medium`, 좁은 행간, `text.fg.muted`이고, 자간을 더하지 않으며 대소문자도 바꾸지 않습니다.
+
+`text.font.family`와 달리 Todae는 `text.label.font.family`를 적용합니다. 이 토큰은 `text.font.family`를 읽으므로, 텍스트에 서체 하나를 지정한 테마는 레이블의 서체도 함께 지정하게 되고, `text.label.font.family`를 `font.family.mono`로 지정한 테마는 레이블만 바꿉니다. 텍스트 글꼴을 `var(--todae-text-font-family)`가 아닌 자체 CSS로 정하는 제품은 `text.label.font.family`도 그 글꼴로 지정하세요. 그러지 않으면 레이블이 `font.family.sans`로 보입니다.
+
+직접 준 `tone`이나 `weight`가 레이블 자체의 색과 굵기보다 우선합니다.
+
+<Example of={TextLabel} block />
+
+회사 토큰 패키지는 [Fernway 예제](https://github.com/tounsoo/todae/tree/main/examples/fernway)처럼 자체 `contract` 세트에서 모양을 지정합니다.
+
+```json
+{
+  "text": {
+    "label": {
+      "font": {
+        "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "value": 0.06, "unit": "rem" } },
+        "text-transform": { "$type": "textTransform", "$value": "uppercase" }
+      }
+    }
+  }
+}
+```
+
+## 줄 수
+
+`lines`는 텍스트를 그 줄 수로 자르고 마지막 줄 끝에 말줄임표를 붙입니다. 파일 이름처럼 한 줄보다 긴 단어도 줄바꿈되어 말줄임표로 끝납니다. 요소는 블록이 되므로 부모가 주는 너비를 따르고, flex 행 안에서는 텍스트보다 좁게 줄어들 수 있습니다.
+
+텍스트가 잘리면 `@tounsoo/todae`의 `Text.Root`는 포인터를 올렸을 때와, 텍스트나 텍스트를 감싼 링크, 행, 메뉴 항목이 키보드 포커스를 받았을 때 툴팁에 텍스트 전체를 보여 줍니다. 잘린 텍스트를 여럿 담고 있으면 첫 번째 텍스트의 툴팁을 보여 줍니다. 줄 자르기는 그려지는 모습만 바꾸므로 스크린 리더는 텍스트 전체를 읽고, 툴팁은 스크린 리더에서 숨겨집니다. 툴팁이 보이는 동안에는 텍스트 바로 뒤에 요소로 있으므로 `:last-child` 같은 선택자가 가리키는 대상이 바뀔 수 있습니다. Escape는 툴팁을 먼저 닫습니다. `tooltip={false}`로 끌 수 있습니다. `@tounsoo/todae/text`도 같은 방식으로 자르지만, 툴팁에는 클라이언트 컴포넌트가 필요하므로 툴팁을 그리지 않습니다.
+
+<Example of={TextLines} block />
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 요소를 맡습니다. `as`는 `p`(기본값), `span`, `strong`, `h1`부터 `h6` 중 하나를 고르고, 요소는 네이티브 의미를 그대로 가집니다. `weight`는 모양만 바꾸고, 제목의 수준이 `text.hN.font.size`를 고릅니다. `h2`는 여전히 h2입니다. `ref`, `id` 등 다른 속성은 요소에 전달됩니다. `lines`를 주면 잘린 텍스트의 툴팁을 맡습니다. 툴팁은 포인터를 올렸을 때와 키보드 포커스를 받았을 때 보이며, 텍스트 전체를 읽는 스크린 리더에서는 숨겨집니다.
+
+**직접 제공할 것:** 문서 구조를 정하세요. 각 제목의 레벨은 페이지에서 놓인 위치로 고르세요. 섹션 제목 같은 래퍼는 레벨을 prop으로 받거나, 그 레벨이 항상 맞는 곳에서만 한 레벨로 렌더링하세요. 영역이 `aria-labelledby`로 이름을 가져온다면 제목에 `id`를 주세요.
+
+**주의할 점:** 카드 안의 굵은 한 줄처럼 섹션을 시작하지 않는 텍스트에 제목 태그를 쓰면 페이지의 제목 목록에 항목이 하나 더 생깁니다. 대신 `weight="bold"`를 쓰세요. `as="strong"`은 중요함을 나타냅니다. 굵은 모양만 필요하면 `weight`를 쓰세요. 오류나 선택된 상태처럼 텍스트의 의미를 `tone`만으로 나타내지 마세요. 레이블은 그 아래 제목의 일부가 아니므로, 제목 사이를 이동할 때 건너뜁니다. 제목에 필요한 말은 제목에 넣으세요. 레이블은 문장형 대소문자로 쓰고, 테마가 바꿀 수 있도록 대소문자는 `text.label.font.text-transform`으로 정하세요. 오류나 가격처럼 끝까지 읽어야 하는 텍스트를 `lines`로 자르지 마세요. 툴팁에는 포인터를 올리거나 포커스가 있어야 하는데, 터치 화면의 일반 텍스트에는 둘 다 없습니다. `lines`는 다음 화면에서 전체가 보이는 이름과 제목에 쓰세요. 잘린 텍스트 안의 링크는 포커스 링이 텍스트 가장자리에서 잘리니, 반대로 잘린 텍스트를 링크 안에 넣으세요.
+
+## 언제 쓰나요
+
+**언제:** 본문 텍스트와 제목. 톤 default / muted / accent, 굵기, `as` p / span / strong / h1–h6. 수준이 `text.hN.font.size`를 고릅니다. 아이브로, 키커, 메타데이터에는 `variant="label"`. 정해진 줄 수로 자르는 이름과 제목에는 `lines`.
+
+**쓰지 않을 때:** 필드 이름 → `variant="label"`이 아니라 Label. 컨트롤 그룹의 이름 → Fieldset.Legend. 힌트와 오류 → Description / ErrorMessage. 다이얼로그 제목 → `Dialog.Title`.
+
+## Props
+
+<PropsTable name="Text.Root" />

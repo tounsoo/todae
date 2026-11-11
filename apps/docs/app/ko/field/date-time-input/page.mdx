@@ -1,0 +1,46 @@
+import FieldDateTimeInputAlone from '../../../../examples/field/date-time-input/FieldDateTimeInputAlone';
+import DateTimePicker from '../../../../examples/recipes/date-time-picker/DateTimePicker';
+
+# Field.DateTimeInput
+
+`Field.DateTimeInput`은 [Field](/field) 안에서 날짜와 시각을 로캘의 방식대로 입력하는 텍스트 입력입니다. `value`는 `Temporal.PlainDateTime`이나 `null`입니다. 텍스트는 확정될 때, 즉 포커스를 잃을 때, Enter를 누를 때, 폼을 제출할 때 읽고, `formatDateTime`이 쓰는 대로 다시 쓴 뒤 그 값으로 `onValueChange`를 호출합니다. 입력하는 것만으로는 아무것도 호출하지 않습니다. `onValueChange`가 없으면 입력은 읽기 전용입니다. [Field.DateInput](/field/date-input), [Field.TimeInput](/field/time-input)처럼 동작하고, 뜻이 같은 props는 똑같이 받습니다. `PlainDateTime`에는 시간대가 없습니다. 사용자의 시계로 본 날짜와 시각입니다. 특정 시점으로 저장하려면 `value.toZonedDateTime(zone)`처럼 직접 작성한 코드에서 시간대와 합치세요.
+
+<Example of={FieldDateTimeInputAlone} block />
+
+단독으로 쓰면 `Field.DateTimeInput`이 버튼 없이 필드의 컨트롤입니다. 값을 고를 수도 있게 하려면 옆에 [Calendar](/calendar)와 시각의 [OptionList](/optionlist)를 담은 [Field.Picker](/field/picker)를 두세요. 날짜와 시각을 함께 고르는 패널은 따로 없습니다. [Date and time picker](/recipes/date-time-picker) 레시피가 그런 패널을 조합합니다. 날짜를 고르면 시각을, 시각을 고르면 날짜를 그대로 두고, 둘 다 정해지면 선택기를 닫습니다.
+
+<Example of={DateTimePicker} block />
+
+## 입력한 날짜와 시각
+
+`formatDateTime`은 `en-US`의 `10/13/2026, 9:30 PM`처럼 날짜를 숫자로, 시각을 시와 분으로 쓰고, `parseDateTime`은 `Oct 13, 2026 at 9:30 PM`처럼 로캘이 쓰는 순서로 입력한 날짜와 시각을 읽습니다. 각각 무엇을 쓰고 읽는지는 [formatDateTime과 parseDateTime](/utilities/format-date-time)에 있습니다.
+
+`Field.DateTimeInput`은 자신의 `locale`로 텍스트를 `parseDateTime`으로 읽고 `formatDateTime`으로 씁니다. 빈 텍스트는 `null`로 확정됩니다. 날짜와 시각이 아닌 텍스트는 입력한 그대로 남고, `onValueChange`는 호출되지 않으며, 확정하면서 읽으려다 실패한 뒤에는 필드가 유효하지 않음으로 표시됩니다. 텍스트가 날짜와 시각이거나 비어 있을 때까지 폼은 제출되지 않습니다.
+
+## 폼에서
+
+값은 텍스트 입력 옆의 네이티브 `<input type="datetime-local">`에 담겨, 필드의 `name`이나 입력 자체의 `name`으로, HTML이 쓰는 형식으로 폼과 함께 전송됩니다. 예: `2026-10-13T09:30`. 텍스트 입력은 아무것도 보내지 않고, 네이티브 입력은 화면과 보조 기술에서 숨겨지며 탭 정지점이 아닙니다. `required`는 값이 없는 폼을, `min`과 `max`는 그보다 이르거나 늦은 값이 있는 폼을 유효하지 않게 합니다. 브라우저가 네이티브 입력에서 세 가지를 모두 검사하고, 날짜와 시각이 아닌 텍스트도 제출을 막습니다. [Form.Root](/form) 안에서는 문제가 필드의 `ErrorMessage.Root`에 페이지의 언어로 나타나고 `min`이나 `max`는 `formatDateTime`이 쓰는 방식으로 표기되며, 포커스는 텍스트 입력으로 갑니다. `Form.Root` 밖에서도 브라우저가 제출을 막고, 포커스는 마찬가지로 텍스트 입력에 놓입니다. 네이티브 날짜 입력은 1년부터 275760년까지만 담을 수 있으므로, 그 밖의 값이나 범위는 값 없음으로 읽힙니다. 빈 값으로 전송되고 `required`, `min`, `max`는 이를 무시하며, 개발 빌드는 한 번 경고합니다.
+
+## Temporal
+
+Todae는 Temporal 폴리필을 포함하지 않습니다. 입력의 값과 `formatDateTime`, `parseDateTime`은 `Temporal.PlainDateTime`이므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 텍스트 입력은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 확정할 때 텍스트를 읽지 못하면 `aria-invalid`가, `required`가 있으면 `aria-required`가 붙습니다. [Field.Picker](/field/picker) 옆에서도 입력이 필드의 컨트롤이고, 선택기의 버튼은 [StringsProvider](/utilities/strings-provider)의 `dateTimePicker` 문자열로 이름이 붙으며 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar` 글리프를 보여 줍니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 선택기를 둔다면 레시피처럼 패널과 그 이름도 직접 제공합니다.
+
+**주의할 점:** `value`가 있으면 서버는 그 날짜와 시각을 서버의 로캘로 쓰므로, 서버에서 렌더링할 때는 `locale`을 넘기세요. 값을 특정 시점인 것처럼 저장하지 마세요. `PlainDateTime`은 읽는 사람의 시계를 따르므로, 시점을 저장하기 전에 시간대를 더하세요.
+
+## 언제 쓰나요
+
+### Field.DateTimeInput
+
+**언제:** 회의 시작이나 항공편 출발처럼 날짜와 하루 중 시각을 하나의 값으로.
+
+**쓰지 않을 때:** 날짜만 → [Field.DateInput](/field/date-input). 시각만 → [Field.TimeInput](/field/time-input). 시간대가 있는 시점 → 이 입력을 쓰고 시간대는 직접 작성한 코드에서 더하세요.
+
+## Props
+
+<PropsTable name="Field.DateTimeInput" />

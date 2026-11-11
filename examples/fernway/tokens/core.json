@@ -1,0 +1,33 @@
+{
+  "color": {
+    "gray": {
+      "$type": "color",
+      "50": { "$value": { "colorSpace": "oklch", "components": [0.985, 0.006, 80] } },
+      "100": { "$value": { "colorSpace": "oklch", "components": [0.955, 0.009, 80] } },
+      "200": { "$value": { "colorSpace": "oklch", "components": [0.9, 0.012, 80] } },
+      "300": { "$value": { "colorSpace": "oklch", "components": [0.82, 0.014, 75] } },
+      "400": { "$value": { "colorSpace": "oklch", "components": [0.78, 0.015, 75] } },
+      "500": { "$value": { "colorSpace": "oklch", "components": [0.6, 0.016, 70] } },
+      "600": { "$value": { "colorSpace": "oklch", "components": [0.48, 0.016, 70] } },
+      "700": { "$value": { "colorSpace": "oklch", "components": [0.36, 0.014, 65] } },
+      "800": { "$value": { "colorSpace": "oklch", "components": [0.28, 0.012, 65] } },
+      "850": { "$value": { "colorSpace": "oklch", "components": [0.235, 0.011, 65] } },
+      "900": { "$value": { "colorSpace": "oklch", "components": [0.19, 0.01, 65] } },
+      "950": { "$value": { "colorSpace": "oklch", "components": [0.145, 0.008, 65] } }
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "sm": { "$value": { "value": 0.375, "unit": "rem" } },
+    "md": { "$value": { "value": 0.625, "unit": "rem" } },
+    "lg": { "$value": { "value": 1, "unit": "rem" } }
+  },
+  "font": {
+    "family": {
+      "sans": { "$type": "fontFamily", "$value": ["Avenir Next", "Avenir", "Segoe UI", "system-ui", "sans-serif"] }
+    },
+    "weight": {
+      "bold": { "$type": "fontWeight", "$value": 700 }
+    }
+  }
+}

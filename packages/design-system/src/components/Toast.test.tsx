@@ -1,0 +1,1005 @@
+import { act, cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { createContext, Profiler, use, useRef, useState, type ReactNode } from 'react';
+import { renderToString } from 'react-dom/server';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { heldModals } from '../overlay/modalStack.js';
+import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { useModalLayer } from '../hooks/useModalLayer.js';
+import { usePopover } from '../hooks/usePopover.js';
+import { Popover } from './Popover.js';
+import { Dialog } from './Dialog.js';
+import { matchesHotkey, Toast, type ToastRegionProps } from './Toast.js';
+import { createToaster, type Toaster } from './toaster.js';
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
+
+/** Renders, then lets the region's live list settle, as toasts show a task after it. */
+function render(ui: Parameters<typeof rtlRender>[0]): ReturnType<typeof rtlRender> {
+  const fake = vi.isFakeTimers();
+  if (!fake) vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const result = rtlRender(ui);
+  act(() => void vi.advanceTimersByTime(0));
+  if (!fake) vi.useRealTimers();
+  return result;
+}
+
+function Region({ toaster, ...props }: { toaster: Toaster } & Partial<ToastRegionProps>) {
+  return (
+    <Toast.Region toaster={toaster} {...props}>
+      {(toast) => (
+        <Toast.Root>
+          <Toast.Title>{toast.title}</Toast.Title>
+          <Toast.Action>Undo</Toast.Action>
+          <Toast.Close />
+        </Toast.Root>
+      )}
+    </Toast.Region>
+  );
+}
+
+/** An open Popover, shown as it mounts; `onEscape` hears when Escape closes it. */
+function OpenPopover({ onEscape }: { onEscape: () => void }) {
+  const popover = usePopover({
+    defaultOpen: true,
+    onOpenChange: (open, reason) => {
+      if (!open && reason === 'escape') onEscape();
+    },
+  });
+  return <Popover.Root {...popover.getPopoverProps()}>Popover</Popover.Root>;
+}
+
+describe('Toast', () => {
+  it('renders nothing but its home on the server', () => {
+    const toaster = createToaster();
+    toaster.add({ title: 'From another request' });
+    const html = renderToString(<Region toaster={toaster} />);
+    expect(html).not.toContain('<section');
+  });
+
+  it('renders a named region with a polite live list, before any toast', () => {
+    render(<Region toaster={createToaster()} aria-label="알림" />);
+    const region = screen.getByRole('region', { name: '알림' });
+    expect(region.querySelector('ol')?.getAttribute('aria-live')).toBe('polite');
+    expect(region.closest('[popover]')?.getAttribute('popover')).toBe('manual');
+  });
+
+  it('takes the tone from the toast and reads every tone through the one live list', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} />);
+    act(() => {
+      toaster.add({ title: 'Saved', tone: 'success' });
+      toaster.add({ title: 'Failed', tone: 'critical' });
+    });
+    const saved = screen.getByText('Saved').parentElement!;
+    const failed = screen.getByText('Failed').parentElement!;
+    expect(saved.dataset.tone).toBe('success');
+    expect(failed.dataset.tone).toBe('critical');
+    expect(failed.getAttribute('role')).toBeNull();
+    expect(screen.getByRole('region').querySelectorAll('[aria-live], [role="alert"], [role="status"]')).toHaveLength(1);
+  });
+
+  it('lists the newest first', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} />);
+    act(() => {
+      toaster.add({ title: 'Old' });
+      toaster.add({ title: 'New' });
+    });
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      expect.stringContaining('New'),
+      expect.stringContaining('Old'),
+    ]);
+  });
+
+  it('dismisses from Close and from Action unless the action prevents it', () => {
+    const toaster = createToaster();
+    function Keep() {
+      return (
+        <Toast.Region toaster={toaster}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Toast.Action onClick={(event) => toast.title === 'Keep' && event.preventDefault()}>Act</Toast.Action>
+              <Toast.Close>Got it</Toast.Close>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      );
+    }
+    render(<Keep />);
+    act(() => void toaster.add({ id: 'k', title: 'Keep' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Act' }));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    expect(toaster.getSnapshot()[0]?.open ?? false).toBe(false);
+  });
+
+  it('takes a link as its action and dismisses when it is followed', () => {
+    const toaster = createToaster();
+    render(
+      <Toast.Region toaster={toaster}>
+        {(toast) => (
+          <Toast.Root>
+            <Toast.Title>{toast.title}</Toast.Title>
+            <Toast.Action render={(props) => <a {...props} href="#report" />}>View</Toast.Action>
+          </Toast.Root>
+        )}
+      </Toast.Region>,
+    );
+    act(() => void toaster.add({ title: 'Report ready' }));
+    const view = screen.getByRole('link', { name: 'View' });
+    expect(view.getAttribute('data-button-variant')).toBe('secondary');
+    fireEvent.click(view);
+    expect(toaster.getSnapshot()[0]?.open ?? false).toBe(false);
+  });
+
+  it('names Close "Dismiss" unless its text names it', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'A' }));
+    expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
+  });
+
+  it('dismisses after its duration, and waiting toasts show when one leaves', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} limit={1} />);
+    act(() => {
+      toaster.add({ title: 'First' });
+      toaster.add({ title: 'Second', duration: Infinity });
+    });
+    expect(screen.queryByText('Second')).toBeNull();
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(screen.queryByText('First')).toBeNull();
+    expect(screen.getByText('Second')).toBeTruthy();
+  });
+
+  it('removes a toast dismissed while it waited', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} limit={1} />);
+    act(() => {
+      toaster.add({ title: 'Shown' });
+      toaster.dismiss(toaster.add({ title: 'Waiting' }));
+    });
+    expect(toaster.getSnapshot().map((t) => t.title)).toEqual(['Shown']);
+  });
+
+  it('shows toasts already in the store a task after the live list', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster();
+    toaster.add({ title: 'Early' });
+    rtlRender(<Region toaster={toaster} />);
+    const list = screen.getByRole('list', { hidden: true });
+    expect(list.children).toHaveLength(0);
+    act(() => void vi.advanceTimersByTime(0));
+    expect(list.textContent).toContain('Early');
+  });
+
+  it('keeps its own pointer bookkeeping when a handler of yours prevents the event', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} onPointerLeave={(event) => event.preventDefault()} />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region);
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.pointerLeave(region);
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
+  it('pauses while a finger is down, spreads on its tap and stays spread until a press outside', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(
+      <>
+        <button type="button">Outside</button>
+        <Region toaster={toaster} layout="stack" />
+      </>,
+    );
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const title = screen.getByText('Hold');
+    // A finger enters on press and leaves on release.
+    fireEvent.pointerEnter(region, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1 });
+    // Held past the timer, not spread yet.
+    act(() => void vi.advanceTimersByTime(2000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    fireEvent.pointerUp(title, { pointerType: 'touch' });
+    fireEvent.pointerLeave(region, { pointerType: 'touch' });
+    fireEvent.click(title, { detail: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    act(() => void vi.advanceTimersByTime(2000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Outside' }), { pointerType: 'touch', buttons: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('neither spreads nor stays paused when a finger press turns into a scroll', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const title = screen.getByText('Hold');
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 3 });
+    fireEvent.pointerCancel(title, { pointerType: 'touch', pointerId: 3 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    // A click from no press, such as one from assistive technology.
+    fireEvent.click(title);
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('spreads on a tap from a pen that is not hovering, and not on a click from one that is', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region, { pointerType: 'pen', buttons: 0, pointerId: 4 });
+    fireEvent.pointerDown(region, { pointerType: 'pen', buttons: 1, pointerId: 4 });
+    fireEvent.pointerUp(region, { pointerType: 'pen', pointerId: 4 });
+    fireEvent.click(region, { detail: 1 });
+    fireEvent.pointerLeave(region, { pointerType: 'pen', pointerId: 4 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    fireEvent.pointerEnter(region, { pointerType: 'pen', buttons: 1, pointerId: 5 });
+    fireEvent.pointerDown(region, { pointerType: 'pen', buttons: 1, pointerId: 5 });
+    fireEvent.pointerUp(region, { pointerType: 'pen', pointerId: 5 });
+    fireEvent.click(region, { detail: 1 });
+    fireEvent.pointerLeave(region, { pointerType: 'pen', pointerId: 5 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+  });
+
+  it('collapses after a tap once no toast is left, so the next one is timed', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ id: 'a', title: 'First' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerDown(region, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerUp(region, { pointerType: 'touch' });
+    fireEvent.click(region, { detail: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    act(() => toaster.dismiss('a'));
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    act(() => void toaster.add({ title: 'Next' }));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot().every((toast) => !toast.open)).toBe(true);
+  });
+
+  it('spreads while a mouse is over it, even one dragged in, and never pins from a click', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region, { pointerType: 'mouse', buttons: 1, pointerId: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.pointerDown(region, { pointerType: 'mouse', buttons: 1, pointerId: 1 });
+    fireEvent.pointerUp(region, { pointerType: 'mouse', pointerId: 1 });
+    fireEvent.click(region, { detail: 1 });
+    fireEvent.pointerLeave(region, { pointerType: 'mouse', pointerId: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
+  it('counts a mouse resting on it and a finger tapping it apart', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <>
+        <button type="button">Outside</button>
+        <Region toaster={toaster} layout="stack" />
+      </>,
+    );
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region, { pointerType: 'mouse', pointerId: 1 });
+    // A touch that turns into a scroll leaves the mouse's hover alone.
+    fireEvent.pointerEnter(region, { pointerType: 'touch', buttons: 1, pointerId: 2 });
+    fireEvent.pointerDown(region, { pointerType: 'touch', buttons: 1, pointerId: 2 });
+    fireEvent.pointerCancel(region, { pointerType: 'touch', pointerId: 2 });
+    fireEvent.pointerLeave(region, { pointerType: 'touch', pointerId: 2 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    // A tap pins it, so it stays spread once the mouse leaves.
+    fireEvent.pointerEnter(region, { pointerType: 'touch', buttons: 1, pointerId: 3 });
+    fireEvent.pointerDown(region, { pointerType: 'touch', buttons: 1, pointerId: 3 });
+    fireEvent.pointerUp(region, { pointerType: 'touch', pointerId: 3 });
+    fireEvent.pointerLeave(region, { pointerType: 'touch', pointerId: 3 });
+    fireEvent.click(region, { detail: 1 });
+    fireEvent.pointerLeave(region, { pointerType: 'mouse', pointerId: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Outside' }), { pointerType: 'touch', buttons: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
+  it('spreads on a click only when a tap made it', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const title = screen.getByText('Hold');
+    const click = (init: PointerEventInit) =>
+      fireEvent(title, new PointerEvent('click', { bubbles: true, detail: 1, ...init }));
+    // A long press that sent no click, then a mouse click: no tap.
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 6 });
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 6 });
+    fireEvent.pointerDown(title, { pointerType: 'mouse', buttons: 1, pointerId: 1 });
+    fireEvent.pointerUp(title, { pointerType: 'mouse', pointerId: 1 });
+    click({ pointerType: 'mouse', pointerId: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    // Nor a click that names no pointer, from the keyboard or click().
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 7 });
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 7 });
+    click({ pointerType: '', pointerId: -1, detail: 0 });
+    fireEvent.click(title);
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    click({ pointerType: 'touch', pointerId: 8 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+  });
+
+  it("spreads on a tap whose click Safari names a mouse's", () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const title = screen.getByText('Hold');
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 9 });
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 9 });
+    fireEvent(title, new PointerEvent('click', { bubbles: true, detail: 1, pointerType: 'mouse', pointerId: 1 }));
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+  });
+
+  it('forgets a tap that sent no click once it scrolls, a key is pressed or a press lands outside', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <>
+        <button type="button">Outside</button>
+        <Region toaster={toaster} layout="stack" />
+      </>,
+    );
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const title = screen.getByText('Hold');
+    const press = () => fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 10 });
+    // A click that names no pointer but has a detail, as from a label.
+    const click = () => fireEvent.click(title, { detail: 1 });
+    press();
+    fireEvent.pointerCancel(title, { pointerType: 'touch', pointerId: 10 });
+    click();
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    press();
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 10 });
+    fireEvent.keyDown(title, { key: 'Tab' });
+    click();
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    press();
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 10 });
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Outside' }), { pointerType: 'mouse', buttons: 1 });
+    click();
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
+  it('spreads on a click from a pen only while it is not hovering', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const click = (pointerId: number) =>
+      fireEvent(region, new PointerEvent('click', { bubbles: true, detail: 1, pointerType: 'pen', pointerId }));
+    fireEvent.pointerEnter(region, { pointerType: 'pen', buttons: 0, pointerId: 11 });
+    click(11);
+    fireEvent.pointerLeave(region, { pointerType: 'pen', pointerId: 11 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    click(12);
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+  });
+
+  it('lets a tap on the collapsed stack reach what was under it, and spreads after', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => {
+      toaster.add({ id: 'back', title: 'Back' });
+      toaster.add({ id: 'front', title: 'Front' });
+    });
+    const region = screen.getByRole('region');
+    const back = screen.getByText('Back').closest('li')!;
+    fireEvent.pointerDown(back, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerUp(back, { pointerType: 'touch' });
+    // Nothing moves until the click.
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    fireEvent.click(back, { detail: 1 });
+    expect(toaster.getSnapshot().find((toast) => toast.id === 'back')!.open).toBe(true);
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    // Spread, a tap on the back toast's Close reaches it.
+    const backClose = screen.getAllByRole('button', { name: 'Dismiss' })[1]!;
+    fireEvent.pointerDown(backClose, { pointerType: 'touch', buttons: 1 });
+    fireEvent.pointerUp(backClose, { pointerType: 'touch' });
+    fireEvent.click(backClose, { detail: 1 });
+    expect(toaster.getSnapshot().find((toast) => toast.id === 'back')!.open).toBe(false);
+  });
+
+  it('leaves a typing hotkey to a text field, but not a function key or a Ctrl or Meta chord', () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page({ hotkey }: { hotkey: string }) {
+      return (
+        <>
+          <input aria-label="Name" />
+          <input type="checkbox" aria-label="Agree" />
+          <Region toaster={toaster} hotkey={hotkey} />
+        </>
+      );
+    }
+    const { rerender } = render(<Page hotkey="Alt+T" />);
+    act(() => void toaster.add({ title: 'Keys' }));
+    const input = screen.getByRole('textbox', { name: 'Name' });
+    input.focus();
+    fireEvent.keyDown(input, { key: 't', code: 'KeyT', altKey: true });
+    expect(document.activeElement).toBe(input);
+    // A checkbox types nothing.
+    const checkbox = screen.getByRole('checkbox', { name: 'Agree' });
+    checkbox.focus();
+    fireEvent.keyDown(checkbox, { key: 't', code: 'KeyT', altKey: true });
+    expect(document.activeElement).toBe(screen.getByRole('region'));
+    input.focus();
+    // Ctrl with Alt is AltGr on Windows, which types.
+    rerender(<Page hotkey="Ctrl+Alt+E" />);
+    fireEvent.keyDown(input, { key: '€', code: 'KeyE', ctrlKey: true, altKey: true });
+    expect(document.activeElement).toBe(input);
+    rerender(<Page hotkey="F8" />);
+    fireEvent.keyDown(input, { key: 'F8', code: 'F8' });
+    expect(document.activeElement).toBe(screen.getByRole('region'));
+    for (const [hotkey, init] of [
+      ['Ctrl+K', { key: 'k', code: 'KeyK', ctrlKey: true }],
+      ['Meta+K', { key: 'k', code: 'KeyK', metaKey: true }],
+      ['Cmd+K', { key: 'k', code: 'KeyK', metaKey: true }],
+    ] as const) {
+      input.focus();
+      rerender(<Page hotkey={hotkey} />);
+      fireEvent.keyDown(input, init);
+      expect(document.activeElement, hotkey).toBe(screen.getByRole('region'));
+    }
+  });
+
+  it('warns once about a hotkey with an unknown modifier, not with each new toast', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const toaster = createToaster({ duration: Infinity });
+      render(<Region toaster={toaster} hotkey="Hyper+T" />);
+      act(() => void toaster.add({ id: 'a', title: 'One' }));
+      act(() => void toaster.remove('a'));
+      act(() => void toaster.add({ title: 'Two' }));
+      const warnings = error.mock.calls.filter(([message]) => String(message).includes('Hyper+T'));
+      expect(warnings).toHaveLength(1);
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it('pauses the timer while the pointer is over the region', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    act(() => void vi.advanceTimersByTime(600));
+    fireEvent.pointerEnter(region);
+    act(() => void vi.advanceTimersByTime(2000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    fireEvent.pointerLeave(region);
+    // The rest of the time, not all of it again.
+    act(() => void vi.advanceTimersByTime(300));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(150));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('counts the time already shown when update() changes the duration', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} />);
+    let id = '';
+    act(() => void (id = toaster.add({ title: 'Upload' })));
+    act(() => void vi.advanceTimersByTime(600));
+    act(() => toaster.update(id, { duration: 800 }));
+    act(() => void vi.advanceTimersByTime(150));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(100));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('keeps a toast shown again under the same id as its exit ends', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ id: 'x', title: 'First' }));
+    const item = screen.getByText('First').closest('li')!;
+    let readded = false;
+    // Shows the id again right after the commit that ends the exit, before
+    // the leaving toast's own effects run.
+    const observer = new MutationObserver(() => {
+      if (readded || item.hasAttribute('data-todae-exiting')) return;
+      readded = true;
+      toaster.add({ id: 'x', title: 'Again' });
+    });
+    act(() => toaster.dismiss('x'));
+    expect(item.hasAttribute('data-todae-exiting')).toBe(true);
+    observer.observe(item, { attributes: true, attributeFilter: ['data-todae-exiting'] });
+    await waitFor(() => expect(readded).toBe(true));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    observer.disconnect();
+    expect(toaster.getSnapshot().map((t) => [t.title, t.open])).toEqual([['Again', true]]);
+  });
+
+  it('leaves a hotkey that was handled, composed or held to the page', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Keys' }));
+    const region = screen.getByRole('region');
+    const press = (init: KeyboardEventInit, handled = false) => {
+      const event = new KeyboardEvent('keydown', { key: 'F8', code: 'F8', bubbles: true, cancelable: true, ...init });
+      if (handled) event.preventDefault();
+      document.body.dispatchEvent(event);
+    };
+    press({}, true);
+    press({ isComposing: true });
+    press({ repeat: true });
+    expect(document.activeElement).not.toBe(region);
+    press({});
+    expect(document.activeElement).toBe(region);
+  });
+
+  it('takes a hotkey with keyCode 229 outside a composition, as Windows sends with an IME on', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Keys' }));
+    const region = screen.getByRole('region');
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'F8', code: 'F8', keyCode: 229, bubbles: true, cancelable: true } as KeyboardEventInit),
+    );
+    expect(document.activeElement).toBe(region);
+  });
+
+  it('waits out a duration longer than setTimeout takes', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster();
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Long', duration: 2 ** 32 }));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(2 ** 31));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(2 ** 31));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('shows at least one toast whatever the limit', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} limit={0} />);
+    act(() => void toaster.add({ title: 'Shown anyway' }));
+    expect(screen.getByText('Shown anyway')).toBeTruthy();
+  });
+
+  it('marks the region expanded while focus is inside', async () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'A' }));
+    const region = screen.getByRole('region');
+    expect(region.dataset.layout).toBe('stack');
+    act(() => screen.getByRole('button', { name: 'Undo' }).focus());
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    act(() => screen.getByRole('button', { name: 'Undo' }).blur());
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+  });
+
+  it('keeps keyboard focus in the region when a focused toast leaves and others remain', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => {
+      toaster.add({ id: 'a', title: 'A' });
+      toaster.add({ id: 'b', title: 'B' });
+    });
+    act(() => screen.getAllByRole('button', { name: 'Dismiss' })[0]!.focus());
+    act(() => toaster.remove('b'));
+    expect(document.activeElement).toBe(screen.getByRole('region'));
+  });
+
+  it('sends focus back where it came in from when the last toast leaves', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <>
+        <button type="button">Before</button>
+        <Region toaster={toaster} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const before = screen.getByRole('button', { name: 'Before' });
+    act(() => before.focus());
+    act(() => screen.getByRole('button', { name: 'Undo' }).focus());
+    act(() => toaster.remove('a'));
+    expect(document.activeElement).toBe(before);
+  });
+
+  it('dismisses a toast on Escape through the Escape stack, leaving the key to go on', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    act(() => undo.focus());
+    const seen: boolean[] = [];
+    const listen = (event: KeyboardEvent) => seen.push(event.defaultPrevented);
+    // After focus came in, which put the toast on the stack.
+    document.addEventListener('keydown', listen);
+    try {
+      fireEvent.keyDown(undo, { key: 'Escape' });
+    } finally {
+      document.removeEventListener('keydown', listen);
+    }
+    expect(toaster.getSnapshot().find((toast) => toast.id === 'a')?.open).toBe(false);
+    // Claimed, not stopped: a listener after the stack's still sees it.
+    expect(seen).toEqual([true]);
+  });
+
+  it('lets a layer inside a toast take Escape first', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const inner = vi.fn();
+    function Inner() {
+      const ref = useRef<HTMLSpanElement>(null);
+      useEscapeKey(true, true, inner, ref);
+      return <span ref={ref}>Tip</span>;
+    }
+    render(
+      <Toast.Region toaster={toaster}>
+        {(toast) => (
+          <Toast.Root>
+            <Toast.Title>{toast.title}</Toast.Title>
+            <Inner />
+            <Toast.Close />
+          </Toast.Root>
+        )}
+      </Toast.Region>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const close = screen.getByRole('button', { name: 'Dismiss' });
+    act(() => close.focus());
+    fireEvent.keyDown(close, { key: 'Escape' });
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(toaster.getSnapshot()[0]?.open).toBe(true);
+  });
+
+  it('sends focus back on Escape from the region itself, unless your handler took the key', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const onKeyDown = vi.fn();
+    render(
+      <>
+        <button type="button">Before</button>
+        <Region toaster={toaster} onKeyDown={onKeyDown} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const before = screen.getByRole('button', { name: 'Before' });
+    const region = screen.getByRole('region');
+    act(() => before.focus());
+    fireEvent.keyDown(before, { key: 'F8' });
+    expect(document.activeElement).toBe(region);
+    onKeyDown.mockImplementationOnce((event: { preventDefault: () => void }) => event.preventDefault());
+    fireEvent.keyDown(region, { key: 'Escape' });
+    expect(document.activeElement).toBe(region);
+    fireEvent.keyDown(region, { key: 'Escape' });
+    expect(document.activeElement).toBe(before);
+    expect(toaster.getSnapshot()[0]?.open).toBe(true);
+  });
+
+  it('takes Escape on the region before a popover opened before focus came in', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const popoverEscape = vi.fn();
+    render(
+      <>
+        <button type="button">Before</button>
+        <Region toaster={toaster} />
+        <OpenPopover onEscape={popoverEscape} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const before = screen.getByRole('button', { name: 'Before' });
+    act(() => before.focus());
+    fireEvent.keyDown(before, { key: 'F8' });
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'Escape' });
+    expect(popoverEscape).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(before);
+  });
+
+  it('takes Escape in a toast shown again before a popover opened before focus came in', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const popoverEscape = vi.fn();
+    const { rerender } = render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    rerender(
+      <>
+        <Region toaster={toaster} />
+        <OpenPopover onEscape={popoverEscape} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A again' }));
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    act(() => undo.focus());
+    fireEvent.keyDown(undo, { key: 'Escape' });
+    expect(popoverEscape).not.toHaveBeenCalled();
+    expect(toaster.getSnapshot()[0]?.open).toBe(false);
+  });
+
+  it('keeps focus in the dialog the toasts sit in when the last one leaves', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <>
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="d">
+          <button type="button">Own</button>
+        </Dialog.Root>
+        <Region toaster={toaster} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const dialog = screen.getByRole('dialog');
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    expect(dialog.contains(undo)).toBe(true);
+    // Reached with no known origin, as by a click with nothing focused before.
+    act(() => undo.focus());
+    act(() => toaster.remove('a'));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Own' }));
+  });
+
+  it('stays expanded when the window loses focus with focus still inside', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'A' }));
+    const region = screen.getByRole('region');
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    act(() => undo.focus());
+    // A window blur: no relatedTarget, and the active element stays.
+    fireEvent.blur(undo, { relatedTarget: null });
+    expect(document.activeElement).toBe(undo);
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+  });
+
+  it('raises the region for a toast out of the queue after a replaced one', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} limit={1} />);
+    act(() => {
+      toaster.add({ id: 'a', title: 'A' });
+      toaster.add({ title: 'B' });
+      toaster.add({ id: 'a', title: 'A again' });
+    });
+    const host = screen.getByRole('region').parentElement!;
+    const show = vi.spyOn(host, 'showPopover');
+    act(() => toaster.dismiss('a'));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(screen.getByText('B')).toBeTruthy();
+    expect(show).toHaveBeenCalled();
+  });
+
+  it('reads hover again after it moves, as a moved element sends no pointerleave', async () => {
+    const toaster = createToaster();
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open
+          </button>
+          <Dialog.Root open={open} onOpenChange={setOpen} aria-label="d">
+            d
+          </Dialog.Root>
+          <Region toaster={toaster} />
+        </>
+      );
+    }
+    render(<Page />);
+    act(() => void toaster.add({ title: 'Hovered' }));
+    const frame = () => act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    // Past the read after the toast showed.
+    await frame();
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region);
+    await frame();
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    // jsdom matches no :hover, as for a pointer the move left behind.
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+  });
+});
+
+describe('Toast renders', () => {
+  // A Profiler inside each toast's content counts the commits that rendered it.
+  function Counted({ toaster, counts, suffix = '' }: { toaster: Toaster; counts: Map<string, number>; suffix?: string }) {
+    return (
+      <Toast.Region toaster={toaster} limit={10}>
+        {(toast) => (
+          <Profiler id={String(toast.title)} onRender={(id) => void counts.set(id, (counts.get(id) ?? 0) + 1)}>
+            <Toast.Root>
+              <Toast.Title>
+                {toast.title}
+                {suffix}
+              </Toast.Title>
+              <Toast.Close />
+            </Toast.Root>
+          </Profiler>
+        )}
+      </Toast.Region>
+    );
+  }
+
+  it('renders only the toast that arrives, changes or leaves', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const counts = new Map<string, number>();
+    render(<Counted toaster={toaster} counts={counts} />);
+    const ids: string[] = [];
+    act(() => {
+      for (const title of ['One', 'Two', 'Three']) ids.push(toaster.add({ title }));
+    });
+    counts.clear();
+    act(() => void toaster.add({ title: 'Four' }));
+    expect(screen.getByText('Four')).toBeTruthy();
+    expect([...counts.keys()]).toEqual(['Four']);
+    counts.clear();
+    act(() => toaster.update(ids[1]!, { description: 'More' }));
+    expect([...counts.keys()]).toEqual(['Two']);
+    counts.clear();
+    act(() => toaster.dismiss(ids[0]!));
+    expect([...counts.keys()]).toEqual(['One']);
+  });
+
+  it('renders no toast content when the pointer pauses the timers', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const counts = new Map<string, number>();
+    render(<Counted toaster={toaster} counts={counts} />);
+    act(() => {
+      toaster.add({ title: 'One' });
+      toaster.add({ title: 'Two' });
+    });
+    counts.clear();
+    fireEvent.pointerEnter(screen.getByRole('region'), { pointerType: 'mouse' });
+    expect(screen.getByRole('region').hasAttribute('data-expanded')).toBe(true);
+    expect(counts.size).toBe(0);
+  });
+
+  it('lets the render function read context, per toast, as it changes', () => {
+    const Unit = createContext('USD');
+    // At module scope in an app, so it keeps its identity across renders.
+    const UnitToast = (toast: { title?: ReactNode }) => {
+      const unit = use(Unit);
+      return (
+        <Toast.Root>
+          <Toast.Title>
+            {toast.title} {unit}
+          </Toast.Title>
+        </Toast.Root>
+      );
+    };
+    const toaster = createToaster({ duration: Infinity });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const ui = (unit: string) => (
+      <Unit.Provider value={unit}>
+        <Toast.Region toaster={toaster}>{UnitToast}</Toast.Region>
+      </Unit.Provider>
+    );
+    const { rerender } = render(ui('USD'));
+    act(() => void toaster.add({ title: 'Tax' }));
+    act(() => void toaster.add({ title: 'Total' }));
+    expect(screen.getByText('Tax USD')).toBeTruthy();
+    rerender(ui('EUR'));
+    expect(screen.getByText('Tax EUR')).toBeTruthy();
+    expect(screen.getByText('Total EUR')).toBeTruthy();
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('renders every toast again with a new render function', () => {
+    const toaster = createToaster({ duration: Infinity });
+    const counts = new Map<string, number>();
+    const { rerender } = render(<Counted toaster={toaster} counts={counts} />);
+    act(() => {
+      toaster.add({ title: 'One' });
+      toaster.add({ title: 'Two' });
+    });
+    rerender(<Counted toaster={toaster} counts={counts} suffix="!" />);
+    expect(screen.getByText('One!')).toBeTruthy();
+    expect(screen.getByText('Two!')).toBeTruthy();
+  });
+});
+
+describe('useModalLayer', () => {
+  it('holds a dialog that attaches after open turns true', async () => {
+    function Late() {
+      const ref = useRef<HTMLDialogElement>(null);
+      const [mounted, setMounted] = useState(false);
+      useModalLayer(ref, true);
+      return (
+        <>
+          <button type="button" onClick={() => setMounted(true)}>
+            Mount
+          </button>
+          {mounted ? <dialog ref={ref} aria-label="late" /> : null}
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(screen.getByRole('button', { name: 'Mount' }));
+    const dialog = screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
+    dialog.showModal();
+    await act(async () => undefined);
+    expect(heldModals()).toEqual([dialog]);
+    dialog.close();
+    await act(async () => undefined);
+    expect(heldModals()).toHaveLength(0);
+  });
+
+  it('holds a dialog of your own from open and showModal() until close()', async () => {
+    function Own({ open }: { open: boolean }) {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, open);
+      return <dialog ref={ref} aria-label="own" />;
+    }
+    const { rerender } = render(<Own open />);
+    const dialog = screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
+    expect(heldModals()).toHaveLength(0);
+    dialog.showModal();
+    await act(async () => undefined);
+    expect(heldModals()).toEqual([dialog]);
+    dialog.close();
+    await act(async () => undefined);
+    expect(heldModals()).toHaveLength(0);
+    dialog.showModal();
+    await act(async () => undefined);
+    // Still shown, so the page is still inert: it stays until close().
+    rerender(<Own open={false} />);
+    expect(heldModals()).toEqual([dialog]);
+    dialog.close();
+    await act(async () => undefined);
+    expect(heldModals()).toHaveLength(0);
+  });
+});
+
+describe('matchesHotkey', () => {
+  const key = (init: KeyboardEventInit) => new KeyboardEvent('keydown', init);
+  it('matches the key with exactly the named modifiers', () => {
+    expect(matchesHotkey(key({ key: 'F8', code: 'F8' }), 'F8')).toBe(true);
+    expect(matchesHotkey(key({ key: 'F8', code: 'F8', shiftKey: true }), 'F8')).toBe(false);
+    expect(matchesHotkey(key({ key: 't', code: 'KeyT', altKey: true }), 'Alt+T')).toBe(true);
+    // Option+T types a dagger on macOS; the code still says T.
+    expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'alt+t')).toBe(true);
+    expect(matchesHotkey(key({ key: 't', code: 'KeyT', ctrlKey: true }), 'Control+T')).toBe(true);
+    expect(matchesHotkey(key({ key: 't', code: 'KeyT' }), 'Alt+T')).toBe(false);
+    // Option+1 types ¡ on macOS.
+    expect(matchesHotkey(key({ key: '¡', code: 'Digit1', altKey: true }), 'Alt+1')).toBe(true);
+    // On AZERTY the key at QWERTY's Q types a: the typed letter decides.
+    expect(matchesHotkey(key({ key: 'a', code: 'KeyQ', altKey: true }), 'Alt+Q')).toBe(false);
+    expect(matchesHotkey(key({ key: 'a', code: 'KeyQ', altKey: true }), 'Alt+A')).toBe(true);
+  });
+
+  it('takes Cmd and Option as Meta and Alt, and never the bare key for an unknown name', () => {
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Cmd+K')).toBe(true);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Command+K')).toBe(true);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Cmd+K')).toBe(false);
+    expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Option+T')).toBe(true);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Hyper+K')).toBe(false);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Hyper+K')).toBe(false);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Constructor+K')).toBe(false);
+    expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Opt+T')).toBe(true);
+  });
+
+  it('reads Space by name', () => {
+    expect(matchesHotkey(key({ key: ' ', code: 'Space', ctrlKey: true }), 'Ctrl+Space')).toBe(true);
+  });
+
+  it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {
+    const event = { altKey: false, ctrlKey: false, metaKey: false, shiftKey: false } as unknown as KeyboardEvent;
+    expect(matchesHotkey(event, 'F8')).toBe(false);
+  });
+});

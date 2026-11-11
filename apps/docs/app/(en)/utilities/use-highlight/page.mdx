@@ -1,0 +1,57 @@
+import HighlightSearch from '../../../../examples/utilities/use-highlight/HighlightSearch';
+
+# useHighlight
+
+Marks text matches, such as search results, with the browser's CSS Custom Highlight API. The hook finds each match as a `Range` and adds it to a `Highlight` in `CSS.highlights`; your CSS paints it with `::highlight(name)`. No `<mark>` elements are added, so the DOM, the selection and focus stay as they are.
+
+Put `ref` on the element to search and pass `query`. The hook searches again when text or elements under `ref` change. Matching ignores letter case unless `caseSensitive` is set, and the query is plain text, not a pattern. A list matches any of its terms.
+
+```tsx
+const found = useHighlight({ name: 'search', query });
+
+<article ref={found.ref}>{children}</article>
+<output>{found.matches.length} results</output>
+```
+
+```css
+::highlight(search) {
+  background-color: var(--todae-color-status-warning-bg);
+  color: var(--todae-color-fg-default);
+}
+
+::highlight(search-current) {
+  background-color: var(--todae-color-status-warning-border);
+  color: var(--todae-color-fg-default);
+}
+```
+
+<Example of={HighlightSearch} />
+
+`matches` holds a live `Range` per match, in document order. Text hidden by CSS is still matched. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
+
+To mark the current result, pass it to a second hook as `ranges` under another name, with a higher `priority` so it paints on top. The demo above does this. Hooks that share a `name` paint together into one `Highlight`, so one rule styles them all, such as every combobox on a page; the one mounted last sets its `priority` and `type`. Give a hook its own `name` when its marks need their own look, as the current result does; to style several names the same way, list them: `::highlight(a), ::highlight(b)`. `type` sets `spelling-error` or `grammar-error` for spelling and grammar marks.
+
+```tsx
+const current = found.matches[index];
+useHighlight({ name: 'search-current', ranges: current ? [current] : undefined, priority: 1 });
+```
+
+The hook does not announce anything. Show the count in an `<output>` or other live region when a screen reader user needs it.
+
+## Accessible composition
+
+**Todae handles:** The hook changes no DOM: no `<mark>`, no role, no attribute. The searched content keeps its roles, names, focus and selection. Matches are painted by CSS alone; `matches` gives them to your code as `Range`s in document order.
+
+**You supply:** The same information in text: the match count in a live region, as described above, and the position of the current match, such as "3 of 12". A `::highlight()` style with enough contrast against both the text and its background, in light and dark themes. A current-match style that differs from the others by more than hue. Scrolling and focus: the hook moves neither, so bring the current match into view yourself.
+
+**Watch for:** The highlight as the only sign of the current result. Two hooks with the same `name` and different `priority` or `type`: a name has one of each, so the one mounted last sets them for both.
+
+## When to use
+
+**When:** Marking text without changing the DOM: find in page, search results in a list or document, matched letters in a filter.
+
+**When not:** Highlighting that must be in the accessibility tree → a real `<mark>` element. A single selected item in a list → `aria-selected` and a style, as OptionList does.
+
+## Props
+
+<PropsTable name="useHighlight" />

@@ -1,0 +1,132 @@
+@layer todae.components {
+  .dialog {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--todae-overlay-scrim-bg);
+    color: var(--todae-dialog-fg);
+  }
+
+  .dialog[open] {
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    transition: opacity var(--todae-dialog-motion-duration-enter) var(--todae-dialog-motion-easing-enter);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  .dialog[open][data-entered] {
+    opacity: 1;
+  }
+
+  .dialog[open][data-todae-exiting] {
+    opacity: 0;
+    transition-duration: var(--todae-dialog-motion-duration-exit);
+    transition-timing-function: var(--todae-dialog-motion-easing-exit);
+  }
+
+  .dialog::backdrop {
+    background: transparent;
+  }
+
+  .panel {
+    position: relative;
+    box-sizing: border-box;
+    width: min(100%, var(--todae-dialog-max-width));
+    max-height: calc(100vh - (2 * var(--todae-dialog-padding-y)));
+    max-height: calc(100dvh - (2 * var(--todae-dialog-padding-y)));
+    overflow: auto;
+    /* Room for a focus ring past the focused box when it scrolls into view,
+       as ScrollArea has. */
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-dialog-gap);
+    padding: var(--todae-dialog-padding-y) var(--todae-dialog-padding-x);
+    background: var(--todae-dialog-bg);
+    /* The fill scroll arrows inside take, so they hide the row they cover. */
+    --_scroll-surface: var(--todae-dialog-bg);
+    color: var(--todae-dialog-fg);
+    border: var(--todae-dialog-border-width) solid var(--todae-dialog-border);
+    border-radius: var(--todae-dialog-radius);
+    box-shadow: var(--todae-dialog-shadow);
+    /* How far below its place the panel starts and ends. It rises by
+       layout, not a transform, so a tooltip anchored inside follows it. */
+    --_rise: var(--todae-dialog-motion-offset);
+    top: var(--_rise);
+    opacity: 0;
+    transition:
+      opacity var(--todae-dialog-motion-duration-enter) var(--todae-dialog-motion-easing-enter),
+      top var(--todae-dialog-motion-duration-enter) var(--todae-dialog-motion-easing-enter);
+
+    @starting-style {
+      top: var(--_rise);
+      opacity: 0;
+    }
+  }
+
+  .dialog[open][data-entered] .panel {
+    top: 0;
+    opacity: 1;
+  }
+
+  .dialog[open][data-todae-exiting] .panel {
+    top: var(--_rise);
+    opacity: 0;
+    transition-duration: var(--todae-dialog-motion-duration-exit);
+    transition-timing-function: var(--todae-dialog-motion-easing-exit);
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--todae-dialog-title-font-size);
+    font-weight: var(--todae-dialog-title-font-weight);
+  }
+
+  .description,
+  .header,
+  .body,
+  .footer {
+    margin: 0;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: var(--todae-dialog-gap);
+  }
+
+  /* One row: the first close part placed directly in the header sits at the
+     end with anything after it; what comes before it stays at the start. The
+     attribute is every close part's own, so Dialog's and Drawer's both match. */
+  .header > [data-todae-close] {
+    margin-inline-start: auto;
+  }
+
+  .header > [data-todae-close] ~ [data-todae-close] {
+    margin-inline-start: 0;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-dialog-gap);
+    justify-content: flex-end;
+  }
+
+  /* Fades keep their tokens; the panel no longer rises. */
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      --_rise: 0px;
+    }
+  }
+}

@@ -1,0 +1,19 @@
+import PresentationBadge from '../../../../examples/utilities/use-sheet-presentation/PresentationBadge';
+
+# useSheetPresentation
+
+`useSheetPresentation` chooses a sheet when the pointer is coarse **or** the viewport is narrower than 640px, and a popover otherwise. Those are defaults: `coarseQuery` and `narrowWidth` change them. Unless `forced` is `'popover'` or `'sheet'`, server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`; it is not `isTouch`. [useCombobox](/utilities/use-combobox) uses it for `presentation: 'auto'`. `resolveSheetPresentation({ coarse, narrow })` is its rule without the media queries: `'sheet'` when either is true.
+
+<Example of={PresentationBadge} />
+
+## When to use
+
+**When:** Choose popover or sheet at runtime: coarse pointer or width under 640px (by default) → sheet. SSR and first paint are popover. `forced` overrides.
+
+**When not:** Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → [usePopover](/utilities/use-popover) alone.
+
+## Props
+
+<PropsTable name="useSheetPresentation" />
+
+<PropsTable name="resolveSheetPresentation" />

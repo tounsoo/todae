@@ -1,0 +1,116 @@
+import ButtonIconLibraries from '../../../examples/button/ButtonIconLibraries';
+import ButtonGroupAlign from '../../../examples/button/ButtonGroupAlign';
+import ButtonToggle from '../../../examples/button/ButtonToggle';
+import ButtonVariants from '../../../examples/button/ButtonVariants';
+import ButtonIcons from '../../../examples/button/ButtonIcons';
+import ButtonLinks from '../../../examples/button/ButtonLinks';
+import ButtonOverflow from '../../../examples/button/ButtonOverflow';
+
+# Button
+
+`Button.Root` is the control. `Button.Icon` is a compound part. Icon position is DOM order. The icon is decorative (`aria-hidden`). Icon-only roots need `aria-label` or `aria-labelledby` on `Button.Root`.
+
+Icon-only roots tip that name. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip. Auto tips are never interactive.
+
+Variants use the existing paint packs. Default `type` is `button`. `aria-disabled="true"` draws the button as disabled but keeps it focusable, for a button that turns unavailable while it may have focus, such as Next at the last page: `disabled` would drop that focus to the page. A click then does nothing: `onClick` doesn't run, a toggle doesn't flip, and the button submits no form and follows no link.
+
+<Example of={ButtonVariants} />
+
+Leading icon, trailing icon, icon-only.
+
+<Example of={ButtonIcons} />
+
+Overflowing label.
+
+<Example of={ButtonOverflow} />
+
+## Toggle
+
+Pass `pressed` or `defaultPressed` and the button becomes a toggle: it sets `aria-pressed` and flips on click, unless it is `aria-disabled`. `onPressedChange` gets the new state. A pressed button keeps the active colors with an inset ring. For a set of toggles, use [ToggleGroup](/toggle-group).
+
+<Example of={ButtonToggle} />
+
+## Button.Group
+
+Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by the border width and share the outer radius. No selection state.
+
+<Example of={ButtonGroupAlign} />
+
+## Icons
+
+`Button.Icon` takes an icon from any library, such as Lucide, Phosphor or Tabler. An `svg` or `img` directly inside it takes the `button.icon.size` token, whatever the icon's own `size` or `width`. An icon-only button is a square as tall as a labeled one.
+
+<Example of={ButtonIconLibraries} />
+
+## Links
+
+A link that should look like a button is still a link: it goes somewhere, Enter follows it, and screen readers list it with the page's links. Pass `render` and return the link with the props it is handed, the way a router plugs into [Link](/link). The button keeps its look, its icons and its tips, and the element keeps its own role. `type`, `disabled` and `pressed` are not allowed with `render`, since a link takes none of them. An `a` without `href` goes nowhere and looks disabled. `render` must return an `a` or a `button`; anything else logs an error in development. A `button` it returns sets its own `type`.
+
+```tsx
+import NextLink from 'next/link';
+
+<Button.Root render={(props) => <NextLink {...props} href="/guides/build-on-todae" />}>
+  Get started
+</Button.Root>
+<Button.Root variant="secondary" render={(props) => <a {...props} href="https://github.com/tounsoo/todae" />}>
+  Source
+</Button.Root>
+```
+
+`Button.Root` is a client component, so a Server Component can't pass it a `render` function. Write the link in a client component of your own and render that. Type its props as `Omit<ButtonRenderedProps, 'render'>` plus the `href` it takes, so every other `Button.Root` prop still reaches the link.
+
+<Example of={ButtonLinks} />
+
+## Accessible composition
+
+**Todae handles:** A native `<button>` with `type="button"`, so it keeps the browser's keyboard behaviour, and a focus ring on `:focus-visible`. With `render`, the element keeps its own role; Todae adds none. `pressed` sets `aria-pressed`. `Button.Icon` is `aria-hidden`. An icon-only root shows its `aria-label` or `aria-labelledby` text as a tooltip, and logs an error in development when it has no name. The tip repeats the name, so it is hidden from screen readers and adds nothing to `aria-describedby`, and the name is read once. `Button.Group` is always `role="group"`.
+
+**You supply:** A name for every icon-only button, and an `aria-label` for each `Button.Group`. A wrapper whose buttons can be icon-only should require the name in its props type, pass it as `aria-label`, and spread the rest so `ref` and `disabled` reach the button.
+
+```tsx
+import type { ReactNode } from 'react';
+import { Button, type ButtonRootProps } from '@tounsoo/todae';
+
+type IconButtonProps = Omit<ButtonRootProps, 'aria-label' | 'aria-labelledby' | 'children'> & {
+  label: string;
+  icon: ReactNode;
+};
+
+export function IconButton({ label, icon, ...props }: IconButtonProps) {
+  return (
+    <Button.Root {...props} aria-label={label}>
+      <Button.Icon>{icon}</Button.Icon>
+    </Button.Root>
+  );
+}
+```
+
+**Watch for:** A wrapper that drops the rest props, which loses `ref` and ARIA. A `Button.Root` inside a link, or a link inside a button: interactive content cannot nest, so draw the link as the button with `render` instead. A toggle whose text flips, such as "Mute" to "Unmute", as `aria-pressed` changes; keep one label and let `pressed` carry the state. `tooltip={false}` on an icon-only button, which removes its only visible name. On an icon-only button, or one whose label is cut off, an `onPointerEnter` or `onFocus` that calls `preventDefault()`, which stops the automatic tooltip from showing; your `aria-describedby` stays as you set it.
+
+## When to use
+
+### Button.Root
+
+**When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
+
+**When not:** Navigation in text → [Link](/link); navigation that looks like a button → `Button.Root` with `render`. A setting that takes effect at once → Switch. A form choice → Checkbox. Selected segment → ToggleGroup (Button.Group has no selection).
+
+### Button.Icon
+
+**When:** Decorative icon inside `Button.Root`. Position = DOM order. Always aria-hidden.
+
+**When not:** Icon in a field → `Field.Icon`. Icon as the only name with no `aria-label` on Root. Outside `Button.Root`.
+
+### Button.Group
+
+**When:** Attached horizontal row of related `Button.Root` actions (`role="group"`). Name it with `aria-label`.
+
+**When not:** Toggles → ToggleGroup (no selection state here). Vertical or wrapping rows → Stack. Unrelated actions → separate buttons in Stack.
+
+## Props
+
+<PropsTable name="Button.Root" />
+
+<PropsTable name="Button.Icon" />
+
+<PropsTable name="Button.Group" />

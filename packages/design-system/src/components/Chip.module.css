@@ -1,0 +1,191 @@
+@layer todae.components {
+  /* Neutral is the base: a tone sets these, and every state falls back to its
+     own chip token while they are unset. initial stops them inheriting. */
+  .root {
+    --_tone-fg: initial;
+    --_tone-bg: initial;
+    --_tone-border: initial;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: var(--todae-chip-min-height);
+    gap: var(--todae-chip-gap);
+    padding: var(--todae-chip-padding-y) var(--todae-chip-padding-x);
+    border: var(--todae-chip-border-width) solid var(--_tone-border, var(--todae-chip-border-default));
+    border-radius: var(--todae-chip-radius);
+    background: var(--_tone-bg, var(--todae-chip-bg-default));
+    color: var(--_tone-fg, var(--todae-chip-fg-default));
+    font-size: var(--todae-chip-font-size);
+    font-weight: var(--todae-chip-font-weight);
+    line-height: var(--todae-chip-leading);
+    /* The hover colors fade in and out; focus and disabled take theirs at once. */
+    transition-property: background-color, color, border-color;
+    transition-duration: var(--todae-control-motion-duration);
+    transition-timing-function: var(--todae-control-motion-easing);
+  }
+
+  .root:has(> .dismiss) {
+    padding-inline-end: var(--todae-chip-dismiss-inset);
+  }
+
+  /* The +N of ChipList and Field.ChipInput (data-overflow) is no control by
+     itself; ChipList's button gives it the hover colors. */
+  .root:hover:not([data-disabled]):not([data-overflow]) {
+    background: var(--_tone-bg, var(--todae-chip-bg-hover));
+    color: var(--_tone-fg, var(--todae-chip-fg-hover));
+    border-color: var(--_tone-border, var(--todae-chip-border-hover));
+  }
+
+  .root:has(.dismiss:focus-visible) {
+    background: var(--_tone-bg, var(--todae-chip-bg-focus));
+    color: var(--_tone-fg, var(--todae-chip-fg-focus));
+    border-color: var(--todae-chip-border-focus);
+    outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+    outline-offset: var(--todae-chip-ring-offset);
+  }
+
+  .root:is(:has(.dismiss:focus-visible), [data-disabled]) {
+    transition: none;
+  }
+
+  .root[data-disabled] {
+    background: var(--todae-chip-bg-disabled);
+    color: var(--todae-chip-fg-disabled);
+    border-color: var(--todae-chip-border-disabled);
+    cursor: not-allowed;
+  }
+
+  .root[data-tone='info'] {
+    --_tone-fg: var(--todae-chip-info-fg);
+    --_tone-bg: var(--todae-chip-info-bg);
+    --_tone-border: var(--todae-chip-info-border);
+  }
+
+  .root[data-tone='success'] {
+    --_tone-fg: var(--todae-chip-success-fg);
+    --_tone-bg: var(--todae-chip-success-bg);
+    --_tone-border: var(--todae-chip-success-border);
+  }
+
+  .root[data-tone='warning'] {
+    --_tone-fg: var(--todae-chip-warning-fg);
+    --_tone-bg: var(--todae-chip-warning-bg);
+    --_tone-border: var(--todae-chip-warning-border);
+  }
+
+  .root[data-tone='critical'] {
+    --_tone-fg: var(--todae-chip-critical-fg);
+    --_tone-bg: var(--todae-chip-critical-bg);
+    --_tone-border: var(--todae-chip-critical-border);
+  }
+
+  .root[data-tone='category-1'] {
+    --_tone-fg: var(--todae-chip-category-1-fg);
+    --_tone-bg: var(--todae-chip-category-1-bg);
+    --_tone-border: var(--todae-chip-category-1-border);
+  }
+
+  .root[data-tone='category-2'] {
+    --_tone-fg: var(--todae-chip-category-2-fg);
+    --_tone-bg: var(--todae-chip-category-2-bg);
+    --_tone-border: var(--todae-chip-category-2-border);
+  }
+
+  .root[data-tone='category-3'] {
+    --_tone-fg: var(--todae-chip-category-3-fg);
+    --_tone-bg: var(--todae-chip-category-3-bg);
+    --_tone-border: var(--todae-chip-category-3-border);
+  }
+
+  .root[data-tone='category-4'] {
+    --_tone-fg: var(--todae-chip-category-4-fg);
+    --_tone-bg: var(--todae-chip-category-4-bg);
+    --_tone-border: var(--todae-chip-category-4-border);
+  }
+
+  .root[data-tone='category-5'] {
+    --_tone-fg: var(--todae-chip-category-5-fg);
+    --_tone-bg: var(--todae-chip-category-5-bg);
+    --_tone-border: var(--todae-chip-category-5-border);
+  }
+
+  .root[data-tone='category-6'] {
+    --_tone-fg: var(--todae-chip-category-6-fg);
+    --_tone-bg: var(--todae-chip-category-6-bg);
+    --_tone-border: var(--todae-chip-category-6-border);
+  }
+
+  .root[data-tone='category-7'] {
+    --_tone-fg: var(--todae-chip-category-7-fg);
+    --_tone-bg: var(--todae-chip-category-7-bg);
+    --_tone-border: var(--todae-chip-category-7-border);
+  }
+
+  .root[data-tone='category-8'] {
+    --_tone-fg: var(--todae-chip-category-8-fg);
+    --_tone-bg: var(--todae-chip-category-8-bg);
+    --_tone-border: var(--todae-chip-category-8-border);
+  }
+
+  /* A disabled chip takes the disabled colors whatever its tone. */
+  .root[data-disabled] {
+    --_tone-fg: initial;
+    --_tone-bg: initial;
+    --_tone-border: initial;
+  }
+
+  .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dismiss {
+    /* Keeps its size while a truncated label shrinks. */
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--todae-chip-dismiss-size);
+    block-size: var(--todae-chip-dismiss-size);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--todae-chip-dismiss-radius);
+    background: var(--todae-chip-dismiss-bg-default);
+    /* On a tone, the cross takes the label's color. */
+    color: var(--_tone-fg, var(--todae-chip-dismiss-fg-default));
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+    transition-property: background-color, color;
+    transition-duration: var(--todae-control-motion-duration);
+    transition-timing-function: var(--todae-control-motion-easing);
+  }
+
+  /* An icon from a library renders an svg: it takes the chip's icon size. */
+  .dismiss > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-chip-icon-size);
+    block-size: var(--todae-chip-icon-size);
+  }
+
+  .dismiss:hover:not(:disabled) {
+    background: var(--todae-chip-dismiss-bg-hover);
+    color: var(--_tone-fg, var(--todae-chip-dismiss-fg-hover));
+  }
+
+  .dismiss:is(:active, :disabled) {
+    transition: none;
+  }
+
+  .dismiss:disabled {
+    cursor: not-allowed;
+  }
+
+  .dismiss:focus {
+    outline: none;
+  }
+}

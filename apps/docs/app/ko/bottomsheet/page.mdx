@@ -1,0 +1,58 @@
+import ComboboxSheet from '../../../examples/recipes/combobox/ComboboxSheet';
+import BottomSheetBasic from '../../../examples/bottomsheet/BottomSheetBasic';
+
+# BottomSheet
+
+`showModal()`로 여는 네이티브 `<dialog>` 위의 모달 시트입니다. 브라우저가 시트를 최상위 레이어에 올리고, 뒤의 페이지를 inert로 만들고, 그 페이지로 포커스가 나가지 않게 하고, Escape를 닫기 요청으로 보냅니다. `::backdrop`이 스크림입니다. Todae는 스크롤 잠금, 스냅 지점, 드래그를 더합니다. 중간과 전체 높이로 스냅합니다. 그래버에서, 또는 `scrollTop === 0`일 때 본문에서 드래그합니다. 목록 스크롤은 자유롭게 유지됩니다.
+
+시트는 놓은 자리에서 렌더링되므로 부모의 테마를 따릅니다. 그 대신 부모의 네이티브 동작도 따릅니다. `<form>` 안에서는 시트의 입력이 그 폼과 함께 제출되고, `<fieldset disabled>` 안에서는 컨트롤이 비활성화됩니다. 폼, 비활성 fieldset, 닫힌 팝오버나 탭 패널 같은 숨겨진 컨테이너 바깥에 렌더링하세요. 개발 환경에서는 시트가 숨겨진 곳에서 열리면 Todae가 오류를 기록합니다.
+
+열릴 때는 아래에서 스냅 높이로 미끄러져 올라옵니다(높이 전환이 아니라 첫 프레임 자세입니다). 두 오버레이 모두 `data-entered`를 쓰고, Dialog는 `@starting-style`도 유지합니다. 닫힐 때는 아래로 미끄러져 나가고 `transitionend`에서 언마운트됩니다(대체 시간 240ms). 드래그 중에는 `transition: none`을 유지합니다.
+
+<Example of={BottomSheetBasic} />
+
+시트는 포털 없이 놓은 자리에서 렌더링되므로, 다른 파트처럼 appearance, density, 테마 오버라이드를 상속합니다. `dismissOnEscape={false}`는 `closedby="none"`을 설정해 브라우저가 Escape를 무시하게 합니다. 그렇지 않으면 Escape와 배경 클릭이 `onOpenChange(false, reason)`을 호출합니다. 제어 방식의 시트는 `open`을 false로 바꾸면 닫히고, 비제어 방식의 시트는 바로 닫힙니다. 스크립트가 `close()`를 호출하는 것처럼 Todae 바깥에서 `<dialog>`를 닫으면 `onOpenChange`는 `native` 이유를 받습니다.
+
+## Combobox에서
+
+[useCombobox](/utilities/use-combobox)에 `presentation: 'sheet'`를 주면 목록을 BottomSheet에 보여 줍니다. `Button.Root`가 시트를 열고, 검색 필드와 옵션은 시트 안에 있습니다. 콤보박스의 나머지는 [Combobox](/recipes/combobox) 레시피에 있습니다.
+
+<Example of={ComboboxSheet} />
+
+## 아이콘
+
+내용이 없는 `BottomSheet.Close`는 `close` 글리프를 보여 주며, [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 X 모양입니다. 이름은 `close` 문자열에서 옵니다. 닫기 버튼 하나에만 다른 아이콘을 쓰려면 `Button.Icon`에 넣으세요.
+
+```tsx
+import { X } from 'lucide-react';
+
+<BottomSheet.Close>
+  <Button.Icon>
+    <X />
+  </Button.Icon>
+</BottomSheet.Close>
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 위에서 설명한 모달 `<dialog>` 동작입니다. `BottomSheet.Title`과 `BottomSheet.Description`은 `aria-labelledby`와 `aria-describedby`를 설정하고, `BottomSheet.Close`는 자기 텍스트도 `aria-label`도 이름을 주지 않으면 `close` 문자열로 이름이 붙습니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. `snapPoints`에 두 높이가 모두 있으면 그래버는 `resizeSheet` 문자열("Resize sheet")로 이름이 붙은 `<button>`이고, `full`일 때 `aria-expanded`가 true입니다. 누르거나 Enter, Space를 누르면 `mid`와 `full` 사이를 오가므로, 스크린 리더나 스위치, 터치로도 드래그 없이 시트 크기를 바꿀 수 있습니다. ArrowUp은 `full`로 스냅하고, ArrowDown은 `mid`로 내립니다. `dismissOnDrag`가 켜져 있으면 `mid`에서 ArrowDown이 시트를 닫습니다. 높이가 하나뿐이면 바꿀 크기가 없으므로 그래버는 장식용 표시이고 탭 순서에 들지 않습니다. 소유자가 드래그 닫기를 거절하면 시트는 스냅 높이로 돌아갑니다.
+
+**직접 제공할 것:** 이름입니다. `BottomSheet.Title`을 쓰거나 `BottomSheet.Root`에 `aria-label`을 넘기세요. 개발 환경에서는 이름 없이 열린 시트가 오류를 기록합니다. 검색 필드처럼 작업이 시작되는 컨트롤에 `initialFocusRef`를 넘기세요. 넘기지 않으면 포커스는 첫 번째 탭 가능한 요소에서 시작하며, 시트에 두 높이가 있으면 기본 그래버입니다. 드래그와 배경 탭에는 포인터가 필요하므로, 눈에 보이는 `BottomSheet.Close`나 푸터 버튼을 두세요.
+
+**주의할 점:** 직접 배치한 `BottomSheet.Grabber`는 시트에 두 높이가 있어 그래버가 버튼일 때 자기 `aria-label`을 버튼에 넘깁니다. 이를 버리는 래퍼는 `resizeSheet` 문자열을 남기는데, [StringsProvider](/utilities/strings-provider)로 설정하지 않으면 영어입니다. `dismissOnEscape`, `dismissOnBackdrop`, `dismissOnDrag`가 모두 false라면 시트 안의 버튼이 유일하게 나가는 길입니다. `BottomSheet.Title` 대신 자체 제목을 렌더링하는 래퍼는 `aria-labelledby`를 넘겨야 합니다.
+
+## 언제 쓰나요
+
+**언제:** 아래에서 올라오는 모달 시트(터치용 Combobox의 닫힌 컨트롤, 모바일 선택기). 스크림, 모달 포커스, 중간/전체 스냅.
+
+**쓰지 않을 때:** 데스크톱에서 앵커에 고정된 비모달 → Popover. 가운데 정렬 확인/폼 → Dialog. 호버 팁 → Tooltip.
+
+## Props
+
+<PropsTable name="BottomSheet.Root" />
+
+<PropsTable name="BottomSheet.Grabber" />
+
+<PropsTable name="BottomSheet.Title" />
+
+<PropsTable name="BottomSheet.Close" />

@@ -1,0 +1,43 @@
+import CategoryToneTags from '../../../../examples/utilities/category-tone/CategoryToneTags';
+
+export const description = 'categoryTone은 사용자 id나 태그 이름 같은 문자열에 여덟 카테고리 톤 중 하나를 서버와 모든 브라우저에서 똑같이 돌려줍니다.';
+
+# categoryTone
+
+`categoryTone(key)`는 사용자 id나 태그 이름 같은 문자열에 대해 여덟 가지 카테고리 톤 `category-1`부터 `category-8` 중 하나를 돌려줍니다. 같은 키는 서버와 모든 브라우저에서 같은 톤을 돌려주므로, 사람이나 태그는 페이지와 방문이 바뀌어도 같은 색을 지킵니다. [Badge](/badge), [Chip](/chip), [Avatar](/avatar)는 이 톤을 `tone`으로 받고, [ChipList](/chip-list)는 `(value) => categoryTone(value)` 같은 `getTone`으로 받습니다.
+
+<Example of={CategoryToneTags} />
+
+## 키와 톤
+
+톤은 키의 해시에서 나오므로 고를 수 없고, 두 키가 같은 톤을 받을 수도 있습니다. 톤이 여덟 가지뿐이라 키가 몇 개만 넘어도 겹치는 톤이 생깁니다. `é`를 쓰는 두 방식처럼 조합형과 분해형으로 쓴 텍스트는 같은 톤을 받습니다. 키로는 사람이 바꿀 수 있는 표시 이름보다 id처럼 바뀌지 않는 값을 넘기세요.
+
+`CATEGORY_TONES`는 여덟 개 이름의 튜플이고, `CategoryTone`은 그 한 원소입니다.
+
+```tsx
+import { Avatar, CATEGORY_TONES, categoryTone, type CategoryTone } from '@tounsoo/todae';
+
+const tones: readonly CategoryTone[] = CATEGORY_TONES;
+
+<Avatar.Root label={name} tone={categoryTone(userId)} />
+```
+
+톤이 읽는 `color.category` 토큰은 [Tokens](/tokens)에 있습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 모든 appearance에서 각 톤의 채움 위 텍스트가 Lc 75를 넘는 것. 토큰 빌드가 검사합니다.
+
+**직접 제공할 것:** 배지의 태그 이름이나 아바타의 사람 이름처럼 텍스트로 쓴 카테고리.
+
+**주의할 점:** 톤을 카테고리의 유일한 표시로 쓰는 것. 톤은 겹치고 이름이 없으므로 색만으로는 둘을 구별할 수 없습니다.
+
+## 언제 쓰나요
+
+**언제:** 사용자 id나 태그 이름 같은 키마다 늘 같은 카테고리 톤이 필요할 때.
+
+**쓰지 않을 때:** 상태처럼 의미가 있는 톤 → `success`나 `critical`처럼 직접 고르세요.
+
+## Props
+
+<PropsTable name="categoryTone" />

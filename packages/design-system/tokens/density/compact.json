@@ -1,0 +1,40 @@
+{
+  "space": {
+    "control": {
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
+    },
+    "stack": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+      "gap-condensed": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } },
+      "gap-spacious": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } }
+    },
+    "prose": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
+      "heading-before": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } },
+      "heading-after": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+      "item-gap": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
+    },
+    "inline": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
+    },
+    "chip": {
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } },
+      "y": { "$type": "dimension", "$value": { "value": 0.125, "unit": "rem" } }
+    },
+    "field": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
+    },
+    "selection": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
+    },
+    "popover": {
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
+    },
+    "overlay": {
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
+    }
+  }
+}

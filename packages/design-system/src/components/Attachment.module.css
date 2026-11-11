@@ -1,0 +1,140 @@
+@layer todae.components {
+  .root {
+    display: inline-grid;
+    grid-template-columns: [text] minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: center;
+    column-gap: var(--todae-attachment-gap);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    /* No percentage here: a wrapper that sizes to its content, such as a list
+       item in a wrapping row, would size to the uncapped name. */
+    max-inline-size: var(--todae-attachment-max-width);
+    padding: var(--todae-attachment-padding-y) var(--todae-attachment-padding-x);
+    border: var(--todae-attachment-border-width) solid var(--todae-attachment-border-default);
+    border-radius: var(--todae-attachment-radius);
+    background: var(--todae-attachment-bg);
+    color: var(--todae-attachment-fg);
+    line-height: var(--todae-attachment-leading);
+    vertical-align: top;
+  }
+
+  .root[data-status='error'] {
+    border-color: var(--todae-attachment-border-error);
+  }
+
+  /* The columns follow the parts that are there, so a missing preview or
+     remove button leaves no empty gap. */
+  .root:has(> .preview:not([hidden])) {
+    grid-template-columns: [preview] auto [text] minmax(0, 1fr);
+  }
+
+  .root:has(> .remove:not([hidden])) {
+    grid-template-columns: [text] minmax(0, 1fr) [remove] auto;
+  }
+
+  .root:has(> .preview:not([hidden])):has(> .remove:not([hidden])) {
+    grid-template-columns: [preview] auto [text] minmax(0, 1fr) [remove] auto;
+  }
+
+  .root > * {
+    grid-column: text;
+  }
+
+  .root > [hidden] {
+    display: none;
+  }
+
+  /* One row for each text part that is there: the name, then the meta line,
+     then the upload bar. The preview and the button span them all, so a
+     missing part leaves no empty row. */
+  .root:has(> .meta:not([hidden])),
+  .root:has(> .progress:not([hidden])) {
+    grid-template-rows: auto auto;
+  }
+
+  .root:has(> .meta:not([hidden])):has(> .progress:not([hidden])) {
+    grid-template-rows: auto auto auto;
+  }
+
+  .root > .name {
+    grid-row: 1;
+  }
+
+  .root > .meta {
+    grid-row: 2;
+  }
+
+  .root > .progress {
+    grid-row: -2;
+    margin-block-start: var(--todae-attachment-padding-y);
+  }
+
+  .root > .preview {
+    grid-column: preview;
+    grid-row: 1 / -1;
+  }
+
+  .root > .remove {
+    grid-column: remove;
+    grid-row: 1 / -1;
+  }
+
+  .preview {
+    display: grid;
+    place-items: center;
+    inline-size: var(--todae-attachment-preview-size);
+    block-size: var(--todae-attachment-preview-size);
+    border-radius: var(--todae-attachment-preview-radius);
+    background: var(--todae-attachment-preview-bg);
+    color: var(--todae-attachment-preview-fg);
+    overflow: hidden;
+  }
+
+  /* A thumbnail covers the box, cropped to it; an icon from a library takes
+     the icon size. */
+  .preview > picture {
+    display: contents;
+  }
+
+  .preview > :is(img, video),
+  .preview > picture > img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .preview > svg {
+    inline-size: var(--todae-attachment-icon-size);
+    block-size: var(--todae-attachment-icon-size);
+  }
+
+  .name,
+  .meta {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .name {
+    font-size: var(--todae-attachment-name-font-size);
+    font-weight: var(--todae-attachment-name-font-weight);
+  }
+
+  .meta {
+    color: var(--todae-attachment-meta-fg-default);
+    font-size: var(--todae-attachment-meta-font-size);
+  }
+
+  .root[data-status='error'] > .meta {
+    color: var(--todae-attachment-meta-fg-error);
+  }
+
+  /* An error shows through color alone, so forced colors mark it in the border. */
+  @media (forced-colors: active) {
+    .root[data-status='error'] {
+      border-color: Mark;
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "color": {
+    "accent": {
+      "default": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [0.78, 0.13, 25] } }
+    }
+  },
+  "brand": {
+    "ink": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } }
+  }
+}

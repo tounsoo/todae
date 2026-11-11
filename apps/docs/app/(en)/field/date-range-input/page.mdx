@@ -1,0 +1,46 @@
+import FieldDateRangeInputPicker from '../../../../examples/field/date-range-input/FieldDateRangeInputPicker';
+import FieldDateRangeInputAlone from '../../../../examples/field/date-range-input/FieldDateRangeInputAlone';
+
+# Field.DateRangeInput
+
+`Field.DateRangeInput` is a text input inside a [Field](/field) that people type a range of dates into, two dates with a separator between them. Its `value` is a `DateRange`, `{ start, end }` with both days included, or `null`. It reads the text when it is committed, on blur, on Enter or when its form is submitted, rewrites it as `formatDateRange` writes the range and calls `onValueChange` with it. Typing alone calls nothing. Without `onValueChange`, the input is read-only. It works like [Field.DateInput](/field/date-input) and takes the same props where they mean the same thing.
+
+<Example of={FieldDateRangeInputPicker} block />
+
+Here a [Field.Picker](/field/picker) beside the input opens a [Calendar](/calendar) with `mode="range"` in a [Popover](/popover). The input and the calendar get the same `value` and `onValueChange`, so a typed range moves the calendar to its start. The first date picked in the calendar starts a range and the second ends it, in either order; the range is then written into the text and the popover closes. After the first pick, Escape drops it and the calendar stays open. Beside a `Field.DateRangeInput`, the picker's button shows a calendar glyph and is named from the `dateRangePicker` string.
+
+## Typed ranges
+
+`formatDateRange` writes both dates as `formatDate` writes them, with the locale's range separator between them, such as `10/3/2026 – 10/10/2026` in `en-US`, and `parseDateRange` reads two dates typed with a separator between them, such as `Oct 3, 2026 – Oct 10, 2026` or `2026-10-03/2026-10-10`. [formatDateRange and parseDateRange](/utilities/format-date-range) says what each writes and reads.
+
+`Field.DateRangeInput` reads its text with `parseDateRange` and writes it with `formatDateRange`, in its `locale`. Empty text commits `null`. Text that is not a range stays as it was typed, `onValueChange` is not called, and the field is marked invalid once a commit has tried to read it; until the text is a range or empty, the form can't be submitted.
+
+Presets such as "Last 7 days" are not part of the input. They are the [Date range with presets](/recipes/date-range-presets) recipe, which puts buttons beside the field that set its `value`.
+
+## On its own
+
+On its own, `Field.DateRangeInput` is the field's control, with no button, for a range people know the dates of.
+
+<Example of={FieldDateRangeInputAlone} block />
+
+The range goes with a form in a native text input beside the text input, under the field's `name`, or the input's own `name`, as an ISO 8601 interval such as `2026-10-03/2026-10-10`. The text input sends nothing, and the native input is hidden from sight and from assistive technology and is not a tab stop. `required` makes a form with no range invalid. No native input holds a range, so the browser does not check `min` and `max`: the input does, and a range that starts before `min` or ends after `max` blocks the submit, as text that is not a range does. Inside a [Form.Root](/form), a missing range shows in the field's `ErrorMessage.Root` in the page's language, a range that starts before `min` or ends after `max` shows the `dateRangeUnderflow` or `dateRangeOverflow` string with the bound in the input's own date format, and unreadable text shows the `badInput` string; focus goes to the text input. Outside a `Form.Root` the browser blocks the submit and focus lands on the text input too. A Calendar's `isDateDisabled` is not part of the check, and neither is whether every day between the dates can be picked, so check a typed range yourself and set `customValidity` on the `Field.Root`.
+
+## Accessible composition
+
+**Todae handles:** The text input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). It gets `aria-invalid` once a commit can't read its text, and `aria-required` with `required`. Beside a [Field.Picker](/field/picker), the input stays the field's control, and the picker's button is named from the `dateRangePicker` string in [StringsProvider](/utilities/strings-provider) and shows the `calendar` glyph from [GlyphsProvider](/utilities/glyphs-provider). The calendar inside is keyed and announced as on [Calendar](/calendar) in range mode.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same range for the input and the calendar beside it, and the same `locale`, `min` and `max`.
+
+**Watch for:** With a `value`, the server writes the range in its own locale, so pass `locale` when the input renders on a server.
+
+## When to use
+
+### Field.DateRangeInput
+
+**When:** A start and an end date in a form, such as a stay, a trip or a report's period.
+
+**When not:** One date → [Field.DateInput](/field/date-input). A range picked from a calendar shown on the page → [Calendar](/calendar) with `mode="range"`. A start and an end that people set apart, such as a start date and a separate deadline → two `Field.DateInput`s.
+
+## Props
+
+<PropsTable name="Field.DateRangeInput" />

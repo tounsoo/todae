@@ -1,0 +1,8 @@
+{
+  "focus": {
+    "$description": "The focus ring every component draws; component ring.focus colors read focus.ring.",
+    "ring": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+    "ring-width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+    "ring-offset": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+  }
+}

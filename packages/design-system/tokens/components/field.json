@@ -1,0 +1,140 @@
+{
+  "field": {
+    "$description": "Field.Root and its parts: text, number and one-time code inputs, step buttons, textarea, select, pickers, labels and messages.",
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
+    },
+    "swatch": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+    },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
+    },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+    "min-width": { "$type": "dimension", "$value": { "$ref": "#/space/12/$value" } },
+    "bg": {
+      "default": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } }
+    },
+    "fg": {
+      "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } },
+      "placeholder": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } },
+      "adornment": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
+    },
+    "border": {
+      "default": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+      "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } },
+      "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
+    },
+    "label": {
+      "gap": { "$type": "dimension", "$value": { "value": 0.4, "unit": "rem" } },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } },
+        "text-transform": { "$type": "textTransform", "$value": { "$ref": "#/font/text-transform/default/$value" } }
+      },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+    },
+    "description": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
+      },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+    },
+    "error": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
+      },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } },
+      "motion": {
+        "duration": {
+          "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } }
+        },
+        "easing": {
+          "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+        }
+      }
+    },
+    "messages": {
+      "gap": { "$type": "dimension", "$value": { "value": 0.2, "unit": "rem" } }
+    },
+    "counter": {
+      "emphasis": {
+        "weight": { "$type": "fontWeight", "$value": 600 }
+      }
+    },
+    "picker": {
+      "bg": { "$type": "color", "$value": { "$ref": "#/popover/bg/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/popover/fg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/popover/border/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/popover/radius/$value" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/x/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/y/$value" } }
+      },
+      "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/popover/shadow/$value" } }
+    },
+    "action": {
+      "$description": "An icon-only Button.Root in the line of a one-line Field.Root, such as a password's show button.",
+      "size": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } }
+    },
+    "row": {
+      "control": {
+        "size": { "$type": "dimension", "$value": { "value": 1.625, "unit": "rem" } }
+      }
+    },
+    "stepper": {
+      "size": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "bg": {
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/pressed/$value" } }
+      },
+      "repeat-delay": { "$type": "duration", "$value": { "value": 400, "unit": "ms" } },
+      "repeat-interval": { "$type": "duration", "$value": { "value": 60, "unit": "ms" } }
+    },
+    "token": {
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } }
+    },
+    "code": {
+      "$description": "Field.OneTimeCode: the boxes drawn over its input, and the caret in the box waiting for the next character. Box colors are the field's own.",
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },
+      "slot": {
+        "inline-size": { "$type": "dimension", "$value": { "value": 2.75, "unit": "rem" } },
+        "block-size": { "$type": "dimension", "$value": { "value": 3.25, "unit": "rem" } },
+        "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+        "font-size": { "$type": "dimension", "$value": { "$ref": "#/font/size/5/$value" } }
+      },
+      "caret": {
+        "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+        "color": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "motion": {
+          "duration": { "$type": "duration", "$description": "How long one blink of the caret takes, on and off.", "$value": { "value": 1000, "unit": "ms" } }
+        }
+      }
+    }
+  }
+}

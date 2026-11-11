@@ -1,0 +1,32 @@
+{
+  "button": {
+    "secondary": {
+      "$description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state.",
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/pressed/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } }
+      },
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
+      },
+      "border": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+      },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
+    }
+  }
+}

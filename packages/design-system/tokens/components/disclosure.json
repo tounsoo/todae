@@ -1,0 +1,36 @@
+{
+  "disclosure": {
+    "$description": "Disclosure.Root: a details/summary section that opens and closes, with its marker.",
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+    "padding": {
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
+    },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+    "summary": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "font": {
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      }
+    },
+    "marker": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "scale": { "$type": "number", "$value": 1 },
+      "gap": { "$type": "number", "$value": 0.375 }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+    },
+    "ring-radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+    "motion": {
+      "duration": {
+        "enter": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/enter/$value" } },
+        "exit": { "$type": "duration", "$value": { "$ref": "#/motion/reveal/duration/exit/$value" } }
+      },
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      }
+    }
+  }
+}

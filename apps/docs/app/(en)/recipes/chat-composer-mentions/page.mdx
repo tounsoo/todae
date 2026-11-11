@@ -1,0 +1,29 @@
+import ChatComposer from '../../../../examples/recipes/chat-composer-mentions/ChatComposer';
+
+export const description = 'A recipe for a chat composer with @mentions: Field, Button and Attachment for the card, Popover and OptionList for suggestions, and useMentions.';
+
+# Chat composer mentions
+
+A recipe, not a package namespace. Build the card with [Field](/field), [Button](/button) and [Attachment](/attachment), show the suggestions with [Popover](/popover) and [OptionList](/optionlist), and give one `people` source to [useMentions](/utilities/use-mentions) and to [MentionText](/mention). The card frame is this page, not a package part. Type `@` for suggestions, rest the caret in `@Mina Park` for its peek, and send to see the mention in the sent message.
+
+<Example of={ChatComposer} block />
+
+## Caret peek
+
+While the list is closed and the caret rests in a mention, `useMentions` returns `caretPeekAnchorName`, the anchor name it puts on that mention. Pass it to `usePopover` as `anchorName` and fill the popover with the source's `renderPeek` in `caret` mode. Make that popover `inert`, since it never takes focus and the caret stays in the field. Browsers leave inert text out of a description, so while the peek is open, describe the textarea with a [VisuallyHidden](/visually-hidden) copy of what it says. The hook doesn't say which mention the caret is in, so the recipe reads the textarea's selection, looks the mention up with `resolve`, and aborts the lookup when the caret moves on.
+
+## Accessible composition
+
+**Todae handles:** `getTextareaProps()` sets `aria-autocomplete` and `aria-haspopup`, and while the list is open, `aria-controls` and `aria-activedescendant`, which point at the ids that `getListboxProps()` and `getOptionProps()` give the list and its options. It runs ArrowDown, ArrowUp, Enter, Tab and Escape in the list. `OptionList` renders the `role="listbox"` and `role="option"` rows, and `Popover` closes on Escape and on an outside press. A mention in a sent message is a button or a link with its peek, from `MentionText`.
+
+**You supply:** A name for the field, here `aria-label="Message"` on `Field.Root`, or a [Label](/label). The `Popover.Root` with `OptionList.Root {...getListboxProps()}` and an `OptionList.Option {...getOptionProps(item)}` for each item, so the ids the textarea points at exist. A visually hidden copy of the caret peek's text in the textarea's `aria-describedby` while the peek is open, since its own text is inert. Text in a `role="status"` element when no option matches, with the list `hidden` rather than unmounted. A name for the icon-only send button. Enter that sends, but not while an IME composition is open, and Shift+Enter for a new line. A label on the list of attached files. Focus back in the field after a send and after the last attachment is removed, since the Send button turns disabled and the list goes away.
+
+**Watch for:** A list built from your own `role="listbox"` and `role="option"` elements, whose ids drift from the ones the textarea points at. Toolbar buttons named only by a symbol, such as "＋" or "/", or that do nothing. Your own `onFocus` or `onBlur` after the getter's spread, which replaces the hook's handlers: pass them to `getTextareaProps()` instead, as the recipe does.
+
+## When to use
+
+A chat box where someone types `@` to mention a person, and the sent message shows that mention with the same peek.
+
+## When not to use
+
+A suggestion list that does not become a token → [Combobox](/recipes/combobox).

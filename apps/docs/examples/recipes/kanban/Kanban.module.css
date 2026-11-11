@@ -1,0 +1,73 @@
+/* Columns sit side by side at 11rem or wider, and the board scrolls sideways
+   when they don't fit. */
+.board {
+  display: grid;
+  grid-auto-columns: minmax(11rem, 1fr);
+  grid-auto-flow: column;
+  gap: var(--todae-space-3);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-3);
+  padding: var(--todae-space-3);
+  border-radius: var(--todae-radius-md);
+  background: var(--todae-color-bg-subtle);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  position: relative;
+}
+
+.card[data-dragging] {
+  opacity: 0.5;
+}
+
+/* A line in the gap on the side the dragged card would land on. */
+.card[data-drop]::before {
+  position: absolute;
+  inset-inline: 0;
+  block-size: var(--todae-focus-ring-width);
+  background: var(--todae-color-accent-default);
+  content: '';
+}
+
+.card[data-drop='before']::before {
+  inset-block-start: calc(-0.5 * (var(--todae-space-2) + var(--todae-focus-ring-width)));
+}
+
+.card[data-drop='after']::before {
+  inset-block-end: calc(-0.5 * (var(--todae-space-2) + var(--todae-focus-ring-width)));
+}
+
+/* The grip spans the height of the card's top row, with padding beside the
+   icon, so it is easy to hit: at least 24 by 24 CSS pixels (WCAG 2.2 SC 2.5.8). */
+.grip {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding-inline: var(--todae-space-control-x);
+  color: var(--todae-color-fg-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Forced colors replace backgrounds, so the drop line takes the system's
+   highlight color. */
+@media (forced-colors: active) {
+  .card[data-drop]::before {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

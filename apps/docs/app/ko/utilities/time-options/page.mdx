@@ -1,0 +1,37 @@
+import TimeOptionsList from '../../../../examples/utilities/time-options/TimeOptionsList';
+
+export const description = 'timeOptions는 시작과 끝 사이에서 몇 분마다의 시각 목록을 ISO 값과 라벨로 돌려줍니다. 시각의 OptionList에 씁니다.';
+
+# timeOptions
+
+`timeOptions({ step, min, max, value, locale })`는 시각의 [OptionList](/optionlist)에 쓸 시각을 돌려줍니다. 자정부터 `step`분마다, 기본값은 30분마다 `min`과 `max` 사이의 시각입니다. 각각은 `OptionList.Option`에 쓸 `09:30:00` 같은 ISO `value`, `locale`에서 [formatTime](/utilities/format-time)이 쓰는 `label`, 그리고 `Temporal.PlainTime` 자체인 `time`을 가진 객체입니다.
+
+<Example of={TimeOptionsList} />
+
+## 목록에서 고르기
+
+`OptionList.Root`의 값으로는 고른 시각의 `value.toString()`을 주고, 고른 값은 `Temporal.PlainTime.from`으로 읽으세요. 같은 시각을 `timeOptions`에도 `value`로 넘기세요. 그러면 [Field.TimeInput](/field/time-input)에 입력한 `9:07`처럼 두 단계 사이의 시각도 목록의 제자리에 들어가고 고른 상태로 남습니다. `min`과 `max` 밖의 `value`는 빠집니다.
+
+`Field.TimeInput` 옆의 [Field.Picker](/field/picker) 안에서는 목록이 시각을 고르고 선택기를 닫습니다. [Field.TimeInput](/field/time-input)에 그 예가 있습니다.
+
+## 밤을 넘는 범위
+
+`max`보다 늦은 `min`은 네이티브 시각 입력이 읽는 것처럼 밤을 넘는 범위입니다. 목록은 `min`부터 자정까지, 그리고 자정부터 `max`까지이며, 자정부터 순서대로 나열됩니다. `min`이 22:00이고 `max`가 02:00이면 오전 2:00까지의 시각이 먼저, 오후 10:00부터의 시각이 마지막에 옵니다. 달력 옆에 하루의 시각을 둘 때는 `min`을 `max`보다 앞에 두세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 넘긴 `locale`로 쓴 각 시각의 텍스트. 넘기지 않으면 런타임의 로캘입니다. 목록의 키와 선택은 `OptionList`가 맡습니다.
+
+**직접 제공할 것:** `OptionList.Root`의 `aria-label`이나 `aria-labelledby`로 붙인 목록의 이름. 목록 옆 입력과 같은 `locale`, `min`, `max`.
+
+**주의할 점:** 옵션의 키를 라벨로 정하는 것. 로캘마다 시각을 다르게 쓰므로 키는 `value`로 정하세요. `locale` 없이 서버에서 렌더링하면 라벨은 서버의 로캘로 쓰입니다.
+
+## 언제 쓰나요
+
+**언제:** [Field.Picker](/field/picker) 안이나 페이지에 둔 `OptionList.Root`에서 고르는 시각 목록.
+
+**쓰지 않을 때:** 가게의 빈 시간처럼 간격이 고르지 않은 몇 개의 시각 → 직접 만든 `OptionList.Option`.
+
+## Props
+
+<PropsTable name="timeOptions" />

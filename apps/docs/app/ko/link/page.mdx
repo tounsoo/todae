@@ -1,0 +1,50 @@
+import LinkCurrent from '../../../examples/link/LinkCurrent';
+import LinkInText from '../../../examples/link/LinkInText';
+
+# Link
+
+`Link.Root`는 `link` contract 토큰으로 스타일을 정한 네이티브 `<a>`입니다. 링크는 텍스트 색을 그대로 쓰고 밑줄로 구분되며, 밑줄은 호버하면 진해집니다. 그래서 중립적인 잉크 팔레트에 어울립니다. `href`가 없는 `<a>`는 링크가 아니므로 링크 스타일을 받지 않습니다.
+
+```tsx
+<Link.Root href="/billing">Billing</Link.Root>
+```
+
+<Example of={LinkInText} />
+
+Server Components는 `@tounsoo/todae/link`에서 가져올 수 있습니다. 모든 링크의 스타일은 `link.fg.*`, `link.decoration.*`, `link.decoration-thickness.*`, `link.decoration-offset`, `link.ring.focus`, `link.ring-radius` 토큰으로 바꿉니다. 현재 링크의 스타일은 `link.fg.current`, `link.decoration.current`, `link.decoration-thickness.current` 토큰이 정합니다.
+
+## 라우터 링크
+
+라우터의 링크 컴포넌트는 자기 `<a>`를 렌더링합니다. 그 컴포넌트를 `render`로 넘기세요. `Link.Root`는 `<a>`에 붙였을 모든 prop을 클래스까지 포함해 넘기며 그 함수를 부릅니다. 그 prop을 라우터 링크에 넘기고, 목적지는 라우터 링크가 받는 prop에 넣으세요. Next.js는 `href`가 있어야 하므로, `href`가 없는 링크는 평범한 `<a>`로 둡니다.
+
+```tsx
+<Link.Root href="/billing" render={({ href, ...props }) => (href ? <NextLink href={href} {...props} /> : <a {...props} />)}>
+  Billing
+</Link.Root>
+```
+
+Server Component에서 `render`를 넘기려면 `Link`를 `@tounsoo/todae/link`에서 가져오세요. `@tounsoo/todae`는 클라이언트 모듈이라 Server Component가 함수를 넘길 수 없습니다.
+
+## 현재 페이지
+
+지금 있는 페이지로 가는 링크에는 `aria-current="page"`를, 또는 `step` 같은 다른 `aria-current` 값을 붙입니다. 밑줄이 두꺼워져서 호버하지 않아도 눈에 띕니다. 속성은 라우터가 붙입니다. Next.js와 React Router 모두 이 속성을 넘길 수 있고, React Router의 `NavLink`는 알아서 붙입니다.
+
+<Example of={LinkCurrent} />
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 스타일만 맡으며, 대상은 `href`가 있는 네이티브 `<a>`입니다. 색은 텍스트 색 그대로 두고 링크임을 보여 주는 밑줄, `link.ring.focus`로 그리는 `:focus-visible` 포커스 링, 그리고 비어 있거나 `false`가 아닌 `aria-current`에 쓰는 더 굵은 밑줄입니다. 링크의 role, Enter 키, 탭 순서의 자리는 브라우저가 줍니다.
+
+**직접 제공할 것:** 요소가 링크가 되게 하는 `href`. 어디로 가는지 말해 주는 링크 텍스트. 라우터가 현재 링크에 다는 `aria-current`. 받은 prop을 모두 `<a>`에 넘기는 `render` 함수. 그래야 `aria-current`, `aria-label`, `ref`, 클래스가 `<a>`에 닿습니다.
+
+**주의할 점:** `text-decoration: none`이나 `outline: none`을 설정하는 클래스. 밑줄이 없으면 링크는 색이 같아서 주변 텍스트와 똑같아 보입니다. `href` 없이 `onClick`만 있는 `Link.Root`. 링크 role도 키보드 동작도 없습니다. 다른 곳으로 가지 않고 이 페이지에서 무언가를 하는 링크.
+
+## 언제 쓰나요
+
+**언제:** 다른 페이지나 위치로 이동할 때. 본문 안, 내비게이션, Alert의 동작.
+
+**쓰지 않을 때:** 저장이나 다이얼로그 열기처럼 이 페이지에서 무언가를 할 때 → Button. 동작 목록 → Menu.
+
+## Props
+
+<PropsTable name="Link.Root" />

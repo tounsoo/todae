@@ -1,0 +1,27 @@
+{
+  "picker": {
+    "$description": "ColorPicker.Root, alone or in a Field.Picker: the color area, hue slider and their thumbs.",
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+    "width": { "$type": "dimension", "$value": { "value": 15, "unit": "rem" } },
+    "area": {
+      "height": { "$type": "dimension", "$value": { "value": 10, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } }
+    },
+    "hue": {
+      "height": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/full/$value" } }
+    },
+    "thumb": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+      "edge": {
+        "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+        "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+      }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
+    }
+  }
+}

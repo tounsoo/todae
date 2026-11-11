@@ -1,0 +1,170 @@
+name: Bench
+
+# The performance benchmark, on demand only: start it from the Actions tab with "Run workflow" and
+# pick the branch or tag to measure. It never runs on a push, a pull request or a schedule.
+# apps/bench/README.md says what it measures and how to read the report.
+on:
+  workflow_dispatch:
+    inputs:
+      against:
+        description: Branch, tag or SHA to run beside the chosen one, such as main or @tounsoo/todae@0.7.0. Empty runs the chosen one alone.
+        required: false
+        type: string
+      save:
+        description: Commit the record to a bench-record/<name> branch off main, to open a pull request from.
+        type: boolean
+        default: false
+      name:
+        description: Record name, such as release-0.8.0. Empty uses the date, ref and short SHA.
+        required: false
+        type: string
+      runs:
+        description: Measured runs per case. Fewer than 5 gives no timing verdict in a comparison.
+        required: false
+        type: string
+        default: '5'
+      cases:
+        description: Only these cases, comma separated. menu picks every case whose id starts with menu; button/100 picks that size only. Empty runs every case.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-${{ github.ref }}
+
+jobs:
+  bench:
+    name: Bench
+    # Ubuntu 24.04, where Playwright's Chromium installs. It stays on the runner, not Playwright's image as
+    # Fernway does, so new records compare with the saved ones. A record names the machine type,
+    # and timings compare only between records from the same one.
+    runs-on: ubuntu-24.04
+    # Every public part has a case, and --against runs each one on both builds.
+    timeout-minutes: 180
+    outputs:
+      name: ${{ steps.run.outputs.name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # --against checks out the other ref in a worktree.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      # A save that would collide stops here, before the long run. The save job checks again for a
+      # name the run picks itself.
+      - name: Check the record name is free
+        if: ${{ inputs.save && inputs.name != '' }}
+        env:
+          NAME: ${{ inputs.name }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          name=$(node --experimental-strip-types --no-warnings=ExperimentalWarning --input-type=module \
+            -e "import { slug } from './apps/bench/src/record.ts'; console.log(slug(process.env.NAME));")
+          if [ -z "$name" ]; then echo "::error::The name leaves no usable record name."; exit 1; fi
+          if git cat-file -e "origin/$BASE:apps/bench/records/$name.json" 2>/dev/null; then
+            echo "::error::$BASE already has a record named $name. Run again with another name."; exit 1
+          fi
+          if git rev-parse --verify --quiet "refs/remotes/origin/bench-record/$name" >/dev/null; then
+            echo "::error::A bench-record/$name branch already exists. Merge or delete it, or pick another name."; exit 1
+          fi
+
+      # Keyed by the lockfile, so a Playwright bump downloads its Chromium build again.
+      - id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: pnpm --filter bench exec playwright install --with-deps chromium
+      - if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
+        run: pnpm --filter bench exec playwright install-deps chromium
+
+      - name: Run the benchmark
+        id: run
+        env:
+          AGAINST: ${{ inputs.against }}
+          NAME: ${{ inputs.name }}
+          RUNS: ${{ inputs.runs }}
+          CASES: ${{ inputs.cases }}
+        run: |
+          set -euo pipefail
+          args=(--runs "${RUNS:-5}" --summary "$GITHUB_STEP_SUMMARY")
+          if [ -n "${AGAINST:-}" ]; then args+=(--against "$AGAINST"); fi
+          if [ -n "${NAME:-}" ]; then args+=(--name "$NAME"); fi
+          if [ -n "${CASES:-}" ]; then args+=(--cases "$CASES"); fi
+          pnpm bench "${args[@]}" | tee "$RUNNER_TEMP/bench.txt"
+          name=$(sed -n 's/^.*RECORD_NAME=//p' "$RUNNER_TEMP/bench.txt" | tail -n 1)
+          if [ -z "$name" ]; then echo "The benchmark printed no record name."; exit 1; fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "The record:"
+          cat "apps/bench/out/$name.json"
+
+      # Hands the record to the save job, as the CI workflow hands dist/ to Fernway. Each attempt saves
+      # its own key, and the save job takes the newest attempt's, so re-running all jobs saves the new
+      # record and re-running only the save job still finds the last one.
+      - if: ${{ inputs.save }}
+        env:
+          NAME: ${{ steps.run.outputs.name }}
+        run: mkdir -p "$RUNNER_TEMP/bench-record" && cp "apps/bench/out/$NAME.json" "$RUNNER_TEMP/bench-record/"
+      - if: ${{ inputs.save }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/bench-record
+          key: bench-record-${{ github.run_id }}-${{ github.run_attempt }}
+
+  # Only this job can write, and it runs no package code: it commits the record and pushes a branch.
+  save:
+    name: Save the record
+    needs: bench
+    if: ${{ inputs.save }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/bench-record
+          key: bench-record-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: bench-record-${{ github.run_id }}-
+          fail-on-cache-miss: true
+      - name: Push the record branch
+        env:
+          BASE: ${{ github.event.repository.default_branch }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # The name comes from the restored file, the record of the newest attempt that ran the bench.
+          file=$(find "$RUNNER_TEMP/bench-record" -name '*.json' | head -n 1)
+          NAME=$(basename "$file" .json)
+          if [ -e "apps/bench/records/$NAME.json" ]; then
+            echo "::error::$BASE already has a record named $NAME. Run again with another name."
+            exit 1
+          fi
+          branch="bench-record/$NAME"
+          # The full ref, since ls-remote matches a bare pattern against the end of every ref.
+          if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
+            echo "::error::A $branch branch already exists. Merge or delete it, or run again with another name."
+            exit 1
+          fi
+          mkdir -p apps/bench/records
+          cp "$file" "apps/bench/records/$NAME.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add "apps/bench/records/$NAME.json"
+          git commit -m "Add benchmark record $NAME"
+          git push origin "$branch"
+          {
+            echo "## Saved $NAME"
+            echo
+            echo "The record is on [$branch](https://github.com/$REPO/tree/$branch). [Open a pull request](https://github.com/$REPO/compare/$BASE...$branch?expand=1) to keep it."
+          } >> "$GITHUB_STEP_SUMMARY"
