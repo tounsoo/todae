@@ -5,6 +5,7 @@ import { cleanup, createEvent, fireEvent, render, screen } from '@testing-librar
 import { Profiler } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index.js';
+import { GlyphsProvider } from '../providers/GlyphsProvider.js';
 import { OptionList } from './OptionList.js';
 
 afterEach(cleanup);
@@ -255,6 +256,23 @@ describe('OptionList', () => {
       type(list, 'a', 2000);
       type(list, 'b', 3000);
       expect(active(list)).toBe(idOf('Apple'));
+    });
+
+    it('leaves a text check glyph out of the selected option\'s text', () => {
+      render(
+        <GlyphsProvider glyphs={{ check: 'v' }}>
+          <OptionList.Root value="kiwi" onValueChange={() => undefined} aria-label="Fruit">
+            <OptionList.Option value="kiwi">Kiwi</OptionList.Option>
+            <OptionList.Option value="vanilla">Vanilla</OptionList.Option>
+          </OptionList.Root>
+        </GlyphsProvider>,
+      );
+      const list = screen.getByRole('listbox');
+      type(list, 'v', 1000);
+      expect(active(list)).toBe(idOf('Vanilla'));
+      // A second v cycles among options that start with v: only Vanilla does.
+      type(list, 'v', 1100);
+      expect(active(list)).toBe(idOf('Vanilla'));
     });
 
     it('matches a longer prefix, case aside, and starts over after a pause', () => {

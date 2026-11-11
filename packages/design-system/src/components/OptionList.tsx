@@ -19,6 +19,7 @@ import {
 import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
+import { spokenText } from './buttonName.js';
 import { optionDomId } from '../internal/optionDomId.js';
 import { observeMutations } from '../internal/sharedMutations.js';
 import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
@@ -68,7 +69,7 @@ type OptionListContextValue = {
 };
 
 /** `unavailable` (aria-disabled) keeps the option reachable; `disabled` also skips it. Neither can be selected. */
-type OptionEntry = { value: string; text: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
+type OptionEntry = { value: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
 
 const OptionListContext = /* @__PURE__ */ createContext<OptionListContextValue | null>(null);
 
@@ -121,20 +122,12 @@ function OptionListOption({
     console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
-  // The text only feeds typeahead, read on a key, so a new label updates the
-  // entry in place. Re-registering would hand the list a new entry and render
-  // it a second time on every label change.
-  const entry = useRef<OptionEntry | null>(null);
-  const text = useRef(label);
-  useLayoutEffect(() => {
-    text.current = label;
-    if (entry.current) entry.current.text = label;
-  }, [label]);
+  // The label stays out of the entry: typeahead reads the option's text from
+  // the DOM on a key, so a new label neither re-registers the option nor
+  // renders the list again.
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
-    const next = { value, text: text.current, disabled: Boolean(disabled), unavailable, node: nodeRef.current };
-    entry.current = next;
-    return register(next);
+    return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
   }, [disabled, register, unavailable, value]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
@@ -278,8 +271,12 @@ function OptionListRoot(props: OptionListRootProps) {
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
     if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
-      const texts = new Map([...registered.current].map((entry) => [entry.value, entry.text]));
-      const text = (at: number) => (texts.get(enabled[at]!) ?? '').trim().toLowerCase();
+      const nodes = new Map([...registered.current].map((entry) => [entry.value, entry.node]));
+      // The text a screen reader reads, so the aria-hidden check glyph is left out.
+      const text = (at: number) => {
+        const node = nodes.get(enabled[at]!);
+        return node ? spokenText(node).trim().toLowerCase() : '';
+      };
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);
       if (found >= 0) move(enabled[found]);
       // A Space that joined the search is the search's, match or not.
