@@ -1,10 +1,23 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { useState, type PointerEvent } from 'react';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import { Dialog, useReorder, useReorderGroup, type ReorderGroup, type ReorderPlace } from '../index.js';
 
 afterEach(cleanup);
+
+// WebKit sends no pointerdown for the first press after a drag, only mousedown (see useReorder's
+// onMouseDown), and the next test file runs in the same page. A press after the last drag here takes
+// that, so a file whose first press needs pointerdown, like the Splitter's, isn't left without it.
+afterAll(async () => {
+  render(<button type="button">Press</button>);
+  const pressed: string[] = [];
+  const button = screen.getByRole('button', { name: 'Press' });
+  button.addEventListener('mousedown', () => pressed.push('mousedown'));
+  await userEvent.click(button);
+  cleanup();
+  expect(pressed).toEqual(['mousedown']);
+});
 
 type ListProps = {
   onMove?: (from: number, to: number) => void;
@@ -76,20 +89,22 @@ function Grip({ onPointerDown }: { onPointerDown: (event: PointerEvent<HTMLEleme
 }
 
 const order = () => screen.getAllByRole('listitem').map((item) => item.textContent?.replace('::', ''));
-const top = { x: 100, y: 5 };
-const bottom = { x: 100, y: 35 };
+// A new object for each drag: in a scaled frame, Vitest scales a position object in place, so a
+// shared one moves closer to the corner with every use in Chromium.
+const top = () => ({ x: 100, y: 5 });
+const bottom = () => ({ x: 100, y: 35 });
 
 it('moves an item dragged by its handle to the side of the item it is dropped on', async () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
   await userEvent.dragAndDrop(screen.getByTestId('handle-A'), screen.getByText('C').closest('li')!, {
-    targetPosition: bottom,
+    targetPosition: bottom(),
   });
   expect(onMove).toHaveBeenCalledWith(0, 2);
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
 
   await userEvent.dragAndDrop(screen.getByTestId('handle-D'), screen.getByText('B').closest('li')!, {
-    targetPosition: top,
+    targetPosition: top(),
   });
   expect(order()).toEqual(['D', 'B', 'C', 'A']);
 });
@@ -98,7 +113,7 @@ it('does nothing for a drop that would leave the item where it is', async () => 
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
   await userEvent.dragAndDrop(screen.getByTestId('handle-B'), screen.getByText('A').closest('li')!, {
-    targetPosition: bottom,
+    targetPosition: bottom(),
   });
   expect(onMove).not.toHaveBeenCalled();
   expect(order()).toEqual(['A', 'B', 'C', 'D']);
@@ -108,7 +123,7 @@ it('starts a drag only from a handle', async () => {
   const onMove = vi.fn();
   render(<List onMove={onMove} />);
   await userEvent.dragAndDrop(screen.getByTestId('text-A'), screen.getByText('C').closest('li')!, {
-    targetPosition: bottom,
+    targetPosition: bottom(),
   });
   expect(onMove).not.toHaveBeenCalled();
   for (const item of screen.getAllByRole('listitem')) expect(item).not.toHaveAttribute('draggable');
@@ -716,7 +731,7 @@ it('moves an item dragged to another list of its group, beside an item or below 
     drops.push({ y: event.clientY, middle: rect.top + rect.height / 2 });
   };
   document.addEventListener('drop', record, true);
-  await userEvent.dragAndDrop(screen.getByTestId('handle-A'), item('X'), { targetPosition: bottom });
+  await userEvent.dragAndDrop(screen.getByTestId('handle-A'), item('X'), { targetPosition: bottom() });
   document.removeEventListener('drop', record, true);
   expect(drops).toHaveLength(1);
   expect(drops[0]!.y, `drop point ${JSON.stringify(drops[0])}`).toBeGreaterThan(drops[0]!.middle);
