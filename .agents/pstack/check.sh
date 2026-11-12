@@ -2,9 +2,9 @@
 # Checks the pinned pstack copy and the todae playbooks that change its playbooks. Reads text only: it runs
 # nothing from the copy and downloads nothing. Run it from the root of the todae checkout:
 #   sh .agents/pstack/check.sh
-# It prints the copy's folder and commit, then whether every quoted anchor in .agents/playbooks/ is still in
-# the pstack playbook it extends. The weekly update workflow (.github/workflows/pstack-update.yml) runs it
-# too and puts the output in its pull request.
+# It checks the committed copy against pin.json's tree id, prints the copy's folder and commit, then says
+# whether every quoted anchor in .agents/playbooks/ is still in the pstack playbook it extends. CI's Forbidden
+# paths job and the weekly update workflow (.github/workflows/pstack-update.yml) run it too.
 set -u
 
 [ -d .agents/playbooks ] || { echo "Run this from the root of the todae checkout."; exit 1; }
@@ -17,16 +17,14 @@ sha=$(pin commit)
 for agent in poteto-agent comment-sicko thermo-nuclear-review-subagent thermo-nuclear-code-quality-review-subagent; do
   [ -f "$pstack/agents/$agent.md" ] || { echo "pstack: the copy has no $agent agent."; exit 1; }
 done
-# Git's id for a folder changes with any file in it, so an equal id means the committed copy is upstream's
-# folder word for word.
+# Git's id for a folder changes with any file in it, so an equal id means the committed copy is the one
+# pin.json records. CI's Forbidden paths job checks that id against upstream whenever pin.json changes.
 tree=$(pin tree)
-if [ -n "$tree" ]; then
-  have=$(git rev-parse -q --verify "HEAD:.agents/pstack/plugin" 2>/dev/null) || have=""
-  [ "$have" = "$tree" ] || { echo "pstack: the committed copy in .agents/pstack/plugin isn't upstream's $sha word for word. Don't edit it by hand: run the pstack update workflow instead."; exit 1; }
-  [ -z "$(git status --porcelain -- .agents/pstack/plugin 2>/dev/null)" ] || echo "pstack: the copy has uncommitted changes, so it may differ from upstream's $sha. git restore .agents/pstack/plugin puts it back."
-else
-  echo "pstack: pin.json has no tree id, so the copy can't be checked word for word. The first copy came from todae's history; the first update adds the id."
-fi
+[ -n "$tree" ] || { echo "pstack: .agents/pstack/pin.json has no tree id."; exit 1; }
+have=$(git rev-parse -q --verify "HEAD:.agents/pstack/plugin" 2>/dev/null) || have=""
+[ "$have" = "$tree" ] || { echo "pstack: the committed copy in .agents/pstack/plugin isn't the one pin.json records. Don't edit it by hand: the pstack update workflow changes it."; exit 1; }
+[ -z "$(git status --porcelain -- .agents/pstack/plugin 2>/dev/null)" ] || { echo "pstack: .agents/pstack/plugin has uncommitted changes. git restore and git clean on that folder put it back."; exit 1; }
+find "$pstack" -type f -name 'LICENSE*' | grep -q . || { echo "pstack: the copy has no LICENSE file."; exit 1; }
 echo "pstack $sha is in $pstack"
 
 playbooks="$pstack/skills/poteto-mode/playbooks"

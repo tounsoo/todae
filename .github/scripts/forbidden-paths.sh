@@ -7,8 +7,8 @@ under_audit() {
 	[ "${1#.audit/}" != "$1" ]
 }
 
-# The pinned pstack copy is upstream's folder word for word, and .agents/pstack/check.sh fails on any other
-# change to it, so a file named like a scratch body or a PNG may sit there.
+# The pinned pstack copy is upstream's folder word for word: .agents/pstack/check.sh and pstack-upstream.sh
+# fail on any other change to it, so a file named like a scratch body or a PNG may sit there.
 pstack_copy() {
 	[ "${1#.agents/pstack/plugin/}" != "$1" ]
 }

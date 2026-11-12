@@ -93,8 +93,8 @@ describe('planFor', () => {
     assert.deepEqual(planFor([]), { types: [], steps: [] });
   });
 
-  test('an agent change runs the verify self-test and its tests', () => {
-    assert.deepEqual(planFor(['.claude/skills/verify/verify.mjs']).steps, ['verify-self-test', 'verify-tests']);
+  test('an agent change runs the verify self-test, its tests and the pinned pstack check', () => {
+    assert.deepEqual(planFor(['.claude/skills/verify/verify.mjs']).steps, ['verify-self-test', 'verify-tests', 'pstack-check']);
   });
 
   test('tests that import the built package run after the build, even when no type asks for the build', () => {

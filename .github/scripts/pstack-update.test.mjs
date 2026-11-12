@@ -48,15 +48,27 @@ for (const [from, to] of [
   ['.github/scripts/pstack-update.sh', 'pstack-update.sh'],
   ['.agents/pstack/update.sh', 'update.sh'],
   ['.agents/pstack/check.sh', 'check.sh'],
+  ['.github/scripts/pstack-upstream.sh', 'pstack-upstream.sh'],
 ]) {
   copyFileSync(join(root, from), join(tools, to));
 }
 const ghLog = join(scratch, 'gh.log');
 const ghPrs = join(scratch, 'gh-prs.json');
 const bin = fresh('bin');
+// It keeps only the pull requests in the state asked for, as GitHub does, and says OPEN for any it is asked about.
 writeFileSync(
   join(bin, 'gh'),
-  `#!/bin/sh\nprintf '%s\\n' "$*" >> '${ghLog}'\ncase "$1 $2" in\n  "pr list") cat '${ghPrs}' ;;\n  "pr create") echo https://example.test/pull/9 ;;\nesac\n`,
+  [
+    '#!/bin/sh',
+    `printf '%s\\n' "$*" >> '${ghLog}'`,
+    'case "$*" in',
+    `  "pr list "*"--state open"*) jq '[.[] | select(.state == "OPEN")]' '${ghPrs}' ;;`,
+    `  "pr list "*"--state closed"*) jq '[.[] | select(.state != "OPEN")]' '${ghPrs}' ;;`,
+    '  "pr view "*) echo "${GH_PR_STATE:-OPEN}" ;;',
+    '  "pr create "*) echo https://example.test/pull/9 ;;',
+    'esac',
+    '',
+  ].join('\n'),
 );
 chmodSync(join(bin, 'gh'), 0o755);
 
@@ -154,7 +166,7 @@ const publish = (cwd, up, origin, prepared) => step('publish', cwd, up, [], {
   TITLE: prepared.outputs.title,
   BODY: prepared.bodyPath,
 });
-const pr = (fields) => ({ number: 1, state: 'OPEN', title: 'x', headRefName: 'pstack-update/x', isCrossRepository: false, ...fields });
+const pr = (fields) => ({ number: 1, state: 'OPEN', title: 'x', headRefName: 'pstack-update/x', isCrossRepository: false, mergedAt: null, ...fields });
 
 test('a current copy opens nothing', () => {
   const up = upstream();
@@ -254,17 +266,53 @@ test('a commit whose pull request was closed without merging opens nothing', () 
   assert.match(result.out, /#5 .* closed without merging/);
 });
 
-test('a branch left with no pull request is reported, not pushed over', () => {
+test('a branch pushed by a run that failed to open its pull request gets one', () => {
+  const up = upstream();
+  const repo = todae(up);
+  up.step('B', toB);
+  const first = repo.clone();
+  const opened = step('prepare', first, up, []);
+  git(first, 'push', '-q', 'origin', `HEAD:refs/heads/${opened.outputs.branch}`);
+  const work = repo.clone();
+  const result = step('prepare', work, up, []);
+  assert.equal(result.status, 0, result.out);
+  assert.equal(result.outputs.changed, 'true');
+  assert.equal(result.outputs.branch, opened.outputs.branch);
+  assert.equal(git(work, 'rev-parse', 'HEAD'), git(first, 'rev-parse', 'HEAD'));
+  const pushed = publish(work, up, repo.origin, result);
+  assert.equal(pushed.status, 0, pushed.out);
+  assert.match(pushed.gh, /^pr create /m);
+});
+
+test('the lookups ask GitHub for open pull requests, and for closed ones by commit', () => {
+  const up = upstream();
+  const repo = todae(up);
+  const b = up.step('B', toB);
+  const result = step('prepare', repo.clone(), up, []);
+  assert.equal(result.status, 0, result.out);
+  assert.match(result.gh, /^pr list .*--state open/m);
+  assert.ok(result.gh.split('\n').some((line) => line.includes('--state closed') && line.includes(`--search ${b.slice(0, 7)} in:title`)), result.gh);
+});
+
+test('a pull request closed while the run prepared gets no push', () => {
   const up = upstream();
   const repo = todae(up);
   up.step('B', toB);
   const first = repo.clone();
   const opened = step('prepare', first, up, []);
   assert.equal(publish(first, up, repo.origin, opened).status, 0);
-  const result = step('prepare', repo.clone(), up, []);
-  assert.equal(result.status, 0, result.out);
-  assert.equal(result.outputs.changed, 'false');
-  assert.match(result.out, /already exists with no open pull request/);
+  up.step('C', (dir) => write(dir, { 'plugins/pstack/new.md': 'new\n' }));
+  const work = repo.clone();
+  const result = step('prepare', work, up, [pr({ number: 9, headRefName: opened.outputs.branch })]);
+  assert.equal(result.outputs.changed, 'true');
+  const before = git(repo.origin, 'rev-parse', `refs/heads/${opened.outputs.branch}`);
+  const pushed = step('publish', work, up, [], {
+    PUSH_URL: repo.origin, OPEN: '9', BRANCH: result.outputs.branch, TITLE: result.outputs.title, BODY: result.bodyPath, GH_PR_STATE: 'MERGED',
+  });
+  assert.equal(pushed.status, 0, pushed.out);
+  assert.match(pushed.out, /closed while this run prepared/);
+  assert.doesNotMatch(pushed.gh, /pr edit/);
+  assert.equal(git(repo.origin, 'rev-parse', `refs/heads/${opened.outputs.branch}`), before);
 });
 
 test('update.sh copies nothing from a commit with a link, without a license or by a short name', () => {
@@ -278,7 +326,7 @@ test('update.sh copies nothing from a commit with a link, without a license or b
   });
   const before = git(work, 'rev-parse', 'HEAD:.agents/pstack/plugin');
   for (const [commit, message] of [
-    [linked, /links or special files/],
+    [linked, /links or submodules/],
     [unlicensed, /ships no LICENSE/],
     [linked.slice(0, 7), /not a full commit SHA/],
   ]) {
@@ -303,9 +351,46 @@ test('check.sh fails on a committed copy that differs from upstream, and on a br
   git(work, 'checkout', '--', '.agents/playbooks/x.md');
 
   write(work, { '.agents/pstack/plugin/agents/poteto-agent.md': 'edited\n' });
-  assert.match(run('sh', [join(tools, 'check.sh')], work).out, /uncommitted changes/);
+  const dirty = run('sh', [join(tools, 'check.sh')], work);
+  assert.equal(dirty.status, 1);
+  assert.match(dirty.out, /uncommitted changes/);
   git(work, 'commit', '-q', '-am', 'hand edit');
   const edited = run('sh', [join(tools, 'check.sh')], work);
   assert.equal(edited.status, 1);
-  assert.match(edited.out, /isn't upstream's .* word for word/);
+  assert.match(edited.out, /isn't the one pin.json records/);
+
+  write(work, { '.agents/pstack/pin.json': `{\n  "commit": "${up.a}"\n}\n` });
+  const untreed = run('sh', [join(tools, 'check.sh')], work);
+  assert.equal(untreed.status, 1);
+  assert.match(untreed.out, /has no tree id/);
+});
+
+test('pstack-upstream.sh holds a changed pin to the tree upstream has at its commit', () => {
+  const up = upstream();
+  const repo = todae(up);
+  const work = repo.clone();
+  const base = git(work, 'rev-parse', 'HEAD');
+  const check = () => run('bash', [join(tools, 'pstack-upstream.sh'), base], work, { PSTACK_REPO: up.dir });
+  assert.match(check().out, /unchanged/);
+
+  // A real update passes.
+  const b = up.step('B', toB);
+  assert.equal(run('sh', [join(tools, 'update.sh'), b], work, { PSTACK_REPO: up.dir }).status, 0);
+  git(work, 'commit', '-q', '-am', 'update');
+  const updated = check();
+  assert.equal(updated.status, 0, updated.out);
+  assert.match(updated.out, /matches upstream/);
+
+  // A hand edit with its own tree id written into pin.json fails.
+  write(work, { '.agents/pstack/plugin/agents/poteto-agent.md': 'edited\n' });
+  git(work, 'add', '-A');
+  git(work, 'commit', '-q', '-m', 'edit');
+  const forged = JSON.parse(readFileSync(join(work, '.agents/pstack/pin.json'), 'utf8'));
+  forged.tree = git(work, 'rev-parse', 'HEAD:.agents/pstack/plugin');
+  writeFileSync(join(work, '.agents/pstack/pin.json'), JSON.stringify(forged, null, 2));
+  git(work, 'commit', '-q', '-am', 'forged pin');
+  assert.equal(run('sh', [join(tools, 'check.sh')], work).status, 0);
+  const caught = check();
+  assert.equal(caught.status, 1);
+  assert.match(caught.out, /Only the pstack update workflow should change the copy/);
 });

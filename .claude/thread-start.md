@@ -10,7 +10,7 @@ A Claude Duet thread reads this page after `CLAUDE.md`. The thread starts outsid
 sh .agents/pstack/check.sh
 ```
 
-It reads text only. It checks that the committed copy is upstream's folder word for word, prints the copy's folder and commit, checks that the copy has poteto-mode and the four agents this page uses, and checks the todae playbooks against the copy's playbooks. CI runs the same check on every pull request.
+It reads text only. It checks that the copy is the one `pin.json` records, with no uncommitted changes, prints the copy's folder and commit, checks that the copy has poteto-mode and the four agents this page uses, and checks the todae playbooks against the copy's playbooks. CI runs the same check on every pull request.
 
 If it says to run it from the root of the todae checkout, change to the folder where you cloned todae and run it again. Any other stop before it prints the pstack folder means the copy is missing, incomplete or edited, as on a branch cut before the copy was added. Merge `origin/main` into the branch and run it again. Never edit the copy to make the check pass. If it still stops, tell Ben which line it printed, and keep working from `AGENTS.md` and the standalone todae playbooks. `review-before-pr.md` and `waiting-on-ci.md` change pstack's own playbooks, so ask Ben how to go on before you open a pull request or change an open one in any way, such as pushing to it, marking it ready, replying on it or driving its CI.
 

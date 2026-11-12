@@ -16,7 +16,7 @@ set -euo pipefail
 prefix=pstack-update/
 upstream=https://github.com/michael-denyer/pstack-claude
 
-pin() { sed -n 's/^[[:space:]]*"commit":[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' | head -n 1; }
+pin() { sed -n "s/^[[:space:]]*\"$1\":[[:space:]]*\"\([0-9a-f]\{40\}\)\".*/\1/p" | head -n 1; }
 out() { printf '%s=%s\n' "$1" "$2" >>"$GITHUB_OUTPUT"; }
 
 prepare() {
@@ -24,63 +24,65 @@ prepare() {
 	git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
 	git fetch -q origin "refs/heads/$BASE:refs/remotes/origin/$BASE"
 
-	# Only pull requests from this repository's own pstack-update/ branches count. A fork's branch can take
-	# the same name.
-	local ours open="" branch
-	ours=$(gh pr list --repo "$REPO" --base "$BASE" --state all --limit 100 \
-		--json number,state,title,headRefName,isCrossRepository |
-		jq -c --arg prefix "$prefix" '[.[] | select((.isCrossRepository | not) and (.headRefName | startswith($prefix)))]')
-	open=$(jq -r '[.[] | select(.state == "OPEN")] | sort_by(.number) | .[0] // empty | .number' <<<"$ours")
+	local before main_tree after short branch open="" closed
+	before=$(git show "origin/$BASE:.agents/pstack/pin.json" | pin commit)
+	main_tree=$(git show "origin/$BASE:.agents/pstack/pin.json" | pin tree)
+	after=$(git ls-remote "${PSTACK_REPO:-$upstream}" HEAD | cut -f1)
+	[[ "$after" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Couldn't read pstack-claude's newest commit."; exit 1; }
+	short=${after:0:7}
 
-	# What the base holds, so the body compares upstream from there even on a branch that moved on since.
-	local before after
-	before=$(git show "origin/$BASE:.agents/pstack/pin.json" | pin)
+	# Only pull requests from this repository's own pstack-update/ branches count: a fork's branch can take the
+	# same name. Open pull requests are few, so one page holds them all.
+	open=$(gh pr list --repo "$REPO" --base "$BASE" --state open --limit 200 --json number,headRefName,isCrossRepository |
+		jq -r --arg prefix "$prefix" '[.[] | select((.isCrossRepository | not) and (.headRefName | startswith($prefix)))] | sort_by(.number) | .[0] // empty | "\(.number) \(.headRefName)"')
+	out open "${open%% *}"
 
 	if [ -n "$open" ]; then
-		branch=$(jq -r --argjson n "$open" '.[] | select(.number == $n) | .headRefName' <<<"$ours")
+		branch=${open#* }
+		open=${open%% *}
+	else
+		if [ "$before" = "$after" ] && [ -n "$main_tree" ] && [ "$(git rev-parse "origin/$BASE:.agents/pstack/plugin")" = "$main_tree" ]; then
+			echo "The copy is already at pstack-claude $short, so there is nothing to update."
+			out changed false
+			return
+		fi
+		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 50 --search "$short in:title" \
+			--json number,title,headRefName,isCrossRepository,mergedAt |
+			jq -r --arg prefix "$prefix" --arg short "$short" '[.[] | select((.isCrossRepository | not) and .mergedAt == null and (.headRefName | startswith($prefix)) and (.title | contains($short)))] | .[0] // empty | .number')
+		if [ -n "$closed" ]; then
+			echo "Pull request #$closed for pstack-claude $short was closed without merging, so this run opens no new one. Reopen it to take this commit, and the next run updates it."
+			out changed false
+			return
+		fi
+		branch="$prefix$short"
+	fi
+
+	if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
+		# The open pull request's branch, or one a run pushed before it failed to open the pull request. Keep its
+		# history: bring the base in rather than rebuild the branch.
 		git fetch -q origin "refs/heads/$branch:refs/remotes/origin/$branch"
 		git switch -q -c "$branch" "origin/$branch"
-		# Keep the open pull request and its history: bring the base in rather than rebuild the branch.
 		git merge -q --no-edit "origin/$BASE" || {
-			echo "::error::$branch conflicts with $BASE. Merge $BASE into it on pull request #$open and resolve the conflict, and the next run updates it again."
+			echo "::error::$branch conflicts with $BASE. Merge $BASE into it${open:+ on pull request #$open} and resolve the conflict, and the next run updates it again."
 			exit 1
 		}
 	else
-		git switch -q --detach "origin/$BASE"
+		git switch -q -c "$branch" "origin/$BASE"
 	fi
 
-	sh "$TOOLS/update.sh"
-	after=$(pin <.agents/pstack/pin.json)
-	out open "$open"
-	if [ -z "$(git status --porcelain --ignored -- .agents/pstack)" ]; then
-		echo "The copy is already at pstack-claude ${after:0:7}, so there is nothing to update."
+	sh "$TOOLS/update.sh" "$after"
+	git add -- .agents/pstack/pin.json
+	if [ -n "$(git status --porcelain -- .agents/pstack)" ]; then
+		git commit -q -m "chore(pstack): update the pinned copy to $short" -m "Upstream: $upstream/commit/$after"
+	elif [ -n "$open" ]; then
+		echo "Pull request #$open already has pstack-claude $short, so there is nothing to update."
 		out changed false
 		return
 	fi
-
-	if [ -z "$open" ]; then
-		branch="$prefix${after:0:7}"
-		local closed
-		closed=$(jq -r --arg short "${after:0:7}" '[.[] | select(.state == "CLOSED" and (.title | contains($short)))] | .[0] // empty | .number' <<<"$ours")
-		if [ -n "$closed" ]; then
-			echo "Pull request #$closed for pstack-claude ${after:0:7} was closed without merging, so this run opens no new one. Reopen it to take this commit, and the next run updates it."
-			out changed false
-			return
-		fi
-		if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
-			echo "::warning::The branch $branch already exists with no open pull request. Open a pull request from it, or delete it so the next run starts it again."
-			out changed false
-			return
-		fi
-		git switch -q -c "$branch"
-	fi
-
-	# -f, because the copy is upstream's word for word, even where todae's .gitignore would leave a file out.
-	git add -A -f -- .agents/pstack
-	git commit -q -m "chore(pstack): update the pinned copy to ${after:0:7}" -m "Upstream: $upstream/commit/$after"
 	out changed true
 	out branch "$branch"
-	out title "chore(pstack): update the pinned copy to ${after:0:7}"
+	out title "chore(pstack): update the pinned copy to $short"
+
 
 	# The check's verdict goes in the body here, and CI's Forbidden paths job runs the same check and fails on it.
 	local check status=0 tested base verdict result compare short_before stat others added removed fable
@@ -99,7 +101,8 @@ prepare() {
 	others=$(git diff --name-only "$base" HEAD | grep -v '^\.agents/pstack/' || true)
 	added=$(git diff --name-only --no-renames --diff-filter=A "$base" HEAD -- .agents/pstack/plugin | sed 's|^\.agents/pstack/plugin/||')
 	removed=$(git diff --name-only --no-renames --diff-filter=D "$base" HEAD -- .agents/pstack/plugin | sed 's|^\.agents/pstack/plugin/||')
-	fable=$(git diff -i -G 'fable' --name-only "$base" HEAD -- .agents/pstack/plugin | sed 's|^\.agents/pstack/plugin/||')
+	fable=$(git grep -l -i fable HEAD -- .agents/pstack/plugin | sed 's|^HEAD:\.agents/pstack/plugin/||' |
+		grep -Fx -f <(git diff --name-only "$base" HEAD -- .agents/pstack/plugin | sed 's|^\.agents/pstack/plugin/||') || true)
 
 	list() {
 		local name="$1" files="$2" count
@@ -108,7 +111,8 @@ prepare() {
 		echo
 		echo "$name ($count):"
 		echo
-		printf '%s\n' "$files" | head -n 20 | sed 's/^/- `/; s/$/`/'
+		# Upstream names the files, so a backquote can't end the code span.
+		printf '%s\n' "$files" | head -n 20 | tr '`' "'" | sed 's/^/- `/; s/$/`/'
 		[ "$count" -le 20 ] || echo "- and $((count - 20)) more"
 	}
 
@@ -160,6 +164,11 @@ prepare() {
 
 publish() {
 	local url=${PUSH_URL:-"https://x-access-token:$GH_TOKEN@github.com/$REPO.git"}
+	# Ben may have merged or closed the pull request while the run prepared its update.
+	if [ -n "$OPEN" ] && [ "$(gh pr view "$OPEN" --repo "$REPO" --json state --jq .state)" != OPEN ]; then
+		echo "Pull request #$OPEN closed while this run prepared its update, so nothing was pushed. The next run starts again."
+		return
+	fi
 	# A plain push: it fails rather than overwrite anything someone else pushed to the branch.
 	git push -q --no-verify "$url" "HEAD:refs/heads/$BRANCH"
 	if [ -n "$OPEN" ]; then
