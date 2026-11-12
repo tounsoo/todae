@@ -144,6 +144,9 @@ it('moves a card dragged by its grip to another column, under its last card, and
     targetPosition: { x: 40, y: done.height - 4 },
   });
   expect(cards('Done')).toEqual(['Sign in with SSO', 'Write the onboarding guide']);
+  await expect
+    .poll(() => politeRegion()?.textContent)
+    .toBe('Write the onboarding guide moved to Done, position 2 of 2');
 
   // Once Done is empty, a drop on it lands as its first card.
   await userEvent.dragAndDrop(grip('Sign in with SSO'), card('Fix chart colors in dark mode'), {

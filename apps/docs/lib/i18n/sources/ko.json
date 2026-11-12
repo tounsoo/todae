@@ -760,11 +760,11 @@
     "(section order)": "808446d2e9ad"
   },
   "recipes/kanban": {
-    "(top)": "7d7742974450",
+    "(top)": "2cefaed932c7",
     "# Kanban": "0008a1f55d5b",
     "## Columns and cards": "70d9decd98d8",
     "## The move menu": "4c7e3f09bc24",
-    "## Dragging": "9ad4c30fd822",
+    "## Dragging": "4556d1a520d9",
     "## Saving the board": "c74bdf1783e2",
     "## Accessible composition": "186181013735",
     "## When to use": "69ed21d4e222",
