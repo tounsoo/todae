@@ -91,8 +91,8 @@ function byDocumentOrder(a: OptionEntry, b: OptionEntry): number {
 }
 
 // Server-render hint only, used until options have registered: direct Option
-// children, looking through fragments.
-function hintOptions(children: ReactNode): { value: string; disabled: boolean }[] {
+// children, looking through fragments. They have no node yet.
+function hintOptions(children: ReactNode): { value: string; disabled: boolean; node?: undefined }[] {
   return Children.toArray(children).flatMap((child) => {
     if (!isValidElement<{ value?: unknown; disabled?: boolean; children?: ReactNode }>(child)) return [];
     if (child.type === OptionListOption && typeof child.props.value === 'string') {
@@ -122,8 +122,9 @@ function OptionListOption({
     console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
-  // Typeahead reads the option's text from its node, so the label isn't
-  // registered and a new label doesn't render the list again.
+  // The entry holds what order, keys and selection need. Typeahead reads the
+  // label from the node, so a label change re-registers nothing and the list
+  // renders once.
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
     return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
@@ -271,11 +272,10 @@ function OptionListRoot(props: OptionListRootProps) {
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
     if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
-      // The option's text without its aria-hidden parts, such as the check glyph.
-      // Options hinted from children before they register have no node yet.
+      // spokenText leaves out aria-hidden parts, such as the check glyph.
       const text = (at: number) => {
-        const option = enabledOptions[at];
-        return option && 'node' in option ? spokenText(option.node).trim().toLowerCase() : '';
+        const node = enabledOptions[at]?.node;
+        return node ? spokenText(node).trim().toLowerCase() : '';
       };
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);
       if (found >= 0) move(enabled[found]);
