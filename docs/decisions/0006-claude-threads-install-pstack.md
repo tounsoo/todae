@@ -10,7 +10,7 @@ A Claude Duet thread reads `CLAUDE.md`, then `.claude/thread-start.md`. That pag
 
 The repository keeps no copy of pstack ([0015](0015-pinned-pstack-copy.md) replaced this with a pinned copy). `.claude/` holds `thread-start.md` and the model sheet, `models.md`. Todae's own process rules are project playbooks in `.agents/playbooks/`. Agents change `.claude/`, `.agents/` and `CLAUDE.md` only with Ben's yes.
 
-Cursor is separate. `.cursor/`, its verify skill and [0005](0005-verify-procedure.md) stay as they are. The sentence in 0005 that says `.claude/` stays unchanged and holds the pstack port describes the layout before this decision.
+Cursor is separate. `.cursor/`, its verify skill and [0005](0005-verify-procedure.md) stay as they are. 0005 once said `.claude/` stays unchanged and holds the pstack port, which was the layout before this decision. It now points to the pinned copy in `.agents/pstack/`.
 
 ## Why
 
