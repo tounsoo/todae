@@ -3,8 +3,8 @@ name: pstack update
 # Once a week, brings the pinned pstack-claude copy in .agents/pstack up to upstream's newest commit and opens
 # one pull request for Ben to review, or updates the one already open, so pull requests never stack. Agent
 # threads read that copy instead of downloading pstack (.claude/thread-start.md). When the copy is already
-# current, nothing opens. A pull request Ben closed without merging isn't opened again for the same upstream
-# commit. The steps live in .github/scripts/pstack-update.sh, which pstack-update.test.mjs tests. Only git and
+# current, nothing opens. A copy whose pull request Ben closed without merging isn't proposed again, whichever
+# upstream commit carries it. The steps live in .github/scripts/pstack-update.sh, which pstack-update.test.mjs tests. Only git and
 # the base branch's own scripts run here: nothing from the fetched copy or from the update branch is executed.
 #
 # The pull request only changes .agents/pstack, which .github/scripts/change-class.sh counts as files no tool

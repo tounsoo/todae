@@ -47,6 +47,12 @@ prepare() {
 	if [ -n "$open" ]; then
 		branch=${open#* }
 		open=${open%% *}
+		# Upstream went back to main's copy, so the open pull request would only move the pin.
+		if [ "$(git rev-parse "origin/$BASE:.agents/pstack/plugin" 2>/dev/null)" = "$tree" ]; then
+			echo "::notice::pstack-claude's plugins/pstack at $short is the copy $BASE already has, so pull request #$open has nothing left to update. Close it."
+			out changed false
+			return
+		fi
 	else
 		if [ "$(git rev-parse "origin/$BASE:.agents/pstack/plugin" 2>/dev/null)" = "$tree" ]; then
 			echo "pstack-claude's plugins/pstack at $short is the copy $BASE already has, so there is nothing to update."
@@ -56,7 +62,7 @@ prepare() {
 		# A pull request Ben closed without merging turns this copy down, whichever upstream commit carried it, so
 		# a later commit that leaves plugins/pstack as it was opens nothing either. Each body records its tree id.
 		# Search only narrows the list to unmerged pull requests, which are few; jq matches the tree id itself.
-		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 100 --search is:unmerged \
+		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 1000 --search is:unmerged \
 			--json number,body,headRefName,isCrossRepository,mergedAt |
 			jq -r --arg prefix "$prefix" --arg tree "$tree" '[.[] | select((.isCrossRepository | not) and .mergedAt == null and (.headRefName | startswith($prefix)) and ((.body // "") | contains($tree)))] | .[0] // empty | .number')
 		if [ -n "$closed" ]; then

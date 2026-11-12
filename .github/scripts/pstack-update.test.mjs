@@ -300,6 +300,20 @@ test('a copy whose pull request was closed without merging opens nothing, at the
   assert.equal(next.outputs.changed, 'true');
 });
 
+test('an open pull request is left alone, with a note to close it, when upstream goes back to main\'s copy', () => {
+  const up = upstream();
+  const repo = todae(up);
+  up.step('B', toB);
+  const first = repo.clone();
+  const opened = step('prepare', first, up, []);
+  git(first, 'push', '-q', 'origin', `HEAD:refs/heads/${opened.outputs.branch}`);
+  git(up.dir, 'revert', '--no-edit', 'HEAD');
+  const result = step('prepare', repo.clone(), up, [pr({ number: 6, headRefName: opened.outputs.branch })]);
+  assert.equal(result.status, 0, result.out);
+  assert.equal(result.outputs.changed, 'false');
+  assert.match(result.out, /#6 has nothing left to update/);
+});
+
 test('with two update pull requests open, the run updates the lower one and warns', () => {
   const up = upstream();
   const repo = todae(up);
