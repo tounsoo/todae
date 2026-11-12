@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useReorder } from './useReorder.js';
+import { useReorder, useReorderGroup, type ReorderGroup, type ReorderPlace } from './useReorder.js';
 
 // jsdom has no layout, no DragEvent and no DataTransfer: items stand 40px tall in a column, or
 // 100px wide in a row, and drag events carry a stand-in DataTransfer that lasts the drag.
@@ -51,26 +51,34 @@ function List({
 const item = (name: string) => screen.getByText(name).closest('li')!;
 const order = () => screen.getAllByRole('listitem').map((node) => node.textContent!.replace('::', ''));
 
+// A list with data-x stands that far to the right, so lists of a group sit side by side.
+const leftOf = (list: Element) => Number(list.getAttribute('data-x') ?? 0);
+
 function rectOf(li: Element): DOMRect {
   const index = [...li.parentElement!.children].indexOf(li);
+  const x = leftOf(li.parentElement!);
   return li.parentElement!.getAttribute('data-orientation') === 'horizontal'
-    ? new DOMRect(index * 100, 0, 100, 40)
-    : new DOMRect(0, index * 40, 200, 40);
+    ? new DOMRect(x + index * 100, 0, 100, 40)
+    : new DOMRect(x, index * 40, 200, 40);
 }
+
+// A list stands 200px wide and 400px tall, so it has room below its items.
+const listRect = (ul: Element) => new DOMRect(leftOf(ul), 0, 200, 400);
 
 let restore: () => void = () => {};
 beforeEach(() => {
   const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-    return this.tagName === 'LI' ? rectOf(this) : new DOMRect(0, 0, 0, 0);
+    if (this.tagName === 'LI') return rectOf(this);
+    return this.tagName === 'UL' ? listRect(this) : new DOMRect(0, 0, 0, 0);
   });
   const doc = document as Omit<Document, 'elementFromPoint'> & { elementFromPoint?: Document['elementFromPoint'] };
   const had = Object.prototype.hasOwnProperty.call(doc, 'elementFromPoint');
   const previous = doc.elementFromPoint;
+  const at = (box: DOMRect, x: number, y: number) => x >= box.left && x < box.right && y >= box.top && y < box.bottom;
   doc.elementFromPoint = (x: number, y: number) =>
-    [...document.querySelectorAll('li')].find((li) => {
-      const box = rectOf(li);
-      return x >= box.left && x < box.right && y >= box.top && y < box.bottom;
-    }) ?? null;
+    [...document.querySelectorAll('li')].find((li) => at(rectOf(li), x, y)) ??
+    [...document.querySelectorAll('ul')].find((ul) => at(listRect(ul), x, y)) ??
+    null;
   restore = () => {
     rect.mockRestore();
     if (had) doc.elementFromPoint = previous;
@@ -123,6 +131,8 @@ function mouseDrag(name: string, orientation?: Orientation) {
       fireDrag(source, 'dragend', dataTransfer);
     },
     end: () => fireDrag(source, 'dragend', dataTransfer),
+    /** A drag event of this drag on any element, such as a list, at a point. */
+    on: (node: Element, type: string, at: { clientX: number; clientY: number }) => fireDrag(node, type, dataTransfer, at),
   };
 }
 
@@ -360,4 +370,323 @@ it('cancels a touch drag on Escape', () => {
   expect(item('C').getAttribute('data-drop')).toBeNull();
   t.up('C', 'end');
   expect(onMove).not.toHaveBeenCalled();
+});
+
+// Two lists of one group, side by side: 'left' at x 0 and 'right' at x 300. Each keeps its own order,
+// and the group moves items between them.
+type Key = 'left' | 'right';
+
+function Column({
+  group,
+  list,
+  items,
+  x,
+  disabled,
+  onMove,
+}: {
+  group: ReorderGroup<Key>;
+  list: Key;
+  items: string[];
+  x: number;
+  disabled?: boolean;
+  onMove: (from: number, to: number) => void;
+}) {
+  const reorder = useReorder({ group, list, disabled, onMove });
+  return (
+    <ul data-x={x} data-testid={`list-${list}`} {...reorder.getListProps()}>
+      {items.map((name, index) => (
+        <li key={name} {...reorder.getItemProps(index)}>
+          <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)}>
+            ::
+          </span>
+          <span>{name}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Board({
+  right: initialRight = ['W', 'X'],
+  onBetween,
+  onWithin,
+  rightDisabled,
+  hideLeft,
+}: {
+  right?: string[];
+  hideLeft?: boolean;
+  onBetween?: (from: ReorderPlace<Key>, to: ReorderPlace<Key>) => void;
+  onWithin?: (list: Key, from: number, to: number) => void;
+  rightDisabled?: boolean;
+}) {
+  const [lists, setLists] = useState<Record<Key, string[]>>({ left: ['A', 'B', 'C', 'D'], right: initialRight });
+  const move = (from: ReorderPlace<Key>, to: ReorderPlace<Key>) =>
+    setLists((current) => {
+      const next = { left: [...current.left], right: [...current.right] };
+      const [moved] = next[from.list].splice(from.index, 1);
+      next[to.list].splice(to.index, 0, moved!);
+      return next;
+    });
+  const group = useReorderGroup<Key>({
+    onMove: (from, to) => {
+      onBetween?.(from, to);
+      move(from, to);
+    },
+  });
+  const within = (list: Key) => (from: number, to: number) => {
+    onWithin?.(list, from, to);
+    move({ list, index: from }, { list, index: to });
+  };
+  return (
+    <>
+      {!hideLeft && <Column group={group} list="left" items={lists.left} x={0} onMove={within('left')} />}
+      <Column group={group} list="right" items={lists.right} x={300} disabled={rightDisabled} onMove={within('right')} />
+    </>
+  );
+}
+
+const orderIn = (list: Key) =>
+  [...screen.getByTestId(`list-${list}`).querySelectorAll('li')].map((node) => node.textContent!.replace('::', ''));
+/** A point in a list, below its items. */
+const below = (list: Key) => ({ clientX: leftOf(screen.getByTestId(`list-${list}`)) + 5, clientY: 390 });
+
+it('moves an item dragged to another list of its group, and shows the line only in the list under the pointer', () => {
+  const onBetween = vi.fn();
+  const onWithin = vi.fn();
+  render(<Board onBetween={onBetween} onWithin={onWithin} />);
+  const d = mouseDrag('B');
+  d.over('C', 'end');
+  expect(item('C').getAttribute('data-drop')).toBe('after');
+  const over = d.over('W', 'end');
+  expect(over.defaultPrevented).toBe(true);
+  expect(item('W').getAttribute('data-drop')).toBe('after');
+  expect(item('C').getAttribute('data-drop')).toBeNull();
+  expect(screen.getByTestId('list-right').getAttribute('data-drop-target')).toBe('');
+  expect(screen.getByTestId('list-left').getAttribute('data-drop-target')).toBeNull();
+  // Before the first item of another list is a move too, unlike before the item next to it in its own.
+  d.over('W', 'start');
+  expect(item('W').getAttribute('data-drop')).toBe('before');
+  d.drop('W', 'end');
+  expect(onBetween).toHaveBeenCalledExactlyOnceWith({ list: 'left', index: 1 }, { list: 'right', index: 1 });
+  expect(onWithin).not.toHaveBeenCalled();
+  expect(orderIn('left')).toEqual(['A', 'C', 'D']);
+  expect(orderIn('right')).toEqual(['W', 'B', 'X']);
+  for (const node of screen.getAllByRole('listitem')) {
+    expect(node.getAttribute('data-dragging')).toBeNull();
+    expect(node.getAttribute('data-drop')).toBeNull();
+  }
+  expect(screen.getByTestId('list-right').getAttribute('data-drop-target')).toBeNull();
+});
+
+it('keeps a drop inside one list of a group with that list\'s own onMove', () => {
+  const onBetween = vi.fn();
+  const onWithin = vi.fn();
+  render(<Board onBetween={onBetween} onWithin={onWithin} />);
+  const d = mouseDrag('W');
+  d.drop('X', 'end');
+  expect(onWithin).toHaveBeenCalledExactlyOnceWith('right', 0, 1);
+  expect(onBetween).not.toHaveBeenCalled();
+  expect(orderIn('right')).toEqual(['X', 'W']);
+});
+
+it('drops past the last item, or in an empty list, at the end of the list', () => {
+  const onBetween = vi.fn();
+  render(<Board right={[]} onBetween={onBetween} />);
+  const right = screen.getByTestId('list-right');
+  const d = mouseDrag('A');
+  d.over('B', 'end');
+  expect(item('B').getAttribute('data-drop')).toBe('after');
+  const over = d.on(right, 'dragover', below('right'));
+  expect(over.defaultPrevented).toBe(true);
+  expect(right.getAttribute('data-drop-target')).toBe('');
+  expect(item('B').getAttribute('data-drop')).toBeNull();
+  d.on(right, 'drop', below('right'));
+  expect(onBetween).toHaveBeenCalledExactlyOnceWith({ list: 'left', index: 0 }, { list: 'right', index: 0 });
+  expect(orderIn('right')).toEqual(['A']);
+  expect(right.getAttribute('data-drop-target')).toBeNull();
+
+  const again = mouseDrag('B');
+  again.on(right, 'dragover', below('right'));
+  expect(item('A').getAttribute('data-drop')).toBe('after');
+  // Leaving the list clears its line.
+  again.on(right, 'dragleave', { clientX: 900, clientY: 900 });
+  expect(item('A').getAttribute('data-drop')).toBeNull();
+  expect(right.getAttribute('data-drop-target')).toBeNull();
+  again.end();
+});
+
+it('takes nothing into a disabled list of the group', () => {
+  const onBetween = vi.fn();
+  render(<Board onBetween={onBetween} rightDisabled />);
+  const d = mouseDrag('A');
+  const over = d.over('W', 'end');
+  expect(over.defaultPrevented).toBe(false);
+  expect(item('W').getAttribute('data-drop')).toBeNull();
+  d.drop('W', 'end');
+  expect(onBetween).not.toHaveBeenCalled();
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+});
+
+it('moves an item a finger drags to another list of its group, onto an item or below them', () => {
+  const onBetween = vi.fn();
+  render(<Board onBetween={onBetween} />);
+  const t = touch('D');
+  t.move('B', 'start');
+  expect(item('B').getAttribute('data-drop')).toBe('before');
+  t.move('X', 'start');
+  expect(item('B').getAttribute('data-drop')).toBeNull();
+  expect(item('X').getAttribute('data-drop')).toBe('before');
+  t.up('X', 'start');
+  expect(onBetween).toHaveBeenLastCalledWith({ list: 'left', index: 3 }, { list: 'right', index: 1 });
+  expect(orderIn('right')).toEqual(['W', 'D', 'X']);
+
+  touch('A');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 7, pointerType: 'touch', ...below('right') }));
+  });
+  expect(item('X').getAttribute('data-drop')).toBe('after');
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, pointerType: 'touch', ...below('right') }));
+  });
+  expect(onBetween).toHaveBeenLastCalledWith({ list: 'left', index: 0 }, { list: 'right', index: 3 });
+  expect(orderIn('left')).toEqual(['B', 'C']);
+  expect(orderIn('right')).toEqual(['W', 'D', 'X', 'A']);
+});
+
+it('clears the line in another list when the list a touch drag started from goes away', () => {
+  const onBetween = vi.fn();
+  const { rerender } = render(<Board onBetween={onBetween} />);
+  const t = touch('A');
+  t.move('W', 'end');
+  expect(item('W').getAttribute('data-drop')).toBe('after');
+  rerender(<Board onBetween={onBetween} hideLeft />);
+  expect(item('W').getAttribute('data-drop')).toBeNull();
+  expect(screen.getByTestId('list-right').getAttribute('data-drop-target')).toBeNull();
+  act(() => {
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7, pointerType: 'touch', ...point('W', 'end') }));
+  });
+  expect(onBetween).not.toHaveBeenCalled();
+});
+
+it('clears the line in another list when a touch drag is cancelled', () => {
+  const onBetween = vi.fn();
+  render(<Board onBetween={onBetween} />);
+  const t = touch('A');
+  t.move('W', 'end');
+  expect(item('W').getAttribute('data-drop')).toBe('after');
+  fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+  expect(item('W').getAttribute('data-drop')).toBeNull();
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  t.up('W', 'end');
+  expect(onBetween).not.toHaveBeenCalled();
+});
+
+// Nested lists of one group, laid out by data-r="left,top,width,height" on each element.
+function nestedLayout() {
+  const box = (node: Element) => {
+    const [x = 0, y = 0, w = 0, h = 0] = (node.getAttribute('data-r') ?? '').split(',').map(Number);
+    return new DOMRect(x, y, w, h);
+  };
+  vi.mocked(Element.prototype.getBoundingClientRect).mockImplementation(function (this: Element) {
+    return box(this);
+  });
+  (document as { elementFromPoint: Document['elementFromPoint'] }).elementFromPoint = (x, y) =>
+    [...document.querySelectorAll('[data-r]')].reverse().find((node) => {
+      const b = box(node);
+      return x >= b.left && x < b.right && y >= b.top && y < b.bottom;
+    }) ?? null;
+}
+
+/** An outer list of O1 and O2, with an inner list of the same group inside O2, or inside O1 with `inO1`. */
+function Nested({
+  onOuter,
+  onBetween,
+  innerDisabled,
+  inO1,
+}: {
+  onOuter: (from: number, to: number) => void;
+  onBetween: (from: ReorderPlace<string>, to: ReorderPlace<string>) => void;
+  innerDisabled?: boolean;
+  inO1?: boolean;
+}) {
+  const group = useReorderGroup<string>({ onMove: onBetween });
+  const outer = useReorder({ group, list: 'outer', onMove: onOuter });
+  const inner = useReorder({ group, list: 'inner', disabled: innerDisabled, onMove: () => {} });
+  const innerList = (top: number) => (
+    <ul data-r={`0,${top},200,40`} {...inner.getListProps()}>
+      <li data-r={`0,${top},200,40`} {...inner.getItemProps(0)}>
+        I1
+      </li>
+    </ul>
+  );
+  return (
+    <ul data-r="0,0,200,400" {...outer.getListProps()}>
+      <li data-r={inO1 ? '0,0,200,140' : '0,0,200,40'} {...outer.getItemProps(0)}>
+        <span data-testid="handle-O1" {...outer.getHandleProps(0)}>
+          ::
+        </span>
+        O1
+        {inO1 && innerList(100)}
+      </li>
+      <li data-r={inO1 ? '0,140,200,100' : '0,40,200,100'} {...outer.getItemProps(1)}>
+        O2
+        {!inO1 && innerList(100)}
+      </li>
+    </ul>
+  );
+}
+
+const outerItem = (name: RegExp) => screen.getByText(name, { selector: 'li' });
+
+it('leaves a drop on a disabled list nested in an item to the list around it, by mouse and by finger', () => {
+  nestedLayout();
+  const onOuter = vi.fn();
+  const onBetween = vi.fn();
+  render(<Nested onOuter={onOuter} onBetween={onBetween} innerDisabled />);
+  const at = { clientX: 5, clientY: 110 };
+  const d = mouseDrag('O1');
+  d.on(screen.getByText('I1'), 'dragover', at);
+  expect(outerItem(/O2/).getAttribute('data-drop')).toBe('after');
+  d.on(screen.getByText('I1'), 'drop', at);
+  d.end();
+  expect(onOuter).toHaveBeenCalledExactlyOnceWith(0, 1);
+
+  onOuter.mockClear();
+  const fire = (type: string, x: number, y: number) =>
+    act(() => {
+      const target = type === 'pointerdown' ? screen.getByTestId('handle-O1') : window;
+      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, clientX: x, clientY: y }));
+    });
+  fire('pointerdown', 5, 5);
+  fire('pointermove', at.clientX, at.clientY);
+  expect(outerItem(/O2/).getAttribute('data-drop')).toBe('after');
+  fire('pointerup', at.clientX, at.clientY);
+  expect(onOuter).toHaveBeenCalledExactlyOnceWith(0, 1);
+  expect(onBetween).not.toHaveBeenCalled();
+});
+
+it('moves nothing when an item is dropped on a list inside itself', () => {
+  nestedLayout();
+  const onOuter = vi.fn();
+  const onBetween = vi.fn();
+  render(<Nested onOuter={onOuter} onBetween={onBetween} inO1 />);
+  const at = { clientX: 5, clientY: 110 };
+  const d = mouseDrag('O1');
+  const over = d.on(screen.getByText('I1'), 'dragover', at);
+  expect(over.defaultPrevented).toBe(true);
+  expect(screen.getByText('I1').getAttribute('data-drop')).toBeNull();
+  d.on(screen.getByText('I1'), 'drop', at);
+  d.end();
+
+  const fire = (type: string, x: number, y: number) =>
+    act(() => {
+      const target = type === 'pointerdown' ? screen.getByTestId('handle-O1') : window;
+      target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, clientX: x, clientY: y }));
+    });
+  fire('pointerdown', 5, 5);
+  fire('pointermove', at.clientX, at.clientY);
+  expect(screen.getByText('I1').getAttribute('data-drop')).toBeNull();
+  fire('pointerup', at.clientX, at.clientY);
+  expect(onBetween).not.toHaveBeenCalled();
+  expect(onOuter).not.toHaveBeenCalled();
 });

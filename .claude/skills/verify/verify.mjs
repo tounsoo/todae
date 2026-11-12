@@ -69,8 +69,8 @@ export const CHANGE_TYPES = [
     id: 'agent',
     label: 'Agent instructions and skills',
     match: anyOf(under('.claude/'), under('.agents/'), oneOf('CLAUDE.md', 'AGENTS.md')),
-    steps: ['verify-self-test', 'verify-tests'],
-    proof: 'the verify self-test and its tests; the rest is review',
+    steps: ['verify-self-test', 'verify-tests', 'pstack-check'],
+    proof: 'the verify self-test and its tests, and the pinned pstack check; the rest is review',
   },
   {
     id: 'ci',
@@ -154,6 +154,11 @@ export const STEPS = {
     id: 'verify-tests',
     label: 'Verify helper tests',
     cmd: ['node', '--test', '.claude/skills/verify/verify.test.mjs'],
+  },
+  'pstack-check': {
+    id: 'pstack-check',
+    label: 'Pinned pstack copy and playbook anchors',
+    cmd: ['sh', '.agents/pstack/check.sh'],
   },
   drive: { id: 'drive', label: 'Drive the touched docs routes in English and Korean', drive: true },
 };

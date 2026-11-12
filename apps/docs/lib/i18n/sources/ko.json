@@ -759,6 +759,17 @@
     "## When to use": "99b196ff7fc6",
     "(section order)": "808446d2e9ad"
   },
+  "recipes/kanban": {
+    "(top)": "2cefaed932c7",
+    "# Kanban": "0008a1f55d5b",
+    "## Columns and cards": "70d9decd98d8",
+    "## The move menu": "4c7e3f09bc24",
+    "## Dragging": "4556d1a520d9",
+    "## Saving the board": "c74bdf1783e2",
+    "## Accessible composition": "186181013735",
+    "## When to use": "69ed21d4e222",
+    "(section order)": "4a1a03297ee1"
+  },
   "recipes/message-actions": {
     "(top)": "e6aebc3720e6",
     "# Message actions": "9499c3178053",
@@ -1279,13 +1290,14 @@
     "(section order)": "59d900639520"
   },
   "utilities/use-reorder": {
-    "(top)": "2fb0345ed302",
-    "# useReorder": "5b86b472d87e",
+    "(top)": "a98b70dcfcf0",
+    "# useReorder": "82802c6ad052",
     "## Touch": "55459a623454",
-    "## Accessible composition": "b7931bd53749",
-    "## When to use": "096cd31b6ac9",
-    "## Props": "d782464e8b92",
-    "(section order)": "26fdfe644b20"
+    "## Between lists": "d29cfb5356d7",
+    "## Accessible composition": "ca0b01ac5bf3",
+    "## When to use": "0d34d15d0e85",
+    "## Props": "48fcb5146827",
+    "(section order)": "890fa6f5839e"
   },
   "utilities/use-roving-focus": {
     "(top)": "f424b205a893",

@@ -138,12 +138,14 @@ describe('docs mcp tools', () => {
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
     expect(combobox).not.toHaveProperty('scope');
-    // A hook that reads a provider is documented with that provider.
+    // A hook that reads a provider is documented with that provider, and a hook that only serves
+    // another hook is documented with that hook.
     const providerHooks: Record<string, string> = {
       useAppearance: 'tokens',
       useDensity: 'tokens',
       useStrings: 'utilities/strings-provider',
       useGlyphs: 'utilities/glyphs-provider',
+      useReorderGroup: 'utilities/use-reorder',
     };
     for (const [name, slug] of Object.entries(providerHooks)) {
       expect(getComponent(name).docsUrl, name).toBe(`${DOCS_ORIGIN}/${slug}`);

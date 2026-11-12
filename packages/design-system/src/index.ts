@@ -389,12 +389,18 @@ export {
 export { useFocusHandoff, type UseFocusHandoffOptions } from './hooks/useFocusHandoff.js';
 export {
   useReorder,
+  useReorderGroup,
   type ReorderDrop,
   type ReorderDropPosition,
+  type ReorderGroup,
+  type ReorderPlace,
+  type UseReorderGroupOptions,
   type UseReorderHandleProps,
   type UseReorderHandleUserProps,
   type UseReorderItemProps,
   type UseReorderItemUserProps,
+  type UseReorderListProps,
+  type UseReorderListUserProps,
   type UseReorderOptions,
   type UseReorderResult,
 } from './hooks/useReorder.js';

@@ -1,0 +1,49 @@
+import KanbanExample from '../../../../examples/recipes/kanban/KanbanExample';
+
+export const description = 'A recipe for a Kanban board: columns of Cards, a grip that drags a card within or between columns, and a Menu that moves it up, down or to another column.';
+
+# Kanban
+
+A recipe, not a package namespace. A board is a row of columns, each an ordered list of [Cards](/card). A card's grip drags it within its column or to another one through [`useReorder`](/utilities/use-reorder) and its [`useReorderGroup`](/utilities/use-reorder#between-lists), and its [Menu](/menu) moves it up, down or to another column, for the keyboard, screen readers and anyone who can't drag. Every move is announced with [`useAnnouncer`](/utilities/use-announcer). What the columns are and where the board is saved are up to your product. There is no `Kanban.*` export.
+
+Drag a card by its grip within its column or into another one, or open its menu to move it.
+
+<Example of={KanbanExample} />
+
+## Columns and cards
+
+Each column is a `section` named by its heading, with its cards in an `ol` that the same heading names, since a card's place in the column is its priority. The count beside the heading is a [Badge](/badge). A column with no cards says so in text instead of showing an empty list. The board is a grid of columns at least 11rem wide in a [ScrollArea](/scroll-area) with `axis="inline"`, so on a narrow screen the board scrolls sideways and the cards keep their width.
+
+Each card leads with its title, as most boards do, with its label under the title. The grip runs down the card's leading edge and the menu button sits at its trailing edge. Both are as wide as an icon-only button and sit the same small distance inside the card's edges, so their icons mirror each other and the menu's hover fill and focus ring stay inside the card, and both icons are centered on the title's first line. A word too long for the card's narrow title breaks with a hyphen when its `lang` has hyphenation rules, and a string with no break point, such as a URL, still wraps, so neither pushes the menu out. The board sits in a `DensityProvider` with `density="compact"`, since cards on a board are dense.
+
+Key each card by its task's id, not its index, so a card's menu moves with it and focus follows it.
+
+## The move menu
+
+Each card has a `Menu.Trigger` named after the card. Move up and Move down change its place in its column, and a Move to item for each column, after a `Menu.Separator`, sends it to the end of that column. Moves the card can't make, such as Move up on the first card or Move to on its own column, take `disabled`, which a menu item draws as `aria-disabled`: the item stays in the arrow-key order and is read as unavailable, so every card's menu has the same items.
+
+A move inside a column moves the card's element, and the menu hands focus back to its trigger there. A move to another column takes the card out of one list and puts a new one in the other, so its old element goes away holding focus. [`useFocusHandoff`](/utilities/use-focus-handoff) on each card sends that focus to the moved card's trigger in its new column, through a ref that only that trigger holds. The announcement names the card, its column and its position, which the person would otherwise have to find by reading the board again.
+
+## Dragging
+
+The board calls `useReorderGroup` once, and each column calls `useReorder` with that group and its own index as `list`. Spread `getListProps()` on each column's `section`, `getItemProps(index)` on each card's `li` and `getHandleProps(index)` on its grip: a press on the grip makes that card draggable, so the text on the cards stays selectable and a card drags only by its grip. The hook puts `data-dragging` on the dragged card and `data-drop` on the card it would land beside, and the example's stylesheet draws the drop line in the gap from those. The list props are on the whole column, so a drop under the last card or on the heading lands in that column too. A column with no cards takes a dropped card as its first, and while a card would land there the column carries `data-drop-target`, which the stylesheet draws as a dashed outline. A drop inside a column calls that column's `onMove`, and a drop in another column calls the group's `onMove` with `{ list, index }` for where the card leaves and where it lands. Both call the same move function as the menu, so a drag is announced too.
+
+The grip is `aria-hidden` and not a tab stop, since dragging has no keyboard path: the menu is the way to move a card from the keyboard (WCAG 2.2 SC 2.1.1) and with a single pointer and no dragging (SC 2.5.7). The grip runs the card's height over its leading padding, so it is easy to hit and more than 24 by 24 CSS pixels (SC 2.5.8). It stays visible, since touch has no hover, in a muted color that turns full contrast while the card is hovered or holds focus. It has `touch-action: none`, so a finger on it drags the card instead of scrolling the page. Escape cancels a drag and leaves the board as it was.
+
+## Saving the board
+
+The example changes the board as soon as a move is chosen. If your product saves the move and the save fails, put the card back and say so with a [Toast](/toast) or an [Alert](/alert), since the announcement already said the card moved.
+
+## Accessible composition
+
+**Todae handles:** `Menu` gives the trigger `aria-haspopup` and `aria-expanded`, moves focus into the menu and through it with arrow keys, reads a `disabled` item as `aria-disabled`, and returns focus to the trigger when an item is chosen. `useReorder` drags a card only by its grip, works out the column and place a drop lands on, and ignores drags from outside the board, such as files. `useFocusHandoff` moves focus from a card that leaves its column. `useAnnouncer` writes the message to a live region.
+
+**You supply:** A heading for each column that names its `section` and its `ol`. A name for each card's trigger that says which card it moves. `disabled` on the moves a card can't make. Keys from the task's id. A ref on the trigger of the card that last changed columns, for the focus hand-off. A grip hidden from screen readers, and a look for the drop line and the dragged card. The announcement, with the card's name, its column and its position, in your product's language.
+
+**Watch for:** Keying cards by index, which hands focus to whichever card now sits where the moved one was. A move to another column without the focus hand-off, which drops focus to the page. Removing a move a card can't make instead of marking it unavailable, which changes the menu from card to card. Drag as the only way to move a card. A grip that is a button or a tab stop, which adds a control that does nothing from the keyboard.
+
+## When to use
+
+**When:** Work that moves through a few stages, such as tasks, issues or hiring candidates, where people see every stage at once and move items between them.
+
+**When not:** One ordered list → the [Reorder](/recipes/reorder) recipe. Many items to sort, filter or compare by their fields → a [Data table](/recipes/data-table). A sequence the person goes through in order → [Steps](/steps).

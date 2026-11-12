@@ -1,0 +1,81 @@
+name: pstack update
+
+# Once a week, brings the pinned pstack-claude copy in .agents/pstack up to upstream's newest commit and opens
+# one pull request for Ben to review, or updates the one already open, so pull requests never stack. Agent
+# threads read that copy instead of downloading pstack (.claude/thread-start.md). When the copy is already
+# current, nothing opens. A copy whose pull request Ben closed without merging isn't proposed again, whichever
+# upstream commit carries it. The steps live in .github/scripts/pstack-update.sh, which pstack-update.test.mjs tests. Only git and
+# the base branch's own scripts run here: nothing from the fetched copy or from the update branch is executed.
+#
+# The pull request only changes .agents/pstack, which .github/scripts/change-class.sh counts as files no tool
+# reads, so CI runs only Changes, Forbidden paths (with .agents/pstack/check.sh) and Checks on it, and
+# docs-deploy.yml builds no preview for it or for its merge into main.
+permissions: {}
+
+on:
+  schedule:
+    # Mondays at 00:17 UTC, 9:17 AM in Seoul.
+    - cron: '17 0 * * 1'
+  workflow_dispatch:
+
+# One run at a time, so two runs never write a branch together.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Update the pinned copy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # The run's own token only reads. Pushing and the pull request use the release app's token, because GitHub
+    # starts no workflows for pushes made with GITHUB_TOKEN, so CI would never run on the pull request.
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      REPO: ${{ github.repository }}
+      # A scheduled run's event carries no repository, so the base is named, as in ci.yml and release.yml.
+      BASE: main
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+          # The update branch is merged with main, which needs both histories.
+          fetch-depth: 0
+
+      - id: prepare
+        name: Update the copy on its branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOOLS: ${{ runner.temp }}/pstack-tools
+          BODY: ${{ runner.temp }}/pstack-body.md
+        run: |
+          set -euo pipefail
+          # Copies from main, so the scripts that run are main's even after the update branch is checked out.
+          mkdir -p "$TOOLS"
+          cp .github/scripts/pstack-update.sh .agents/pstack/update.sh .agents/pstack/check.sh "$TOOLS/"
+          bash "$TOOLS/pstack-update.sh" prepare
+
+      - id: app-token
+        if: ${{ steps.prepare.outputs.changed == 'true' }}
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          # Merging main into an open update pull request can carry main's workflow changes.
+          permission-workflows: write
+
+      - name: Push and open or update the pull request
+        if: ${{ steps.prepare.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OPEN: ${{ steps.prepare.outputs.open }}
+          BRANCH: ${{ steps.prepare.outputs.branch }}
+          TITLE: ${{ steps.prepare.outputs.title }}
+          TOOLS: ${{ runner.temp }}/pstack-tools
+          BODY: ${{ runner.temp }}/pstack-body.md
+        run: bash "$TOOLS/pstack-update.sh" publish

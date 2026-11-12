@@ -78,6 +78,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/file-upload': () => import('../../app/(en)/recipes/file-upload/page.mdx'),
   'recipes/filter-bar': () => import('../../app/(en)/recipes/filter-bar/page.mdx'),
   'recipes/inline-edit': () => import('../../app/(en)/recipes/inline-edit/page.mdx'),
+  'recipes/kanban': () => import('../../app/(en)/recipes/kanban/page.mdx'),
   'recipes/message-actions': () => import('../../app/(en)/recipes/message-actions/page.mdx'),
   'recipes/message-parts': () => import('../../app/(en)/recipes/message-parts/page.mdx'),
   'recipes/product-tour': () => import('../../app/(en)/recipes/product-tour/page.mdx'),
