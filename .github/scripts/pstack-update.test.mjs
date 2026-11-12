@@ -174,7 +174,17 @@ test('a current copy opens nothing', () => {
   const result = step('prepare', repo.clone(), up, []);
   assert.equal(result.status, 0, result.out);
   assert.equal(result.outputs.changed, 'false');
-  assert.match(result.out, /already at pstack-claude/);
+  assert.match(result.out, /is the copy main already has/);
+});
+
+test('an upstream commit that leaves plugins/pstack as it was opens nothing', () => {
+  const up = upstream();
+  const repo = todae(up);
+  up.step('readme', (dir) => write(dir, { 'README.md': 'upstream readme\n' }));
+  const result = step('prepare', repo.clone(), up, []);
+  assert.equal(result.status, 0, result.out);
+  assert.equal(result.outputs.changed, 'false');
+  assert.match(result.out, /already has, so there is nothing to update/);
 });
 
 test('a new upstream commit is copied word for word onto a new branch and opens a pull request', () => {
@@ -354,6 +364,13 @@ test('check.sh fails on a committed copy that differs from upstream, and on a br
   const dirty = run('sh', [join(tools, 'check.sh')], work);
   assert.equal(dirty.status, 1);
   assert.match(dirty.out, /uncommitted changes/);
+  write(work, { '.agents/pstack/plugin/dist/extra.js': 'ignored by .gitignore\n' });
+  git(work, 'stash', '-q');
+  const ignored = run('sh', [join(tools, 'check.sh')], work);
+  assert.equal(ignored.status, 1);
+  assert.match(ignored.out, /extra files, ignored ones included/);
+  rmSync(join(work, '.agents/pstack/plugin/dist'), { recursive: true });
+  git(work, 'stash', 'pop', '-q');
   git(work, 'commit', '-q', '-am', 'hand edit');
   const edited = run('sh', [join(tools, 'check.sh')], work);
   assert.equal(edited.status, 1);
@@ -393,4 +410,33 @@ test('pstack-upstream.sh holds a changed pin to the tree upstream has at its com
   const caught = check();
   assert.equal(caught.status, 1);
   assert.match(caught.out, /Only the pstack update workflow should change the copy/);
+
+  // A commit off upstream's default branch, as a fork's would be, fails even with its real tree.
+  git(up.dir, 'switch', '-q', '-c', 'side');
+  const side = up.step('side', (dir) => write(dir, { 'plugins/pstack/side.md': 'side\n' }));
+  git(up.dir, 'switch', '-q', '-');
+  assert.equal(run('sh', [join(tools, 'update.sh'), side], work, { PSTACK_REPO: up.dir }).status, 0);
+  git(work, 'commit', '-q', '-am', 'side pin');
+  const offBranch = check();
+  assert.equal(offBranch.status, 1);
+  assert.match(offBranch.out, /isn't on pstack-claude's default branch/);
+});
+
+test('a restored copy pinned at upstream\'s newest commit, but not its tree, is still replaced', () => {
+  const up = upstream();
+  const repo = todae(up);
+  const first = repo.clone();
+  write(first, { '.agents/pstack/plugin/extra.md': 'restored by hand\n' });
+  git(first, 'add', '-A');
+  const pin = JSON.parse(readFileSync(join(first, '.agents/pstack/pin.json'), 'utf8'));
+  git(first, 'commit', '-q', '-m', 'restored');
+  pin.tree = git(first, 'rev-parse', 'HEAD:.agents/pstack/plugin');
+  writeFileSync(join(first, '.agents/pstack/pin.json'), JSON.stringify(pin, null, 2));
+  git(first, 'commit', '-q', '-am', 'pin restored copy');
+  git(first, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+  const work = repo.clone();
+  const result = step('prepare', work, up, []);
+  assert.equal(result.status, 0, result.out);
+  assert.equal(result.outputs.changed, 'true');
+  assert.match(result.body, /Files upstream removed \(1\):\n\n- `extra.md`/);
 });

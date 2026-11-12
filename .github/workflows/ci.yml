@@ -349,14 +349,14 @@ jobs:
       - name: Pinned pstack copy
         env:
           EVENT_NAME: ${{ github.event_name }}
-          PR_BASE: ${{ github.event.pull_request.base.sha }}
-          PR_HEAD: ${{ github.event.pull_request.head.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
           sh .agents/pstack/check.sh
           if [ "$EVENT_NAME" = "pull_request" ]; then
-            base=$(git merge-base "$PR_BASE" "$PR_HEAD")
+            # The checkout is the merge commit, and its first parent is the base it was built on, so only a pull
+            # request that changes pin.json itself downloads anything.
+            base=$(git rev-parse HEAD^1)
           else
             base="$PUSH_BEFORE"
           fi

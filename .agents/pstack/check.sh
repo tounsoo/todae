@@ -23,7 +23,7 @@ tree=$(pin tree)
 [ -n "$tree" ] || { echo "pstack: .agents/pstack/pin.json has no tree id."; exit 1; }
 have=$(git rev-parse -q --verify "HEAD:.agents/pstack/plugin" 2>/dev/null) || have=""
 [ "$have" = "$tree" ] || { echo "pstack: the committed copy in .agents/pstack/plugin isn't the one pin.json records. Don't edit it by hand: the pstack update workflow changes it."; exit 1; }
-[ -z "$(git status --porcelain -- .agents/pstack/plugin 2>/dev/null)" ] || { echo "pstack: .agents/pstack/plugin has uncommitted changes. git restore and git clean on that folder put it back."; exit 1; }
+[ -z "$(git status --porcelain --ignored -- .agents/pstack/plugin 2>/dev/null)" ] || { echo "pstack: .agents/pstack/plugin has uncommitted changes or extra files, ignored ones included. git restore and git clean on that folder put it back."; exit 1; }
 find "$pstack" -type f -name 'LICENSE*' | grep -q . || { echo "pstack: the copy has no LICENSE file."; exit 1; }
 echo "pstack $sha is in $pstack"
 

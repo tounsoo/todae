@@ -24,28 +24,27 @@ prepare() {
 	git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
 	git fetch -q origin "refs/heads/$BASE:refs/remotes/origin/$BASE"
 
-	local before main_tree after short branch open="" closed
+	local before after short branch open="" closed
 	before=$(git show "origin/$BASE:.agents/pstack/pin.json" | pin commit)
-	main_tree=$(git show "origin/$BASE:.agents/pstack/pin.json" | pin tree)
 	after=$(git ls-remote "${PSTACK_REPO:-$upstream}" HEAD | cut -f1)
 	[[ "$after" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Couldn't read pstack-claude's newest commit."; exit 1; }
 	short=${after:0:7}
 
 	# Only pull requests from this repository's own pstack-update/ branches count: a fork's branch can take the
 	# same name. Open pull requests are few, so one page holds them all.
-	open=$(gh pr list --repo "$REPO" --base "$BASE" --state open --limit 200 --json number,headRefName,isCrossRepository |
-		jq -r --arg prefix "$prefix" '[.[] | select((.isCrossRepository | not) and (.headRefName | startswith($prefix)))] | sort_by(.number) | .[0] // empty | "\(.number) \(.headRefName)"')
+	local all
+	all=$(gh pr list --repo "$REPO" --base "$BASE" --state open --limit 200 --json number,headRefName,isCrossRepository |
+		jq -r --arg prefix "$prefix" '[.[] | select((.isCrossRepository | not) and (.headRefName | startswith($prefix)))] | sort_by(.number) | .[] | "\(.number) \(.headRefName)"')
+	open=$(head -n 1 <<<"$all")
+	if [ "$(grep -c . <<<"$all")" -gt 1 ]; then
+		echo "::warning::More than one pstack update pull request is open. This run updates #${open%% *} only; close the others."
+	fi
 	out open "${open%% *}"
 
 	if [ -n "$open" ]; then
 		branch=${open#* }
 		open=${open%% *}
 	else
-		if [ "$before" = "$after" ] && [ -n "$main_tree" ] && [ "$(git rev-parse "origin/$BASE:.agents/pstack/plugin")" = "$main_tree" ]; then
-			echo "The copy is already at pstack-claude $short, so there is nothing to update."
-			out changed false
-			return
-		fi
 		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 50 --search "$short in:title" \
 			--json number,title,headRefName,isCrossRepository,mergedAt |
 			jq -r --arg prefix "$prefix" --arg short "$short" '[.[] | select((.isCrossRepository | not) and .mergedAt == null and (.headRefName | startswith($prefix)) and (.title | contains($short)))] | .[0] // empty | .number')
@@ -71,6 +70,16 @@ prepare() {
 	fi
 
 	sh "$TOOLS/update.sh" "$after"
+	# The copy update.sh built decides, not the pin: upstream's newest commit may leave plugins/pstack as it was,
+	# as when only its README changes, and then a new pull request, or a commit on the open one, would only move
+	# the pin. Without an open pull request the copy is compared with main's.
+	local ref=HEAD
+	[ -n "$open" ] || ref="origin/$BASE"
+	if git diff --quiet "$ref" -- .agents/pstack/plugin; then
+		echo "pstack-claude's plugins/pstack at $short is the copy ${open:+pull request #$open}${open:-$BASE} already has, so there is nothing to update."
+		out changed false
+		return
+	fi
 	git add -- .agents/pstack/pin.json
 	if [ -n "$(git status --porcelain -- .agents/pstack)" ]; then
 		git commit -q -m "chore(pstack): update the pinned copy to $short" -m "Upstream: $upstream/commit/$after"
@@ -163,7 +172,13 @@ prepare() {
 }
 
 publish() {
-	local url=${PUSH_URL:-"https://x-access-token:$GH_TOKEN@github.com/$REPO.git"}
+	local url=${PUSH_URL:-"https://github.com/$REPO.git"} auth
+	if [ -z "${PUSH_URL:-}" ]; then
+		# The token goes to git through its environment, not the command line or the URL.
+		auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
+		echo "::add-mask::$auth"
+		export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.https://github.com/.extraheader GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth"
+	fi
 	# Ben may have merged or closed the pull request while the run prepared its update.
 	if [ -n "$OPEN" ] && [ "$(gh pr view "$OPEN" --repo "$REPO" --json state --jq .state)" != OPEN ]; then
 		echo "Pull request #$OPEN closed while this run prepared its update, so nothing was pushed. The next run starts again."

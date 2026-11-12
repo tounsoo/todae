@@ -27,10 +27,17 @@ tree=$(pin tree <.agents/pstack/pin.json)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 git -C "$tmp" init -q
+# GitHub serves a fork's commits through the parent's URL too, so the commit has to be on upstream's default
+# branch. Its history comes as commits only, then the commit's trees.
+git -C "$tmp" fetch -q --filter=tree:0 "$repo" HEAD
+git -C "$tmp" merge-base --is-ancestor "$commit" FETCH_HEAD 2>/dev/null || {
+	echo "pstack-upstream: $commit isn't on pstack-claude's default branch." >&2
+	exit 1
+}
 git -C "$tmp" fetch -q --depth 1 --filter=blob:none "$repo" "$commit"
 want=$(git -C "$tmp" rev-parse -q --verify "FETCH_HEAD:plugins/pstack") || { echo "pstack-upstream: $commit has no plugins/pstack folder." >&2; exit 1; }
 if [ "$want" != "$tree" ]; then
-	echo "pstack-upstream: pin.json says the copy is $tree, but upstream's plugins/pstack at $commit is $want. Only the pstack update workflow should change the copy and its pin." >&2
+	echo "pstack-upstream: pin.json says the copy is $tree, but upstream's plugins/pstack at $commit is $want. Only the pstack update workflow should change the copy and its pin. (The first copy, rebuilt from todae's history, has a tree of its own, so leave its pin alone until the first update replaces it.)" >&2
 	exit 1
 fi
 echo "pstack-upstream: the pin matches upstream's plugins/pstack at $commit."
