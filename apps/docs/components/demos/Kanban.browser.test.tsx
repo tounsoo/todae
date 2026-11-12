@@ -1,9 +1,14 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { userEvent } from 'vitest/browser';
-import { afterEach, expect, it } from 'vitest';
+import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
 import KanbanExample from '../../examples/recipes/kanban/KanbanExample';
+
+// Wide enough for all three columns, so a drag into Done doesn't scroll the board while it runs.
+beforeEach(async () => {
+  await page.viewport(1280, 800);
+});
 
 afterEach(cleanup);
 
@@ -138,10 +143,12 @@ it('moves a card dragged by its grip to another column, under its last card, and
     .poll(() => politeRegion()?.textContent)
     .toBe('Export invoices as CSV moved to In progress, position 2 of 3');
 
-  // A drop on the column below its last card lands at the end.
+  // A drop on the column just below its last card lands at the end. The point is measured from the
+  // card, not from the column's bottom, because a column can be taller than the test's viewport.
   const done = column('Done').getBoundingClientRect();
+  const last = card('Sign in with SSO').getBoundingClientRect();
   await userEvent.dragAndDrop(grip('Write the onboarding guide'), column('Done'), {
-    targetPosition: { x: 40, y: done.height - 4 },
+    targetPosition: { x: 40, y: last.bottom - done.top + 4 },
   });
   expect(cards('Done')).toEqual(['Sign in with SSO', 'Write the onboarding guide']);
   await expect
