@@ -13,6 +13,8 @@ import {
   useAnnouncer,
   useFocusHandoff,
   useReorder,
+  useReorderGroup,
+  type ReorderGroup,
   type UseReorderResult,
 } from '@tounsoo/todae';
 import { EllipsisVertical, GripVertical } from 'lucide-react';
@@ -117,12 +119,14 @@ function BoardCard({
 }
 
 function BoardColumn({
+  group,
   columnIndex,
   columns,
   move,
   landing,
   landed,
 }: {
+  group: ReorderGroup<number>;
   columnIndex: number;
   columns: readonly Column[];
   move: Move;
@@ -131,14 +135,19 @@ function BoardColumn({
 }) {
   const column = columns[columnIndex]!;
   const headingId = useId();
-  // Each column is its own list to drag in. A card goes to another column
-  // through its menu.
+  // Each column is a list of the board's group, keyed by its index. A drop
+  // inside the column calls its own onMove, and a drop from another column
+  // calls the group's.
   const reorder = useReorder({
+    group,
+    list: columnIndex,
     onMove: (from, to) => move(columnIndex, from, columnIndex, to),
   });
 
+  // The list props go on the whole column, so a drop under the last card, on
+  // the heading or in an empty column lands in it.
   return (
-    <section aria-labelledby={headingId} className={styles.column}>
+    <section aria-labelledby={headingId} {...reorder.getListProps()} className={styles.column}>
       <Stack.Root direction="row" align="center" justify="between" gap="condensed">
         <Text.Root as="h3" id={headingId}>
           {column.name}
@@ -189,6 +198,10 @@ export function KanbanBoard({
     const column = next[toColumn]!;
     announce(`${task.title} moved to ${column.name}, position ${to + 1} of ${column.tasks.length}`);
   };
+  // A drag between columns calls the same move as the menu.
+  const group = useReorderGroup<number>({
+    onMove: (from, to) => move(from.list, from.index, to.list, to.index),
+  });
 
   // Cards on a board are dense, so the board uses the compact density.
   return (
@@ -198,6 +211,7 @@ export function KanbanBoard({
           {columns.map((column, columnIndex) => (
             <BoardColumn
               key={column.id}
+              group={group}
               columnIndex={columnIndex}
               columns={columns}
               move={move}

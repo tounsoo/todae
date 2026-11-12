@@ -95,11 +95,22 @@
   margin-inline-end: calc(var(--todae-button-padding-y) - var(--todae-card-padding));
 }
 
-/* Forced colors replace backgrounds, so the drop line takes the system's
-   highlight color. */
+/* A column with no cards has no card to draw the drop line on, so the column
+   itself takes a dashed outline while a card would land in it. */
+.column[data-drop-target]:not(:has(.list)) {
+  outline: var(--todae-focus-ring-width) dashed var(--todae-color-accent-default);
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
+}
+
+/* Forced colors replace backgrounds, so the drop line and the empty column's
+   outline take the system's highlight color. */
 @media (forced-colors: active) {
   .card[data-drop]::before {
     background: Highlight;
     forced-color-adjust: none;
+  }
+
+  .column[data-drop-target]:not(:has(.list)) {
+    outline-color: Highlight;
   }
 }

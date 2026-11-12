@@ -117,3 +117,46 @@ it('moves a card dragged by its grip within its column and announces where it we
     .poll(() => politeRegion()?.textContent)
     .toBe('Export invoices as CSV moved to To do, position 2 of 3');
 });
+
+it('moves a card dragged by its grip to another column, under its last card, and into a column once it is empty', async () => {
+  setup();
+  const card = (name: string) => trigger(name).closest('li')!;
+  const grip = (name: string) => card(name).querySelector('.lucide-grip-vertical')!.parentElement!;
+  const column = (name: string) => screen.getByRole('region', { name });
+
+  const rect = card('Search across projects').getBoundingClientRect();
+  await userEvent.dragAndDrop(grip('Export invoices as CSV'), card('Search across projects'), {
+    targetPosition: { x: 40, y: rect.height - 2 },
+  });
+  expect(cards('To do')).toEqual(['Fix chart colors in dark mode', 'Write the onboarding guide']);
+  expect(cards('In progress')).toEqual([
+    'Search across projects',
+    'Export invoices as CSV',
+    'Show due dates in local time',
+  ]);
+  await expect
+    .poll(() => politeRegion()?.textContent)
+    .toBe('Export invoices as CSV moved to In progress, position 2 of 3');
+
+  // A drop on the column below its last card lands at the end.
+  const done = column('Done').getBoundingClientRect();
+  await userEvent.dragAndDrop(grip('Write the onboarding guide'), column('Done'), {
+    targetPosition: { x: 40, y: done.height - 4 },
+  });
+  expect(cards('Done')).toEqual(['Sign in with SSO', 'Write the onboarding guide']);
+
+  // Once Done is empty, a drop on it lands as its first card.
+  await userEvent.dragAndDrop(grip('Sign in with SSO'), card('Fix chart colors in dark mode'), {
+    targetPosition: { x: 40, y: 2 },
+  });
+  await userEvent.dragAndDrop(grip('Write the onboarding guide'), card('Fix chart colors in dark mode'), {
+    targetPosition: { x: 40, y: 2 },
+  });
+  expect(cards('Done')).toEqual([]);
+  expect(within(column('Done')).getByText('No tasks')).toBeVisible();
+  await userEvent.dragAndDrop(grip('Search across projects'), column('Done'), { targetPosition: { x: 40, y: 8 } });
+  expect(cards('Done')).toEqual(['Search across projects']);
+  await expect
+    .poll(() => politeRegion()?.textContent)
+    .toBe('Search across projects moved to Done, position 1 of 1');
+});
