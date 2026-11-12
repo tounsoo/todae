@@ -343,6 +343,29 @@ jobs:
           # -z keeps a quote, tab, or newline in the path. --no-renames lists the new path of a rename.
           # Do not store this output in a variable. Bash drops bytes at the first NUL.
           git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames "${diff_args[@]}" | bash .github/scripts/forbidden-paths.sh
+      # Threads read the pinned pstack copy, so a change that breaks it, edits it by hand or breaks a todae
+      # playbook's anchor in it fails here, on every class of change. check.sh reads text only, and
+      # pstack-upstream.sh downloads upstream's trees when pin.json changes.
+      - name: Pinned pstack copy
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          sh .agents/pstack/check.sh
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            # The base branch's tip, which the checked-out merge commit is built on, so only a pull request that
+            # changes pin.json itself downloads anything.
+            base="$PR_BASE"
+          else
+            base="$PUSH_BEFORE"
+          fi
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "pstack-upstream: skipped because this change has no base commit"
+            exit 0
+          fi
+          bash .github/scripts/pstack-upstream.sh "$base"
 
   docs:
     needs: changes

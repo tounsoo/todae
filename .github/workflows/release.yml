@@ -2,7 +2,7 @@ name: Release
 
 # With changesets on main, keeps the "Version Packages" pull request up to date.
 # With none, publishes the versions that aren't on npm yet once Checks passes, unless the push only changed
-# Markdown or docs pages. So merging the Version Packages pull request releases.
+# Markdown, docs pages or the pinned pstack copy. So merging the Version Packages pull request releases.
 # Either way, moves docs-stable, the branch the docs deploy from, to the newest commit whose package is on npm
 # and whose package source is the same as at that version's tag (the docs job below has the full rule).
 on:
@@ -126,9 +126,9 @@ jobs:
           persist-credentials: false
           # The diff needs the push's base commit.
           fetch-depth: 0
-      # CI skips most checks on a push that is only Markdown or docs pages, so its Checks proves nothing
-      # about the package. Publishing from such a commit would ship whatever an earlier commit's CI failed,
-      # so the run skips publishing. That is routine for a docs push, so it doesn't fail the run.
+      # CI skips most checks on a push that is only Markdown, docs pages or the pinned pstack copy, so its
+      # Checks proves nothing about the package. Publishing from such a commit would ship whatever an earlier
+      # commit's CI failed, so the run skips publishing. That is routine for a docs push, so it doesn't fail the run.
       - id: change
         name: Classify the diff
         env:
@@ -141,7 +141,7 @@ jobs:
           if [ "$(sed -n 's/^class=//p' "$GITHUB_OUTPUT" | tail -n 1)" = all ]; then
             echo "publish=true" >>"$GITHUB_OUTPUT"
           else
-            echo "::notice::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown or docs pages, so this run doesn't publish. If npm lacks the version on main, push a commit that changes code and has no changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
+            echo "::notice::CI on $PUSH_SHA skipped the package's checks, since the push only changed Markdown, docs pages or the pinned pstack copy, so this run doesn't publish. If npm lacks the version on main, push a commit that changes code and has no changeset, or re-run the Release run of the commit that bumped the version once its CI passes."
             echo "publish=false" >>"$GITHUB_OUTPUT"
           fi
       - if: ${{ steps.change.outputs.publish == 'true' }}
