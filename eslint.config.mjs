@@ -7,7 +7,7 @@ import todae from './eslint/todae.mjs';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/.next/**', '**/.vercel/**', '**/node_modules/**', '**/*.generated.*', 'apps/docs/next-env.d.ts', 'examples/ssr-smoke/next-env.d.ts', '.cursor/**', '.claude/**', '**/graft/**', '**/.graft/**'],
+    ignores: ['**/dist/**', '**/.next/**', '**/.vercel/**', '**/node_modules/**', '**/*.generated.*', 'apps/docs/next-env.d.ts', 'examples/ssr-smoke/next-env.d.ts', '.cursor/**', '.claude/**', '.agents/pstack/plugin/**', '**/graft/**', '**/.graft/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

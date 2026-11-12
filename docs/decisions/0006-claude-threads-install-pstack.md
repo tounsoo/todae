@@ -1,7 +1,7 @@
 # 0006. Claude threads install pstack at thread start
 
 - **Date:** 2026-11-02
-- **Status:** Active
+- **Status:** Partly superseded by [0015](0015-pinned-pstack-copy.md), 2026-11-12: threads read a pinned copy in the repository instead of installing the latest pstack
 - **Source:** Ben's decisions of 2026-11-02 in the clean-slate `.claude` plan, and his choice of the latest pstack for every thread.
 
 ## Decision
