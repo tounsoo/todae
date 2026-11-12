@@ -4,11 +4,12 @@ name: pstack update
 # one pull request for Ben to review, or updates the one already open, so pull requests never stack. Agent
 # threads read that copy instead of downloading pstack (.claude/thread-start.md). When the copy is already
 # current, nothing opens. A pull request Ben closed without merging isn't opened again for the same upstream
-# commit. Only git and the repository's own scripts run here: nothing from the fetched copy is executed.
+# commit. The steps live in .github/scripts/pstack-update.sh, which pstack-update.test.mjs tests. Only git and
+# the base branch's own scripts run here: nothing from the fetched copy or from the update branch is executed.
 #
 # The pull request only changes .agents/pstack, which .github/scripts/change-class.sh counts as files no tool
-# reads, so CI runs only Changes, Forbidden paths and Checks on it, and docs-deploy.yml builds no preview for it
-# or for its merge into main.
+# reads, so CI runs only Changes, Forbidden paths (with .agents/pstack/check.sh) and Checks on it, and
+# docs-deploy.yml builds no preview for it or for its merge into main.
 permissions: {}
 
 on:
@@ -17,7 +18,7 @@ on:
     - cron: '17 0 * * 1'
   workflow_dispatch:
 
-# One run at a time, so two runs never write the branch together. A waiting run is replaced by a newer one.
+# One run at a time, so two runs never write a branch together.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -33,115 +34,29 @@ jobs:
       contents: read
       pull-requests: read
     env:
-      BRANCH: pstack-update
       REPO: ${{ github.repository }}
-      BASE: ${{ github.event.repository.default_branch }}
+      # A scheduled run's event carries no repository, so the base is named, as in ci.yml and release.yml.
+      BASE: main
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.repository.default_branch }}
-          # The branch is merged with the base, which needs both histories.
+          ref: main
+          persist-credentials: false
+          # The update branch is merged with main, which needs both histories.
           fetch-depth: 0
 
       - id: prepare
-        name: Update the copy on the branch
+        name: Update the copy on its branch
         env:
           GH_TOKEN: ${{ github.token }}
+          TOOLS: ${{ runner.temp }}/pstack-tools
+          BODY: ${{ runner.temp }}/pstack-body.md
         run: |
           set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
-          open=$(gh pr list --repo "$REPO" --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[0].number // empty')
-          if [ -n "$open" ]; then
-            # Keep the open pull request and its history: bring the base in rather than rebuild the branch.
-            git fetch -q origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
-            git switch -q -c "$BRANCH" "origin/$BRANCH"
-            git merge -q --no-edit "origin/$BASE" || {
-              echo "::error::$BRANCH conflicts with $BASE. Resolve it on pull request #$open, or close that pull request so the next run starts over."
-              exit 1
-            }
-          else
-            git switch -q -c "$BRANCH"
-          fi
-          before=$(sed -n 's/^[[:space:]]*"commit":[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' .agents/pstack/pin.json | head -n 1)
-          sh .agents/pstack/update.sh
-          after=$(sed -n 's/^[[:space:]]*"commit":[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' .agents/pstack/pin.json | head -n 1)
-          {
-            echo "open=$open"
-            echo "before=$before"
-            echo "after=$after"
-          } >> "$GITHUB_OUTPUT"
-          if [ -z "$(git status --porcelain -- .agents/pstack)" ]; then
-            echo "The copy is already at pstack-claude ${after:0:7}, so there is nothing to update."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ -z "$open" ]; then
-            # The SHA is hex, so it is safe inside the jq program.
-            closed=$(gh pr list --repo "$REPO" --head "$BRANCH" --base "$BASE" --state closed --limit 20 --json title,mergedAt \
-              --jq "[.[] | select(.mergedAt == null and (.title | contains(\"${after:0:7}\")))] | length")
-            if [ "$closed" != 0 ]; then
-              echo "A pull request for pstack-claude ${after:0:7} was closed without merging, so this run opens no new one."
-              echo "changed=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          fi
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-          git add -A -- .agents/pstack
-          git commit -q -m "chore(pstack): update the pinned copy to ${after:0:7}" -m "Upstream: https://github.com/michael-denyer/pstack-claude/commit/$after"
-
-          # The anchor check reads text only. Its verdict goes in the pull request, not into the run's result.
-          set +e
-          check=$(sh .agents/pstack/check.sh 2>&1)
-          status=$?
-          set -e
-          tested=$(git rev-parse HEAD)
-          base=$(git merge-base HEAD "origin/$BASE")
-          if [ "$status" = 0 ]; then verdict=PASS; result=passed; else verdict=FAIL; result=failed; fi
-          short_before=${before:0:7}
-          if [ -n "$before" ] && [ "$before" != "$after" ]; then
-            compare="https://github.com/michael-denyer/pstack-claude/compare/$before...$after"
-          else
-            compare="https://github.com/michael-denyer/pstack-claude/commit/$after"
-            short_before=none
-          fi
-          stat=$(git diff --shortstat "$base" HEAD -- .agents/pstack)
-          {
-            echo "## Why"
-            echo
-            echo "Agent threads read pstack from the pinned copy in \`.agents/pstack\` and download nothing. This weekly run brings that copy up to pstack-claude's newest commit, so Ben reviews each update before threads use it."
-            echo
-            echo "## What changed"
-            echo
-            echo "- \`.agents/pstack/plugin\` is upstream's \`plugins/pstack\` at [\`${after:0:7}\`](https://github.com/michael-denyer/pstack-claude/commit/$after), word for word. It was at \`$short_before\`. Upstream changes: $compare"
-            echo "- \`.agents/pstack/pin.json\` records the new commit.$( [ -n "$stat" ] && echo " Diff:$stat." )"
-            echo
-            echo "## Scope"
-            echo
-            echo "Only the pinned copy and its pin. Todae's playbooks and \`.claude/\` are unchanged. If the anchor check below failed, a todae playbook needs a matching change before this merges."
-            echo
-            echo "## Verification"
-            echo
-            echo "Tested commit: \`$tested\`"
-            echo "Base: \`$base\`"
-            echo "Verdict: $verdict"
-            echo
-            echo "- \`sh .agents/pstack/check.sh\`: $result"
-            echo
-            echo '```text'
-            printf '%s\n' "$check"
-            echo '```'
-            echo
-            echo "## Unverified checks"
-            echo
-            echo "- The new skills, agents and playbooks aren't read here. Review the upstream changes above before merging."
-            echo
-            echo "## Remaining risks"
-            echo
-            echo "- Every thread started after the merge follows the new pstack. A wording change in a playbook that a todae playbook doesn't anchor on can still change how threads work."
-          } > "$RUNNER_TEMP/pstack-body.md"
-          echo "title=chore(pstack): update the pinned copy to ${after:0:7}" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "$check" >> "$GITHUB_STEP_SUMMARY"
+          # Copies from main, so the scripts that run are main's even after the update branch is checked out.
+          mkdir -p "$TOOLS"
+          cp .github/scripts/pstack-update.sh .agents/pstack/update.sh .agents/pstack/check.sh "$TOOLS/"
+          bash "$TOOLS/pstack-update.sh" prepare
 
       - id: app-token
         if: ${{ steps.prepare.outputs.changed == 'true' }}
@@ -151,27 +66,16 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
+          # Merging main into an open update pull request can carry main's workflow changes.
+          permission-workflows: write
 
       - name: Push and open or update the pull request
         if: ${{ steps.prepare.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           OPEN: ${{ steps.prepare.outputs.open }}
+          BRANCH: ${{ steps.prepare.outputs.branch }}
           TITLE: ${{ steps.prepare.outputs.title }}
-        run: |
-          set -euo pipefail
-          # The empty extraheader drops the read-only token checkout stored, so the push uses the app's.
-          push() { git -c http.https://github.com/.extraheader= push -q "https://x-access-token:$GH_TOKEN@github.com/$REPO.git" "$@"; }
-          if [ -n "$OPEN" ]; then
-            push "HEAD:refs/heads/$BRANCH"
-            gh pr edit "$OPEN" --repo "$REPO" --title "$TITLE" --body-file "$RUNNER_TEMP/pstack-body.md"
-            echo "Updated pull request #$OPEN." >> "$GITHUB_STEP_SUMMARY"
-          else
-            # A branch left from a merged or closed pull request starts over from the base.
-            if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null; then
-              push ":refs/heads/$BRANCH"
-            fi
-            push "HEAD:refs/heads/$BRANCH"
-            url=$(gh pr create --repo "$REPO" --base "$BASE" --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pstack-body.md")
-            echo "Opened $url." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          TOOLS: ${{ runner.temp }}/pstack-tools
+          BODY: ${{ runner.temp }}/pstack-body.md
+        run: bash "$TOOLS/pstack-update.sh" publish

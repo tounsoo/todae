@@ -343,6 +343,10 @@ jobs:
           # -z keeps a quote, tab, or newline in the path. --no-renames lists the new path of a rename.
           # Do not store this output in a variable. Bash drops bytes at the first NUL.
           git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames "${diff_args[@]}" | bash .github/scripts/forbidden-paths.sh
+      # Threads read the pinned pstack copy, so a change that breaks it or a todae playbook's anchor in it
+      # fails here, on every class of change. It reads text only.
+      - name: Pinned pstack copy
+        run: sh .agents/pstack/check.sh
 
   docs:
     needs: changes

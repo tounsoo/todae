@@ -18,7 +18,7 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component,
 - `tokens.md` keeps every design token change behind Ben's approval and runs the token checks.
 - `changesets.md` adds the changeset a shipping change needs.
 
-`.agents/pstack/` holds the pinned pstack-claude copy that threads read, so no thread downloads pstack. `.claude/thread-start.md` runs its check, and `.github/workflows/pstack-update.yml` opens a pull request each week when upstream has changed. [0015](docs/decisions/0015-pinned-pstack-copy.md) records this.
+`.agents/pstack/` holds the pinned pstack-claude copy that threads read, so no thread downloads pstack. `.claude/thread-start.md` and CI's Forbidden paths job run its check, and `.github/workflows/pstack-update.yml` opens a pull request each week when upstream has changed. [0015](docs/decisions/0015-pinned-pstack-copy.md) records this.
 
 `.claude/models.md` is the pstack model sheet. A change to a role's model or effort goes there, with Ben's yes.
 

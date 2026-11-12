@@ -21,8 +21,6 @@ on:
     paths:
       - '**'
       - '!**.md'
-      - '!.agents/pstack/plugin/**'
-      - '!.agents/pstack/pin.json'
       - '.changeset/**'
       - 'packages/design-system/README.md'
       - 'packages/design-system/CHANGELOG.md'
@@ -30,6 +28,9 @@ on:
       - '**/*-body.md'
       - '.audit/**'
       - 'apps/docs/app/**'
+      # Last, so no pattern above brings a file of the copy back.
+      - '!.agents/pstack/plugin/**'
+      - '!.agents/pstack/pin.json'
   push:
     branches: [main, docs-stable]
     # Merging a pstack update changes nothing the docs build reads, so it deploys nothing.

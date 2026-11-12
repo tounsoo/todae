@@ -21,6 +21,8 @@ git -C "$tmp" init -q
 git -C "$tmp" fetch -q --depth 1 "$repo" "$commit"
 git -C "$tmp" -c advice.detachedHead=false checkout -q FETCH_HEAD
 src="$tmp/plugins/pstack"
+# Git's id for the folder. check.sh compares the committed copy with it, which proves the copy is word for word.
+tree=$(git -C "$tmp" rev-parse FETCH_HEAD:plugins/pstack)
 
 [ -f "$src/skills/poteto-mode/SKILL.md" ] || { echo "pstack: $commit has no plugins/pstack/skills/poteto-mode/SKILL.md." >&2; exit 1; }
 # A link could point outside the copy, and any other special file has no place in it.
@@ -36,7 +38,8 @@ cat > .agents/pstack/pin.json <<EOF
 {
   "repository": "michael-denyer/pstack-claude",
   "path": "plugins/pstack",
-  "commit": "$commit"
+  "commit": "$commit",
+  "tree": "$tree"
 }
 EOF
 echo "pstack $commit"

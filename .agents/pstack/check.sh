@@ -7,14 +7,26 @@
 # too and puts the output in its pull request.
 set -u
 
-[ -d .agents/playbooks ] && [ -f .agents/pstack/pin.json ] || { echo "Run this from the root of the todae checkout."; exit 1; }
+[ -d .agents/playbooks ] || { echo "Run this from the root of the todae checkout."; exit 1; }
+[ -f .agents/pstack/pin.json ] || { echo "pstack: this checkout has no .agents/pstack/pin.json, so it has no pinned copy."; exit 1; }
 pstack="$(pwd)/.agents/pstack/plugin"
-sha=$(sed -n 's/^[[:space:]]*"commit":[[:space:]]*"\([0-9a-f]\{40\}\)".*/\1/p' .agents/pstack/pin.json | head -n 1)
+pin() { sed -n "s/^[[:space:]]*\"$1\":[[:space:]]*\"\([0-9a-f]\{40\}\)\".*/\1/p" .agents/pstack/pin.json | head -n 1; }
+sha=$(pin commit)
 [ -n "$sha" ] || { echo "pstack: .agents/pstack/pin.json names no commit."; exit 1; }
 [ -f "$pstack/skills/poteto-mode/SKILL.md" ] || { echo "pstack: the copy has no poteto-mode skill."; exit 1; }
 for agent in poteto-agent comment-sicko thermo-nuclear-review-subagent thermo-nuclear-code-quality-review-subagent; do
   [ -f "$pstack/agents/$agent.md" ] || { echo "pstack: the copy has no $agent agent."; exit 1; }
 done
+# Git's id for a folder changes with any file in it, so an equal id means the committed copy is upstream's
+# folder word for word.
+tree=$(pin tree)
+if [ -n "$tree" ]; then
+  have=$(git rev-parse -q --verify "HEAD:.agents/pstack/plugin" 2>/dev/null) || have=""
+  [ "$have" = "$tree" ] || { echo "pstack: the committed copy in .agents/pstack/plugin isn't upstream's $sha word for word. Don't edit it by hand: run the pstack update workflow instead."; exit 1; }
+  [ -z "$(git status --porcelain -- .agents/pstack/plugin 2>/dev/null)" ] || echo "pstack: the copy has uncommitted changes, so it may differ from upstream's $sha. git restore .agents/pstack/plugin puts it back."
+else
+  echo "pstack: pin.json has no tree id, so the copy can't be checked word for word. The first copy came from todae's history; the first update adds the id."
+fi
 echo "pstack $sha is in $pstack"
 
 playbooks="$pstack/skills/poteto-mode/playbooks"
