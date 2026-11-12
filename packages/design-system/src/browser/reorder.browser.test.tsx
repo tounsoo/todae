@@ -708,7 +708,18 @@ it('moves an item dragged to another list of its group, beside an item or below 
   render(<Board onMove={onMove} />);
   // A board wider than the frame makes real input scroll the frame first.
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  // The drop event's own point decides the index. Where it lands against X tells a wrong index
+  // from the hook apart from a point the input put in the wrong place.
+  const drops: { y: number; middle: number }[] = [];
+  const record = (event: DragEvent) => {
+    const rect = item('X').getBoundingClientRect();
+    drops.push({ y: event.clientY, middle: rect.top + rect.height / 2 });
+  };
+  document.addEventListener('drop', record, true);
   await userEvent.dragAndDrop(screen.getByTestId('handle-A'), item('X'), { targetPosition: bottom });
+  document.removeEventListener('drop', record, true);
+  expect(drops).toHaveLength(1);
+  expect(drops[0]!.y, `drop point ${JSON.stringify(drops[0])}`).toBeGreaterThan(drops[0]!.middle);
   expect(onMove).toHaveBeenCalledExactlyOnceWith({ list: 'left', index: 0 }, { list: 'right', index: 1 });
   expect(orderIn('left')).toEqual(['B', 'C']);
   expect(orderIn('right')).toEqual(['X', 'A', 'Y']);
