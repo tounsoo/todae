@@ -238,11 +238,5 @@ const COLUMNS: Column[] = [
 
 export default function KanbanExample() {
   const [columns, setColumns] = useState(COLUMNS);
-  // The sample tasks are in English, so the board says so, which lets a page in
-  // another language still hyphenate their titles and read them out right.
-  return (
-    <div lang="en">
-      <KanbanBoard columns={columns} onChange={setColumns} />
-    </div>
-  );
+  return <KanbanBoard columns={columns} onChange={setColumns} />;
 }
