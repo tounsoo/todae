@@ -1,5 +1,11 @@
 # @tounsoo/todae
 
+## 0.11.1
+
+### Patch Changes
+
+- useReorder takes items from other lists that share a group from the new useReorderGroup, and its new getListProps lets a drop land in a gap, below the last item or in an empty list. ([#455](https://github.com/tounsoo/todae/pull/455))
+
 ## 0.11.0
 
 ### Minor Changes
