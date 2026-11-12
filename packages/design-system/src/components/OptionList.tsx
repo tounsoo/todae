@@ -18,8 +18,8 @@ import {
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
-import { CheckGlyph, glyphOr } from './glyphs.js';
 import { spokenText } from './buttonName.js';
+import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
 import { observeMutations } from '../internal/sharedMutations.js';
 import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
@@ -122,9 +122,8 @@ function OptionListOption({
     console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
-  // The label stays out of the entry: typeahead reads the option's text from
-  // the DOM on a key, so a new label neither re-registers the option nor
-  // renders the list again.
+  // Typeahead reads the option's text from its node, so the label isn't
+  // registered and a new label doesn't render the list again.
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
     return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
@@ -209,7 +208,8 @@ function OptionListRoot(props: OptionListRootProps) {
     return observeMutations(list, { childList: true, subtree: true }, resort).stop;
   }, [resort]);
   const known = entries.length > 0 || registered.current.size > 0 ? entries : hintOptions(children);
-  const enabled = known.filter((option) => !option.disabled).map((option) => option.value);
+  const enabledOptions = known.filter((option) => !option.disabled);
+  const enabled = enabledOptions.map((option) => option.value);
   const selected = useMemo(() => {
     if (isMultiple(props)) return new Set(props.value);
     return new Set(props.value ? [props.value] : []);
@@ -271,11 +271,11 @@ function OptionListRoot(props: OptionListRootProps) {
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
     if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
-      const nodes = new Map([...registered.current].map((entry) => [entry.value, entry.node]));
-      // The text a screen reader reads, so the aria-hidden check glyph is left out.
+      // The option's text without its aria-hidden parts, such as the check glyph.
+      // Options hinted from children before they register have no node yet.
       const text = (at: number) => {
-        const node = nodes.get(enabled[at]!);
-        return node ? spokenText(node).trim().toLowerCase() : '';
+        const option = enabledOptions[at];
+        return option && 'node' in option ? spokenText(option.node).trim().toLowerCase() : '';
       };
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);
       if (found >= 0) move(enabled[found]);
