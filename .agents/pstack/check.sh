@@ -23,9 +23,11 @@ tree=$(pin tree)
 [ -n "$tree" ] || { echo "pstack: .agents/pstack/pin.json has no tree id."; exit 1; }
 have=$(git rev-parse -q --verify "HEAD:.agents/pstack/plugin" 2>/dev/null) || have=""
 [ "$have" = "$tree" ] || { echo "pstack: the committed copy in .agents/pstack/plugin isn't the one pin.json records. Don't edit it by hand: the pstack update workflow changes it."; exit 1; }
-[ -z "$(git status --porcelain --ignored -- .agents/pstack/plugin 2>/dev/null)" ] || { echo "pstack: .agents/pstack/plugin has uncommitted changes or extra files, ignored ones included. git restore and git clean on that folder put it back."; exit 1; }
+[ -z "$(git status --porcelain --ignored -- .agents/pstack/plugin 2>/dev/null)" ] || { echo "pstack: .agents/pstack/plugin has uncommitted changes or extra files, ignored ones included. git restore -- .agents/pstack/plugin and git clean -fdx -- .agents/pstack/plugin put it back."; exit 1; }
 find "$pstack" -type f -name 'LICENSE*' | grep -q . || { echo "pstack: the copy has no LICENSE file."; exit 1; }
 echo "pstack $sha is in $pstack"
+# The first copy was rebuilt from todae's history, so it is close to upstream at that commit, not the same.
+grep -q '"restored_from"' .agents/pstack/pin.json && echo "pstack: this is the first copy, rebuilt from todae's history and not compared with upstream. The first update pull request replaces it."
 
 playbooks="$pstack/skills/poteto-mode/playbooks"
 bad=0

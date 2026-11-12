@@ -187,6 +187,20 @@ test('an upstream commit that leaves plugins/pstack as it was opens nothing', ()
   assert.match(result.out, /already has, so there is nothing to update/);
 });
 
+test('an open pull request is left alone when upstream moves outside plugins/pstack', () => {
+  const up = upstream();
+  const repo = todae(up);
+  up.step('B', toB);
+  const first = repo.clone();
+  const opened = step('prepare', first, up, []);
+  assert.equal(publish(first, up, repo.origin, opened).status, 0);
+  up.step('readme', (dir) => write(dir, { 'README.md': 'upstream readme\n' }));
+  const result = step('prepare', repo.clone(), up, [pr({ number: 12, headRefName: opened.outputs.branch })]);
+  assert.equal(result.status, 0, result.out);
+  assert.equal(result.outputs.changed, 'false');
+  assert.match(result.out, /is the copy pull request #12 already has/);
+});
+
 test('a new upstream commit is copied word for word onto a new branch and opens a pull request', () => {
   const up = upstream();
   const repo = todae(up);
@@ -263,17 +277,43 @@ test("a fork's pull requests on a pstack-update branch are ignored", () => {
   assert.equal(result.outputs.open, '');
 });
 
-test('a commit whose pull request was closed without merging opens nothing', () => {
+test('a copy whose pull request was closed without merging opens nothing, at the next commit too', () => {
   const up = upstream();
   const repo = todae(up);
   const b = up.step('B', toB);
   const short = b.slice(0, 7);
-  const result = step('prepare', repo.clone(), up, [
-    pr({ number: 5, state: 'CLOSED', title: `chore(pstack): update the pinned copy to ${short}`, headRefName: `pstack-update/${short}` }),
-  ]);
+  const tree = git(up.dir, 'rev-parse', `${b}:plugins/pstack`);
+  const closed = [pr({ number: 5, state: 'CLOSED', title: `chore(pstack): update the pinned copy to ${short}`, headRefName: `pstack-update/${short}`, body: `records the new commit and its folder's tree id, \`${tree}\`.` })];
+  const result = step('prepare', repo.clone(), up, closed);
   assert.equal(result.status, 0, result.out);
   assert.equal(result.outputs.changed, 'false');
-  assert.match(result.out, /#5 .* closed without merging/);
+  assert.match(result.out, /#5 proposed this copy .* closed without merging/);
+  up.step('README', (dir) => write(dir, { 'README.md': 'readme\n' }));
+  const later = step('prepare', repo.clone(), up, closed);
+  assert.equal(later.status, 0, later.out);
+  assert.equal(later.outputs.changed, 'false');
+  assert.match(later.out, /#5 proposed this copy/);
+  // Another copy is a new proposal.
+  up.step('C', (dir) => write(dir, { 'plugins/pstack/agents/poteto-agent.md': 'agent, changed\n' }));
+  const next = step('prepare', repo.clone(), up, closed);
+  assert.equal(next.status, 0, next.out);
+  assert.equal(next.outputs.changed, 'true');
+});
+
+test('with two update pull requests open, the run updates the lower one and warns', () => {
+  const up = upstream();
+  const repo = todae(up);
+  up.step('B', toB);
+  const first = repo.clone();
+  const opened = step('prepare', first, up, []);
+  git(first, 'push', '-q', 'origin', `HEAD:refs/heads/${opened.outputs.branch}`);
+  const result = step('prepare', repo.clone(), up, [
+    pr({ number: 8, headRefName: 'pstack-update/later' }),
+    pr({ number: 7, headRefName: opened.outputs.branch }),
+  ]);
+  assert.equal(result.status, 0, result.out);
+  assert.equal(result.outputs.open, '7');
+  assert.match(result.out, /::warning::More than one .* updates #7 only/);
 });
 
 test('a branch pushed by a run that failed to open its pull request gets one', () => {
@@ -294,14 +334,16 @@ test('a branch pushed by a run that failed to open its pull request gets one', (
   assert.match(pushed.gh, /^pr create /m);
 });
 
-test('the lookups ask GitHub for open pull requests, and for closed ones by commit', () => {
+test('the lookups ask GitHub for open pull requests, and for closed ones by the copy, and the body names it', () => {
   const up = upstream();
   const repo = todae(up);
   const b = up.step('B', toB);
+  const tree = git(up.dir, 'rev-parse', `${b}:plugins/pstack`);
   const result = step('prepare', repo.clone(), up, []);
   assert.equal(result.status, 0, result.out);
   assert.match(result.gh, /^pr list .*--state open/m);
-  assert.ok(result.gh.split('\n').some((line) => line.includes('--state closed') && line.includes(`--search ${b.slice(0, 7)} in:title`)), result.gh);
+  assert.ok(result.gh.split('\n').some((line) => line.includes('--state closed') && line.includes(`--search ${tree} in:body`)), result.gh);
+  assert.ok(result.body.includes(`tree id, \`${tree}\``), result.body);
 });
 
 test('a pull request closed while the run prepared gets no push', () => {

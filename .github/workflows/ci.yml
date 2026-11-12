@@ -354,8 +354,10 @@ jobs:
           set -euo pipefail
           sh .agents/pstack/check.sh
           if [ "$EVENT_NAME" = "pull_request" ]; then
-            # The checkout is the merge commit, and its first parent is the base it was built on, so only a pull
-            # request that changes pin.json itself downloads anything.
+            # The checkout is GitHub's merge commit, and its first parent is the base it was built on, so only a
+            # pull request that changes pin.json itself downloads anything. A checkout of the head instead would
+            # compare the pin with the head's own parent and could pass a changed pin unchecked, so it fails.
+            git rev-parse -q --verify HEAD^2 >/dev/null || { echo "pstack-upstream: the checkout isn't the pull request's merge commit." >&2; exit 1; }
             base=$(git rev-parse HEAD^1)
           else
             base="$PUSH_BEFORE"

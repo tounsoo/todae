@@ -24,11 +24,14 @@ prepare() {
 	git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
 	git fetch -q origin "refs/heads/$BASE:refs/remotes/origin/$BASE"
 
-	local before after short branch open="" closed
+	local before after short tree branch open="" closed
 	before=$(git show "origin/$BASE:.agents/pstack/pin.json" | pin commit)
 	after=$(git ls-remote "${PSTACK_REPO:-$upstream}" HEAD | cut -f1)
 	[[ "$after" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Couldn't read pstack-claude's newest commit."; exit 1; }
 	short=${after:0:7}
+	# The folder's tree id names its content, whatever commit carries it. update.sh builds the copy from it.
+	git fetch -q --depth 1 "${PSTACK_REPO:-$upstream}" "$after"
+	tree=$(git rev-parse -q --verify "FETCH_HEAD:plugins/pstack") || { echo "::error::pstack-claude $short has no plugins/pstack folder."; exit 1; }
 
 	# Only pull requests from this repository's own pstack-update/ branches count: a fork's branch can take the
 	# same name. Open pull requests are few, so one page holds them all.
@@ -45,11 +48,18 @@ prepare() {
 		branch=${open#* }
 		open=${open%% *}
 	else
-		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 50 --search "$short in:title" \
-			--json number,title,headRefName,isCrossRepository,mergedAt |
-			jq -r --arg prefix "$prefix" --arg short "$short" '[.[] | select((.isCrossRepository | not) and .mergedAt == null and (.headRefName | startswith($prefix)) and (.title | contains($short)))] | .[0] // empty | .number')
+		if [ "$(git rev-parse "origin/$BASE:.agents/pstack/plugin" 2>/dev/null)" = "$tree" ]; then
+			echo "pstack-claude's plugins/pstack at $short is the copy $BASE already has, so there is nothing to update."
+			out changed false
+			return
+		fi
+		# A pull request Ben closed without merging turns this copy down, whichever upstream commit carried it, so
+		# a later commit that leaves plugins/pstack as it was opens nothing either. Each body records its tree id.
+		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 50 --search "$tree in:body" \
+			--json number,body,headRefName,isCrossRepository,mergedAt |
+			jq -r --arg prefix "$prefix" --arg tree "$tree" '[.[] | select((.isCrossRepository | not) and .mergedAt == null and (.headRefName | startswith($prefix)) and ((.body // "") | contains($tree)))] | .[0] // empty | .number')
 		if [ -n "$closed" ]; then
-			echo "Pull request #$closed for pstack-claude $short was closed without merging, so this run opens no new one. Reopen it to take this commit, and the next run updates it."
+			echo "Pull request #$closed proposed this copy of pstack-claude's plugins/pstack and was closed without merging, so this run opens no new one. Reopen it to take the copy, and the next run updates it."
 			out changed false
 			return
 		fi
@@ -76,17 +86,15 @@ prepare() {
 	local ref=HEAD
 	[ -n "$open" ] || ref="origin/$BASE"
 	if git diff --quiet "$ref" -- .agents/pstack/plugin; then
-		echo "pstack-claude's plugins/pstack at $short is the copy ${open:+pull request #$open}${open:-$BASE} already has, so there is nothing to update."
+		local where=${open:+pull request #$open}
+		echo "pstack-claude's plugins/pstack at $short is the copy ${where:-$BASE} already has, so there is nothing to update."
 		out changed false
 		return
 	fi
 	git add -- .agents/pstack/pin.json
+	# A branch an earlier run pushed may hold this update already, and then only its pull request is missing.
 	if [ -n "$(git status --porcelain -- .agents/pstack)" ]; then
 		git commit -q -m "chore(pstack): update the pinned copy to $short" -m "Upstream: $upstream/commit/$after"
-	elif [ -n "$open" ]; then
-		echo "Pull request #$open already has pstack-claude $short, so there is nothing to update."
-		out changed false
-		return
 	fi
 	out changed true
 	out branch "$branch"
@@ -133,7 +141,7 @@ prepare() {
 		echo "## What changed"
 		echo
 		echo "- \`.agents/pstack/plugin\` is upstream's \`plugins/pstack\` at [\`${after:0:7}\`]($upstream/commit/$after), word for word. \`$BASE\` has \`$short_before\`. Upstream changes: $compare"
-		echo "- \`.agents/pstack/pin.json\` records the new commit and its folder's tree id.${stat:+ Diff:$stat.}"
+		echo "- \`.agents/pstack/pin.json\` records the new commit and its folder's tree id, \`$tree\`.${stat:+ Diff:$stat.}"
 		list "Files upstream added" "$added"
 		list "Files upstream removed" "$removed"
 		list "Changed files that name Fable, which .claude/models.md must still cover" "$fable"
