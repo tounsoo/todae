@@ -5,20 +5,49 @@ import { useEscapeKey } from '../overlay/useEscapeKey.js';
 export type ReorderDropPosition = 'before' | 'after';
 
 export type ReorderDrop = {
-  /** The item the dragged one would land beside. */
+  /** The item the dragged one would land beside. In an empty list, 0. */
   index: number;
   /** Which side of that item, in the list's reading order. */
   position: ReorderDropPosition;
 };
 
-export type UseReorderOptions = {
+/** A place in one of a group's lists: the list's key and an index in it. */
+export type ReorderPlace<L> = {
+  list: L;
+  index: number;
+};
+
+export type UseReorderGroupOptions<L> = {
+  /** Called on a drop that moves an item from one of the group's lists to another, with the list and index it leaves and the list and index it ends at. */
+  onMove: (from: ReorderPlace<L>, to: ReorderPlace<L>) => void;
+};
+
+declare const groupBrand: unique symbol;
+
+/** Lists that pass the same group to `useReorder` take each other's items. `useReorderGroup` makes one. */
+export type ReorderGroup<L> = { readonly [groupBrand]: (list: L) => L };
+
+type Orientation = 'vertical' | 'horizontal';
+
+type ReorderOwnOptions = {
   /** Called on a drop that changes the order, with the dragged item's index and the index it ends at. */
   onMove: (from: number, to: number) => void;
   /** The axis the items run along. Default 'vertical'. In a horizontal list, 'before' follows the text direction. */
-  orientation?: 'vertical' | 'horizontal';
-  /** Turn dragging off. While `disabled` is true, a drag under way can't be dropped. */
+  orientation?: Orientation;
+  /** Turn dragging off. While `disabled` is true, a drag under way can't be dropped, and the list takes no item from another. */
   disabled?: boolean;
 };
+
+export type UseReorderOptions<L = never> = ReorderOwnOptions &
+  (
+    | { group?: undefined; list?: undefined }
+    | {
+        /** The group from `useReorderGroup` whose lists take each other's items. */
+        group: ReorderGroup<L>;
+        /** This list's key, which the group's `onMove` gets as `list`. */
+        list: L;
+      }
+  );
 
 type DragHandler = (event: DragEvent<HTMLElement>) => void;
 
@@ -45,6 +74,22 @@ export type UseReorderItemProps = {
   'data-drop'?: ReorderDropPosition;
 };
 
+export type UseReorderListUserProps = {
+  onDragEnter?: DragHandler;
+  onDragOver?: DragHandler;
+  onDragLeave?: DragHandler;
+  onDrop?: DragHandler;
+};
+
+export type UseReorderListProps = {
+  onDragEnter: DragHandler;
+  onDragOver: DragHandler;
+  onDragLeave: DragHandler;
+  onDrop: DragHandler;
+  'data-todae-reorder-root': string;
+  'data-drop-target'?: '';
+};
+
 export type UseReorderHandleUserProps = {
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onMouseDown?: (event: MouseEvent<HTMLElement>) => void;
@@ -56,9 +101,9 @@ export type UseReorderHandleProps = {
 };
 
 export type UseReorderResult = {
-  /** The index of the item being dragged, or null. */
+  /** The index of this list's item being dragged, or null. */
   dragging: number | null;
-  /** Where the dragged item would land, or null when a drop there would not move it. */
+  /** Where the dragged item would land in this list, or null when a drop here would not move it or the drag isn't over this list. */
   drop: ReorderDrop | null;
   /** Drag and drop props for each item, by its index, merged with the caller's own handlers. */
   getItemProps: <P extends UseReorderItemUserProps>(
@@ -70,56 +115,161 @@ export type UseReorderResult = {
     index: number,
     props?: P,
   ) => Omit<P, keyof UseReorderHandleProps> & UseReorderHandleProps;
+  /** Props for the element around the items, so a drop in a gap, past the last item or in an empty list lands in the list too. */
+  getListProps: <P extends UseReorderListUserProps>(props?: P) => Omit<P, keyof UseReorderListProps> & UseReorderListProps;
 };
 
-/** The index the item at `from` ends at when dropped on `position` of the item at `index`. */
+/** One list of a group, as the group's other lists see it. Updated on every render. */
+type Member = {
+  list: unknown;
+  orientation: Orientation;
+  disabled: boolean;
+  onMove: (from: number, to: number) => void;
+  show: (drop: ReorderDrop | null) => void;
+  end: () => void;
+};
+
+/** What the lists of a group share. A list with no group has one of its own. */
+type Group = {
+  /** The drag data type, so a drag from another group, or a file, is never this group's. */
+  type: string;
+  onMove: ((from: ReorderPlace<unknown>, to: ReorderPlace<unknown>) => void) | null;
+  /** The group's lists, by the id on their items. */
+  members: Map<string, { current: Member }>;
+  /** The drag under way: its item's element and the list it left. */
+  drag: { node: HTMLElement; list: string } | null;
+  /** The list that shows where the dragged item would land, if any. */
+  shown: string | null;
+};
+
+/** A drag under way, read when an event needs it: the dragged item's index and its list. */
+type Source = { from: number; list: string };
+
+type Locate = (event: DragEvent<HTMLElement>) => ReorderDrop;
+
+const INDEX = 'data-todae-reorder-index';
+const LIST = 'data-todae-reorder-list';
+const ROOT = 'data-todae-reorder-root';
+// How far a finger or pen moves on a handle before its item drags, so a tap doesn't flash a drag.
+const SLOP = 4;
+// Drag events an item or list of a group has taken, so the items and lists around it leave them alone.
+const handled = /* @__PURE__ */ new WeakSet<Event>();
+
+// Types are lowercased, so the id goes in as hex char codes, which keeps ids that differ only in case apart.
+const typeFor = (id: string) =>
+  `application/x-todae-reorder-${[...id].map((c) => c.charCodeAt(0).toString(16).padStart(4, '0')).join('')}`;
+
+const createGroup = (type: string, onMove: Group['onMove']): Group => ({ type, onMove, members: new Map(), drag: null, shown: null });
+
+/** The index the item at `from` ends at when dropped on `position` of the item at `index` in its own list. */
 function reorderTarget(from: number, index: number, position: ReorderDropPosition): number {
   const to = position === 'before' ? index : index + 1;
   return to > from ? to - 1 : to;
 }
 
 /** The side of `item` the point x, y is on, in the list's reading order. */
-function sideOf(item: Element, x: number, y: number, orientation: 'vertical' | 'horizontal', rtl: boolean): ReorderDropPosition {
+function sideOf(item: Element, x: number, y: number, orientation: Orientation): ReorderDropPosition {
   const rect = item.getBoundingClientRect();
   if (orientation === 'vertical') return y < rect.top + rect.height / 2 ? 'before' : 'after';
   const left = x < rect.left + rect.width / 2;
-  return left !== rtl ? 'before' : 'after';
+  return left !== (getComputedStyle(item).direction === 'rtl') ? 'before' : 'after';
 }
 
-const INDEX = 'data-todae-reorder-index';
-const LIST = 'data-todae-reorder-list';
-// How far a finger or pen moves on a handle before its item drags, so a tap doesn't flash a drag.
-const SLOP = 4;
-
 /** An item's index now, read from its element, so a list that changes during a drag still moves that item. */
-function indexOf(node: HTMLElement): number | null {
+function indexOf(node: Element): number | null {
   const value = node.getAttribute(INDEX);
   return value === null ? null : Number(value);
 }
 
+/** Where a drop at x, y in the list `root` lands: before the first of its items the point is before, else after the last. */
+function insertion(root: Element, list: string, x: number, y: number, orientation: Orientation): ReorderDrop {
+  let last: Element | null = null;
+  for (const item of root.querySelectorAll(`[${LIST}]`)) {
+    if (item.getAttribute(LIST) !== list) continue;
+    if (sideOf(item, x, y, orientation) === 'before') return { index: indexOf(item)!, position: 'before' };
+    last = item;
+  }
+  return last === null ? { index: 0, position: 'before' } : { index: indexOf(last)!, position: 'after' };
+}
+
+/** The drop line to show for `at` in `list`, or null where a drop would leave the item where it is. */
+function landing(source: Source, list: string, at: ReorderDrop): ReorderDrop | null {
+  return list === source.list && reorderTarget(source.from, at.index, at.position) === source.from ? null : at;
+}
+
+/** Shows `next` in `list`, and clears the line of any other list of the group. */
+function display(group: Group, list: string | null, next: ReorderDrop | null) {
+  if (group.shown !== null && group.shown !== list) group.members.get(group.shown)?.current.show(null);
+  group.shown = next !== null && list !== null ? list : null;
+  if (list !== null) group.members.get(list)?.current.show(next);
+}
+
+/** Ends the drag in both lists, then moves the item to `at` in `list`. */
+function commit(group: Group, source: Source, list: string, at: ReorderDrop) {
+  const from = group.members.get(source.list)?.current;
+  const into = group.members.get(list)?.current;
+  from?.end();
+  into?.end();
+  if (from === undefined || into === undefined) return;
+  if (list === source.list) {
+    const to = reorderTarget(source.from, at.index, at.position);
+    if (to !== source.from) from.onMove(source.from, to);
+    return;
+  }
+  const to = at.position === 'before' ? at.index : at.index + 1;
+  group.onMove?.({ list: from.list, index: source.from }, { list: into.list, index: to });
+}
+
+/** Whether a drag event's pointer is inside its element. Leaving the window reports 0, 0. */
+function inside(event: DragEvent<HTMLElement>): boolean {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const { clientX: x, clientY: y } = event;
+  return (x !== 0 || y !== 0) && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom;
+}
+
 /**
- * `useReorder({ onMove })` returns `{ dragging, drop, getItemProps, getHandleProps }`, which let a
- * person reorder a list by dragging an item's handle: with the browser's drag and drop for a mouse,
- * and with pointer events for a finger or a pen, since browsers on touch screens differ in whether
- * they drag at all. A drop that changes the order calls `onMove(from, to)`, and Escape cancels a drag. It
- * has no keyboard path: pair it with a way to move an item without dragging, such as a menu.
+ * `useReorderGroup({ onMove })` returns a group for `useReorder`. Lists that pass it, each with its
+ * own `list` key, take each other's items: a drop in another list of the group calls
+ * `onMove(from, to)` with each list's key and index. A drop inside one list still calls that list's own
+ * `onMove`.
  */
-export function useReorder({ onMove, orientation = 'vertical', disabled = false }: UseReorderOptions): UseReorderResult {
-  // One type per list, so a drag from another list, or a file, is never this list's. Types are
-  // lowercased, so the id goes in as hex char codes, which keeps ids that differ only in case apart.
+export function useReorderGroup<L>({ onMove }: UseReorderGroupOptions<L>): ReorderGroup<L> {
   const id = useId();
-  const type = `application/x-todae-reorder-${[...id].map((c) => c.charCodeAt(0).toString(16).padStart(4, '0')).join('')}`;
+  const latest = useRef(onMove);
+  latest.current = onMove;
+  const [group] = useState(() =>
+    createGroup(typeFor(id), (from, to) => latest.current(from as ReorderPlace<L>, to as ReorderPlace<L>)),
+  );
+  return group as unknown as ReorderGroup<L>;
+}
+
+/**
+ * `useReorder({ onMove })` returns `{ dragging, drop, getItemProps, getHandleProps, getListProps }`,
+ * which let a person reorder a list by dragging an item's handle: with the browser's drag and drop for
+ * a mouse, and with pointer events for a finger or a pen, since browsers on touch screens differ in
+ * whether they drag at all. A drop that changes the order calls `onMove(from, to)`, and Escape cancels
+ * a drag. Lists that share a `group` from `useReorderGroup` also take each other's items. It has no
+ * keyboard path: pair it with a way to move an item without dragging, such as a menu.
+ */
+export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorderResult {
+  const { onMove, orientation = 'vertical', disabled = false } = options;
+  const id = useId();
+  // A list with no group is a group of one, with a drag type of its own.
+  const [own] = useState(() => createGroup(typeFor(id), null));
+  const group = (options.group as unknown as Group | undefined) ?? own;
+  const { type } = group;
   // The item a press on its handle may start dragging. Only that item is draggable, so text in the
   // others stays selectable and a drag of one can't start from anywhere else.
   const [armed, setArmed] = useState<number | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
   const [drop, setDrop] = useState<ReorderDrop | null>(null);
-  // Read by the drag events, which run between renders.
+  // This list's item being dragged, read by the drag events, which run between renders.
   const sourceRef = useRef<HTMLElement | null>(null);
   // The armed item's element.
   const armedRef = useRef<HTMLElement | null>(null);
-  const rtlRef = useRef(false);
   const dropRef = useRef<ReorderDrop | null>(null);
+  const groupRef = useRef(group);
+  groupRef.current = group;
   // A finger or pen on a handle: its pointer and where it went down. A touch drag runs on pointer
   // events, so it never arms the item for the browser's drag.
   const touchRef = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -128,16 +278,20 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
   const [touch, setTouch] = useState<{ id: number; x: number; y: number } | null>(null);
   // Whether the last press on a handle was a finger or pen, whose mousedown, sent after the tap, arms nothing.
   const fingerRef = useRef(false);
-  // Read by the touch drag's window listeners.
-  const latest = useRef({ onMove, orientation, disabled });
-  latest.current = { onMove, orientation, disabled };
 
-  const show = (next: ReorderDrop | null) => {
+  const show = useCallback((next: ReorderDrop | null) => {
     dropRef.current = next;
     setDrop((prev) => (prev?.index === next?.index && prev?.position === next?.position ? prev : next));
-  };
+  }, []);
 
   const end = useCallback(() => {
+    const shared = groupRef.current;
+    // The list a drag started from ends it for the whole group, so another list's line goes too.
+    if (shared.drag?.list === id) {
+      shared.drag = null;
+      display(shared, null, null);
+    }
+    if (shared.shown === id) shared.shown = null;
     sourceRef.current = null;
     armedRef.current = null;
     dropRef.current = null;
@@ -146,7 +300,24 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     setArmed(null);
     setDrop(null);
     setTouch(null);
-  }, []);
+  }, [id]);
+
+  // Read by the group's other lists and by the touch drag's window listeners.
+  const member = useRef<Member>(null!);
+  member.current = { list: options.list, orientation, disabled, onMove, show, end };
+
+  useLayoutEffect(() => {
+    group.members.set(id, member);
+    return () => {
+      group.members.delete(id);
+      if (group.shown === id) group.shown = null;
+      // A list that goes away mid-drag ends its drag, with any line it left in another list.
+      if (group.drag?.list === id) {
+        group.drag = null;
+        display(group, null, null);
+      }
+    };
+  }, [group, id]);
 
   // Items that move while armed or dragged keep their state: armed and dragging follow the element,
   // and a removed one ends the drag. It runs after every render, since the items aren't an input, and
@@ -192,46 +363,62 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     };
   }, [armed, end]);
 
-  // A touch drag: it starts once the finger moves off the press, follows the item under the finger,
-  // and drops where the finger lifts. A pointercancel, such as the browser taking the touch to scroll
-  // a handle without `touch-action: none`, ends it without a move.
+  // A touch drag: it starts once the finger moves off the press, follows the item or list of the
+  // group under the finger, and drops where the finger lifts. A pointercancel, such as the browser
+  // taking the touch to scroll a handle without `touch-action: none`, ends it without a move.
   useEffect(() => {
     const pointer = touch;
     if (pointer === null) return;
-    /** Where a drop at x, y lands, or null where it would not move the item. */
-    const target = (x: number, y: number): ReorderDrop | null => {
+    /** The drag under way from this list, or null when it can't drop. */
+    const from = (): Source | null => {
       const node = sourceRef.current;
-      const from = node && !latest.current.disabled ? indexOf(node) : null;
-      if (from === null) return null;
-      const root = node!.getRootNode() as Document | ShadowRoot;
-      let item = root.elementFromPoint(x, y)?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
-      // An item of a list nested in this one's item isn't this list's.
-      while (item && item.getAttribute(LIST) !== node!.getAttribute(LIST)) item = item.parentElement?.closest<HTMLElement>(`[${INDEX}]`) ?? null;
-      const index = item ? indexOf(item) : null;
-      if (index === null) return null;
-      const position = sideOf(item!, x, y, latest.current.orientation, rtlRef.current);
-      return reorderTarget(from, index, position) === from ? null : { index, position };
+      const index = node && !member.current.disabled ? indexOf(node) : null;
+      return index === null ? null : { from: index, list: id };
+    };
+    /** The list of the group under x, y and where in it a drop lands, or null where nothing takes it. */
+    const target = (x: number, y: number): { list: string; at: ReorderDrop } | null => {
+      const { members } = groupRef.current;
+      const dragged = sourceRef.current!;
+      const root = dragged.getRootNode() as Document | ShadowRoot;
+      // The innermost item or list of this group under the point that takes the item. An item of a
+      // list in another group, such as one nested in an item, isn't this group's. A disabled list, or one
+      // inside the dragged item, leaves the drop to the list around it, as in the browser's drag.
+      for (let node = root.elementFromPoint(x, y); node; node = node.parentElement) {
+        const item = node.getAttribute(LIST);
+        const list = node.getAttribute(ROOT);
+        const key = item !== null && members.has(item) ? item : list !== null && members.has(list) ? list : null;
+        if (key === null || (node !== dragged && dragged.contains(node))) continue;
+        const into = members.get(key)!.current;
+        if (into.disabled) continue;
+        const at =
+          key === item
+            ? { index: indexOf(node)!, position: sideOf(node, x, y, into.orientation) }
+            : insertion(node, key, x, y, into.orientation);
+        return { list: key, at };
+      }
+      return null;
     };
     const move = (event: globalThis.PointerEvent) => {
       if (event.pointerId !== pointer.id) return;
       const node = sourceRef.current ?? armedRef.current;
       if (node === null || !node.isConnected) return end();
       if (sourceRef.current === null) {
-        if (latest.current.disabled) return end();
+        if (member.current.disabled) return end();
         if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) < SLOP) return;
         sourceRef.current = node;
-        rtlRef.current = getComputedStyle(node).direction === 'rtl';
+        groupRef.current.drag = { node, list: id };
         setDragging(indexOf(node));
       }
-      show(target(event.clientX, event.clientY));
+      const source = from();
+      const over = source && target(event.clientX, event.clientY);
+      display(groupRef.current, over?.list ?? null, source && over ? landing(source, over.list, over.at) : null);
     };
     const up = (event: globalThis.PointerEvent) => {
       if (event.pointerId !== pointer.id) return;
-      const node = sourceRef.current;
-      const from = node?.isConnected ? indexOf(node) : null;
-      const at = from === null ? null : target(event.clientX, event.clientY);
-      end();
-      if (from !== null && at !== null) latest.current.onMove(from, reorderTarget(from, at.index, at.position));
+      const source = sourceRef.current?.isConnected ? from() : null;
+      const over = source && target(event.clientX, event.clientY);
+      if (source && over) commit(groupRef.current, source, over.list, over.at);
+      else end();
     };
     const cancel = (event: globalThis.PointerEvent) => {
       if (event.pointerId === pointer.id) end();
@@ -245,37 +432,61 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       window.removeEventListener('pointerup', up, true);
       window.removeEventListener('pointercancel', cancel, true);
     };
-  }, [touch, end]);
+  }, [touch, end, id]);
 
   // The browser's drag takes Escape itself and ends with dragend. A touch drag gets it here, before a
   // dialog around the list, as does a modal's close request, such as the Android back gesture.
   useEscapeKey(touch !== null && dragging !== null, true, end, sourceRef);
 
-  const positionOf = (event: DragEvent<HTMLElement>): ReorderDropPosition =>
-    sideOf(event.currentTarget, event.clientX, event.clientY, orientation, rtlRef.current);
-
-  /** The dragged item's index, or null when this event isn't a drag this list started and can take. */
-  const source = (event: DragEvent<HTMLElement>): number | null => {
-    const node = sourceRef.current;
-    if (node === null || !event.dataTransfer.types.includes(type)) return null;
-    if (!node.isConnected) {
-      end();
-      return null;
-    }
-    return disabled ? null : indexOf(node);
+  /** Clears this list's line, without touching another list's. */
+  const hide = () => {
+    show(null);
+    if (group.shown === id) group.shown = null;
   };
 
-  const over = (event: DragEvent<HTMLElement>, index: number) => {
+  /** The group's drag under way, or null when this event isn't one this list can take. */
+  const source = (event: DragEvent<HTMLElement>): Source | null => {
+    const drag = group.drag;
+    if (drag === null || !event.dataTransfer.types.includes(type)) return null;
+    // An item can't go into a list inside itself.
+    if (drag.node !== event.currentTarget && drag.node.contains(event.currentTarget)) return null;
+    const owner = group.members.get(drag.list)?.current;
+    if (owner === undefined || !drag.node.isConnected) {
+      if (owner) owner.end();
+      else group.drag = null;
+      return null;
+    }
+    const from = disabled || owner.disabled ? null : indexOf(drag.node);
+    return from === null ? null : { from, list: drag.list };
+  };
+
+  // dragenter and dragover, on an item or on the list. The innermost item or list of the group
+  // that takes the drag shows where it lands; the ones around it leave the event alone.
+  const over = (event: DragEvent<HTMLElement>, locate: Locate) => {
+    if (handled.has(event.nativeEvent)) return;
     const from = source(event);
-    if (from === null) return show(null);
+    if (from === null) return hide();
+    handled.add(event.nativeEvent);
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    const position = positionOf(event);
-    show(reorderTarget(from, index, position) === from ? null : { index, position });
+    display(group, id, landing(from, id, locate(event)));
+  };
+
+  const take = (event: DragEvent<HTMLElement>, locate: Locate) => {
+    if (handled.has(event.nativeEvent) || group.drag === null || !event.dataTransfer.types.includes(type)) return;
+    // The drop is the group's own drag, so the browser does nothing else with it, such as open a link.
+    event.preventDefault();
+    const from = source(event);
+    // A list that can't take it, such as one disabled during the drag, leaves it to the list around
+    // it. Where none takes it, the drag ends with dragend in its own list.
+    if (from === null) return hide();
+    handled.add(event.nativeEvent);
+    commit(group, from, id, locate(event));
   };
 
   const getItemProps = <P extends UseReorderItemUserProps>(index: number, props?: P) => {
     const user = (props ?? {}) as P;
+    const locate: Locate = (event) => ({ index, position: sideOf(event.currentTarget, event.clientX, event.clientY, orientation) });
     return {
       ...user,
       draggable: armed === index && !disabled ? true : undefined,
@@ -286,29 +497,17 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
         // Firefox starts a drag only when it carries data.
         event.dataTransfer.setData(type, String(index));
         sourceRef.current = event.currentTarget;
-        rtlRef.current = getComputedStyle(event.currentTarget).direction === 'rtl';
+        group.drag = { node: event.currentTarget, list: id };
         setDragging(index);
       }),
-      onDragEnter: composeHandlers(user.onDragEnter, (event) => over(event, index)),
-      onDragOver: composeHandlers(user.onDragOver, (event) => over(event, index)),
+      onDragEnter: composeHandlers(user.onDragEnter, (event) => over(event, locate)),
+      onDragOver: composeHandlers(user.onDragOver, (event) => over(event, locate)),
       onDragLeave: composeHandlers(user.onDragLeave, (event) => {
-        if (sourceRef.current === null) return;
         // WebKit fires dragleave on every move inside an item, with no relatedTarget, so ask the
-        // pointer instead. Leaving the window reports 0, 0.
-        const rect = event.currentTarget.getBoundingClientRect();
-        const { clientX: x, clientY: y } = event;
-        const inside = (x !== 0 || y !== 0) && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom;
-        if (!inside && dropRef.current?.index === index) show(null);
+        // pointer instead.
+        if (group.drag !== null && !inside(event) && dropRef.current?.index === index) hide();
       }),
-      onDrop: composeHandlers(user.onDrop, (event) => {
-        if (sourceRef.current === null || !event.dataTransfer.types.includes(type)) return;
-        const from = source(event);
-        event.preventDefault();
-        end();
-        if (from === null) return;
-        const to = reorderTarget(from, index, positionOf(event));
-        if (to !== from) onMove(from, to);
-      }),
+      onDrop: composeHandlers(user.onDrop, (event) => take(event, locate)),
       onDragEnd: composeHandlers(user.onDragEnd, () => {
         if (sourceRef.current !== null || armed !== null) end();
       }),
@@ -316,6 +515,24 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
       [LIST]: id,
       'data-dragging': dragging === index ? ('' as const) : undefined,
       'data-drop': drop?.index === index ? drop.position : undefined,
+    };
+  };
+
+  const getListProps = <P extends UseReorderListUserProps>(props?: P) => {
+    const user = (props ?? {}) as P;
+    // A drag over the list but not over one of its items, such as in a gap, past the last item or
+    // in an empty list, lands by the pointer among the items.
+    const locate: Locate = (event) => insertion(event.currentTarget, id, event.clientX, event.clientY, orientation);
+    return {
+      ...user,
+      onDragEnter: composeHandlers(user.onDragEnter, (event) => over(event, locate)),
+      onDragOver: composeHandlers(user.onDragOver, (event) => over(event, locate)),
+      onDragLeave: composeHandlers(user.onDragLeave, (event) => {
+        if (group.drag !== null && !inside(event)) hide();
+      }),
+      onDrop: composeHandlers(user.onDrop, (event) => take(event, locate)),
+      [ROOT]: id,
+      'data-drop-target': drop !== null ? ('' as const) : undefined,
     };
   };
 
@@ -361,5 +578,5 @@ export function useReorder({ onMove, orientation = 'vertical', disabled = false 
     };
   };
 
-  return { dragging, drop, getItemProps, getHandleProps };
+  return { dragging, drop, getItemProps, getHandleProps, getListProps };
 }

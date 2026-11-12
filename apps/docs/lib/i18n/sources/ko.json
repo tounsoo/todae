@@ -1290,13 +1290,14 @@
     "(section order)": "59d900639520"
   },
   "utilities/use-reorder": {
-    "(top)": "2fb0345ed302",
-    "# useReorder": "5b86b472d87e",
+    "(top)": "a98b70dcfcf0",
+    "# useReorder": "82802c6ad052",
     "## Touch": "55459a623454",
-    "## Accessible composition": "b7931bd53749",
-    "## When to use": "096cd31b6ac9",
-    "## Props": "d782464e8b92",
-    "(section order)": "26fdfe644b20"
+    "## Between lists": "d29cfb5356d7",
+    "## Accessible composition": "ca0b01ac5bf3",
+    "## When to use": "0d34d15d0e85",
+    "## Props": "48fcb5146827",
+    "(section order)": "890fa6f5839e"
   },
   "utilities/use-roving-focus": {
     "(top)": "f424b205a893",

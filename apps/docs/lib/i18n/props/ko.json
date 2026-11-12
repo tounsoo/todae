@@ -3281,8 +3281,22 @@
       "ko": "항목이 늘어선 축. 기본값은 'vertical'. 가로 목록에서 'before'는 텍스트 방향을 따릅니다."
     },
     "disabled": {
-      "en": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",
-      "ko": "끌기를 끕니다. `disabled`가 true인 동안에는 진행 중인 끌기를 놓을 수 없습니다."
+      "en": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped, and the list takes no item from another.",
+      "ko": "끌기를 끕니다. `disabled`가 true인 동안에는 진행 중인 끌기를 놓을 수 없고, 목록이 다른 목록의 항목을 받지 않습니다."
+    },
+    "group": {
+      "en": "The group from `useReorderGroup` whose lists take each other's items.",
+      "ko": "목록끼리 서로의 항목을 받는, `useReorderGroup`이 만든 그룹."
+    },
+    "list": {
+      "en": "This list's key, which the group's `onMove` gets as `list`. Required with `group`.",
+      "ko": "그룹의 `onMove`가 `list`로 받는 이 목록의 키. `group`과 함께 쓰면 필수입니다."
+    }
+  },
+  "useReorderGroup": {
+    "onMove": {
+      "en": "Called on a drop that moves an item from one of the group's lists to another, with the list and index it leaves and the list and index it ends at.",
+      "ko": "그룹의 한 목록에서 다른 목록으로 항목을 옮기는 놓기에서, 항목이 떠나는 목록과 인덱스, 그리고 놓이는 목록과 인덱스를 받아 불립니다."
     }
   },
   "formatRelativeTime": {
