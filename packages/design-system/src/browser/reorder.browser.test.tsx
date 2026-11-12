@@ -657,13 +657,14 @@ it.runIf(server.browser === 'chromium')('moves an item a real touch drags in Chr
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
 });
 
-// Two lists of one group, side by side, each with room below its items.
+// Two lists of one group, side by side, each with room below its items. Both fit the 414px test
+// frame, so real input never has to scroll the frame sideways first.
 type Key = 'left' | 'right';
 
 function GroupList({ group, list, items, onMove }: { group: ReorderGroup<Key>; list: Key; items: string[]; onMove: (from: number, to: number) => void }) {
   const reorder = useReorder({ group, list, onMove });
   return (
-    <ul data-testid={`list-${list}`} {...reorder.getListProps()} style={{ inlineSize: 200, minBlockSize: 200, padding: 0, margin: 0, listStyle: 'none' }}>
+    <ul data-testid={`list-${list}`} {...reorder.getListProps()} style={{ inlineSize: 160, minBlockSize: 200, padding: 0, margin: 0, listStyle: 'none' }}>
       {items.map((name, index) => (
         <li key={name} {...reorder.getItemProps(index)} style={{ blockSize: 40, display: 'flex' }}>
           <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)} style={{ inlineSize: 24 }}>
@@ -692,7 +693,7 @@ function Board({ onMove, right = ['X', 'Y'] }: { onMove: (from: ReorderPlace<Key
     },
   });
   return (
-    <div style={{ display: 'flex', gap: 40, alignItems: 'start' }}>
+    <div style={{ display: 'flex', gap: 24, alignItems: 'start' }}>
       {(['left', 'right'] as const).map((list) => (
         <GroupList key={list} group={group} list={list} items={lists[list]} onMove={(from, to) => move({ list, index: from }, { list, index: to })} />
       ))}
@@ -705,8 +706,10 @@ const orderIn = (list: Key) => [...screen.getByTestId(`list-${list}`).querySelec
 it('moves an item dragged to another list of its group, beside an item or below the last one', async () => {
   const onMove = vi.fn();
   render(<Board onMove={onMove} />);
+  // A board wider than the frame makes real input scroll the frame first.
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   await userEvent.dragAndDrop(screen.getByTestId('handle-A'), item('X'), { targetPosition: bottom });
-  expect(onMove).toHaveBeenLastCalledWith({ list: 'left', index: 0 }, { list: 'right', index: 1 });
+  expect(onMove).toHaveBeenCalledExactlyOnceWith({ list: 'left', index: 0 }, { list: 'right', index: 1 });
   expect(orderIn('left')).toEqual(['B', 'C']);
   expect(orderIn('right')).toEqual(['X', 'A', 'Y']);
 
