@@ -65,7 +65,9 @@ function BoardCard({
           </span>
           <Stack.Root style={{ flex: 1, minInlineSize: 0 }}>
             <Stack.Root direction="row" align="start" gap="condensed">
-              <Text.Root style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere' }}>{task.title}</Text.Root>
+              <Text.Root style={{ flex: 1, minInlineSize: 0, overflowWrap: 'anywhere', hyphens: 'auto' }}>
+                {task.title}
+              </Text.Root>
               <Menu.Root>
                 <Menu.Trigger
                   ref={task.id === landed ? landing : undefined}
