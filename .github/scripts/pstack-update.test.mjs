@@ -342,7 +342,7 @@ test('the lookups ask GitHub for open pull requests, and for closed ones by the 
   const result = step('prepare', repo.clone(), up, []);
   assert.equal(result.status, 0, result.out);
   assert.match(result.gh, /^pr list .*--state open/m);
-  assert.ok(result.gh.split('\n').some((line) => line.includes('--state closed') && line.includes(`--search ${tree} in:body`)), result.gh);
+  assert.ok(result.gh.split('\n').some((line) => line.includes('--state closed') && line.includes('--search is:unmerged')), result.gh);
   assert.ok(result.body.includes(`tree id, \`${tree}\``), result.body);
 });
 

@@ -55,7 +55,8 @@ prepare() {
 		fi
 		# A pull request Ben closed without merging turns this copy down, whichever upstream commit carried it, so
 		# a later commit that leaves plugins/pstack as it was opens nothing either. Each body records its tree id.
-		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 50 --search "$tree in:body" \
+		# Search only narrows the list to unmerged pull requests, which are few; jq matches the tree id itself.
+		closed=$(gh pr list --repo "$REPO" --base "$BASE" --state closed --limit 100 --search is:unmerged \
 			--json number,body,headRefName,isCrossRepository,mergedAt |
 			jq -r --arg prefix "$prefix" --arg tree "$tree" '[.[] | select((.isCrossRepository | not) and .mergedAt == null and (.headRefName | startswith($prefix)) and ((.body // "") | contains($tree)))] | .[0] // empty | .number')
 		if [ -n "$closed" ]; then
