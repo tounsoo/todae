@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, createEvent, fireEvent, render, screen } from '@testing-library/react';
+import { Profiler } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index.js';
+import { GlyphsProvider } from '../providers/GlyphsProvider.js';
 import { OptionList } from './OptionList.js';
 
 afterEach(cleanup);
@@ -184,6 +186,24 @@ describe('OptionList', () => {
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
+  it('renders the list once when its option labels change', () => {
+    let commits = 0;
+    function Labeled({ tick }: { tick: number }) {
+      return (
+        <Profiler id="list" onRender={() => (commits += 1)}>
+          <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+            <OptionList.Option value="a">{`Apple ${tick}`}</OptionList.Option>
+            <OptionList.Option value="b">{`Banana ${tick}`}</OptionList.Option>
+          </OptionList.Root>
+        </Profiler>
+      );
+    }
+    const { rerender } = render(<Labeled tick={0} />);
+    commits = 0;
+    rerender(<Labeled tick={1} />);
+    expect(commits).toBe(1);
+  });
+
   describe('typeahead', () => {
     function Fruit({ onValueChange = () => undefined }: { onValueChange?: (value: string) => void }) {
       return (
@@ -217,6 +237,42 @@ describe('OptionList', () => {
       expect(active(list)).toBe(idOf('Blueberry'));
       type(list, 'b', 1200);
       expect(active(list)).toBe(idOf('Banana'));
+    });
+
+    it('matches an option by its new label after the label changes', () => {
+      function Renamed({ label }: { label: string }) {
+        return (
+          <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+            <OptionList.Option value="a">Apple</OptionList.Option>
+            <OptionList.Option value="b">{label}</OptionList.Option>
+          </OptionList.Root>
+        );
+      }
+      const { rerender } = render(<Renamed label="Banana" />);
+      rerender(<Renamed label="Quince" />);
+      const list = screen.getByRole('listbox');
+      type(list, 'q', 1000);
+      expect(active(list)).toBe(idOf('Quince'));
+      type(list, 'a', 2000);
+      type(list, 'b', 3000);
+      expect(active(list)).toBe(idOf('Apple'));
+    });
+
+    it('leaves a text check glyph out of the selected option\'s text', () => {
+      render(
+        <GlyphsProvider glyphs={{ check: 'v' }}>
+          <OptionList.Root value="kiwi" onValueChange={() => undefined} aria-label="Fruit">
+            <OptionList.Option value="kiwi">Kiwi</OptionList.Option>
+            <OptionList.Option value="vanilla">Vanilla</OptionList.Option>
+          </OptionList.Root>
+        </GlyphsProvider>,
+      );
+      const list = screen.getByRole('listbox');
+      type(list, 'v', 1000);
+      expect(active(list)).toBe(idOf('Vanilla'));
+      // A second v cycles among options that start with v: only Vanilla does.
+      type(list, 'v', 1100);
+      expect(active(list)).toBe(idOf('Vanilla'));
     });
 
     it('matches a longer prefix, case aside, and starts over after a pause', () => {

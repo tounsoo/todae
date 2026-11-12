@@ -18,6 +18,7 @@ import {
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { spokenText } from './buttonName.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
 import { observeMutations } from '../internal/sharedMutations.js';
@@ -68,7 +69,7 @@ type OptionListContextValue = {
 };
 
 /** `unavailable` (aria-disabled) keeps the option reachable; `disabled` also skips it. Neither can be selected. */
-type OptionEntry = { value: string; text: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
+type OptionEntry = { value: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
 
 const OptionListContext = /* @__PURE__ */ createContext<OptionListContextValue | null>(null);
 
@@ -90,8 +91,8 @@ function byDocumentOrder(a: OptionEntry, b: OptionEntry): number {
 }
 
 // Server-render hint only, used until options have registered: direct Option
-// children, looking through fragments.
-function hintOptions(children: ReactNode): { value: string; disabled: boolean }[] {
+// children, looking through fragments. They have no node yet.
+function hintOptions(children: ReactNode): { value: string; disabled: boolean; node?: undefined }[] {
   return Children.toArray(children).flatMap((child) => {
     if (!isValidElement<{ value?: unknown; disabled?: boolean; children?: ReactNode }>(child)) return [];
     if (child.type === OptionListOption && typeof child.props.value === 'string') {
@@ -121,10 +122,13 @@ function OptionListOption({
     console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
+  // The entry holds what order, keys and selection need. Typeahead reads the
+  // label from the node, so a label change re-registers nothing and the list
+  // renders once.
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
-    return register({ value, text: label, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
-  }, [disabled, label, register, unavailable, value]);
+    return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
+  }, [disabled, register, unavailable, value]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
   return (
@@ -205,7 +209,8 @@ function OptionListRoot(props: OptionListRootProps) {
     return observeMutations(list, { childList: true, subtree: true }, resort).stop;
   }, [resort]);
   const known = entries.length > 0 || registered.current.size > 0 ? entries : hintOptions(children);
-  const enabled = known.filter((option) => !option.disabled).map((option) => option.value);
+  const enabledOptions = known.filter((option) => !option.disabled);
+  const enabled = enabledOptions.map((option) => option.value);
   const selected = useMemo(() => {
     if (isMultiple(props)) return new Set(props.value);
     return new Set(props.value ? [props.value] : []);
@@ -267,8 +272,11 @@ function OptionListRoot(props: OptionListRootProps) {
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
     if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
-      const texts = new Map([...registered.current].map((entry) => [entry.value, entry.text]));
-      const text = (at: number) => (texts.get(enabled[at]!) ?? '').trim().toLowerCase();
+      // spokenText leaves out aria-hidden parts, such as the check glyph.
+      const text = (at: number) => {
+        const node = enabledOptions[at]?.node;
+        return node ? spokenText(node).trim().toLowerCase() : '';
+      };
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);
       if (found >= 0) move(enabled[found]);
       // A Space that joined the search is the search's, match or not.
