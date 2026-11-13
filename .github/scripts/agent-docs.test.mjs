@@ -252,10 +252,13 @@ test('a sidebar that the script can no longer read fails, even with the body lin
     'Agent docs unchanged: a new type\n',
   );
   assert.equal(layout.status, 1, layout.out);
-  assert.match(layout.out, /has no exported SITE_GROUPS array/);
+  assert.match(layout.out, /has no exported SITE_GROUPS array with groups in it/);
   const moved = check({ 'apps/docs/components/siteGroups.ts': null, 'apps/docs/components/siteGroups.tsx': siteGroups('foundations', 'components') });
   assert.equal(moved.status, 1, moved.out);
-  assert.match(moved.out, /has no exported SITE_GROUPS array, so it moved/);
+  assert.match(moved.out, /has no exported SITE_GROUPS array with groups in it, so it moved/);
+  const emptied = check({ 'apps/docs/components/siteGroups.ts': 'export const SITE_GROUPS = [];\nexport const GROUPS = [];\n' });
+  assert.equal(emptied.status, 1, emptied.out);
+  assert.match(emptied.out, /has no exported SITE_GROUPS array with groups in it/);
 });
 
 test('a long unnamed step shows its first line', () => {

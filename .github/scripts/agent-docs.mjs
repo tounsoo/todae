@@ -52,9 +52,10 @@ function sectionIds(text) {
   const ids = new Set();
   let unread = 0;
   if (text == null) return { ids, unread, found: false };
+  const { parser } = createRequire(import.meta.url)('typescript-eslint');
   let program;
   try {
-    program = createRequire(import.meta.url)('typescript-eslint').parser.parseForESLint(text).ast;
+    program = parser.parseForESLint(text).ast;
   } catch (error) {
     throw new Error(`${SITE_GROUPS} is not valid TypeScript: ${error.message}`, { cause: error });
   }
@@ -182,7 +183,7 @@ function review(base, head) {
   return {
     added: [...pages, ...minus(after.others, before.others)],
     unreadGroups: after.sidebar.unread,
-    sidebarLost: before.sidebar.ids.size > 0 && !after.sidebar.found,
+    sidebarLost: before.sidebar.ids.size > 0 && (!after.sidebar.found || after.sidebar.ids.size === 0),
     claudeMd: changes(AGENT_DOCS.claude),
     verifySkill: changes(AGENT_DOCS.verify),
   };
@@ -237,7 +238,8 @@ function main() {
     status = 1;
   } else if (sidebarLost) {
     say(
-      `agent-docs: ${SITE_GROUPS} has no exported SITE_GROUPS array, so it moved or changed its declaration. Update ` +
+      `agent-docs: ${SITE_GROUPS} has no exported SITE_GROUPS array with groups in it, so it moved or changed its ` +
+        'declaration. Update ' +
         'sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read it, so the check keeps seeing new ' +
         'sections.',
     );
