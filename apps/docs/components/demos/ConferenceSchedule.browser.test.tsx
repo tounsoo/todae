@@ -21,8 +21,12 @@ function setup() {
 const board = () => document.querySelector<HTMLElement>('[data-todae-lanes-board]')!;
 const stage = (name: string) => screen.getByRole('region', { name });
 const lane = (name: string) => stage(name).querySelector<HTMLElement>('[data-todae-lane]')!;
-const trigger = (title: string) => screen.getByRole('button', { name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')},`) });
+// The header row and the stage rows.
+const rows = () => stage('Main stage').parentElement!;
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const trigger = (title: string) => screen.getByRole('button', { name: new RegExp(`^${escape(title)},`) });
 const talk = (title: string) => trigger(title).closest('li')!;
+const onStage = (title: string, name: string) => within(stage(name)).getByRole('list').contains(talk(title));
 const grip = (title: string) => talk(title).querySelector<HTMLElement>('.lucide-grip-vertical')!.parentElement!;
 const politeRegion = () => document.querySelector('[data-todae-announcer] > [aria-live="polite"]');
 const centre = (el: Element) => {
@@ -35,17 +39,23 @@ const pointer = (type: string, target: EventTarget, x: number, y: number) =>
     target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
   });
 
+/** Scrolls the board so the point `units` along the axis sits 200px from where the names column ends. */
+function reveal(units: number) {
+  board().scrollLeft = (units / UNITS) * lane('Main stage').getBoundingClientRect().width - 200;
+}
+
 /** The point `units` along a stage's lane, in its middle across. */
 function along(name: string, units: number) {
   const box = lane(name).getBoundingClientRect();
   return { x: box.left + (units / UNITS) * box.width, y: box.top + box.height / 2 };
 }
 
-/** Presses a talk's grip and moves the pointer to `to`, keeping where on the grip it was pressed. */
-function dragTo(title: string, to: { x: number; y: number }, { placed = false } = {}) {
+/** Presses a talk's grip and moves the pointer so the talk would start at `to`. */
+function dragTo(title: string, to: { x: number; y: number }) {
   const handle = grip(title);
   const start = centre(handle);
-  // For a placed talk, the pointer keeps its distance from the talk's start, so aim the start at `to`.
+  // A placed talk keeps the pointer's distance from its start; one from the queue starts at the pointer.
+  const placed = talk(title).hasAttribute('data-todae-lane-start');
   const lead = placed ? start.x - talk(title).getBoundingClientRect().left : 0;
   pointer('pointerdown', handle, start.x, start.y);
   pointer('pointermove', handle, start.x + 6, start.y);
@@ -53,40 +63,74 @@ function dragTo(title: string, to: { x: number; y: number }, { placed = false } 
   return { drop: () => pointer('pointerup', handle, to.x + lead, to.y) };
 }
 
-describe('dragging', () => {
-  // Wide enough for the queue to sit beside the board.
-  beforeEach(async () => {
-    await page.viewport(1280, 800);
-  });
+/** Opens a talk's menu from the keyboard and walks to an item with the arrow keys. */
+async function open(title: string, item: string) {
+  trigger(title).focus();
+  await userEvent.keyboard('{Enter}');
+  const menu = await screen.findByRole('menu');
+  const items = within(menu).getAllByRole('menuitem');
+  const target = items.findIndex((element) => element.textContent === item);
+  expect(target, `no ${item}`).toBeGreaterThanOrEqual(0);
+  await expect.poll(() => document.activeElement).toBe(items[0]);
+  if (target > 0) await userEvent.keyboard('{ArrowDown}'.repeat(target));
+  expect(document.activeElement).toBe(items[target]);
+}
 
+// Wide enough for the queue to sit beside the board.
+beforeEach(async () => {
+  await page.viewport(1280, 800);
+});
+
+describe('dragging', () => {
   it('places a talk from the queue at the time under the pointer and announces it', async () => {
     setup();
+    reveal(100);
     // 11:15 on day 1 is 135 minutes into the axis, clear of Tokens that travel's changeover.
     dragTo('Dark mode, done right', along('Main stage', 135)).drop();
     expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
-    expect(within(stage('Main stage')).getByRole('list').contains(talk('Dark mode, done right'))).toBe(true);
+    expect(onStage('Dark mode, done right', 'Main stage')).toBe(true);
     await expect.poll(() => politeRegion()?.textContent).toBe('Dark mode, done right moved to Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
   });
 
   it('moves a placed talk to another stage at the same time, with its warning', async () => {
     setup();
     // Motion with purpose runs 14:00 to 14:40 on day 1, 300 minutes in.
-    dragTo('Motion with purpose', along('Hall B', 300), { placed: true }).drop();
-    expect(within(stage('Hall B')).getByRole('list').contains(talk('Motion with purpose'))).toBe(true);
+    reveal(280);
+    dragTo('Motion with purpose', along('Hall B', 300)).drop();
+    expect(onStage('Motion with purpose', 'Hall B')).toBe(true);
     await expect.poll(() => politeRegion()?.textContent).toBe('Motion with purpose moved to Hall B, Wed, Jun 2, 2:00 PM to 2:40 PM. Expects 400, Hall B seats 300');
     expect(talk('Motion with purpose').getAttribute('data-conflict')).toBe('warning');
   });
 
-  it('marks the talk a speaker gives on another stage and refuses the drop', async () => {
+  it('marks the talk a speaker gives on another stage, refuses the drop and puts the mark back', async () => {
     setup();
-    // Ana Ruiz gives Hands-on theming in the workshop room from 10:30 to 12:00 on day 1.
-    const drag = dragTo('Motion with purpose', along('Main stage', 120), { placed: true });
-    await expect.poll(() => talk('Hands-on theming').getAttribute('data-conflict')).toBe('blocked');
-    expect(lane('Main stage').textContent).toContain('Ana Ruiz is in Hands-on theming then');
+    reveal(60);
+    // Kenji Sato gives Tokens that travel on Main stage from 10:15 to 11:00 on day 1, and it has a
+    // warning of its own: Hands-on theming, also Engineering, runs at the same time.
+    const own = talk('Tokens that travel').getAttribute('data-conflict');
+    expect(own).toBe('warning');
+    const drag = dragTo('Migrating to 1.0', along('Hall B', 90));
+    await expect.poll(() => talk('Tokens that travel').getAttribute('data-conflict')).toBe('blocked');
+    expect(lane('Hall B').textContent).toContain('Kenji Sato is in Tokens that travel then');
     drag.drop();
-    expect(trigger('Motion with purpose').getAttribute('aria-label')).toContain('Main stage, Wed, Jun 2, 2:00 PM to 2:40 PM');
-    // The workshop goes back to showing no warning of its own.
-    expect(talk('Hands-on theming').hasAttribute('data-conflict')).toBe(false);
+    expect(within(screen.getByRole('list', { name: 'Unscheduled' })).getByRole('button', { name: /^Migrating to 1\.0,/ })).toBeTruthy();
+    expect(talk('Tokens that travel').getAttribute('data-conflict')).toBe(own);
+  });
+});
+
+describe('the menu', () => {
+  it('hands focus to the talk on its new stage and back from the queue', async () => {
+    setup();
+    await open('Motion with purpose', 'Move to Hall B');
+    await userEvent.keyboard('{Enter}');
+    expect(onStage('Motion with purpose', 'Hall B')).toBe(true);
+    await expect.poll(() => document.activeElement).toBe(trigger('Motion with purpose'));
+
+    await open('Motion with purpose', 'Back to unscheduled');
+    await userEvent.keyboard('{Enter}');
+    expect(within(screen.getByRole('list', { name: 'Unscheduled' })).getByRole('button', { name: /^Motion with purpose,/ })).toBeTruthy();
+    await expect.poll(() => document.activeElement).toBe(trigger('Motion with purpose'));
+    await expect.poll(() => politeRegion()?.textContent).toBe('Motion with purpose moved to unscheduled');
   });
 });
 
@@ -98,76 +142,87 @@ describe('the sticky stage names', () => {
     [1024, 768],
     [390, 844],
   ] as const) {
-    it(`stay in view at every scroll amount at ${width}px`, async () => {
-      await page.viewport(width, height);
-      setup();
-      const scroller = board();
-      const max = scroller.scrollWidth - scroller.clientWidth;
-      expect(max).toBeGreaterThan(0);
-      for (const amount of [0, 120, max / 4, max / 2, max - 40, max]) {
-        scroller.scrollLeft = amount;
-        const start = scroller.getBoundingClientRect().left + scroller.clientLeft;
-        for (const name of ['Main stage', 'Hall B', 'Workshop room']) {
-          const heading = within(stage(name)).getByRole('heading', { name });
-          const box = heading.parentElement!.getBoundingClientRect();
-          expect(Math.abs(box.left - start), `${name} at ${amount}px`).toBeLessThan(1);
-          // Nothing paints over the name: the point at its middle hits the name itself.
-          const at = centre(heading);
-          expect(heading.parentElement!.contains(document.elementFromPoint(at.x, at.y)), `${name} covered at ${amount}px`).toBe(true);
+    for (const zoom of ['One day', 'Whole event']) {
+      it(`stay in view at every scroll amount at ${width}px, ${zoom}`, async () => {
+        await page.viewport(width, height);
+        setup();
+        await userEvent.click(screen.getByRole('button', { name: zoom }));
+        const scroller = board();
+        const max = scroller.scrollWidth - scroller.clientWidth;
+        expect(max).toBeGreaterThan(0);
+        for (const amount of [0, 120, max / 4, max / 2, max - 40, max]) {
+          scroller.scrollLeft = amount;
+          const start = scroller.getBoundingClientRect().left + scroller.clientLeft;
+          for (const name of ['Main stage', 'Hall B', 'Workshop room']) {
+            const heading = within(stage(name)).getByRole('heading', { name });
+            const box = heading.parentElement!.getBoundingClientRect();
+            // At rest the names sit inside the area's room for focus rings; scrolled, they stick at its edge.
+            expect(box.left - start, `${name} at ${amount}px`).toBeGreaterThan(-0.5);
+            expect(box.left - start, `${name} at ${amount}px`).toBeLessThan(6);
+            // Nothing paints over the name: the point at its middle hits the name itself.
+            const at = centre(heading);
+            expect(heading.parentElement!.contains(document.elementFromPoint(at.x, at.y)), `${name} covered at ${amount}px`).toBe(true);
+          }
+          // The corner covers the hours that scroll under the names column.
+          const corner = rows().firstElementChild!.firstElementChild!;
+          const at = centre(corner);
+          expect(document.elementFromPoint(at.x, at.y)).toBe(corner);
         }
-        // The corner covers the hours that scroll under the names column.
-        const corner = scroller.firstElementChild!.firstElementChild!;
-        const at = centre(corner);
-        expect(document.elementFromPoint(at.x, at.y)).toBe(corner);
-      }
-    });
+      });
+    }
   }
 
   it('scrolls a day to just past the names column from its button', async () => {
-    await page.viewport(1280, 800);
     setup();
     // The header row's axis holds a cell for each day.
-    const day = board().firstElementChild!.children[1]!.children[1] as HTMLElement;
+    const day = rows().firstElementChild!.children[1]!.children[1] as HTMLElement;
     expect(day.textContent).toContain('Thu, Jun 3');
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
-    await expect.poll(() => Math.round(day.getBoundingClientRect().left - names.right)).toBe(0);
+    await expect.poll(() => Math.abs(day.getBoundingClientRect().left - names.right) < 1).toBe(true);
+  });
+
+  it('keeps the time at the board’s start when the zoom changes', async () => {
+    setup();
+    reveal(400);
+    const before = (board().scrollLeft / lane('Main stage').getBoundingClientRect().width) * UNITS;
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    const after = (board().scrollLeft / lane('Main stage').getBoundingClientRect().width) * UNITS;
+    expect(Math.abs(after - before)).toBeLessThan(2);
   });
 });
 
 describe('the dialog', () => {
-  beforeEach(async () => {
-    await page.viewport(1280, 800);
-  });
+  async function openDialog(title: string) {
+    await open(title, 'Change time or stage…');
+    await userEvent.keyboard('{Enter}');
+    return screen.findByRole('dialog', { name: `Move ${title}` });
+  }
 
-  it('moves a talk to the stage it picks and hands focus back to the talk in its new place', async () => {
+  it('moves a talk to the stage it picks and hands focus to the talk in its new place', async () => {
     setup();
-    trigger('Motion with purpose').focus();
-    await userEvent.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
-    await expect.poll(() => document.activeElement).toBe(within(menu).getAllByRole('menuitem')[0]);
-    await userEvent.keyboard('{Enter}');
-    const dialog = await screen.findByRole('dialog', { name: 'Move Motion with purpose' });
+    const dialog = await openDialog('Motion with purpose');
     await userEvent.selectOptions(within(dialog).getByRole('combobox', { name: 'Stage' }), 'Hall B');
     expect(within(dialog).getByText('Expects 400, Hall B seats 300.')).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
-    expect(within(stage('Hall B')).getByRole('list').contains(talk('Motion with purpose'))).toBe(true);
+    expect(onStage('Motion with purpose', 'Hall B')).toBe(true);
     await expect.poll(() => document.activeElement).toBe(trigger('Motion with purpose'));
   });
 
-  it('puts a blocked place on the start field and keeps the dialog open', async () => {
+  it('puts a blocked place on the start field, clears it on a change, and gives focus back on Escape', async () => {
     setup();
-    trigger('Motion with purpose').focus();
+    // Move another talk first, so focus must go back to the talk the dialog edits, not the last one moved.
+    await open('Writing UI copy', 'Move to Hall B');
     await userEvent.keyboard('{Enter}');
-    const menu = await screen.findByRole('menu');
-    await expect.poll(() => document.activeElement).toBe(within(menu).getAllByRole('menuitem')[0]);
-    await userEvent.keyboard('{Enter}');
-    const dialog = await screen.findByRole('dialog', { name: 'Move Motion with purpose' });
+    const dialog = await openDialog('Motion with purpose');
     // The workshop room isn't recorded, and Motion with purpose is.
     await userEvent.selectOptions(within(dialog).getByRole('combobox', { name: 'Stage' }), 'Workshop room');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
-    expect(screen.getByRole('dialog', { name: 'Move Motion with purpose' })).toBe(dialog);
     expect(await within(dialog).findByText("Workshop room isn't recorded.")).toBeVisible();
-    expect(within(stage('Main stage')).getByRole('list').contains(talk('Motion with purpose'))).toBe(true);
+    expect(onStage('Motion with purpose', 'Main stage')).toBe(true);
+    await userEvent.selectOptions(within(dialog).getByRole('combobox', { name: 'Stage' }), 'Main stage');
+    expect(within(dialog).queryByText("Workshop room isn't recorded.")).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => document.activeElement).toBe(trigger('Motion with purpose'));
   });
 });

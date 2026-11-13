@@ -44,21 +44,28 @@
   }
 }
 
-/* The board scrolls both ways. Its rows line up at the start and each is as
-   wide as its content, the names column plus the whole axis. A sticky
-   element stays inside its parent, so a row only as wide as the board would
-   carry its stage name away once the board scrolled past the row's end. */
+/* The board scrolls both ways, and its stacking stays inside it. */
 .board {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: var(--todae-space-1);
+  isolation: isolate;
+  /* Focus and scrolling stop clear of the sticky names column and header row. */
+  scroll-padding-block-start: 4.5rem;
+  scroll-padding-inline-start: var(--names);
   max-block-size: 32rem;
-  overflow: auto;
   border: var(--todae-border-width) solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
   background: var(--todae-color-bg-canvas);
   overscroll-behavior-inline: contain;
+}
+
+/* The rows line up at the start and each is as wide as its content, the
+   names column plus the whole axis. A sticky element stays inside its
+   parent, so a row only as wide as the board would carry its stage name away
+   once the board scrolled past the row's end. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--todae-space-1);
 }
 
 .row {
@@ -71,16 +78,17 @@
 .row:first-child {
   position: sticky;
   inset-block-start: 0;
-  z-index: 3;
+  z-index: 4;
   background: var(--todae-color-bg-canvas);
   border-block-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
 }
 
+/* Above the talks and a drag's preview, which scroll under it. */
 .corner,
 .name {
   position: sticky;
   inset-inline-start: 0;
-  z-index: 2;
+  z-index: 3;
   background: var(--todae-color-bg-canvas);
   border-inline-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
 }
@@ -90,7 +98,6 @@
   block-size: 4.5rem;
 }
 
-/* Each day's scroll stop sits clear of the sticky names column. */
 .day {
   position: absolute;
   inset-block: 0;
@@ -100,7 +107,6 @@
   padding-block-start: var(--todae-space-2);
   padding-inline-start: var(--todae-space-2);
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-default);
-  scroll-margin-inline-start: var(--names);
 }
 
 .bands {
@@ -220,8 +226,9 @@
   container-type: inline-size;
   min-inline-size: 0;
   overflow: hidden;
-  /* Room for the menu button's focus ring, which the clipped block would cut. */
-  padding-inline-end: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+  /* The end handle's width, so the menu button sits clear of it and its ring
+     inside the clipped block. */
+  padding-inline-end: var(--todae-space-2);
   border-inline-start: 0.25rem solid var(--track);
 }
 
@@ -230,9 +237,16 @@
   opacity: 0.5;
 }
 
+/* Talks without the speaker picked recede without fading their text or
+   controls, so they keep their contrast. */
 .block[data-dimmed],
 .card[data-dimmed] {
-  opacity: 0.35;
+  border-color: var(--todae-color-border-subtle);
+  background: var(--todae-color-bg-subtle);
+}
+
+.block[data-dimmed] {
+  border-inline-start-color: var(--todae-color-border-subtle);
 }
 
 /* A talk with a warning of its own, or one a drag would conflict with: a
@@ -277,12 +291,35 @@
   color: var(--todae-color-status-warning-fg);
 }
 
-/* A short talk in the whole-event view keeps only its grip and menu, which
-   names the talk in full. */
+/* A short talk keeps only its grip and menu, which names the talk in full. */
 @container (max-inline-size: 6rem) {
   .body,
   .flag {
     display: none;
+  }
+}
+
+/* A talk too short for its grip and menu button becomes the button, which
+   makes every move. Its ring sits inside it, so the block can't cut it. */
+@container (max-inline-size: 3.5rem) {
+  .grip,
+  .edge {
+    display: none;
+  }
+
+  .block .menu {
+    position: absolute;
+    inset: 0;
+    inline-size: auto;
+    min-inline-size: 0;
+    block-size: auto;
+    min-block-size: 0;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .block .menu:focus-visible {
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 }
 

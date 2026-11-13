@@ -8,12 +8,12 @@ import ConferenceSchedule, {
   snapGrid,
   timeline,
   toUnits,
-  type Timeline,
+  verdictFor,
 } from '../../examples/recipes/conference-schedule/ConferenceSchedule';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);
-const at = (axis: Timeline, text: string, zone: string) => Temporal.PlainDateTime.from(text).toZonedDateTime(zone);
+const at = (text: string, zone: string) => Temporal.PlainDateTime.from(text).toZonedDateTime(zone);
 
 describe('time axis', () => {
   const zone = 'America/Los_Angeles';
@@ -25,8 +25,8 @@ describe('time axis', () => {
       [0, 540],
       [540, 1080],
     ]);
-    expect(toUnits(axis, at(axis, '2027-06-03T10:15', zone))).toBe(615);
-    expect(toUnits(axis, at(axis, '2027-06-02T20:00', zone))).toBeNull();
+    expect(toUnits(axis, at('2027-06-03T10:15', zone))).toBe(615);
+    expect(toUnits(axis, at('2027-06-02T20:00', zone))).toBeNull();
     expect(fromUnits(axis, 615)!.toPlainDateTime().toString()).toBe('2027-06-03T10:15:00');
   });
 
@@ -35,8 +35,8 @@ describe('time axis', () => {
     expect(fromUnits(axis, 540, 'end')!.toPlainDateTime().toString()).toBe('2027-06-02T18:00:00');
     expect(segmentAt(axis, 540, 'start')!.day.toString()).toBe('2027-06-03');
     expect(segmentAt(axis, 540, 'end')!.day.toString()).toBe('2027-06-02');
-    expect(toUnits(axis, at(axis, '2027-06-02T18:00', zone), 'end')).toBe(540);
-    expect(toUnits(axis, at(axis, '2027-06-02T18:00', zone), 'start')).toBeNull();
+    expect(toUnits(axis, at('2027-06-02T18:00', zone), 'end')).toBe(540);
+    expect(toUnits(axis, at('2027-06-02T18:00', zone), 'start')).toBeNull();
   });
 
   it('snaps to each step from every opening, and to each closing', () => {
@@ -85,6 +85,35 @@ describe('findConflicts', () => {
       { start: 0, end: 70, keys: ['speaker:Ana'], reason: 'Away' },
     ];
     expect(findConflicts(talk, [], { closed }).shut.map((window) => window.reason)).toEqual(['Lunch', 'Away']);
+  });
+});
+
+describe('verdictFor', () => {
+  const zone = 'America/Los_Angeles';
+  const talk = (id: string, from: string, to: string) => ({
+    id,
+    title: id,
+    speakers: [id],
+    track: 'Design',
+    format: 'Talk',
+    length: 30,
+    audience: 10,
+    recorded: true,
+    at: { stage: 'hall', starts: Temporal.PlainDateTime.from(from).toZonedDateTime(zone), ends: Temporal.PlainDateTime.from(to).toZonedDateTime(zone) },
+  });
+  const talks = (from: string, to: string) => [talk('earlier', from, to), { ...talk('moved', from, to), at: null }] as unknown as Parameters<typeof verdictFor>[0];
+
+  it('counts a changeover only within a day, though the axis leaves the night out', () => {
+    // 18:00 on day 1 and 9:00 on day 2 are both 540 on the axis.
+    expect(verdictFor(talks('2027-06-02T17:15', '2027-06-02T18:00'), 'moved', { lane: 'hall', start: 540, end: 570 })).toBeNull();
+    // 9:30 to 9:35 on day 2 is too short to change over.
+    expect(verdictFor(talks('2027-06-03T09:00', '2027-06-03T09:30'), 'moved', { lane: 'hall', start: 575, end: 605 })).toEqual({ level: 'warning', reason: 'Under 10 minutes from earlier', with: ['earlier'] });
+  });
+
+  it('marks only the talks a blocked place overlaps, not those under a closed window', () => {
+    // Lunch on day 1 runs 12:30 to 13:30, units 210 to 270.
+    const verdict = verdictFor(talks('2027-06-02T12:00', '2027-06-02T12:45'), 'moved', { lane: 'hall', start: 210, end: 240 });
+    expect(verdict).toEqual({ level: 'blocked', reason: 'Overlaps Lunch', with: [] });
   });
 });
 
@@ -139,7 +168,7 @@ describe('the schedule', () => {
 
   it('marks a move that a rule blocks as unavailable', async () => {
     setup();
-    // The workshop room isn't recorded, and Tokens that travel is.
+    // Kenji Sato's Tokens that travel would overlap Hands-on theming in the workshop room.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /^Tokens that travel,/ }));
     });
@@ -151,12 +180,13 @@ describe('the schedule', () => {
     setup();
     await choose(screen.getByRole('button', { name: /^Dark mode, done right,/ }), 'First free time on Main stage');
     expect(talksOn('Main stage')).toContain('Dark mode, done right');
-    // The opening keynote holds 9:00 to 10:00, and Tokens that travel runs 10:15 to 11:00.
-    expect(screen.getByRole('button', { name: /^Dark mode, done right,/ }).getAttribute('aria-label')).toContain('Main stage, Wed, Jun 2, 11:00 AM to 11:30 AM');
+    // The opening keynote holds 9:00 to 10:00, and Tokens that travel runs 10:15 to 11:00, so 11:00 is
+    // allowed but leaves no time to change over. 11:15 is the first time with no warning.
+    expect(screen.getByRole('button', { name: /^Dark mode, done right,/ }).getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     });
     expect(talksOn('Main stage')).not.toContain('Dark mode, done right');
-    await vi.waitFor(() => expect(politeRegion()?.textContent).toBe('Undid: Dark mode, done right moved to Main stage, Wed, Jun 2, 11:00 AM to 11:30 AM'));
+    await vi.waitFor(() => expect(politeRegion()?.textContent).toBe('Undid: Dark mode, done right moved to Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM'));
   });
 });

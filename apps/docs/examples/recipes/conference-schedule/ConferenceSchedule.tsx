@@ -10,6 +10,7 @@ import {
   Form,
   Label,
   Menu,
+  ScrollArea,
   Text,
   ToggleGroup,
   formatTime,
@@ -24,7 +25,7 @@ import {
   type UseLaneDragResult,
 } from '@tounsoo/todae';
 import { Ban, EllipsisVertical, GripVertical, TriangleAlert, Undo2, Video } from 'lucide-react';
-import { memo, useId, useMemo, useRef, useState, type RefObject, type SubmitEvent } from 'react';
+import { memo, useId, useLayoutEffect, useMemo, useRef, useState, type RefObject, type SubmitEvent } from 'react';
 import styles from './ConferenceSchedule.module.css';
 
 // ─── The time axis ─────────────────────────────────────────────────────────
@@ -123,6 +124,7 @@ export function findConflicts(item: Booking, others: readonly Booking[], { close
 }
 
 // ─── The event ─────────────────────────────────────────────────────────────
+// Built when the module loads, so Temporal or its polyfill has to be loaded first.
 
 const ZONE = 'America/Los_Angeles';
 const DAYS = ['2027-06-02', '2027-06-03', '2027-06-04'].map((day) => Temporal.PlainDate.from(day));
@@ -130,6 +132,8 @@ const OPENS = Temporal.PlainTime.from('09:00');
 const CLOSES = Temporal.PlainTime.from('18:00');
 const AXIS = timeline({ days: DAYS, opens: OPENS, closes: CLOSES, timeZone: ZONE });
 /** Minutes a stage needs between talks. */
+/** The longest talk, a whole day, so a talk an end drag made long still fits the dialog. */
+const LONGEST = 540;
 const CHANGEOVER = 10;
 const SHORTEST = 15;
 
@@ -225,10 +229,14 @@ export function verdictFor(talks: readonly Talk[], id: string, to: LanePlace): L
   const reason = found.shut[0]?.reason
     ?? (overlap && (overlap.key.startsWith('stage:') ? `Overlaps ${title(overlap.id)}` : `${overlap.key.slice('speaker:'.length)} is in ${title(overlap.id)} then`))
     ?? (talk.recorded && !stage.recorded ? `${stage.name} isn't recorded` : null);
-  if (reason) return { level: 'blocked', reason, with: found.overlaps.map((each) => each.id) };
+  // Only an overlap names other talks, so a drop on lunch doesn't mark a talk it also overlaps.
+  if (reason) return { level: 'blocked', reason, with: found.shut[0] ? [] : found.overlaps.map((each) => each.id) };
 
   const warnings: string[] = [];
-  const near = found.near.filter((each) => each.key === `stage:${to.lane}`);
+  // The axis leaves the nights out, so a talk that ends one day sits next to one that opens the next.
+  // A changeover counts only within a day.
+  const startOf = (other: string) => placed.find(({ talk: each }) => each.id === other)!.at.start;
+  const near = found.near.filter((each) => each.key === `stage:${to.lane}` && segmentAt(AXIS, startOf(each.id), 'start')?.day.equals(day.day));
   const sameTrack = placed.filter(({ talk: other, at }) => other.track === talk.track && at.lane !== to.lane && at.start < to.end && to.start < at.end);
   if (talk.audience > stage.seats) warnings.push(`Expects ${talk.audience}, ${stage.name} seats ${stage.seats}`);
   if (near[0]) warnings.push(`Under ${CHANGEOVER} minutes from ${title(near[0].id)}`);
@@ -237,13 +245,16 @@ export function verdictFor(talks: readonly Talk[], id: string, to: LanePlace): L
   return { level: 'warning', reason: warnings.join('. '), with: [...near.map((each) => each.id), ...sameTrack.map(({ talk: other }) => other.id)] };
 }
 
-/** The earliest place on `stage` that no rule blocks, every quarter hour from day 1. */
+/** The earliest place on `stage` with no warning, or else the earliest no rule blocks, every quarter hour from day 1. */
 function firstFree(talks: readonly Talk[], talk: Talk, stage: string): LanePlace | null {
+  let allowed: LanePlace | null = null;
   for (let start = AXIS.range.start; start + talk.length <= AXIS.range.end; start += 15) {
     const to = { lane: stage, start, end: start + talk.length };
-    if (verdictFor(talks, talk.id, to)?.level !== 'blocked') return to;
+    const verdict = verdictFor(talks, talk.id, to);
+    if (verdict === null) return to;
+    if (verdict.level !== 'blocked') allowed ??= to;
   }
-  return null;
+  return allowed;
 }
 
 // ─── Words ─────────────────────────────────────────────────────────────────
@@ -272,10 +283,11 @@ const Preview = memo(function Preview({ drag, stage, locale }: { drag: UseLaneDr
   if (change?.to == null) return null;
   const { to, verdict } = change;
   const starts = fromUnits(AXIS, to.start, 'start');
-  const ends = fromUnits(AXIS, to.end, 'end');
+  // A place that runs past closing ends on the next day's axis, so it shows its start alone.
+  const ends = segmentAt(AXIS, to.start, 'start') === segmentAt(AXIS, to.end, 'end') ? fromUnits(AXIS, to.end, 'end') : null;
   return (
     <div className={styles.preview} data-level={verdict?.level} style={{ insetInlineStart: `${(to.start / AXIS.range.end) * 100}%`, inlineSize: `${((to.end - to.start) / AXIS.range.end) * 100}%` }}>
-      <span className={styles.time}>{starts && ends ? `${clock(starts, locale)}–${clock(ends, locale)}` : null}</span>
+      <span className={styles.time}>{starts ? (ends ? `${clock(starts, locale)}–${clock(ends, locale)}` : clock(starts, locale)) : null}</span>
       {verdict ? (
         <span className={styles.reason}>
           {verdict.level === 'blocked' ? <Ban size="1em" aria-hidden /> : <TriangleAlert size="1em" aria-hidden />}
@@ -394,21 +406,7 @@ function QueueCard({ talk, dimmed, ...shared }: Shared & { talk: Talk; dimmed: b
 // ─── The dialog ────────────────────────────────────────────────────────────
 
 /** Picks a talk's stage, day, start and length, for the keyboard and anyone who can't drag. */
-function PlaceDialog({
-  talk,
-  talks,
-  locale,
-  restoreFocusRef,
-  onClose,
-  onSave,
-}: {
-  talk: Talk;
-  talks: readonly Talk[];
-  locale: string;
-  restoreFocusRef: RefObject<HTMLButtonElement | null>;
-  onClose: () => void;
-  onSave: (to: LanePlace, verdict: LaneVerdict | null) => void;
-}) {
+function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonly Talk[]; locale: string; onSave: (to: LanePlace, verdict: LaneVerdict | null) => void }) {
   const ids = { stage: useId(), day: useId(), start: useId(), length: useId(), title: useId() };
   const first = talk.at ? null : firstFree(talks, talk, 'main');
   const from = talk.at ?? (first && { stage: first.lane, starts: fromUnits(AXIS, first.start)!, ends: fromUnits(AXIS, first.end, 'end')! });
@@ -417,12 +415,19 @@ function PlaceDialog({
   const [start, setStart] = useState<Temporal.PlainTime | null>(from?.starts.toPlainTime() ?? OPENS);
   const [length, setLength] = useState<number | null>(talk.length);
   const [errors, setErrors] = useState<FormErrors>({});
+  // An error is about the fields as they were, so a change clears it.
+  const edited =
+    <T,>(set: (value: T) => void) =>
+    (value: T) => {
+      setErrors({});
+      set(value);
+    };
 
   // The place the fields name, or why they name none.
   const target = ((): { to: LanePlace } | { error: string } | null => {
     if (start === null || length === null) return null;
     const at = toUnits(AXIS, DAYS[Number(day)]!.toZonedDateTime({ timeZone: ZONE, plainTime: start }));
-    if (at === null) return { error: `Pick a time from ${formatTime(OPENS, { locale })} to ${formatTime(CLOSES, { locale })}.` };
+    if (at === null) return { error: `Start at ${formatTime(OPENS, { locale })} or later, and before ${formatTime(CLOSES, { locale })}.` };
     return { to: { lane: stage, start: at, end: at + length } };
   })();
   const verdict = target && 'to' in target ? verdictFor(talks, talk.id, target.to) : null;
@@ -436,79 +441,82 @@ function PlaceDialog({
   };
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()} restoreFocusRef={restoreFocusRef}>
-      <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.title}>
-        <Dialog.Header>
-          <Dialog.Title id={ids.title}>{talk.at ? `Move ${talk.title}` : `Schedule ${talk.title}`}</Dialog.Title>
-          <Dialog.Close />
-        </Dialog.Header>
-        <Dialog.Body>
-          <div className={styles.fields}>
-            <Field.Group>
-              <Label.Root htmlFor={ids.stage}>Stage</Label.Root>
-              <Field.Root id={ids.stage} name="stage">
-                <Field.Select value={stage} onChange={(event) => setStage(event.target.value)}>
-                  {STAGES.map((each) => (
-                    <option key={each.id} value={each.id}>
-                      {each.name}
-                    </option>
-                  ))}
-                </Field.Select>
-              </Field.Root>
-            </Field.Group>
-            <Field.Group>
-              <Label.Root htmlFor={ids.day}>Day</Label.Root>
-              <Field.Root id={ids.day} name="day">
-                <Field.Select value={day} onChange={(event) => setDay(event.target.value)}>
-                  {DAYS.map((each, index) => (
-                    <option key={index} value={index}>
-                      {dayLabel(each, locale)}
-                    </option>
-                  ))}
-                </Field.Select>
-              </Field.Root>
-            </Field.Group>
-            <Field.Group>
-              <Label.Root htmlFor={ids.start}>Starts</Label.Root>
-              <Field.Root id={ids.start} name="start">
-                <Field.TimeInput required value={start} onValueChange={setStart} locale={locale} />
-              </Field.Root>
-              <ErrorMessage.Root />
-            </Field.Group>
-            <Field.Group>
-              <Label.Root htmlFor={ids.length}>Minutes</Label.Root>
-              <Field.Root id={ids.length} name="length">
-                <Field.NumberInput required value={length} onValueChange={setLength} min={SHORTEST} max={240} step={5} locale={locale} />
-              </Field.Root>
-            </Field.Group>
-          </div>
-          {verdict?.level === 'warning' ? (
-            <Alert.Root tone="warning" className={styles.alert}>
-              {verdict.reason}.
-            </Alert.Root>
-          ) : null}
-        </Dialog.Body>
-        <Dialog.Footer>
-          <Dialog.Close>Cancel</Dialog.Close>
-          <Button.Root type="submit">{talk.at ? 'Move' : 'Schedule'}</Button.Root>
-        </Dialog.Footer>
-      </Form.Root>
-    </Dialog.Root>
+    <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.title}>
+      <Dialog.Header>
+        <Dialog.Title id={ids.title}>{talk.at ? `Move ${talk.title}` : `Schedule ${talk.title}`}</Dialog.Title>
+        <Dialog.Close />
+      </Dialog.Header>
+      <Dialog.Body>
+        <div className={styles.fields}>
+          <Field.Group>
+            <Label.Root htmlFor={ids.stage}>Stage</Label.Root>
+            <Field.Root id={ids.stage} name="stage">
+              <Field.Select value={stage} onChange={(event) => edited(setStage)(event.target.value)}>
+                {STAGES.map((each) => (
+                  <option key={each.id} value={each.id}>
+                    {each.name}
+                  </option>
+                ))}
+              </Field.Select>
+            </Field.Root>
+          </Field.Group>
+          <Field.Group>
+            <Label.Root htmlFor={ids.day}>Day</Label.Root>
+            <Field.Root id={ids.day} name="day">
+              <Field.Select value={day} onChange={(event) => edited(setDay)(event.target.value)}>
+                {DAYS.map((each, index) => (
+                  <option key={index} value={index}>
+                    {dayLabel(each, locale)}
+                  </option>
+                ))}
+              </Field.Select>
+            </Field.Root>
+          </Field.Group>
+          <Field.Group>
+            <Label.Root htmlFor={ids.start}>Starts</Label.Root>
+            <Field.Root id={ids.start} name="start">
+              <Field.TimeInput required value={start} onValueChange={edited(setStart)} locale={locale} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <Field.Group>
+            <Label.Root htmlFor={ids.length}>Minutes</Label.Root>
+            <Field.Root id={ids.length} name="length">
+              <Field.NumberInput required value={length} onValueChange={edited(setLength)} min={SHORTEST} max={LONGEST} step={5} locale={locale} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+        </div>
+        {verdict?.level === 'warning' ? (
+          <Alert.Root tone="warning" className={styles.alert}>
+            {verdict.reason}.
+          </Alert.Root>
+        ) : null}
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.Close>Cancel</Dialog.Close>
+        <Button.Root type="submit">{talk.at ? 'Move' : 'Schedule'}</Button.Root>
+      </Dialog.Footer>
+    </Form.Root>
   );
 }
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
+// One day shows a talk's text and grip; the whole event is the overview.
 const ZOOM = { event: { step: 15, minute: '0.09375rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: string }) {
   const [talks, setTalks] = useState(TALKS);
   const [history, setHistory] = useState<{ talks: Talk[]; said: string }[]>([]);
-  const [zoom, setZoom] = useState<keyof typeof ZOOM>('event');
+  const [zoom, setZoom] = useState<keyof typeof ZOOM>('day');
   const [speaker, setSpeaker] = useState('');
+  // The talk the dialog edits, and the one it shows, which stays while the dialog closes.
   const [editing, setEditing] = useState<string | null>(null);
+  const [shown, setShown] = useState<{ id: string; opened: number } | null>(null);
   const announce = useAnnouncer();
-  const ids = { speaker: useId(), queue: useId(), board: useId() };
+  const ids = { speaker: useId(), queue: useId() };
+  const board = useRef<HTMLDivElement>(null);
   const days = useRef<(HTMLElement | null)[]>([]);
   // The menu button of the talk that last changed place, which takes focus from its old element.
   const landing = useRef<HTMLButtonElement | null>(null);
@@ -542,9 +550,29 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
     onDrop: ({ id, to, verdict }) => move(id, to, verdict),
   });
 
-  const shared: Shared = { talks, lanes, move, edit: setEditing, landing, landed, locale };
+  // The dialog hands focus back to the talk it edits, wherever that talk is once it closes.
+  const edit = (id: string) => {
+    setLanded(id);
+    setShown((last) => ({ id, opened: (last?.opened ?? 0) + 1 }));
+    setEditing(id);
+  };
+
+  // A zoom keeps the time at the board's start in view.
+  const kept = useRef<number | null>(null);
+  const perMinute = () => (board.current?.querySelector('[data-todae-lane]')?.getBoundingClientRect().width ?? 0) / AXIS.range.end;
+  const zoomTo = (next: keyof typeof ZOOM) => {
+    kept.current = board.current && perMinute() > 0 ? board.current.scrollLeft / perMinute() : null;
+    setZoom(next);
+  };
+  useLayoutEffect(() => {
+    if (kept.current === null || !board.current) return;
+    board.current.scrollLeft = kept.current * perMinute();
+    kept.current = null;
+  }, [zoom]);
+
+  const shared: Shared = { talks, lanes, move, edit, landing, landed, locale };
   const dim = (talk: Talk) => speaker !== '' && !talk.speakers.includes(speaker);
-  const editingTalk = talks.find((talk) => talk.id === editing);
+  const shownTalk = shown && talks.find((talk) => talk.id === shown.id);
   const queue = talks.filter((talk) => talk.at === null);
 
   return (
@@ -557,7 +585,7 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
             </Button.Root>
           ))}
         </div>
-        <ToggleGroup.Root aria-label="Zoom" value={zoom} onValueChange={(value: string | null) => value && setZoom(value as keyof typeof ZOOM)}>
+        <ToggleGroup.Root aria-label="Zoom" value={zoom} onValueChange={(value: string | null) => value && zoomTo(value as keyof typeof ZOOM)}>
           <ToggleGroup.Item value="event">Whole event</ToggleGroup.Item>
           <ToggleGroup.Item value="day">One day</ToggleGroup.Item>
         </ToggleGroup.Root>
@@ -581,39 +609,41 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
       </div>
 
       <div className={styles.workspace}>
-        <div {...lanes.getBoardProps()} className={styles.board} id={ids.board}>
+        <ScrollArea.Root {...lanes.getBoardProps()} ref={board} axis="both" focusable aria-label="Schedule" className={styles.board}>
           {/* Every row is as wide as the whole axis, so a sticky stage name can stay in view to its end. */}
-          <div className={styles.row}>
-            <div className={styles.corner} />
-            <div className={styles.axis}>
-              {AXIS.segments.map((segment, index) => (
-                <div
-                  key={index}
-                  ref={(node) => {
-                    days.current[index] = node;
-                  }}
-                  className={styles.day}
-                  style={{ insetInlineStart: `${(segment.start / AXIS.range.end) * 100}%`, inlineSize: `${((segment.end - segment.start) / AXIS.range.end) * 100}%` }}
-                >
-                  <Text.Root variant="label">{dayLabel(segment.day, locale)}</Text.Root>
-                  <span className={styles.bands}>
-                    {BANDS.filter((band) => band.day === index)
-                      .map((band) => `${band.label} ${formatTime(Temporal.PlainTime.from(band.from), { locale })}–${formatTime(Temporal.PlainTime.from(band.to), { locale })}`)
-                      .join(' · ')}
-                  </span>
-                  <span className={styles.hours} aria-hidden>
-                    {Array.from({ length: (segment.end - segment.start) / 60 }, (_, hour) => (
-                      <span key={hour}>{clock(segment.opens.add({ hours: hour }), locale)}</span>
-                    ))}
-                  </span>
-                </div>
-              ))}
+          <div className={styles.rows}>
+            <div className={styles.row}>
+              <div className={styles.corner} />
+              <div className={styles.axis}>
+                {AXIS.segments.map((segment, index) => (
+                  <div
+                    key={index}
+                    ref={(node) => {
+                      days.current[index] = node;
+                    }}
+                    className={styles.day}
+                    style={{ insetInlineStart: `${(segment.start / AXIS.range.end) * 100}%`, inlineSize: `${((segment.end - segment.start) / AXIS.range.end) * 100}%` }}
+                  >
+                    <Text.Root variant="label">{dayLabel(segment.day, locale)}</Text.Root>
+                    <span className={styles.bands}>
+                      {BANDS.filter((band) => band.day === index)
+                        .map((band) => `${band.label} ${formatTime(Temporal.PlainTime.from(band.from), { locale })}–${formatTime(Temporal.PlainTime.from(band.to), { locale })}`)
+                        .join(' · ')}
+                    </span>
+                    <span className={styles.hours} aria-hidden>
+                      {Array.from({ length: (segment.end - segment.start) / 60 }, (_, hour) => (
+                        <span key={hour}>{clock(segment.opens.add({ hours: hour }), locale)}</span>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
+            {STAGES.map((stage) => (
+              <StageRow key={stage.id} stage={stage} shared={shared} dim={dim} />
+            ))}
           </div>
-          {STAGES.map((stage) => (
-            <StageRow key={stage.id} stage={stage} shared={shared} dim={dim} />
-          ))}
-        </div>
+        </ScrollArea.Root>
 
         <section aria-labelledby={ids.queue} className={styles.queueArea}>
           <Text.Root as="h3" id={ids.queue} variant="label">
@@ -628,20 +658,20 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
         </section>
       </div>
 
-      {editingTalk ? (
-        <PlaceDialog
-          key={editingTalk.id}
-          talk={editingTalk}
-          talks={talks}
-          locale={locale}
-          restoreFocusRef={landing}
-          onClose={() => setEditing(null)}
-          onSave={(to, verdict) => {
-            move(editingTalk.id, to, verdict);
-            setEditing(null);
-          }}
-        />
-      ) : null}
+      <Dialog.Root open={editing !== null} onOpenChange={(open) => !open && setEditing(null)} restoreFocusRef={landing}>
+        {shownTalk ? (
+          <PlaceForm
+            key={shown.opened}
+            talk={shownTalk}
+            talks={talks}
+            locale={locale}
+            onSave={(to, verdict) => {
+              move(shownTalk.id, to, verdict);
+              setEditing(null);
+            }}
+          />
+        ) : null}
+      </Dialog.Root>
     </div>
   );
 }
