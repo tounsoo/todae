@@ -25,7 +25,7 @@ import { observeMutations } from '../internal/sharedMutations.js';
 import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
 import { isPopoverOpen } from '../overlay/usePopoverSync.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
-import { pixels } from '../internal/cssLength.js';
+import { layoutScale, pixels } from '../internal/cssLength.js';
 import styles from './OptionList.module.css';
 
 /** `id` is derived from the list and value so `aria-activedescendant` can point at it. */
@@ -453,11 +453,8 @@ function revealInScrollBox(option: HTMLElement) {
   const boxRect = box.getBoundingClientRect();
   // Measured boxes are scaled while a popover grows open; layout lengths and
   // scrollTop are not, so measured lengths are divided back by the scale. A
-  // height off by less than a pixel is offsetHeight's rounding, not a scale.
-  const scale =
-    box instanceof HTMLElement && box.offsetHeight > 0 && Math.abs(boxRect.height - box.offsetHeight) > 1
-      ? boxRect.height / box.offsetHeight
-      : 1;
+  // height off by a pixel or less is offsetHeight's rounding, not a scale.
+  const scale = box instanceof HTMLElement ? layoutScale(boxRect.height, box.offsetHeight) : 1;
   const inset = box.clientTop + px(style.paddingTop) + pixels(style.scrollPaddingTop, box.clientHeight);
   const top = boxRect.top + inset * scale;
   const bottom =

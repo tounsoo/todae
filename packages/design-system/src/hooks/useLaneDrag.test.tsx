@@ -227,6 +227,19 @@ it('drops at the pointer over a part of a lane that scrolls with it, such as an 
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 0, end: 20 } }));
 });
 
+it('drops in view over a strip along the top of a board whose lanes run down', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} axis="block" />);
+  const board = screen.getByTestId('board');
+  board.style.scrollPaddingTop = '200px';
+  const cover = document.createElement('div');
+  cover.setAttribute('data-r', '0,0,300,200');
+  board.append(cover);
+  // t1 runs 10 to 30 down lane a, grabbed 5 units in. Over the strip it lands at 20 in lane b, the first place past it.
+  drag(screen.getByTestId('t1-move'), 50, 150, [[50, 160], [150, 40]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 20, end: 40 } }));
+});
+
 /** Gives the board layout sizes, which jsdom leaves at 0. */
 function layout(board: HTMLElement, sizes: { clientLeft?: number; clientWidth?: number; offsetWidth?: number }) {
   for (const [name, value] of Object.entries(sizes)) Object.defineProperty(board, name, { configurable: true, value });
@@ -300,7 +313,12 @@ it('scrolls toward the nearer side when the part in view is narrower than two ed
     move(950, 20);
     act(() => void vi.advanceTimersByTime(16));
     expect(board.scrollLeft).toBe(0);
-    release(950, 20);
+    // Within a pixel of the middle it rests.
+    board.scrollLeft = 12;
+    move(970.5, 20);
+    act(() => void vi.advanceTimersByTime(48));
+    expect(board.scrollLeft).toBe(12);
+    release(970.5, 20);
   } finally {
     vi.useRealTimers();
   }

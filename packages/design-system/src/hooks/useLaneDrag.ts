@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type DragEvent, type PointerEvent } from 'react';
 import { capturePointer } from '../internal/pointerCapture.js';
-import { pixels } from '../internal/cssLength.js';
+import { layoutScale, pixels } from '../internal/cssLength.js';
 import { composeHandlers } from '../internal/props.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 
@@ -432,10 +432,9 @@ function createLaneDrag(
     if (board === null) return null;
     const box = board.getBoundingClientRect();
     const padding = scrollPadding(board);
-    // Layout sizes, scaled to the screen as the box is under a transform. Within a pixel, the gap is rounding.
-    const scale = (screen: number, layout: number) => (layout > 0 && Math.abs(screen - layout) > 1 ? screen / layout : 1);
-    const sx = scale(box.width, board.offsetWidth);
-    const sy = scale(box.height, board.offsetHeight);
+    // Layout sizes, scaled to the screen as the box is under a transform.
+    const sx = layoutScale(box.width, board.offsetWidth);
+    const sy = layoutScale(box.height, board.offsetHeight);
     // The scrollport, inside the border and clear of scrollbars, is what scroll-padding counts from.
     const port = {
       left: box.left + board.clientLeft * sx,
@@ -465,7 +464,8 @@ function createLaneDrag(
   const shows = (current: Session, x: number, y: number): boolean => {
     const top = rootOf(current).elementFromPoint?.(x, y) ?? null;
     let pinned = false;
-    for (let node = top; node; node = node.parentElement) {
+    // A lane is inside the board, so the walk ends there.
+    for (let node = top; node && node !== current.board; node = node.parentElement) {
       if (mine(node)) {
         if (node.hasAttribute(ITEM) || node.hasAttribute(QUEUE)) return true;
         if (node.hasAttribute(LANE)) return !pinned;
@@ -498,8 +498,8 @@ function createLaneDrag(
     const { open } = shown;
     /** Toward the nearer side within the edge, faster closer to it, and at full speed past it. */
     const speed = (near: number, far: number) => {
-      // An open part narrower than two edges puts the pointer near both sides, and still at its middle.
-      if (Math.min(near, far) >= EDGE || Math.abs(near - far) < 1) return 0;
+      // An open part narrower than two edges puts the pointer near both sides, and still within a pixel of its middle.
+      if (Math.min(near, far) >= EDGE || Math.abs(near - far) <= 1) return 0;
       if (near < far) return -STEP * (1 - Math.max(near, 0) / EDGE);
       return STEP * (1 - Math.max(far, 0) / EDGE);
     };
