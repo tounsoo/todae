@@ -1,6 +1,6 @@
-/* The board scrolls sideways: each stage's lane is at least 120rem wide, 4px
-   a minute at the default font size, so a half-hour talk has room for its
-   grip, title and menu button. The stage names stay in view as it scrolls. */
+/* The board scrolls sideways: each stage's lane is at least 120rem wide, at
+   least 4px a minute at the default font size, so a half-hour talk has room
+   for its grip, title and menu button. The stage names stay in view as it scrolls. */
 .schedule {
   display: flex;
   flex-direction: column;
@@ -35,6 +35,7 @@
    scrolls, as the lanes pass under the names. */
 .hours::before,
 .name {
+  grid-column: 1;
   position: sticky;
   inset-inline-start: 0;
   z-index: 2;
@@ -46,6 +47,7 @@
 }
 
 .ticks {
+  grid-column: 2;
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   color: var(--todae-color-fg-muted);
@@ -61,6 +63,7 @@
 /* The lane's box covers the day, 9:00 to 17:00, so it has no padding or
    border along the axis. Lines mark each hour. */
 .lane {
+  grid-column: 2;
   position: relative;
   block-size: 4rem;
   border-radius: var(--todae-radius-md);
