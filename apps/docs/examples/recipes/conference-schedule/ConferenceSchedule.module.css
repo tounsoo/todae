@@ -329,8 +329,9 @@
    container query can't read a token, so a denser or roomier product sets
    its own number. Its ring sits inside it, so the block can't cut it. */
 @container (max-inline-size: 4.25rem) {
-  .grip,
-  .edge {
+  /* Specific enough to beat the grip's own display, which comes later. */
+  .block .grip,
+  .block .edge {
     display: none;
   }
 
@@ -469,6 +470,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: var(--todae-space-3);
+}
+
+/* The form wraps the dialog's header, body and footer, so it spaces them as
+   the dialog's panel would. */
+.dialogForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-dialog-gap);
 }
 
 .alert {

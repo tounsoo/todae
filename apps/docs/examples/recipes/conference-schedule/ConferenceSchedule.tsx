@@ -457,7 +457,7 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
   };
 
   return (
-    <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.title}>
+    <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.title} className={styles.dialogForm}>
       <Dialog.Header>
         <Dialog.Title id={ids.title}>{from.placed ? `Move ${talk.title}` : `Schedule ${talk.title}`}</Dialog.Title>
         <Dialog.Close />

@@ -228,6 +228,12 @@ describe('the talks', () => {
           expect(box.right, label!).toBeLessThanOrEqual(outer.right + 0.5);
           const at = centre(button);
           expect(button.contains(document.elementFromPoint(at.x, at.y)), `${label} covered`).toBe(true);
+          // A visible grip sits beside the button, never under it: a talk that becomes its button hides its grip.
+          const grip = block.querySelector('.lucide-grip-vertical')!.parentElement!;
+          if (getComputedStyle(grip).display !== 'none') {
+            const side = grip.getBoundingClientRect();
+            expect(side.right <= box.left + 0.5 || side.left >= box.right - 0.5, `${label} grip under its button`).toBe(true);
+          }
         }
       }
     });
