@@ -127,6 +127,8 @@ type Member = {
   onMove: (from: number, to: number) => void;
   show: (drop: ReorderDrop | null) => void;
   end: () => void;
+  /** The armed item's index, read by this list's own handlers. */
+  armed: number | null;
 };
 
 /** What the lists of a group share. A list with no group has one of its own. */
@@ -275,8 +277,8 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   // The armed item's element.
   const armedRef = useRef<HTMLElement | null>(null);
   const dropRef = useRef<ReorderDrop | null>(null);
+  // Written with the member below, once the render commits.
   const groupRef = useRef(group);
-  groupRef.current = group;
   // A finger or pen on a handle: its pointer and where it went down. A touch drag runs on pointer
   // events, so it never arms the item for the browser's drag.
   const touchRef = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -309,9 +311,16 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     setTouch(null);
   }, [id]);
 
-  // Read by the group's other lists and by the touch drag's window listeners.
-  const member = useRef<Member>(null!);
-  member.current = { list: options.list, orientation, disabled, onMove, show, end };
+  // This list's committed state and options, read by its handlers, by the group's other lists and by
+  // the touch drag's window listeners. The handlers are made once per index and read this, so they keep
+  // their identity and a memoized row can skip a render. Written after the commit, so a render React
+  // drops never reaches an event; the first render's values stand until then.
+  const latest: Member = { list: options.list, orientation, disabled, onMove, show, end, armed };
+  const member = useRef(latest);
+  useLayoutEffect(() => {
+    member.current = latest;
+    groupRef.current = group;
+  });
 
   useLayoutEffect(() => {
     group.members.set(id, member);
@@ -445,14 +454,6 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   // dialog around the list, as does a modal's close request, such as the Android back gesture.
   useEscapeKey(touch !== null && dragging !== null, true, end, sourceRef);
 
-  // What the handlers read when an event runs: the committed render's state and options. The handlers
-  // are made once per index and read these, so they keep their identity and a memoized row can skip a
-  // render. Written after the commit, so a render React drops never reaches an event.
-  const live = useRef({ armed, disabled, orientation });
-  useLayoutEffect(() => {
-    live.current = { armed, disabled, orientation };
-  });
-
   /** Clears this list's line, without touching another list's. */
   const hide = () => {
     show(null);
@@ -461,7 +462,7 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
 
   /** The group's drag under way, or null when this event isn't one this list can take. */
   const source = (event: DragEvent<HTMLElement>): Source | null => {
-    const { disabled } = live.current;
+    const { disabled } = member.current;
     const group = groupRef.current;
     const drag = group.drag;
     if (drag === null || !event.dataTransfer.types.includes(group.type)) return null;
@@ -505,11 +506,11 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   const itemHandlers = (index: number): ItemHandlers => {
     const locate: Locate = (event) => ({
       index,
-      position: sideOf(event.currentTarget, event.clientX, event.clientY, live.current.orientation),
+      position: sideOf(event.currentTarget, event.clientX, event.clientY, member.current.orientation),
     });
     return {
       onDragStart: (event) => {
-        const { armed, disabled } = live.current;
+        const { armed, disabled } = member.current;
         const group = groupRef.current;
         if (armed !== index || disabled) return;
         event.stopPropagation();
@@ -529,14 +530,14 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
       },
       onDrop: (event) => take(event, locate),
       onDragEnd: () => {
-        if (sourceRef.current !== null || live.current.armed !== null) end();
+        if (sourceRef.current !== null || member.current.armed !== null) end();
       },
     };
   };
 
   const handleHandlers = (index: number): HandleHandlers => ({
     onPointerDown: (event) => {
-      if (live.current.disabled || event.button !== 0) return;
+      if (member.current.disabled || event.button !== 0) return;
       const finger = event.pointerType === 'touch' || event.pointerType === 'pen';
       // Another finger during a touch drag starts nothing. A primary press, a mouse's, a pen's or a
       // first finger's, means the touch drag's pointerup never came, so that drag is over. A pen and
@@ -564,8 +565,8 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     // WebKit sends no pointerdown for the press after a drag, as if the button were still down from
     // it, but it does send mousedown.
     onMouseDown: (event) => {
-      if (live.current.disabled || event.button !== 0 || fingerRef.current || touchRef.current !== null) return;
-      if (live.current.armed === index) return;
+      if (member.current.disabled || event.button !== 0 || fingerRef.current || touchRef.current !== null) return;
+      if (member.current.armed === index) return;
       if (sourceRef.current !== null) end();
       const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
       armedRef.current = item && indexOf(item) === index ? item : null;
@@ -588,8 +589,7 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   };
   const ownHandle = (index: number) => {
     let own = handlers.handles.get(index);
-    // Frozen, since the same object goes to every render that asks for this handle.
-    if (own === undefined) handlers.handles.set(index, (own = Object.freeze(handleHandlers(index))));
+    if (own === undefined) handlers.handles.set(index, (own = handleHandlers(index)));
     return own;
   };
   // A drag over the list but not over one of its items, such as in a gap, past the last item or in an
@@ -602,7 +602,7 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
         if (groupRef.current.drag !== null && !inside(event)) hide();
       },
       onDrop: (event) => take(event, locate),
-    }))((event) => insertion(event.currentTarget, id, event.clientX, event.clientY, live.current.orientation)));
+    }))((event) => insertion(event.currentTarget, id, event.clientX, event.clientY, member.current.orientation)));
 
   // The item and list getters are this render's, as their props carry its state. The handlers in them
   // keep their identity.

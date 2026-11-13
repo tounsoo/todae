@@ -805,11 +805,26 @@ it('keeps the handlers of the item, handle and list props the same from render t
   function Probe() {
     const [, setCount] = useState(0);
     const reorder = useReorder({ onMove: () => {} });
-    seen.push({ item: reorder.getItemProps(1), handle: reorder.getHandleProps(1), list: reorder.getListProps() });
-    return <button onClick={() => setCount((count) => count + 1)}>again</button>;
+    const props = { item: reorder.getItemProps(1), handle: reorder.getHandleProps(1), list: reorder.getListProps() };
+    seen.push(props);
+    return (
+      <ul>
+        <li {...props.item}>
+          <span data-testid="handle-B" {...props.handle}>
+            ::
+          </span>
+        </li>
+        <li>
+          <button onClick={() => setCount((count) => count + 1)}>again</button>
+        </li>
+      </ul>
+    );
   }
   render(<Probe />);
   fireEvent.click(screen.getByRole('button'));
+  // A render that changes the drag state: the press arms the item.
+  fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'mouse' });
+  expect(seen.at(-1)!.item.draggable).toBe(true);
   const [first, last] = [seen[0]!, seen.at(-1)!];
   expect(seen.length).toBeGreaterThan(1);
   for (const key of ['onDragStart', 'onDragEnter', 'onDragOver', 'onDragLeave', 'onDrop', 'onDragEnd'] as const) expect(last.item[key]).toBe(first.item[key]);
@@ -842,6 +857,9 @@ it('follows a change to disabled in memoized rows', () => {
   rerender(<List memoized disabled />);
   fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'mouse' });
   expect(item('B').getAttribute('draggable')).toBeNull();
+  // The handlers refuse it too, not only the attribute.
+  fireDrag(item('B'), 'dragstart', stubDataTransfer());
+  expect(item('B').getAttribute('data-dragging')).toBeNull();
 });
 
 it('still updates a memoized row that is given the getter itself rather than its props', () => {
@@ -912,4 +930,34 @@ it('follows a change to orientation in memoized rows', () => {
   rerender(<List memoized orientation="horizontal" />);
   mouseDrag('A', 'horizontal').drop('C', 'end');
   expect(order()).toEqual(['B', 'C', 'A', 'D']);
+});
+
+it('keeps dragging the right memoized row when an item before it is removed mid-drag', () => {
+  function Removable() {
+    const [items, setItems] = useState(['A', 'B', 'C', 'D']);
+    const reorder = useReorder({
+      onMove: (from, to) =>
+        setItems((list) => {
+          const next = [...list];
+          next.splice(to, 0, next.splice(from, 1)[0]!);
+          return next;
+        }),
+    });
+    return (
+      <>
+        <button onClick={() => setItems((list) => list.filter((name) => name !== 'A'))}>remove A</button>
+        <ul>
+          {items.map((name, index) => (
+            <Row key={name} {...reorder.getItemProps(index)} name={name} grip={reorder.getHandleProps(index)} />
+          ))}
+        </ul>
+      </>
+    );
+  }
+  render(<Removable />);
+  const d = mouseDrag('B');
+  fireEvent.click(screen.getByRole('button', { name: 'remove A' }));
+  expect(item('B').getAttribute('data-dragging')).toBe('');
+  d.drop('D', 'end');
+  expect(order()).toEqual(['C', 'D', 'B']);
 });
