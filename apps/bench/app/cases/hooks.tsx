@@ -33,6 +33,8 @@ import {
   useInlineEdit,
   useMentions,
   useModalLayer,
+  useLaneDrag,
+  useLaneDragState,
   useReorder,
   useReorderGroup,
   useRovingFocus,
@@ -40,6 +42,8 @@ import {
   useSheetPresentation,
   useStrings,
   type ComboboxOption,
+  type LanePlace,
+  type UseLaneDragResult,
   type MentionTrigger,
   type ReorderGroup,
   type ReorderPlace,
@@ -584,6 +588,72 @@ function dragFirstRowDown(container: HTMLElement) {
   drag('drop', target, box.top + box.height * 0.75);
 }
 
+type Slot = { id: string; at: LanePlace };
+
+const SLOTS: Slot[] = [
+  { id: 'keynote', at: { lane: 'main', start: 0, end: 60 } },
+  { id: 'tokens', at: { lane: 'main', start: 90, end: 120 } },
+  { id: 'forms', at: { lane: 'side', start: 30, end: 75 } },
+];
+
+/** Where a drag would put a slot in one lane, read with useLaneDragState. */
+function LanePreview({ drag, lane }: { drag: UseLaneDragResult['drag']; lane: string }) {
+  const to = useLaneDragState(drag, (state) => (state?.to?.lane === lane ? state.to : null));
+  return to ? <span data-bench-preview>{`${to.start} to ${to.end}`}</span> : null;
+}
+
+/** Two lanes over a 240-unit day with three slots, each with a move handle, and a preview in each lane. */
+function LaneBoardItem({ index, tick }: ItemProps) {
+  const [slots, setSlots] = useState(SLOTS);
+  const lanes = useLaneDrag({
+    range: { start: 0, end: 240 },
+    grid: range(17).map((step) => step * 15),
+    check: (id, to) =>
+      slots.some((slot) => slot.id !== id && slot.at.lane === to.lane && slot.at.start < to.end && to.start < slot.at.end)
+        ? { level: 'blocked', reason: 'Overlaps another slot' }
+        : null,
+    onDrop: ({ id, to }) => setSlots((all) => all.map((slot) => (slot.id === id && to ? { ...slot, at: to } : slot))),
+  });
+  return (
+    <div {...lanes.getBoardProps()} role="group" aria-label={`Board ${index} ${tick}`}>
+      {['main', 'side'].map((lane) => (
+        <div key={lane} {...lanes.getLaneProps(lane)} data-bench-lane style={{ position: 'relative', blockSize: 24, inlineSize: 480 }}>
+          {slots
+            .filter((slot) => slot.at.lane === lane)
+            .map((slot) => (
+              <span
+                key={slot.id}
+                {...lanes.getItemProps(slot.id, slot.at)}
+                style={{ position: 'absolute', insetInlineStart: slot.at.start * 2, inlineSize: (slot.at.end - slot.at.start) * 2 }}
+              >
+                <span aria-hidden data-bench-handle {...lanes.getHandleProps(slot.id, 'move')}>
+                  ::
+                </span>{' '}
+                {slot.id}
+              </span>
+            ))}
+          <LanePreview drag={lanes.drag} lane={lane} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Presses the first slot's handle and drags it, in steps, to a free place in the other lane, then drops it. */
+function dragSlotToOtherLane(container: HTMLElement) {
+  const handle = first<HTMLElement>(container, '[data-bench-handle]');
+  const lanes = handle.closest('[role="group"]')!.querySelectorAll('[data-bench-lane]');
+  const from = handle.getBoundingClientRect();
+  const to = lanes[1]!.getBoundingClientRect();
+  const at = (type: string, target: EventTarget, x: number, y: number) =>
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, clientX: x, clientY: y }));
+  const x = from.left + 2;
+  const y = from.top + from.height / 2;
+  at('pointerdown', handle, x, y);
+  for (let step = 1; step <= 10; step++) at('pointermove', window, x + step * 32, y + ((to.top + to.height / 2 - y) * step) / 10);
+  at('pointerup', window, x + 320, to.top + to.height / 2);
+}
+
 const FILES = ['report.pdf', 'budget.xlsx', 'notes.txt', 'logo.svg', 'deck.pptx'];
 
 /** A file list with a select-all box and a box for each row. */
@@ -809,6 +879,17 @@ export const HOOKS = {
       interact: click('[data-bench-trigger]'),
     },
   ],
+  useLaneDrag: [
+    {
+      id: 'use-lane-drag',
+      title: 'useLaneDrag on two lanes of three slots, with a preview in each lane',
+      Case: many(LaneBoardItem),
+      // The hook has no keyboard path (the docs pair it with a menu), so this drives its drag.
+      interact: dragSlotToOtherLane,
+    },
+  ],
+  // Each lane of the useLaneDrag case renders its preview with it.
+  useLaneDragState: { via: 'useLaneDrag' },
   useReorder: [
     {
       id: 'use-reorder',
