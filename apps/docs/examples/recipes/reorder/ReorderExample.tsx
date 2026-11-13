@@ -1,8 +1,18 @@
 'use client';
 
-import { Button, Menu, Stack, Text, useAnnouncer, useReorder, type ReorderDrop } from '@tounsoo/todae';
+import {
+  Button,
+  Menu,
+  Stack,
+  Text,
+  useAnnouncer,
+  useReorder,
+  type ReorderDropPosition,
+  type UseReorderHandleProps,
+  type UseReorderItemProps,
+} from '@tounsoo/todae';
 import { EllipsisVertical, GripVertical } from 'lucide-react';
-import { useId, useState } from 'react';
+import { memo, useCallback, useId, useState } from 'react';
 
 type Channel = { id: string; name: string };
 
@@ -26,12 +36,61 @@ const gripStyle = {
 } as const;
 
 // A line at the edge the dragged row would land on.
-function dropLine(drop: ReorderDrop | null, index: number) {
-  if (drop?.index !== index) return undefined;
+function dropLine(drop: ReorderDropPosition | undefined) {
+  if (drop === undefined) return undefined;
   const width = 'var(--todae-focus-ring-width)';
-  const offset = drop.position === 'before' ? width : `calc(-1 * ${width})`;
+  const offset = drop === 'before' ? width : `calc(-1 * ${width})`;
   return `inset 0 ${offset} 0 var(--todae-color-accent-default)`;
 }
+
+type ChannelRowProps = UseReorderItemProps & {
+  channel: Channel;
+  index: number;
+  last: number;
+  grip: UseReorderHandleProps;
+  move: (from: number, to: number) => void;
+};
+
+// A row takes its item props spread, so it renders again only when its own
+// drag state changes, not on every step of a drag in another row.
+const ChannelRow = memo(function ChannelRow({ channel, index, last, grip, move, ...item }: ChannelRowProps) {
+  const moves = [
+    ['Move to top', 0],
+    ['Move up', index - 1],
+    ['Move down', index + 1],
+    ['Move to bottom', last],
+  ] as const;
+  return (
+    <li
+      {...item}
+      style={{
+        boxShadow: dropLine(item['data-drop']),
+        background: item['data-dragging'] === undefined ? undefined : 'var(--todae-color-bg-subtle)',
+      }}
+    >
+      <Stack.Root direction="row" align="center" gap="condensed">
+        <span {...grip} aria-hidden style={gripStyle}>
+          <GripVertical size="1em" />
+        </span>
+        <Text.Root style={{ flex: 1 }}>{channel.name}</Text.Root>
+        <Menu.Root>
+          <Menu.Trigger variant="ghost" aria-label={`Move ${channel.name}`}>
+            <Button.Icon>
+              <EllipsisVertical />
+            </Button.Icon>
+          </Menu.Trigger>
+          <Menu.Content>
+            {moves.map(([label, to]) => (
+              <Menu.Item key={label} disabled={to === index || to < 0 || to > last} onSelect={() => move(index, to)}>
+                {label}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Root>
+      </Stack.Root>
+    </li>
+  );
+});
 
 export function PinnedChannels({
   channels,
@@ -44,12 +103,15 @@ export function PinnedChannels({
   const labelId = useId();
   const last = channels.length - 1;
 
-  const move = (from: number, to: number) => {
-    onReorder(moveItem(channels, from, to));
-    announce(
-      `${channels[from]!.name} moved to position ${to + 1} of ${channels.length}`,
-    );
-  };
+  // The same function until the channels change, so a drag step leaves the
+  // rows' props as they were.
+  const move = useCallback(
+    (from: number, to: number) => {
+      onReorder(moveItem(channels, from, to));
+      announce(`${channels[from]!.name} moved to position ${to + 1} of ${channels.length}`);
+    },
+    [channels, onReorder, announce],
+  );
   const reorder = useReorder({ onMove: move });
 
   return (
@@ -58,59 +120,17 @@ export function PinnedChannels({
         Pinned channels
       </Text.Root>
       <Stack.Root as="ol" gap="none" aria-labelledby={labelId}>
-        {channels.map((channel, index) => {
-          const moves = [
-            ['Move to top', 0],
-            ['Move up', index - 1],
-            ['Move down', index + 1],
-            ['Move to bottom', last],
-          ] as const;
-          return (
-            <li
-              key={channel.id}
-              {...reorder.getItemProps(index)}
-              style={{
-                boxShadow: dropLine(reorder.drop, index),
-                background:
-                  reorder.dragging === index
-                    ? 'var(--todae-color-bg-subtle)'
-                    : undefined,
-              }}
-            >
-              <Stack.Root direction="row" align="center" gap="condensed">
-                <span
-                  {...reorder.getHandleProps(index)}
-                  aria-hidden
-                  style={gripStyle}
-                >
-                  <GripVertical size="1em" />
-                </span>
-                <Text.Root style={{ flex: 1 }}>{channel.name}</Text.Root>
-                <Menu.Root>
-                  <Menu.Trigger
-                    variant="ghost"
-                    aria-label={`Move ${channel.name}`}
-                  >
-                    <Button.Icon>
-                      <EllipsisVertical />
-                    </Button.Icon>
-                  </Menu.Trigger>
-                  <Menu.Content>
-                    {moves.map(([label, to]) => (
-                      <Menu.Item
-                        key={label}
-                        disabled={to === index || to < 0 || to > last}
-                        onSelect={() => move(index, to)}
-                      >
-                        {label}
-                      </Menu.Item>
-                    ))}
-                  </Menu.Content>
-                </Menu.Root>
-              </Stack.Root>
-            </li>
-          );
-        })}
+        {channels.map((channel, index) => (
+          <ChannelRow
+            key={channel.id}
+            {...reorder.getItemProps(index)}
+            channel={channel}
+            index={index}
+            last={last}
+            grip={reorder.getHandleProps(index)}
+            move={move}
+          />
+        ))}
       </Stack.Root>
     </>
   );

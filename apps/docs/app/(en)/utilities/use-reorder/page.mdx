@@ -33,6 +33,35 @@ With `orientation="horizontal"`, `before` is the side the text starts from, so i
 
 Escape cancels a drag and leaves the order as it was. During a mouse drag the browser takes Escape itself and ends the drag with no drop; during a touch drag the hook takes it before a [Dialog](/dialog) around the list, which stays open until the next Escape.
 
+## Long lists
+
+As long as you give a getter no handler of your own, the handlers in its props keep their identity from render to render, and `getHandleProps(index)` with no props of yours returns the same object every time, shared by every render, so don't change it. In a long list, then, draw each item as a memoized component that takes `getItemProps(index)` spread and the handle's props as one prop: a drag step then renders only the items whose own state changed, such as the one the line leaves and the one it reaches, instead of every item.
+
+```tsx
+import { type UseReorderHandleProps, type UseReorderItemProps } from '@tounsoo/todae';
+import { GripVertical } from 'lucide-react';
+import { memo } from 'react';
+
+const Row = memo(function Row({ name, grip, ...item }: UseReorderItemProps & { name: string; grip: UseReorderHandleProps }) {
+  return (
+    <li {...item} style={{ opacity: item['data-dragging'] === undefined ? 1 : 0.5 }}>
+      <span {...grip} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
+        <GripVertical />
+      </span>
+      {name}
+    </li>
+  );
+});
+
+<ol>
+  {items.map((item, index) => (
+    <Row key={item.id} {...reorder.getItemProps(index)} name={item.name} grip={reorder.getHandleProps(index)} />
+  ))}
+</ol>
+```
+
+Call `getItemProps(index)` in the list's render and pass the item what it returns, not the getter. An item reads its own state from its `draggable`, `data-dragging` and `data-drop` props, not from `dragging` and `drop`, which would render every item whenever the drag or its landing place changes. Keep its other props the same from step to step too, such as a move function from `useCallback`. A handler of your own given to a getter is wrapped again on each call, so an item that takes one renders on every step. The [Reorder](/recipes/reorder) and [Kanban](/recipes/kanban) recipes draw their rows this way.
+
 ## Touch
 
 Browsers on touch screens differ: some start the browser's drag after a long press and some never do. So a finger or a pen on a handle drags with pointer events instead, the same way everywhere: the item drags once the finger or pen moves, `drop` follows the item under it, and lifting it drops the item. A tap drags nothing, and a pen drag selects no text. The handle needs `touch-action: none`: without it the browser takes a finger or a pen to scroll the page, which cancels the drag. The page doesn't scroll during a touch drag, so in a list taller than the screen the menu is the way to move an item far.
