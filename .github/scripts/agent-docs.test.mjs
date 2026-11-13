@@ -203,16 +203,27 @@ test('a workflow that is not valid YAML fails with its name', () => {
   assert.match(result.out, /\.github\/workflows\/ci\.yml is not valid YAML/);
 });
 
+test('sections are read however the groups are laid out', () => {
+  const result = check({
+    'apps/docs/components/siteGroups.ts':
+      "// id: 'not-a-comment'\nexport const SITE_GROUPS: readonly Group[] = [\n" +
+      "  { id: 'foundations', label: 'a [b] {c}', links: [{ id: 'link' }] },\n" +
+      "  {\n    links: [],\n    id: \"components\",\n  },\n  { label: 'x', id: 'recipes' }, // id: 'comment'\n] as const;\n",
+  });
+  assert.equal(result.status, 1, result.out);
+  assert.match(result.out, /adds:\n {2}- docs section recipes\nagent-docs: change/);
+});
+
 test('a sidebar that the script can no longer read fails, even with the body line, rather than hide new sections', () => {
   const layout = check(
-    { 'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components').replace('SITE_GROUPS = [', 'SITE_GROUPS: readonly Group[] = [') },
+    { 'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components').replace('export const SITE_GROUPS', 'const SITE_GROUPS') },
     'Agent docs unchanged: a new type\n',
   );
   assert.equal(layout.status, 1, layout.out);
   assert.match(layout.out, /shows no sections where this script looks for them/);
   const moved = check({ 'apps/docs/components/siteGroups.ts': null, 'apps/docs/components/siteGroups.tsx': siteGroups('foundations', 'components') });
   assert.equal(moved.status, 1, moved.out);
-  assert.match(moved.out, /moved or changed its layout/);
+  assert.match(moved.out, /moved or SITE_GROUPS is no longer an exported array/);
 });
 
 test('a long unnamed step shows its first line', () => {
@@ -268,4 +279,7 @@ test('the body line counts only where it shows as text', () => {
   passes('> ```\nAgent docs unchanged: after the quote\n');
   passes('**Agent docs unchanged:** a recipe\n');
   passes('## Agent docs unchanged: a recipe\n');
+  passes('- What changed\n    - Agent docs unchanged: a recipe\n');
+  passes('- What changed\n\t- Agent docs unchanged: a recipe\n');
+  passes('I removed the <!-- note from the page.\n\nAgent docs unchanged: a recipe\n');
 });

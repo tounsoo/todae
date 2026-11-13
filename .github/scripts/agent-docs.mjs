@@ -37,13 +37,36 @@ function pageRoute(path) {
   return `/${segments.join('/')}`;
 }
 
-// The id of each group in SITE_GROUPS, the sidebar's sections. A group's id sits one level inside the array.
+// The id of each group in SITE_GROUPS, the sidebar's sections: an `id` key of an object right inside the array,
+// however the file is laid out. It walks the array's brackets, skipping strings and comments.
 function sectionIds(text) {
-  const start = text?.indexOf('export const SITE_GROUPS = [') ?? -1;
-  if (start === -1) return new Set();
-  const end = text.indexOf('\n]', start);
-  const groups = text.slice(start, end === -1 ? undefined : end);
-  return new Set([...groups.matchAll(/^ {4}id: ['"]([^'"]+)['"]/gm)].map((match) => match[1]));
+  const declaration = text == null ? null : /export const SITE_GROUPS\b[^=]*=\s*\[/.exec(text);
+  const ids = new Set();
+  if (!declaration) return ids;
+  let depth = 1;
+  for (let at = declaration.index + declaration[0].length; at < text.length && depth > 0; at++) {
+    const char = text[at];
+    if (char === "'" || char === '"' || char === '`') {
+      let end = at + 1;
+      while (end < text.length && text[end] !== char) end += text[end] === '\\' ? 2 : 1;
+      at = end;
+    } else if (text.startsWith('//', at)) {
+      at = text.indexOf('\n', at);
+      if (at === -1) break;
+    } else if (text.startsWith('/*', at)) {
+      at = text.indexOf('*/', at);
+      if (at === -1) break;
+      at += 1;
+    } else if ('[{('.includes(char)) {
+      depth += 1;
+    } else if (']})'.includes(char)) {
+      depth -= 1;
+    } else if (depth === 2 && /[{,]\s*$/.test(text.slice(Math.max(0, at - 200), at))) {
+      const key = /^id\s*:\s*(['"])([^'"\n]+)\1/.exec(text.slice(at, at + 200));
+      if (key) ids.add(key[2]);
+    }
+  }
+  return ids;
 }
 
 function triggersOnPullRequests(on) {
@@ -98,8 +121,8 @@ function inventory(ref) {
     .split('\0')
     .map(pageRoute)
     .filter((route) => route !== null);
-  const workflows = git(['ls-tree', '--name-only', ref, WORKFLOWS])
-    .split('\n')
+  const workflows = git(['ls-tree', '-z', '--name-only', ref, WORKFLOWS])
+    .split('\0')
     .filter((file) => /\.ya?ml$/.test(file));
   const sections = [...sectionIds(show(ref, SITE_GROUPS))].map((id) => `docs section ${id}`);
   return {
@@ -117,8 +140,8 @@ const minus = (a, b) => [...a].filter((item) => !b.has(item));
 
 // What the diff adds, and whether it changes the files agents read. Pages count only when the diff adds more
 // routes than it removes, so a page that moves, however much it changes on the way, isn't new. When the base has
-// sections and the head shows none, the sidebar moved or changed its layout, and the script has to learn it, or it
-// would stop seeing new sections.
+// sections and the head shows none, the sidebar moved or changed its declaration, and the script has to learn it, or
+// it would stop seeing new sections.
 function review(base, head) {
   const mergeBase = git(['merge-base', base, head]).trim();
   const before = inventory(mergeBase);
@@ -177,9 +200,9 @@ function main() {
   const { added, sectionsLost, claudeMd, verifySkill } = result;
   if (sectionsLost) {
     say(
-      `agent-docs: ${SITE_GROUPS} shows no sections where this script looks for them, so it moved or changed its ` +
-        'layout. Update sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read it, so the check keeps ' +
-        'seeing new sections. The sections it then finds count as new in this pull request.',
+      `agent-docs: ${SITE_GROUPS} shows no sections where this script looks for them, so it moved or SITE_GROUPS ` +
+        'is no longer an exported array. Update sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read ' +
+        'it, so the check keeps seeing new sections.',
     );
     status = 1;
   } else if (added.length === 0) {
