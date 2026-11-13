@@ -38,6 +38,7 @@ function Board({
   minSpan,
   grid = GRID,
   version = 0,
+  cover = 0,
 }: {
   onDrop?: (change: LaneDragChange) => void;
   check?: UseLaneDragOptions['check'];
@@ -48,6 +49,8 @@ function Board({
   grid?: readonly number[] | undefined;
   /** Changing it puts every lane's element back, as a render that rekeys them would. */
   version?: number;
+  /** The width of a strip over the lanes' left side, like sticky lane names, which the board's scroll-padding marks. */
+  cover?: number;
 }) {
   const [talks, setTalks] = useState(START);
   const lanes = useLaneDrag({
@@ -69,7 +72,7 @@ function Board({
       ? `${LANES.indexOf(at.lane) * 100},${at.start * 10},100,${(at.end - at.start) * 10}`
       : `${dir === 'rtl' ? 1000 - at.end * 10 : at.start * 10},${LANES.indexOf(at.lane) * 40},${(at.end - at.start) * 10},40`;
   return (
-    <div {...lanes.getBoardProps({ 'data-testid': 'board' })} data-r="0,0,1000,1000">
+    <div {...lanes.getBoardProps({ 'data-testid': 'board' })} data-r="0,0,1000,1000" style={cover ? { scrollPaddingLeft: cover } : undefined}>
       {LANES.map((lane) => (
         <div key={`${lane}-${version}`} {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })} data-r={box(lane)} style={dir ? { direction: dir } : undefined}>
           {talks
@@ -88,6 +91,7 @@ function Board({
           <Ghost drag={lanes.drag} lane={lane} />
         </div>
       ))}
+      {cover ? <div data-testid="cover" data-r={`0,0,${cover},80`} /> : null}
       <ul {...lanes.getQueueProps({ 'data-testid': 'queue' })} data-r="0,100,1000,100">
         {talks
           .filter((talk) => talk.at === null)
@@ -166,6 +170,25 @@ it('moves an item along its lane, keeping the point it was grabbed at, snapped t
     verdict: null,
   });
   expect(screen.getByTestId('t1').getAttribute('data-todae-lane-start')).toBe('35');
+});
+
+it('drops over a strip the board\'s scroll-padding marks at the first place past it, in the lane under the strip', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  // t1 is grabbed 5 units in. Over the strip, the pointer reads at 201, so the start goes to 15.1 and snaps to 15.
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 15, end: 35 } }));
+  // A resize of the start over the strip holds there too.
+  drag(screen.getByTestId('t1-start'), 155, 60, [[160, 60], [10, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-start', to: { lane: 'b', start: 20, end: 35 } }));
+});
+
+it('drops nothing over a strip that covers the lanes without the board\'s scroll-padding', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  screen.getByTestId('board').style.scrollPaddingLeft = '';
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).not.toHaveBeenCalled();
 });
 
 it('moves an item to the lane under the pointer', () => {

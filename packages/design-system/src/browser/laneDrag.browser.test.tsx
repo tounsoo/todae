@@ -23,12 +23,15 @@ function Board({
   axis,
   width = 600,
   smooth = false,
+  names = false,
 }: {
   onDrop?: (change: LaneDragChange) => void;
   dir?: 'rtl';
   axis?: 'block';
   width?: number;
   smooth?: boolean;
+  /** Puts a sticky 100px name before each lane, which the board's scroll-padding marks. */
+  names?: boolean;
 }) {
   const [talks, setTalks] = useState<Talk[]>([{ id: 't1', at: { lane: 'a', start: 10, end: 20 } }]);
   const lanes = useLaneDrag({
@@ -45,31 +48,45 @@ function Board({
     <div
       {...lanes.getBoardProps({ 'data-testid': 'board' })}
       dir={dir}
-      style={{ display: 'flex', flexDirection: block ? 'row' : 'column', inlineSize: width, overflow: 'auto', margin: 0, scrollBehavior: smooth ? 'smooth' : undefined }}
+      style={{
+        display: 'flex',
+        flexDirection: block ? 'row' : 'column',
+        inlineSize: width,
+        overflow: 'auto',
+        margin: 0,
+        scrollBehavior: smooth ? 'smooth' : undefined,
+        scrollPaddingInlineStart: names ? 100 : undefined,
+      }}
     >
       {['a', 'b'].map((lane) => (
-        <div
-          key={lane}
-          {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })}
-          style={{ position: 'relative', flex: 'none', inlineSize: block ? 100 : 600, blockSize: block ? 600 : 40 }}
-        >
-          {talks
-            .filter((talk) => talk.at.lane === lane)
-            .map((talk) => (
-              <div
-                key={talk.id}
-                {...lanes.getItemProps(talk.id, talk.at)}
-                data-testid={talk.id}
-                style={
-                  block
-                    ? { position: 'absolute', insetInline: 0, insetBlockStart: talk.at.start * 10, blockSize: (talk.at.end - talk.at.start) * 10 }
-                    : { position: 'absolute', insetBlock: 0, insetInlineStart: talk.at.start * 10, inlineSize: (talk.at.end - talk.at.start) * 10 }
-                }
-              >
-                <span {...lanes.getHandleProps(talk.id, 'move')} data-testid={`${talk.id}-move`} style={{ display: 'block', inlineSize: '100%', blockSize: '100%', touchAction: 'none' }} />
-              </div>
-            ))}
-          <Preview drag={lanes.drag} lane={lane} />
+        <div key={lane} style={names ? { display: 'flex', inlineSize: 'max-content' } : { display: 'contents' }}>
+          {names ? (
+            <span data-testid={`name-${lane}`} style={{ position: 'sticky', insetInlineStart: 0, zIndex: 1, flex: 'none', inlineSize: 100, background: 'white' }}>
+              {lane}
+            </span>
+          ) : null}
+          <div
+            {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })}
+            style={{ position: 'relative', flex: 'none', inlineSize: block ? 100 : 600, blockSize: block ? 600 : 40 }}
+          >
+            {talks
+              .filter((talk) => talk.at.lane === lane)
+              .map((talk) => (
+                <div
+                  key={talk.id}
+                  {...lanes.getItemProps(talk.id, talk.at)}
+                  data-testid={talk.id}
+                  style={
+                    block
+                      ? { position: 'absolute', insetInline: 0, insetBlockStart: talk.at.start * 10, blockSize: (talk.at.end - talk.at.start) * 10 }
+                      : { position: 'absolute', insetBlock: 0, insetInlineStart: talk.at.start * 10, inlineSize: (talk.at.end - talk.at.start) * 10 }
+                  }
+                >
+                  <span {...lanes.getHandleProps(talk.id, 'move')} data-testid={`${talk.id}-move`} style={{ display: 'block', inlineSize: '100%', blockSize: '100%', touchAction: 'none' }} />
+                </div>
+              ))}
+            <Preview drag={lanes.drag} lane={lane} />
+          </div>
         </div>
       ))}
     </div>
@@ -133,6 +150,36 @@ it.each([false, true])('scrolls the board while the pointer stays near its edge,
   await vi.waitFor(() => expect(screen.getByTestId('preview-a').textContent).not.toBe(before));
   pointer('pointerup', handle, box.right - 4, start.y);
   expect(screen.queryByTestId('preview-a')).toBeNull();
+});
+
+it.each([undefined, 'rtl'] as const)('scrolls back past sticky names the scroll-padding marks, and drops at the start under them (%s)', async (dir) => {
+  const onDrop = vi.fn();
+  render(<Board width={300} names dir={dir} onDrop={onDrop} />);
+  const board = screen.getByTestId('board');
+  const sign = dir === 'rtl' ? -1 : 1;
+  board.scrollLeft = sign * 120;
+  const box = board.getBoundingClientRect();
+  // A point `px` from the board's inline start, in lane a.
+  const at = (px: number) => ({ x: dir === 'rtl' ? box.right - px : box.left + px, y: along('a', 0).y });
+  const name = screen.getByTestId('name-a').getBoundingClientRect();
+  expect(name.width).toBe(100);
+  expect(dir === 'rtl' ? box.right - name.right : name.left - box.left).toBeCloseTo(0, 0);
+  // t1 spans 10 to 20. The lane starts 100px in, so scrolled 120px the item shows from 80 to 180, partly under the name.
+  const handle = screen.getByTestId('t1-move');
+  const grab = at(150);
+  pointer('pointerdown', handle, grab.x, grab.y);
+  pointer('pointermove', handle, grab.x - sign * 6, grab.y);
+  // Just past the name, inside the edge, the board scrolls toward the start.
+  const near = at(120);
+  pointer('pointermove', handle, near.x, near.y);
+  await vi.waitFor(() => expect(Math.abs(board.scrollLeft)).toBeLessThan(110));
+  // Over the name, the board scrolls the rest of the way and the place follows the first point in view.
+  const over = at(50);
+  pointer('pointermove', handle, over.x, over.y);
+  await vi.waitFor(() => expect(board.scrollLeft).toBe(0));
+  await vi.waitFor(() => expect(screen.getByTestId('preview-a').textContent).toBe('0-10'));
+  pointer('pointerup', handle, over.x, over.y);
+  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'a', start: 0, end: 10 } }));
 });
 
 it('leaves the board still while the pointer is outside it, such as over a queue beside it', async () => {
