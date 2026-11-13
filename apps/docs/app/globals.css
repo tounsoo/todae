@@ -471,25 +471,27 @@ main:focus {
   border-block-start: 1px solid var(--todae-color-border-subtle);
 }
 
-/* Where the fade can't show, or nothing can open the block, the code shows without it. */
-@media print, (scripting: none), (forced-colors: active) {
+@media (forced-colors: active) {
   .docs-code-fold:not([data-expanded]) .docs-pre pre {
     mask-image: none;
   }
-}
 
-@media (forced-colors: active) {
   .docs-code-toggle {
     border-block-start: 1px solid CanvasText;
   }
 }
 
 /* Paper, and a page whose scripts don't run, where the button can't open the block, show every block whole.
-   `scripting` needs Chrome 120, Firefox 113 or Safari 17; older browsers with scripts off keep the peek. */
+   `scripting` needs Chrome 120, Firefox 113 or Safari 17. An older browser with scripts off keeps the rest
+   hidden, behind a button that does nothing. */
 @media print, (scripting: none) {
   .docs-code-fold .docs-code-rest[hidden] {
     display: inline;
     content-visibility: visible;
+  }
+
+  .docs-code-fold:not([data-expanded]) .docs-pre pre {
+    mask-image: none;
   }
 
   .docs-code-fold > .docs-pre {

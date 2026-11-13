@@ -63,7 +63,7 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
   const [expanded, setExpanded] = useState(false);
 
   // A find in page match in the rest fires this, and the browser then removes `hidden`. Its own effect, so
-  // toggling the block doesn't attach it again.
+  // toggling the block doesn't attach it again, and declared first, so it is attached before `until-found` is set.
   useLayoutEffect(() => {
     const el = restRef.current;
     if (!el) return;
@@ -85,14 +85,12 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
   const fold = (button: HTMLElement) => {
     const from = button.getBoundingClientRect().top;
     const root = document.documentElement.style;
-    const anchor = root.getPropertyValue('overflow-anchor');
     root.setProperty('overflow-anchor', 'none');
     try {
       flushSync(() => setExpanded(false));
       scrollBy({ top: button.getBoundingClientRect().top - from, behavior: 'instant' });
     } finally {
-      if (anchor) root.setProperty('overflow-anchor', anchor);
-      else root.removeProperty('overflow-anchor');
+      root.removeProperty('overflow-anchor');
     }
   };
 

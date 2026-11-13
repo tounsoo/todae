@@ -44,9 +44,9 @@ describe('a long code block in a browser', () => {
     expect(getComputedStyle(pre).maskImage).toContain('linear-gradient');
     // The mask clips at the pre's box, so the pre has to be as wide as its longest line for a sideways scroll to show it.
     expect(pre.scrollWidth).toBeLessThanOrEqual(pre.clientWidth);
-    const frameEl = pre.closest('[data-scroll-kind="code"]');
-    expect(frameEl).not.toBeNull();
-    expect(pre.clientWidth).toBeGreaterThan(frameEl?.clientWidth ?? Infinity);
+    const frameEl = pre.closest<HTMLElement>('[data-scroll-kind="code"]');
+    if (!frameEl) throw new Error('The block has no scroll frame.');
+    expect(pre.clientWidth).toBeGreaterThan(frameEl.clientWidth);
     expect(describeViolations(await axe.run(container, AXE_OPTIONS))).toEqual([]);
 
     button.click();
