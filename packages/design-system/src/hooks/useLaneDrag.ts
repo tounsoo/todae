@@ -222,7 +222,7 @@ function createLaneDrag(
   const mine = (element: Element) => element.getAttribute(PARTS) === id;
   const rootOf = (current: Session) => current.node.getRootNode() as Document | ShadowRoot;
 
-  /** Whether the item, its lane and the board a drag reads are all still on the page. A render that puts one back ends the drag. */
+  /** Whether the item, its lane and the board a drag reads are all still on the page. A render that removes or replaces one ends the drag. */
   const attached = (current: Session) =>
     current.node.isConnected && current.lane?.isConnected !== false && current.board?.isConnected !== false;
 

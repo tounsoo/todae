@@ -81,7 +81,7 @@ const lanes = useLaneDrag({
 const change = useLaneDragState(lanes.drag, (state) => (state?.to?.lane === stage.id ? state : null));
 ```
 
-`useLaneDrag`를 쓰는 컴포넌트는 끌기가 시작하고 끝날 때 렌더링됩니다. 포인터가 `getBoardProps()`를 받은 요소 안의 가장자리 가까이에 있는 동안 보드가 스크롤되므로, 그 요소를 스크롤되는 요소로 만드세요. 옆에 둔 대기열 위처럼 요소 밖에서는 보드가 움직이지 않습니다.
+`useLaneDrag`를 쓰는 컴포넌트는 끌기가 시작하고 끝날 때 렌더링됩니다. 끌기 중에는 끄는 항목, 그 레인, 보드를 그대로 두세요. 렌더링이 그중 하나를 바꾸면 끌기는 놓지 않고 끝납니다. 포인터가 `getBoardProps()`를 받은 요소 안의 가장자리 가까이에 있는 동안 보드가 스크롤되므로, 그 요소를 스크롤되는 요소로 만드세요. 옆에 둔 대기열 위처럼 요소 밖에서는 보드가 움직이지 않습니다.
 
 ## 터치와 포인터 {/*#touch-and-the-pointer*/}
 

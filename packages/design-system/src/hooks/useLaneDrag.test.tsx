@@ -623,6 +623,41 @@ it('ends a resize without a drop when a render puts its lane back', () => {
   expect(screen.getByTestId('board').hasAttribute('data-dragging')).toBe(false);
   release(400, 20);
   expect(onDrop).not.toHaveBeenCalled();
+  // The click that release sends is dropped, as after Escape.
+  fireEvent.click(screen.getByTestId('t1-button'), { detail: 1 });
+  expect(renders['click-t1']).toBeUndefined();
+});
+
+it('ends a resize when a render replaces its lane, even with the item drawn outside the lane', () => {
+  const onDrop = vi.fn();
+  function Layered() {
+    const [version, setVersion] = useState(0);
+    const lanes = useLaneDrag({ range: { start: 0, end: 100 }, grid: GRID, onDrop });
+    return (
+      <div {...lanes.getBoardProps({ 'data-testid': 'board' })} data-r="0,0,1000,1000">
+        <button type="button" onClick={() => setVersion((v) => v + 1)}>
+          rekey
+        </button>
+        <div key={version} {...lanes.getLaneProps('a', { 'data-testid': 'lane-a' })} data-r="0,0,1000,40" />
+        {/* A layer above the lanes, as a board that draws its items apart from them might. */}
+        <div {...lanes.getItemProps('t1', { lane: 'a', start: 10, end: 30 }, { 'data-testid': 't1' })} data-r="100,0,200,40">
+          <span {...lanes.getHandleProps('t1', 'end')} data-testid="t1-end" onClick={() => count('click-t1')} />
+        </div>
+      </div>
+    );
+  }
+  render(<Layered />);
+  press(screen.getByTestId('t1-end'), 300, 20);
+  move(350, 20);
+  expect(screen.getByTestId('lane-a').hasAttribute('data-drop-target')).toBe(true);
+  fireEvent.click(screen.getByText('rekey'), { detail: 0 });
+  move(400, 20);
+  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+  expect(screen.getByTestId('lane-a').hasAttribute('data-drop-target')).toBe(false);
+  release(400, 20);
+  expect(onDrop).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByTestId('t1-end'), { detail: 1 });
+  expect(renders['click-t1']).toBeUndefined();
 });
 
 it('ends a drag whose item goes away', () => {

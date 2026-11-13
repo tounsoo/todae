@@ -81,7 +81,7 @@ Style those, and draw the item's future place with `useLaneDragState(lanes.drag,
 const change = useLaneDragState(lanes.drag, (state) => (state?.to?.lane === stage.id ? state : null));
 ```
 
-The owner of `useLaneDrag` renders as a drag starts and ends. While the pointer is inside the element with `getBoardProps()` and near its edge, the board scrolls, so make that element the one that scrolls. Outside it, such as over a queue beside it, the board stays still.
+The owner of `useLaneDrag` renders as a drag starts and ends. Keep the dragged item, its lane and the board mounted during a drag: a render that replaces one of them ends the drag without a drop. While the pointer is inside the element with `getBoardProps()` and near its edge, the board scrolls, so make that element the one that scrolls. Outside it, such as over a queue beside it, the board stays still.
 
 ## Touch and the pointer
 
