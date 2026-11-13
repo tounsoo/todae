@@ -156,9 +156,8 @@ describe('the sticky stage names', () => {
           for (const name of ['Main stage', 'Hall B', 'Workshop room']) {
             const heading = within(stage(name)).getByRole('heading', { name });
             const box = heading.parentElement!.getBoundingClientRect();
-            // At rest the names sit inside the area's room for focus rings; scrolled, they stick at its edge.
-            expect(box.left - start, `${name} at ${amount}px`).toBeGreaterThan(-0.5);
-            expect(box.left - start, `${name} at ${amount}px`).toBeLessThan(6);
+            // The names sit at the board's edge at rest too, so they never slide before they stick.
+            expect(Math.abs(box.left - start), `${name} at ${amount}px`).toBeLessThan(0.5);
             // Nothing paints over the name: the point at its middle hits the name itself.
             const at = centre(heading);
             expect(heading.parentElement!.contains(document.elementFromPoint(at.x, at.y)), `${name} covered at ${amount}px`).toBe(true);
@@ -167,6 +166,17 @@ describe('the sticky stage names', () => {
           const corner = rows().firstElementChild!.firstElementChild!;
           const at = centre(corner);
           expect(document.elementFromPoint(at.x, at.y)).toBe(corner);
+        }
+        // The header row rests at the board's top edge the same way, and stays there as the board
+        // scrolls down. Three stages fit the board's height, so make it shorter to scroll.
+        scroller.scrollLeft = 0;
+        scroller.style.maxBlockSize = '12rem';
+        const down = scroller.scrollHeight - scroller.clientHeight;
+        expect(down).toBeGreaterThan(0);
+        for (const amount of [0, 2, down / 2, down]) {
+          scroller.scrollTop = amount;
+          const top = scroller.getBoundingClientRect().top + scroller.clientTop;
+          expect(Math.abs(rows().firstElementChild!.getBoundingClientRect().top - top), `header at ${amount}px`).toBeLessThan(0.5);
         }
       });
     }

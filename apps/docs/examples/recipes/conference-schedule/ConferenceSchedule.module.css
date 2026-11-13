@@ -69,12 +69,18 @@
 /* The rows line up at the start and each is as wide as its content, the
    names column plus the whole axis. A sticky element stays inside its
    parent, so a row only as wide as the board would carry its stage name away
-   once the board scrolled past the row's end. */
+   once the board scrolled past the row's end. The scroll area keeps room for
+   focus rings inside its edge; the rows start at the edge instead, so the
+   sticky names and header row already sit where they stick and don't slide
+   by that room as the board starts to scroll. --_ring-room matches the
+   scroll area's own room, so the two cancel. */
 .rows {
   display: flex;
   flex-direction: column;
   align-items: start;
   gap: var(--todae-space-1);
+  margin-block-start: calc(-1 * var(--_ring-room));
+  margin-inline-start: calc(-1 * var(--_ring-room));
 }
 
 .row {
