@@ -203,12 +203,16 @@ test('a workflow that is not valid YAML fails with its name', () => {
   assert.match(result.out, /\.github\/workflows\/ci\.yml is not valid YAML/);
 });
 
-test('a SITE_GROUPS that the script cannot read fails rather than hide new sections', () => {
-  const result = check({
-    'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components').replace('SITE_GROUPS = [', 'SITE_GROUPS: readonly Group[] = ['),
-  });
-  assert.notEqual(result.status, 0);
-  assert.match(result.out, /siteGroups\.ts has no group ids where agent-docs\.mjs looks for them/);
+test('a sidebar that the script can no longer read fails, even with the body line, rather than hide new sections', () => {
+  const layout = check(
+    { 'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components').replace('SITE_GROUPS = [', 'SITE_GROUPS: readonly Group[] = [') },
+    'Agent docs unchanged: a new type\n',
+  );
+  assert.equal(layout.status, 1, layout.out);
+  assert.match(layout.out, /shows no sections where this script looks for them/);
+  const moved = check({ 'apps/docs/components/siteGroups.ts': null, 'apps/docs/components/siteGroups.tsx': siteGroups('foundations', 'components') });
+  assert.equal(moved.status, 1, moved.out);
+  assert.match(moved.out, /moved or changed its layout/);
 });
 
 test('a long unnamed step shows its first line', () => {
@@ -243,4 +247,20 @@ test('the body line counts as a list item or quote, after a placeholder, and not
   assert.equal(check(page, '```\nAgent docs unchanged: quoted rule\n```\n').status, 1);
   assert.equal(check(page, '~~~md\nAgent docs unchanged: quoted rule\n').status, 1);
   assert.equal(check(page, '```\nx\n```\nAgent docs unchanged: after the block\n').status, 0);
+});
+
+test('the body line is read as GitHub shows it', () => {
+  const page = { 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n' };
+  const passes = (body) => assert.equal(check(page, body).status, 0, body);
+  const fails = (body) => assert.equal(check(page, body).status, 1, body);
+  passes('1. Agent docs unchanged: a recipe\n');
+  passes('>Agent docs unchanged: a recipe\n');
+  passes('```pnpm check``` passes here.\n\nAgent docs unchanged: a recipe\n');
+  passes('Use `<!--` to start a comment.\n\nAgent docs unchanged: a recipe\n');
+  passes('```html\n<!-- example\n```\n\nAgent docs unchanged: a recipe\n');
+  passes('```\nx\n````\nAgent docs unchanged: a recipe\n');
+  passes('<!-- a --> Agent docs unchanged: a recipe\n');
+  fails('Why.\n\n    Agent docs unchanged: indented code\n');
+  fails('> ```\n> Agent docs unchanged: quoted rule\n> ```\n');
+  fails('Agent docs unchanged: <reason>.\n');
 });

@@ -14,7 +14,7 @@ const PAGE = /^apps\/docs\/app\/\(en\)\/(?:(.+)\/)?page\.(?:mdx?|[jt]sx?)$/;
 const SITE_GROUPS = 'apps/docs/components/siteGroups.ts';
 const WORKFLOWS = '.github/workflows/';
 const AGENT_DOCS = { claude: ['CLAUDE.md'], verify: ['.claude/skills/verify/SKILL.md', '.claude/skills/verify/verify.mjs'] };
-const ESCAPE = /^[ \t]*(?:[-*+>][ \t]+)?Agent docs unchanged:[ \t]*(\S.*?)[ \t\r]*$/gm;
+const ESCAPE = /^(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?Agent docs unchanged:[ \t]*(\S.*?)[ \t]*$/;
 
 const git = (args, stderr = 'inherit') =>
   execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', stderr] });
@@ -36,18 +36,13 @@ function pageRoute(path) {
   return `/${segments.join('/')}`;
 }
 
-// The id of each group in SITE_GROUPS, the sidebar's sections. A group's id sits one level inside the array. When
-// the file is there and no id is found, its layout changed, and the check fails rather than stop seeing sections.
+// The id of each group in SITE_GROUPS, the sidebar's sections. A group's id sits one level inside the array.
 function sectionIds(text) {
-  if (text == null) return new Set();
-  const start = text.indexOf('export const SITE_GROUPS = [');
-  const end = start === -1 ? -1 : text.indexOf('\n]', start);
-  const groups = start === -1 ? '' : text.slice(start, end === -1 ? undefined : end);
-  const ids = new Set([...groups.matchAll(/^ {4}id: ['"]([^'"]+)['"]/gm)].map((match) => match[1]));
-  if (ids.size === 0) {
-    throw new Error(`${SITE_GROUPS} has no group ids where agent-docs.mjs looks for them, so update sectionIds to match it.`);
-  }
-  return ids;
+  const start = text?.indexOf('export const SITE_GROUPS = [') ?? -1;
+  if (start === -1) return new Set();
+  const end = text.indexOf('\n]', start);
+  const groups = text.slice(start, end === -1 ? undefined : end);
+  return new Set([...groups.matchAll(/^ {4}id: ['"]([^'"]+)['"]/gm)].map((match) => match[1]));
 }
 
 function triggersOnPullRequests(on) {
@@ -105,10 +100,12 @@ function inventory(ref) {
   const workflows = git(['ls-tree', '--name-only', ref, WORKFLOWS])
     .split('\n')
     .filter((file) => /\.ya?ml$/.test(file));
+  const sections = [...sectionIds(show(ref, SITE_GROUPS))].map((id) => `docs section ${id}`);
   return {
     pages: new Set(routes.map((route) => `docs page ${route}`)),
+    sections: sections.length,
     others: new Set([
-      ...[...sectionIds(show(ref, SITE_GROUPS))].map((id) => `docs section ${id}`),
+      ...sections,
       ...workflows.flatMap((file) => workflowChecks(file.slice(WORKFLOWS.length), show(ref, file))),
       ...checkScriptParts(show(ref, 'package.json')),
     ]),
@@ -118,7 +115,9 @@ function inventory(ref) {
 const minus = (a, b) => [...a].filter((item) => !b.has(item));
 
 // What the diff adds, and whether it changes the files agents read. Pages count only when the diff adds more
-// routes than it removes, so a page that moves, however much it changes on the way, isn't new.
+// routes than it removes, so a page that moves, however much it changes on the way, isn't new. When the base has
+// sections and the head shows none, the sidebar moved or changed its layout, and the script has to learn it, or it
+// would stop seeing new sections.
 function review(base, head) {
   const mergeBase = git(['merge-base', base, head]).trim();
   const before = inventory(mergeBase);
@@ -131,20 +130,54 @@ function review(base, head) {
   const changes = (paths) => paths.some((path) => changed.has(path));
   return {
     added: [...pages, ...minus(after.others, before.others)],
+    sectionsLost: before.sections > 0 && after.sections === 0,
     claudeMd: changes(AGENT_DOCS.claude),
     verifySkill: changes(AGENT_DOCS.verify),
   };
 }
 
-// The reason a body gives for leaving the agent docs as they are, or null. The first line with a reason counts, as a
-// plain line, a list item or a quote. A line in an HTML comment doesn't show on the pull request and one in a code
-// block only quotes the rule, so neither counts, and neither does a placeholder such as <reason>.
+// The reason a body gives for leaving the agent docs as they are, or null. It reads the body line by line as GitHub
+// shows it: the first line with a reason counts, as a plain line, a list item or a quote. A line in an HTML comment
+// doesn't show, and one in a code block only quotes the rule, so neither counts, and neither does a placeholder such
+// as <reason>.
 function escapeReason(body) {
-  const shown = (body ?? '')
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, '')
-    .replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?(?:^[ \t]*\1[ \t]*$|(?![\s\S]))/gm, '');
-  for (const [, reason] of shown.matchAll(ESCAPE)) {
-    if (!/^`?<[^>]*>`?$/.test(reason)) return reason;
+  let fence = null;
+  let comment = false;
+  for (const line of (body ?? '').split(/\r?\n/)) {
+    // A quote's markers come off first, so a fence or the line inside a quote reads as it would outside one.
+    const content = line.replace(/^(?: {0,3}>[ \t]?)+/, '');
+    if (fence) {
+      if (fence.test(content)) fence = null;
+      continue;
+    }
+    if (!comment) {
+      const opener = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(content);
+      // A backtick fence's info string has no backtick, so ```x``` on one line is inline code, not a fence.
+      if (opener && !(opener[1][0] === '`' && opener[2].includes('`'))) {
+        fence = new RegExp(`^ {0,3}${opener[1][0]}{${opener[1].length},}[ \\t]*$`);
+        continue;
+      }
+      if (/^(?: {4}|\t)/.test(content)) continue;
+    }
+    // What shows of the line once comments are out. A `<!--` in a code span opens no comment.
+    const masked = content.replace(/`[^`]*`/g, (span) => ' '.repeat(span.length));
+    let shown = '';
+    for (let at = 0; at < content.length; ) {
+      if (comment) {
+        const end = content.indexOf('-->', at);
+        if (end === -1) break;
+        comment = false;
+        at = end + 3;
+      } else {
+        const start = masked.indexOf('<!--', at);
+        shown += content.slice(at, start === -1 ? undefined : start);
+        if (start === -1) break;
+        comment = true;
+        at = start + 4;
+      }
+    }
+    const reason = ESCAPE.exec(shown.trim())?.[1];
+    if (reason && !/^\W*<[^>]*>\W*$/.test(reason)) return reason;
   }
   return null;
 }
@@ -157,12 +190,27 @@ function main() {
     console.log(line);
   };
   let status = 0;
-  const { added, claudeMd, verifySkill } = review(base, head);
-  if (added.length === 0) {
+  let result;
+  try {
+    result = review(base, head);
+  } catch (error) {
+    say(`agent-docs: ${error.message}`);
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
+    return 1;
+  }
+  const { added, sectionsLost, claudeMd, verifySkill } = result;
+  if (sectionsLost) {
+    say(
+      `agent-docs: ${SITE_GROUPS} shows no sections where this script looks for them, so it moved or changed its ` +
+        'layout. Update sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read it, so the check keeps ' +
+        'seeing new sections. The sections it then finds count as new in this pull request.',
+    );
+    status = 1;
+  } else if (added.length === 0) {
     say('agent-docs: this pull request adds no docs page, docs section or check.');
   } else {
     say('agent-docs: this pull request adds:');
-    // An unnamed step with a long script shows its first line.
+    // An unnamed step whose command has more than one line shows its first line.
     for (const item of added) say(`  - ${item.replace(/\n[\s\S]*`$/, ' …`')}`);
     const reason = escapeReason(process.env.PR_BODY);
     if (claudeMd && verifySkill) {
@@ -174,7 +222,8 @@ function main() {
       say(
         `agent-docs: change ${missing.filter(Boolean).join(' and ')} in this pull request too, so agents know what it ` +
           'adds. Where one or both need no change, add a line "Agent docs unchanged: <reason>" ' +
-          'to the pull request body, with the reason in place of <reason>, then re-run this job.' +
+          'to the pull request body, with the reason in place of <reason>, outside any HTML comment or code block, ' +
+          'then re-run this job.' +
           (process.env.PR_BODY === undefined ? ' For a run outside CI, set PR_BODY to that body.' : ''),
       );
       status = 1;
