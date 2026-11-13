@@ -222,7 +222,11 @@ function createLaneDrag(
   const mine = (element: Element) => element.getAttribute(PARTS) === id;
   const rootOf = (current: Session) => current.node.getRootNode() as Document | ShadowRoot;
 
-  /** The lane with the key `key` in `node`'s document, wherever `node` sits. */
+  /** Whether the item, its lane and the board a drag reads are all still on the page. A render that puts one back ends the drag. */
+  const attached = (current: Session) =>
+    current.node.isConnected && current.lane?.isConnected !== false && current.board?.isConnected !== false;
+
+  /** The lane with the key `key` in `node`'s document or shadow root, wherever `node` sits in it. */
   const laneOf = (node: Element, key: string): Element | null => {
     for (const element of (node.getRootNode() as Document | ShadowRoot).querySelectorAll(`[${LANE}]`)) {
       if (mine(element) && element.getAttribute(LANE) === key) return element;
@@ -277,8 +281,6 @@ function createLaneDrag(
     const { range, minSpan = 0 } = options();
     const { id: item, from } = current;
     if (current.part !== 'move' && from !== null) {
-      // A lane a render put back is found again by its key.
-      if (current.lane?.isConnected === false) current.lane = laneOf(current.node, from.lane);
       const { lane } = current;
       if (lane === null) return undefined;
       const value = valueAt(current, lane, x, y);
@@ -385,6 +387,7 @@ function createLaneDrag(
   const steer = (current: Session) => {
     if (current.frame !== 0 || velocity(current) === null) return;
     const tick = () => {
+      if (!attached(current)) return abort(current);
       const step = velocity(current);
       const board = current.board;
       if (step === null || board === null) {
@@ -474,7 +477,8 @@ function createLaneDrag(
     const current = session;
     if (current === null || event.pointerId !== current.pointerId) return;
     // No button down means the release was lost, as to a context menu: a hovering pointer drags nothing.
-    if (!current.node.isConnected || event.buttons === 0) return teardown(current);
+    if (event.buttons === 0) return teardown(current);
+    if (!attached(current)) return abort(current);
     if (!current.started) {
       if (options().disabled) return teardown(current);
       if (Math.hypot(event.clientX - current.x, event.clientY - current.y) < SLOP) return;
@@ -500,7 +504,7 @@ function createLaneDrag(
     const ended = session;
     if (ended === null || event.pointerId !== ended.pointerId) return;
     if (ended.started) armQuiet();
-    if (!ended.started || !ended.node.isConnected || options().disabled) return teardown(ended);
+    if (!ended.started || !attached(ended) || options().disabled) return teardown(ended);
     let change: LaneDragChange | null;
     try {
       // `check` again, since what it reads may have changed while the pointer stayed on one place.

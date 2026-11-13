@@ -37,6 +37,7 @@ function Board({
   dir,
   minSpan,
   grid = GRID,
+  version = 0,
 }: {
   onDrop?: (change: LaneDragChange) => void;
   check?: UseLaneDragOptions['check'];
@@ -45,6 +46,8 @@ function Board({
   dir?: 'rtl';
   minSpan?: number;
   grid?: readonly number[] | undefined;
+  /** Changing it puts every lane's element back, as a render that rekeys them would. */
+  version?: number;
 }) {
   const [talks, setTalks] = useState(START);
   const lanes = useLaneDrag({
@@ -68,7 +71,7 @@ function Board({
   return (
     <div {...lanes.getBoardProps({ 'data-testid': 'board' })} data-r="0,0,1000,1000">
       {LANES.map((lane) => (
-        <div key={lane} {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })} data-r={box(lane)} style={dir ? { direction: dir } : undefined}>
+        <div key={`${lane}-${version}`} {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })} data-r={box(lane)} style={dir ? { direction: dir } : undefined}>
           {talks
             .filter((talk) => talk.at?.lane === lane)
             .map((talk) => (
@@ -594,6 +597,30 @@ it('starts no drag when disabled, and refuses the drop of one under way', () => 
   press(screen.getByTestId('t1-move'), 150, 20);
   move(400, 20);
   rerender(<Board onDrop={onDrop} disabled />);
+  release(400, 20);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
+it('ends a resize without a drop when a render puts its lane back', () => {
+  const onDrop = vi.fn();
+  function Host() {
+    const [version, setVersion] = useState(0);
+    return (
+      <>
+        <button type="button" onClick={() => setVersion((v) => v + 1)}>
+          rekey
+        </button>
+        <Board onDrop={onDrop} version={version} />
+      </>
+    );
+  }
+  render(<Host />);
+  press(screen.getByTestId('t1-end'), 300, 20);
+  move(350, 20);
+  expect(screen.getByTestId('ghost-a')).toBeTruthy();
+  fireEvent.click(screen.getByText('rekey'), { detail: 0 });
+  move(400, 20);
+  expect(screen.getByTestId('board').hasAttribute('data-dragging')).toBe(false);
   release(400, 20);
   expect(onDrop).not.toHaveBeenCalled();
 });
