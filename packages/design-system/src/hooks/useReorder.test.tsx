@@ -854,12 +854,21 @@ it('follows a change to disabled in memoized rows', () => {
   fireEvent.pointerDown(screen.getByTestId('handle-A'), { button: 0, pointerType: 'mouse' });
   expect(item('A').getAttribute('draggable')).toBe('true');
   fireEvent.pointerUp(window);
-  rerender(<List memoized disabled />);
+  // Armed while enabled, then disabled before the drag starts: the handler refuses it, not only the attribute.
   fireEvent.pointerDown(screen.getByTestId('handle-B'), { button: 0, pointerType: 'mouse' });
-  expect(item('B').getAttribute('draggable')).toBeNull();
-  // The handlers refuse it too, not only the attribute.
+  rerender(<List memoized disabled />);
   fireDrag(item('B'), 'dragstart', stubDataTransfer());
   expect(item('B').getAttribute('data-dragging')).toBeNull();
+});
+
+it('refuses a drop in a memoized list that is disabled mid-drag', () => {
+  const onMove = vi.fn();
+  const { rerender } = render(<List memoized onMove={onMove} />);
+  const d = mouseDrag('A');
+  rerender(<List memoized onMove={onMove} disabled />);
+  d.drop('C', 'end');
+  expect(onMove).not.toHaveBeenCalled();
+  expect(order()).toEqual(['A', 'B', 'C', 'D']);
 });
 
 it('still updates a memoized row that is given the getter itself rather than its props', () => {

@@ -119,7 +119,7 @@ export type UseReorderResult = {
   getListProps: <P extends UseReorderListUserProps>(props?: P) => Omit<P, keyof UseReorderListProps> & UseReorderListProps;
 };
 
-/** One list of a group, as the group's other lists see it. Updated on every render. */
+/** One list of a group, as the group's other lists and its own handlers see it. Updated after every commit. */
 type Member = {
   list: unknown;
   orientation: Orientation;
@@ -245,8 +245,11 @@ function inside(event: DragEvent<HTMLElement>): boolean {
  */
 export function useReorderGroup<L>({ onMove }: UseReorderGroupOptions<L>): ReorderGroup<L> {
   const id = useId();
+  // The committed onMove, like each list's, so a render React drops never reaches a drop.
   const latest = useRef(onMove);
-  latest.current = onMove;
+  useLayoutEffect(() => {
+    latest.current = onMove;
+  });
   const [group] = useState(() =>
     createGroup(typeFor(id), (from, to) => latest.current(from as ReorderPlace<L>, to as ReorderPlace<L>)),
   );

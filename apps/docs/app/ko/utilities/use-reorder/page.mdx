@@ -35,7 +35,7 @@ Escape는 끌기를 취소하고 순서를 그대로 둡니다. 마우스로 끄
 
 ## 긴 목록 {/*#long-lists*/}
 
-getter가 주는 props의 핸들러는 렌더가 바뀌어도 그대로이고, 직접 넣을 props 없이 부른 `getHandleProps(index)`는 매번 같은 객체를 돌려줍니다. 그래서 긴 목록에서는 각 항목을 `getItemProps(index)`를 펼쳐 받고 손잡이의 props를 prop 하나로 받는 메모된 컴포넌트로 그리세요. 그러면 끌기의 한 단계마다 모든 항목이 아니라, 선이 떠나는 항목과 선이 닿는 항목처럼 자기 상태가 바뀐 항목만 렌더됩니다.
+getter에 직접 만든 핸들러를 넣지 않으면 getter가 주는 props의 핸들러는 렌더가 바뀌어도 그대로이고, 직접 넣을 props 없이 부른 `getHandleProps(index)`는 매번 같은 객체를 돌려줍니다. 모든 렌더가 함께 쓰는 객체이므로 고치지 마세요. 그래서 긴 목록에서는 각 항목을 `getItemProps(index)`를 펼쳐 받고 손잡이의 props를 prop 하나로 받는 메모된 컴포넌트로 그리세요. 그러면 끌기의 한 단계마다 모든 항목이 아니라, 선이 떠나는 항목과 선이 닿는 항목처럼 자기 상태가 바뀐 항목만 렌더됩니다.
 
 ```tsx
 import { type UseReorderHandleProps, type UseReorderItemProps } from '@tounsoo/todae';
