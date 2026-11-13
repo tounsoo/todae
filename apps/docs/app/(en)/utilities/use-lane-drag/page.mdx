@@ -63,7 +63,7 @@ A drop that changes a place calls `onDrop(change)`, where `change` is `{ id, kin
 
 ## Checking a place
 
-`check(id, to)` runs each time the place under the pointer changes, not on every pointer move, and returns `null` or a verdict: `{ level, reason, with }`. A `blocked` place takes no drop. A `warning` place does, and `onDrop` gets the verdict, so you can say why. `with` lists the ids of the other items the place conflicts with, which is how a rule that crosses lanes shows: in the example, a speaker in Room A at 10:30 blocks their other talk at 10:30 on any stage. The rules are yours, and the hook knows nothing about times, stages or speakers. Taking an item back to the queue isn't checked: to keep an item on the board, such as a talk that's been announced, leave its `unassign` out of `onDrop`.
+`check(id, to)` runs each time the place under the pointer changes, not on every pointer move, and once more at the drop, so a rule that changed meanwhile still holds. It returns `null` or a verdict: `{ level, reason, with }`. A `blocked` place takes no drop. A `warning` place does, and `onDrop` gets the verdict, so you can say why. `with` lists the ids of the other items the place conflicts with, which is how a rule that crosses lanes shows: in the example, a speaker in Room A at 10:30 blocks their other talk at 10:30 on any stage. The rules are yours, and the hook knows nothing about times, stages or speakers. Taking an item back to the queue isn't checked: to keep an item on the board, such as a talk that's been announced, leave its `unassign` out of `onDrop`.
 
 ## Showing the drag
 
@@ -72,6 +72,8 @@ The hook renders nothing and sets state on the elements during a drag, so the bo
 - `data-dragging` on the dragged item and on the board,
 - `data-drop-target` on the lane the item would go to, or on the queue for `unassign`,
 - `data-conflict`, the verdict's level, on that lane and on each item in `with`.
+
+When the drag ends, each element gets back the value it had, so an item can carry its own `data-conflict` between drags.
 
 Style those, and draw the item's future place with `useLaneDragState(lanes.drag, select)`. It returns `select` of the drag under way, or of `null` when there is none, and renders again only when that selection changes. Select the drag while its place is in one lane, as the example's preview does, and that lane renders each time the place in it changes, not on every pointer move, and not while the drag is in other lanes. Pass `isEqual` as a third argument when `select` builds a new object each time.
 

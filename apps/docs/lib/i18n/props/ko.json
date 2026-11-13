@@ -3523,8 +3523,8 @@
       "ko": "크기 조절이 남기는 가장 짧은 구간. 기본값은 0입니다."
     },
     "check": {
-      "en": "Says whether the item `id` may go to `to`, each time the place under the pointer changes.",
-      "ko": "포인터 아래의 자리가 바뀔 때마다 항목 `id`가 `to`로 갈 수 있는지 알려 줍니다."
+      "en": "Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop.",
+      "ko": "포인터 아래의 자리가 바뀔 때마다, 그리고 놓을 때 한 번 더 항목 `id`가 `to`로 갈 수 있는지 알려 줍니다."
     },
     "disabled": {
       "en": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",

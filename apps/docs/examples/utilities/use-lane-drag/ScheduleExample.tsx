@@ -118,8 +118,10 @@ function TalkMenu({ talk, talks, move, trigger }: { talk: Talk; talks: readonly 
   const items = [
     { label: '15 minutes earlier', to: shift(-15, -15) },
     { label: '15 minutes later', to: shift(15, 15) },
-    { label: '15 minutes shorter', to: shift(0, -15) },
-    { label: '15 minutes longer', to: shift(0, 15) },
+    { label: 'Start 15 minutes earlier', to: shift(-15, 0) },
+    { label: 'Start 15 minutes later', to: shift(15, 0) },
+    { label: 'End 15 minutes earlier', to: shift(0, -15) },
+    { label: 'End 15 minutes later', to: shift(0, 15) },
   ];
   return (
     <Menu.Root>

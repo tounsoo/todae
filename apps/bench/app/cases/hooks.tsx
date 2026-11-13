@@ -646,7 +646,7 @@ function dragSlotToOtherLane(container: HTMLElement) {
   const from = handle.getBoundingClientRect();
   const to = lanes[1]!.getBoundingClientRect();
   const at = (type: string, target: EventTarget, x: number, y: number) =>
-    target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, clientX: x, clientY: y }));
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
   const x = from.left + 2;
   const y = from.top + from.height / 2;
   at('pointerdown', handle, x, y);

@@ -49,7 +49,7 @@ export type UseLaneDragOptions = {
   grid?: readonly number[];
   /** The shortest span a resize leaves. Default 0. */
   minSpan?: number;
-  /** Says whether the item `id` may go to `to`, each time the place under the pointer changes. */
+  /** Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop. */
   check?: (id: string, to: LanePlace) => LaneVerdict | null;
   /** Called on a drop that changes an item's place, with the change. */
   onDrop: (change: LaneDragChange) => void;
@@ -129,14 +129,14 @@ type Session = {
   /** For a move, how far into the item the press went down, so the item keeps its place under the pointer. */
   offset: number;
   started: boolean;
-  /** An Escape cancelled the drag; the session waits for the pointer's release to drop its click. */
-  cancelled: boolean;
   /** Whether each lane met in the drag runs right to left, read once per lane. */
   rtl: Map<Element, boolean>;
   frame: number;
-  /** The elements the drag marked, so its end clears each one. */
-  marked: Set<Element>;
+  /** The elements the drag marked, with the value each mark replaced, which the drag's end puts back. */
+  marked: Map<Element, Map<Mark, string | null>>;
 };
+
+type Mark = 'data-dragging' | 'data-drop-target' | 'data-conflict';
 
 /** The index of the first grid point `ok` holds for, where `ok` holds from some point on, or the grid's length. */
 function firstWhere(grid: readonly number[], ok: (point: number) => boolean): number {
@@ -175,11 +175,11 @@ function samePlace(a: LanePlace | null, b: LanePlace | null): boolean {
 function readPlace(node: Element): { from: LanePlace | null; span: number } | null {
   const lane = node.getAttribute(IN);
   if (lane !== null) {
-    const start = Number(node.getAttribute(START));
-    const end = Number(node.getAttribute(END));
+    const start = Number(node.getAttribute(START) ?? Number.NaN);
+    const end = Number(node.getAttribute(END) ?? Number.NaN);
     return Number.isFinite(start) && Number.isFinite(end) && end > start ? { from: { lane, start, end }, span: end - start } : null;
   }
-  const span = Number(node.getAttribute(SPAN));
+  const span = Number(node.getAttribute(SPAN) ?? Number.NaN);
   return Number.isFinite(span) && span > 0 ? { from: null, span } : null;
 }
 
@@ -254,62 +254,62 @@ function createLaneDrag(
     return range.start + (length > 0 ? along / length : 0) * (range.end - range.start);
   };
 
-  /** Where a move or an assign would start in `lane` at x, y: inside `range` and on the grid, or null where the item can't fit. */
-  const startAt = (current: Session, lane: Element, x: number, y: number): number | null => {
-    const { range, grid } = options();
-    const last = range.end - current.span;
-    if (last < range.start) return null;
-    const start = Math.min(Math.max(valueAt(current, lane, x, y) - current.offset, range.start), last);
-    if (!grid?.length) return start;
-    const snapped = nearest(grid, start);
-    const fit = snapped > last ? below(grid, last, Infinity) : snapped < range.start ? above(grid, range.start, -Infinity) : snapped;
-    return fit !== undefined && fit >= range.start && fit <= last ? fit : null;
+  /** `value` held between `lo` and `hi`, or undefined when there is no such span. */
+  const fit = (value: number, lo: number | undefined, hi: number | undefined): number | undefined =>
+    lo === undefined || hi === undefined || lo > hi ? undefined : Math.min(Math.max(value, lo), hi);
+
+  /** `value` on the grid between `lo` and `hi`, or between them when there is no grid. */
+  const onGrid = (value: number, lo: number, hi: number): number | undefined => {
+    const { grid } = options();
+    return grid?.length ? fit(nearest(grid, value), above(grid, lo, -Infinity), below(grid, hi, Infinity)) : fit(value, lo, hi);
   };
 
   /** What a drop at x, y would do and the element it would drop on, or undefined to keep the last one, as for a resize past `minSpan`. */
   const locate = (current: Session, x: number, y: number): Target | undefined => {
-    const { range, grid, minSpan = 0 } = options();
-    const { id: item, from } = current;
+    const { range, minSpan = 0 } = options();
+    const { id: item, from, lane } = current;
     if (current.part !== 'move' && from !== null) {
-      const { lane } = current;
       if (lane === null) return undefined;
       const value = valueAt(current, lane, x, y);
-      const snap = grid?.length ? nearest(grid, value) : value;
+      // An end stays inside the range and at least `minSpan` from the other, and never reaches it.
       if (current.part === 'end') {
-        const min = from.start + minSpan;
-        let end = Math.min(snap, range.end);
-        if (end < min || end <= from.start) end = (grid?.length ? above(grid, min, from.start) : min) ?? Number.NaN;
-        if (!(end > from.start && end <= range.end)) return undefined;
+        const end = onGrid(value, from.start + minSpan, range.end);
+        if (end === undefined || end <= from.start) return undefined;
         return { change: { id: item, kind: 'resize-end', from, to: { lane: from.lane, start: from.start, end } }, element: lane };
       }
-      const max = from.end - minSpan;
-      let start = Math.max(snap, range.start);
-      if (start > max || start >= from.end) start = (grid?.length ? below(grid, max, from.end) : max) ?? Number.NaN;
-      if (!(start < from.end && start >= range.start)) return undefined;
+      const start = onGrid(value, range.start, from.end - minSpan);
+      if (start === undefined || start >= from.end) return undefined;
       return { change: { id: item, kind: 'resize-start', from, to: { lane: from.lane, start, end: from.end } }, element: lane };
     }
     const kind = from === null ? 'assign' : 'move';
     const over = hit(current, x, y);
     if (over === null) return { change: { id: item, kind, from, to: null }, element: null };
     if ('queue' in over) return { change: { id: item, kind: from === null ? 'assign' : 'unassign', from, to: null }, element: over.queue };
-    const start = startAt(current, over.element, x, y);
-    if (start === null) return { change: { id: item, kind, from, to: null }, element: null };
+    // The item keeps its length inside the range; one longer than the range has no place.
+    const start = onGrid(valueAt(current, over.element, x, y) - current.offset, range.start, range.end - current.span);
+    if (start === undefined) return { change: { id: item, kind, from, to: null }, element: null };
     return { change: { id: item, kind, from, to: { lane: over.lane, start, end: start + current.span } }, element: over.element };
   };
 
-  const mark = (current: Session, element: Element, name: string, value: string) => {
+  /** Sets a mark on `element`, keeping the value it had, which the drag's end puts back. */
+  const mark = (current: Session, element: Element, name: Mark, value: string) => {
+    let kept = current.marked.get(element);
+    if (kept === undefined) current.marked.set(element, (kept = new Map()));
+    if (!kept.has(name)) kept.set(name, element.getAttribute(name));
     element.setAttribute(name, value);
-    current.marked.add(element);
   };
 
-  /** Clears the drop marks, and with `all` the dragging marks too. */
+  /** Puts back what the drop marks replaced, and with `all` the dragging marks too. */
   const clear = (current: Session, all: boolean) => {
-    for (const element of current.marked) {
-      element.removeAttribute('data-drop-target');
-      element.removeAttribute('data-conflict');
-      if (all) element.removeAttribute('data-dragging');
+    for (const [element, kept] of current.marked) {
+      for (const [name, value] of kept) {
+        if (!all && name === 'data-dragging') continue;
+        if (value === null) element.removeAttribute(name);
+        else element.setAttribute(name, value);
+        kept.delete(name);
+      }
+      if (kept.size === 0) current.marked.delete(element);
     }
-    if (all) current.marked.clear();
   };
 
   /** Marks the element `change` would drop on, and the other items its verdict names. */
@@ -328,38 +328,47 @@ function createLaneDrag(
     }
   };
 
-  /** Shows the drop at x, y, calling `check` only when the place changes. */
-  const update = (current: Session, x: number, y: number) => {
+  /** Shows the drop at x, y, calling `check` when the place changes, and with `fresh` even when it doesn't. */
+  const update = (current: Session, x: number, y: number, fresh = false) => {
     current.last = { x, y };
     const next = locate(current, x, y);
     if (next === undefined) return;
     const shown = store.get();
-    if (shown !== null && shown.kind === next.change.kind && samePlace(shown.to, next.change.to)) return;
+    if (!fresh && shown !== null && shown.kind === next.change.kind && samePlace(shown.to, next.change.to)) return;
     const verdict = next.change.to !== null ? (options().check?.(current.id, next.change.to) ?? null) : null;
     const change = { ...next.change, verdict };
     paint(current, change, next.element);
     store.set(change);
   };
 
-  /** Scrolls the board while the pointer is inside it near an edge, and drops again at the pointer, which the scroll moved over the lanes. */
-  const scroll = (current: Session) => {
+  /** How far the board scrolls this frame: only while the pointer is inside it, near an edge. */
+  const velocity = (current: Session): { dx: number; dy: number } | null => {
+    const { board } = current;
+    if (board === null) return null;
+    const rect = board.getBoundingClientRect();
+    const { x, y } = current.last;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return null;
+    const speed = (near: number, far: number) => (near < EDGE ? -STEP * (1 - near / EDGE) : far < EDGE ? STEP * (1 - far / EDGE) : 0);
+    const dx = Math.round(speed(x - rect.left, rect.right - x));
+    const dy = Math.round(speed(y - rect.top, rect.bottom - y));
+    return dx !== 0 || dy !== 0 ? { dx, dy } : null;
+  };
+
+  /** Scrolls the board each frame the pointer stays near its edge, and drops again at the pointer, which the scroll moved over the lanes. */
+  const steer = (current: Session) => {
+    if (current.frame !== 0 || velocity(current) === null) return;
     const tick = () => {
-      const { board } = current;
-      if (board === null) return;
-      const rect = board.getBoundingClientRect();
-      const { x, y } = current.last;
-      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-        const speed = (near: number, far: number) => (near < EDGE ? -STEP * (1 - near / EDGE) : far < EDGE ? STEP * (1 - far / EDGE) : 0);
-        const dx = Math.round(speed(x - rect.left, rect.right - x));
-        const dy = Math.round(speed(y - rect.top, rect.bottom - y));
-        if (dx !== 0 || dy !== 0) {
-          const left = board.scrollLeft;
-          const top = board.scrollTop;
-          board.scrollLeft = left + dx;
-          board.scrollTop = top + dy;
-          if (board.scrollLeft !== left || board.scrollTop !== top) update(current, x, y);
-        }
+      const step = velocity(current);
+      const board = current.board;
+      if (step === null || board === null) {
+        current.frame = 0;
+        return;
       }
+      const left = board.scrollLeft;
+      const top = board.scrollTop;
+      board.scrollLeft = left + step.dx;
+      board.scrollTop = top + step.dy;
+      if (board.scrollLeft !== left || board.scrollTop !== top) update(current, current.last.x, current.last.y);
       current.frame = requestAnimationFrame(tick);
     };
     current.frame = requestAnimationFrame(tick);
@@ -367,7 +376,7 @@ function createLaneDrag(
 
   const onSelectStart = (event: Event) => event.preventDefault();
 
-  /** Drops the next click soon after a drop, or after the release of a cancelled drag: it lands on the handle. */
+  /** Drops the next click soon after a drop: it lands on the handle. */
   const armQuiet = () => {
     disarmQuiet?.();
     const until = performance.now() + QUIET;
@@ -391,23 +400,42 @@ function createLaneDrag(
     disarmQuiet = disarm;
   };
 
-  /** Ends the session: clears every mark, the store and the listeners. */
+  /** After an Escape, waits for the pointer's release to drop its click. A new press means the release was lost. */
+  const awaitRelease = (pointerId: number) => {
+    disarmQuiet?.();
+    const onRelease = (event: globalThis.PointerEvent) => {
+      if (event.type !== 'pointerdown' && event.pointerId !== pointerId) return;
+      stop();
+      if (event.type === 'pointerup') armQuiet();
+    };
+    const stop = () => {
+      for (const type of ['pointerup', 'pointercancel', 'pointerdown'] as const) window.removeEventListener(type, onRelease, true);
+      if (disarmQuiet === stop) disarmQuiet = null;
+    };
+    for (const type of ['pointerup', 'pointercancel', 'pointerdown'] as const) window.addEventListener(type, onRelease, true);
+    disarmQuiet = stop;
+  };
+
+  /** Ends the session: puts back every mark, clears the store and removes the listeners. */
   const teardown = (ended: Session) => {
     cancelAnimationFrame(ended.frame);
     clear(ended, true);
     window.removeEventListener('pointermove', onMove, true);
     window.removeEventListener('pointerup', onUp, true);
-    window.removeEventListener('pointercancel', onCancel, true);
+    window.removeEventListener('pointercancel', onEnd, true);
+    window.removeEventListener('contextmenu', onEnd, true);
+    window.removeEventListener('blur', onEnd);
     window.removeEventListener('selectstart', onSelectStart, true);
     if (session === ended) session = null;
     store.set(null);
-    if (ended.started && !ended.cancelled) onActive(null);
+    if (ended.started) onActive(null);
   };
 
   function onMove(event: globalThis.PointerEvent) {
     const current = session;
-    if (current === null || event.pointerId !== current.pointerId || current.cancelled) return;
-    if (!current.node.isConnected) return teardown(current);
+    if (current === null || event.pointerId !== current.pointerId) return;
+    // No button down means the release was lost, as to a context menu: a hovering pointer drags nothing.
+    if (!current.node.isConnected || event.buttons === 0) return teardown(current);
     if (!current.started) {
       if (options().disabled) return teardown(current);
       if (Math.hypot(event.clientX - current.x, event.clientY - current.y) < SLOP) return;
@@ -417,23 +445,32 @@ function createLaneDrag(
       window.addEventListener('selectstart', onSelectStart, true);
       mark(current, current.node, 'data-dragging', '');
       for (const element of rootOf(current).querySelectorAll<HTMLElement>(`[${BOARD}]`)) {
-        if (mine(element)) current.board = element;
+        if (mine(element)) {
+          current.board = element;
+          mark(current, element, 'data-dragging', '');
+          break;
+        }
       }
-      if (current.board !== null) mark(current, current.board, 'data-dragging', '');
       onActive(current.node);
-      scroll(current);
     }
     update(current, event.clientX, event.clientY);
+    steer(current);
   }
 
   function onUp(event: globalThis.PointerEvent) {
     const ended = session;
     if (ended === null || event.pointerId !== ended.pointerId) return;
     if (ended.started) armQuiet();
-    if (!ended.started || ended.cancelled || !ended.node.isConnected || options().disabled) return teardown(ended);
-    update(ended, event.clientX, event.clientY);
-    const change = store.get();
-    teardown(ended);
+    if (!ended.started || !ended.node.isConnected || options().disabled) return teardown(ended);
+    let change: LaneDragChange | null;
+    try {
+      // `check` again, since what it reads may have changed while the pointer stayed on one place.
+      update(ended, event.clientX, event.clientY, true);
+    } finally {
+      // A `check` that throws still ends the drag.
+      change = store.get();
+      teardown(ended);
+    }
     if (change === null) return;
     if (change.kind === 'unassign') {
       if (change.from !== null) options().onDrop(change);
@@ -443,19 +480,18 @@ function createLaneDrag(
     options().onDrop(change);
   }
 
-  function onCancel(event: globalThis.PointerEvent) {
-    if (session !== null && event.pointerId === session.pointerId) teardown(session);
+  function onEnd(event: Event) {
+    if (session === null) return;
+    if (event.type !== 'pointercancel' || (event as globalThis.PointerEvent).pointerId === session.pointerId) teardown(session);
   }
 
   return {
     /** Starts a session for a press on `item`'s `part` handle. */
     press(event: PointerEvent<HTMLElement>, item: string, part: Part) {
-      if (options().disabled || event.button !== 0) return;
-      if (session !== null) {
-        // A second finger starts nothing. Any other press means the earlier drag's release never came.
-        if (event.pointerType === 'touch' && !event.isPrimary) return;
-        teardown(session);
-      }
+      // A second finger starts nothing.
+      if (options().disabled || event.button !== 0 || (event.pointerType === 'touch' && !event.isPrimary)) return;
+      // Any other press while a session runs means the earlier drag's release never came.
+      if (session !== null) teardown(session);
       const handle = event.currentTarget;
       // A press on a control inside the handle, such as a menu's trigger, is that control's.
       const target = event.target instanceof Element ? event.target.closest(INTERACTIVE) : null;
@@ -466,10 +502,18 @@ function createLaneDrag(
       const read = readPlace(node);
       if (read === null || (part !== 'move' && read.from === null)) return;
       const { from, span } = read;
+      // The item's lane, by its key, wherever the item's element sits.
       let lane: Element | null = null;
-      for (let parent = node.parentElement; from !== null && parent !== null && lane === null; parent = parent.parentElement) {
-        if (mine(parent) && parent.getAttribute(LANE) === from.lane) lane = parent;
+      if (from !== null) {
+        for (const element of (node.getRootNode() as Document | ShadowRoot).querySelectorAll(`[${LANE}]`)) {
+          if (mine(element) && element.getAttribute(LANE) === from.lane) {
+            lane = element;
+            break;
+          }
+        }
       }
+      // A resize needs the lane it runs along.
+      if (part !== 'move' && lane === null) return;
       const next: Session = {
         pointerId: event.pointerId,
         x: event.clientX,
@@ -485,27 +529,26 @@ function createLaneDrag(
         span,
         offset: 0,
         started: false,
-        cancelled: false,
         rtl: new Map(),
         frame: 0,
-        marked: new Set(),
+        marked: new Map(),
       };
       if (part === 'move' && from !== null && lane !== null) next.offset = valueAt(next, lane, event.clientX, event.clientY) - from.start;
       session = next;
       // Capture, so a product's handler that stops these events can't leave a drag running.
       window.addEventListener('pointermove', onMove, true);
       window.addEventListener('pointerup', onUp, true);
-      window.addEventListener('pointercancel', onCancel, true);
+      window.addEventListener('pointercancel', onEnd, true);
+      window.addEventListener('contextmenu', onEnd, true);
+      // A release while the window is in the background never comes back.
+      window.addEventListener('blur', onEnd);
     },
-    /** Stops a started drag without a drop. The session waits for the pointer's release, whose click it drops. */
+    /** Stops a started drag without a drop, and drops the click its release sends. */
     cancel() {
-      if (session === null || !session.started || session.cancelled) return;
-      cancelAnimationFrame(session.frame);
-      clear(session, true);
-      window.removeEventListener('selectstart', onSelectStart, true);
-      session.cancelled = true;
-      store.set(null);
-      onActive(null);
+      if (session === null || !session.started) return;
+      const { pointerId } = session;
+      teardown(session);
+      awaitRelease(pointerId);
     },
     /** Ends everything, for the hook's unmount. */
     destroy() {

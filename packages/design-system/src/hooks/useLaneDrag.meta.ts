@@ -41,7 +41,7 @@ export const meta = {
       name: 'check',
       type: '(id: string, to: LanePlace) => LaneVerdict | null',
       required: false,
-      description: 'Says whether the item `id` may go to `to`, each time the place under the pointer changes.',
+      description: 'Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop.',
     },
     {
       name: 'disabled',

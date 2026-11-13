@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { memo, useState } from 'react';
+import { memo, StrictMode, useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useLaneDrag, useLaneDragState, type LaneDragChange, type LanePlace, type LaneVerdict, type UseLaneDragOptions } from './useLaneDrag.js';
 
@@ -131,7 +131,7 @@ afterEach(() => {
 
 /** Presses `handle` at x, y, moves through `path` and releases at the last point. */
 function drag(handle: Element, x: number, y: number, path: [number, number][], type = 'mouse') {
-  const at = (px: number, py: number) => ({ clientX: px, clientY: py, pointerId: 1, pointerType: type, isPrimary: true, button: 0 });
+  const at = (px: number, py: number) => ({ clientX: px, clientY: py, pointerId: 1, pointerType: type, isPrimary: true, button: 0, buttons: 1 });
   fireEvent.pointerDown(handle, at(x, y));
   for (const [px, py] of path) act(() => void window.dispatchEvent(new PointerEvent('pointermove', at(px, py))));
   const [ux, uy] = path.at(-1) ?? [x, y];
@@ -143,7 +143,7 @@ function press(handle: Element, x: number, y: number) {
 }
 
 function move(x: number, y: number) {
-  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse' })));
+  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse', buttons: 1 })));
 }
 
 function release(x: number, y: number) {
@@ -239,6 +239,124 @@ it('takes no drag from an item whose span is missing', () => {
   }
   render(<Host />);
   drag(screen.getByTestId('none'), 20, 130, [[60, 100], [100, 20]]);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
+it('keeps a resized end on the grid when the range ends between grid points', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} grid={[0, 30, 60, 90, 120]} />);
+  // The range ends at 100, so an end pulled past it stops at 90, the last grid point inside.
+  drag(screen.getByTestId('t1-end'), 300, 20, [[350, 20], [1500, 20]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-end', to: { lane: 'a', start: 10, end: 90 } }));
+});
+
+it('ends the drag when check throws on the release', () => {
+  let fail = false;
+  const check = () => {
+    if (fail) throw new Error('rules broke');
+    return null;
+  };
+  render(<Board check={check} />);
+  press(screen.getByTestId('t1-move'), 150, 20);
+  move(200, 20);
+  fail = true;
+  // An error thrown in a window listener goes to the window's error event, not to the dispatcher.
+  const errors: unknown[] = [];
+  const onError = (event: ErrorEvent) => {
+    errors.push(event.error);
+    event.preventDefault();
+  };
+  window.addEventListener('error', onError);
+  release(600, 20);
+  window.removeEventListener('error', onError);
+  expect(errors).toEqual([new Error('rules broke')]);
+  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+});
+
+it('starts nothing from a second finger', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} />);
+  fireEvent.pointerDown(screen.getByTestId('t1-move'), { clientX: 150, clientY: 20, pointerId: 2, pointerType: 'touch', isPrimary: false, button: 0 });
+  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: 400, clientY: 20, pointerId: 2, pointerType: 'touch', buttons: 1 })));
+  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+});
+
+it('drags the same way in StrictMode', () => {
+  const onDrop = vi.fn();
+  render(
+    <StrictMode>
+      <Board onDrop={onDrop} />
+    </StrictMode>,
+  );
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [410, 20]]);
+  expect(onDrop).toHaveBeenCalledTimes(1);
+  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ to: { lane: 'a', start: 35, end: 55 } }));
+});
+
+it('lets a click through once the moment after a drop has passed', () => {
+  vi.useFakeTimers();
+  try {
+    render(<Board />);
+    const handle = screen.getByTestId('q1-move');
+    drag(handle, 20, 130, [[60, 130], [80, 150]]);
+    act(() => void vi.advanceTimersByTime(500));
+    fireEvent.click(handle, { detail: 1 });
+    expect(renders['click-q1']).toBe(1);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('ends a drag whose release was lost, as to a context menu or another window, without a drop', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} />);
+  press(screen.getByTestId('t1-move'), 150, 20);
+  move(400, 20);
+  // The button came up where the page couldn't see it, so the pointer now moves with none down.
+  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: 500, clientY: 20, pointerId: 1, pointerType: 'mouse', buttons: 0 })));
+  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+  release(500, 20);
+  expect(onDrop).not.toHaveBeenCalled();
+
+  press(screen.getByTestId('t1-move'), 150, 20);
+  move(400, 20);
+  act(() => void window.dispatchEvent(new Event('blur')));
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  release(400, 20);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
+it('puts back a conflict mark the page had set on an item', () => {
+  function Host() {
+    const lanes = useLaneDrag({ range: { start: 0, end: 100 }, check: () => ({ level: 'blocked', reason: 'x', with: ['b'] }), onDrop: () => {} });
+    return (
+      <div {...lanes.getBoardProps()} data-r="0,0,1000,1000">
+        <div {...lanes.getLaneProps('a')} data-r="0,0,1000,40">
+          <div {...lanes.getItemProps('a1', { lane: 'a', start: 0, end: 10 })} data-r="0,0,100,40">
+            <span {...lanes.getHandleProps('a1', 'move')} data-testid="a1" />
+          </div>
+          <div {...lanes.getItemProps('b', { lane: 'a', start: 50, end: 60 })} data-r="500,0,100,40" data-conflict="warning" data-testid="b" />
+        </div>
+      </div>
+    );
+  }
+  render(<Host />);
+  press(screen.getByTestId('a1'), 50, 20);
+  move(300, 20);
+  expect(screen.getByTestId('b').getAttribute('data-conflict')).toBe('blocked');
+  release(300, 20);
+  expect(screen.getByTestId('b').getAttribute('data-conflict')).toBe('warning');
+});
+
+it('asks check again on the release, since what it reads may have changed', () => {
+  const onDrop = vi.fn();
+  let blocked = false;
+  render(<Board onDrop={onDrop} check={() => (blocked ? { level: 'blocked', reason: 'Taken now' } : null)} />);
+  press(screen.getByTestId('t1-move'), 150, 20);
+  move(410, 20);
+  blocked = true;
+  release(410, 20);
   expect(onDrop).not.toHaveBeenCalled();
 });
 
