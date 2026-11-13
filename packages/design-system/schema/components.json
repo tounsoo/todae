@@ -5872,6 +5872,82 @@
       ]
     },
     {
+      "name": "useLaneDrag",
+      "description": "useLaneDrag({ range, onDrop }) returns { getBoardProps, getLaneProps, getQueueProps, getItemProps, getHandleProps, drag }, prop getters that let a person drag items along lanes that share one axis, such as talks on a conference's stages: place an item from a queue, move it along its lane or to another, resize either end, or take it back to the queue. Places snap to grid, check says whether a place conflicts with others, and a drop calls onDrop(change). Escape cancels a drag. It has no keyboard path: pair it with a way to move an item without dragging, such as a dialog.",
+      "props": [
+        {
+          "name": "range",
+          "type": "{ start: number; end: number }",
+          "required": true,
+          "description": "The span every lane's element covers along the axis, in the board's units, such as minutes from the first day's start."
+        },
+        {
+          "name": "onDrop",
+          "type": "(change: LaneDragChange) => void",
+          "required": true,
+          "description": "Called on a drop that changes an item's place, with the change."
+        },
+        {
+          "name": "axis",
+          "type": "'inline' | 'block'",
+          "required": false,
+          "description": "The direction the range runs in each lane. `inline` follows the text direction, and `block` runs down. Default `inline`.",
+          "default": "'inline'"
+        },
+        {
+          "name": "grid",
+          "type": "readonly number[]",
+          "required": false,
+          "description": "The points a start or end snaps to, in ascending order. Without it, places don't snap."
+        },
+        {
+          "name": "minSpan",
+          "type": "number",
+          "required": false,
+          "description": "The shortest span a resize leaves. Default 0.",
+          "default": "0"
+        },
+        {
+          "name": "check",
+          "type": "(id: string, to: LanePlace) => LaneVerdict | null",
+          "required": false,
+          "description": "Says whether the item `id` may go to `to`, each time the place under the pointer changes."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "useLaneDragState",
+      "description": "useLaneDragState(drag, select) returns select of the drag under way from useLaneDrag, or of null when there is none, and renders again only when that selection changes. A lane that selects the place a drag would take in it renders when the place moves in or out of it, not on every move.",
+      "props": [
+        {
+          "name": "drag",
+          "type": "LaneDragStore",
+          "required": true,
+          "description": "The `drag` that `useLaneDrag` returns."
+        },
+        {
+          "name": "select",
+          "type": "(state: LaneDragChange | null) => T",
+          "required": true,
+          "description": "Picks what this component shows from the drag under way, or from null when there is none."
+        },
+        {
+          "name": "isEqual",
+          "type": "(a: T, b: T) => boolean",
+          "required": false,
+          "description": "Says when two selections are the same, so a selection built anew on each move renders only when it changes. Default `Object.is`.",
+          "default": "Object.is"
+        }
+      ]
+    },
+    {
       "name": "useMentions",
       "description": "Mentions and slash commands in a Field.Textarea. A trigger character at the start of a word opens a suggestion list at that word; a pick replaces the word with the token text through the textarea's own editing, so undo works. Committed tokens are ranges of the text that move with edits, drawn behind the text through Field.Textarea's highlights. Spread getters onto Field.Textarea, Popover and OptionList.",
       "props": [

@@ -131,6 +131,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-highlight': () => import('../../app/(en)/utilities/use-highlight/page.mdx'),
   'utilities/use-hotkey': () => import('../../app/(en)/utilities/use-hotkey/page.mdx'),
   'utilities/use-inline-edit': () => import('../../app/(en)/utilities/use-inline-edit/page.mdx'),
+  'utilities/use-lane-drag': () => import('../../app/(en)/utilities/use-lane-drag/page.mdx'),
   'utilities/use-mentions': () => import('../../app/(en)/utilities/use-mentions/page.mdx'),
   'utilities/use-modal-layer': () => import('../../app/(en)/utilities/use-modal-layer/page.mdx'),
   'utilities/use-popover': () => import('../../app/(en)/utilities/use-popover/page.mdx'),
