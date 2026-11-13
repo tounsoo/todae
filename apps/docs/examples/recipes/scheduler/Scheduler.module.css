@@ -277,6 +277,15 @@
   pointer-events: none;
 }
 
+/* Inside a warning or blocked outline, so the ring doesn't thin it. */
+.block[data-highlight='picked'][data-conflict='warning']::after {
+  inset: var(--todae-focus-ring-width);
+}
+
+.block[data-highlight='picked'][data-conflict='blocked']::after {
+  inset: calc(2 * var(--todae-focus-ring-width));
+}
+
 .block[data-highlight='dimmed'] {
   border-color: var(--todae-color-border-subtle);
   background: var(--todae-color-bg-subtle);
@@ -349,10 +358,10 @@
 }
 
 /* A talk with too little room past its leading edge and end handle for its
-   grip and some text, about 5rem at comfortable density, drops its grip, ends and warning icon and keeps its text; its
-   button still makes every move, and its outline still marks a warning. A
-   container query can't read a token, so a denser or roomier product sets
-   its own number. */
+   grip and some text, about 5rem at comfortable density, drops its grip,
+   ends and warning icon and keeps its text; its button still makes every
+   move, and its outline still marks a warning. A container query can't read
+   a token, so a denser or roomier product sets its own number. */
 @container (max-inline-size: 5rem) {
   /* Specific enough to beat the grip's own display, which comes later. */
   .block .grip,
