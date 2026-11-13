@@ -131,9 +131,9 @@ const DAYS = ['2027-06-02', '2027-06-03', '2027-06-04'].map((day) => Temporal.Pl
 const OPENS = Temporal.PlainTime.from('09:00');
 const CLOSES = Temporal.PlainTime.from('18:00');
 const AXIS = timeline({ days: DAYS, opens: OPENS, closes: CLOSES, timeZone: ZONE });
-/** Minutes a stage needs between talks. */
 /** The longest talk, a whole day, so a talk an end drag made long still fits the dialog. */
 const LONGEST = 540;
+/** Minutes a stage needs between talks. */
 const CHANGEOVER = 10;
 const SHORTEST = 15;
 
@@ -408,11 +408,16 @@ function QueueCard({ talk, dimmed, ...shared }: Shared & { talk: Talk; dimmed: b
 /** Picks a talk's stage, day, start and length, for the keyboard and anyone who can't drag. */
 function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonly Talk[]; locale: string; onSave: (to: LanePlace, verdict: LaneVerdict | null) => void }) {
   const ids = { stage: useId(), day: useId(), start: useId(), length: useId(), title: useId() };
-  const first = talk.at ? null : firstFree(talks, talk, 'main');
-  const from = talk.at ?? (first && { stage: first.lane, starts: fromUnits(AXIS, first.start)!, ends: fromUnits(AXIS, first.end, 'end')! });
-  const [stage, setStage] = useState(from?.stage ?? 'main');
-  const [day, setDay] = useState(String(from ? DAYS.findIndex((each) => each.equals(from.starts.toPlainDate())) : 0));
-  const [start, setStart] = useState<Temporal.PlainTime | null>(from?.starts.toPlainTime() ?? OPENS);
+  // Where the fields start: the talk's place, or for a queued talk the first free time on the main
+  // stage. Read once, so the title and button don't change as the dialog closes after a save.
+  const [from] = useState(() => {
+    if (talk.at) return { placed: true, stage: talk.at.stage, starts: talk.at.starts };
+    const first = firstFree(talks, talk, 'main');
+    return { placed: false, stage: first?.lane ?? 'main', starts: first ? fromUnits(AXIS, first.start)! : null };
+  });
+  const [stage, setStage] = useState(from.stage);
+  const [day, setDay] = useState(() => String(from.starts ? DAYS.findIndex((each) => each.equals(from.starts!.toPlainDate())) : 0));
+  const [start, setStart] = useState<Temporal.PlainTime | null>(from.starts?.toPlainTime() ?? OPENS);
   const [length, setLength] = useState<number | null>(talk.length);
   const [errors, setErrors] = useState<FormErrors>({});
   // An error is about the fields as they were, so a change clears it.
@@ -443,7 +448,7 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
   return (
     <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.title}>
       <Dialog.Header>
-        <Dialog.Title id={ids.title}>{talk.at ? `Move ${talk.title}` : `Schedule ${talk.title}`}</Dialog.Title>
+        <Dialog.Title id={ids.title}>{from.placed ? `Move ${talk.title}` : `Schedule ${talk.title}`}</Dialog.Title>
         <Dialog.Close />
       </Dialog.Header>
       <Dialog.Body>
@@ -495,7 +500,7 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.Close>Cancel</Dialog.Close>
-        <Button.Root type="submit">{talk.at ? 'Move' : 'Schedule'}</Button.Root>
+        <Button.Root type="submit">{from.placed ? 'Move' : 'Schedule'}</Button.Root>
       </Dialog.Footer>
     </Form.Root>
   );
@@ -503,7 +508,8 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
-// One day shows a talk's text and grip; the whole event is the overview.
+// One day gives most talks room for their grip and text and snaps to 5 minutes. The whole event is
+// the overview, where most talks are their menu button alone, and snaps to 15.
 const ZOOM = { event: { step: 15, minute: '0.09375rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: string }) {

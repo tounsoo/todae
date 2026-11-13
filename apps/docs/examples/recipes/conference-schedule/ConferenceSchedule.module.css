@@ -3,6 +3,7 @@
    event. */
 .schedule {
   --names: 10rem;
+  --header: 4.5rem;
   --axis: calc(var(--units) * var(--minute));
   container-type: inline-size;
   display: flex;
@@ -48,7 +49,7 @@
 .board {
   isolation: isolate;
   /* Focus and scrolling stop clear of the sticky names column and header row. */
-  scroll-padding-block-start: 4.5rem;
+  scroll-padding-block-start: calc(var(--header) + var(--todae-border-width));
   scroll-padding-inline-start: var(--names);
   max-block-size: 32rem;
   border: var(--todae-border-width) solid var(--todae-color-border-subtle);
@@ -95,7 +96,7 @@
 
 .axis {
   position: relative;
-  block-size: 4.5rem;
+  block-size: var(--header);
 }
 
 .day {
@@ -238,15 +239,17 @@
 }
 
 /* Talks without the speaker picked recede without fading their text or
-   controls, so they keep their contrast. */
-.block[data-dimmed],
-.card[data-dimmed] {
+   controls, so they keep their contrast. On the board they take the subtle
+   background; in the queue, which already has it, they lose their surface
+   and their border turns dashed. */
+.block[data-dimmed] {
   border-color: var(--todae-color-border-subtle);
   background: var(--todae-color-bg-subtle);
 }
 
-.block[data-dimmed] {
-  border-inline-start-color: var(--todae-color-border-subtle);
+.card[data-dimmed] {
+  border-style: dashed;
+  background: transparent;
 }
 
 /* A talk with a warning of its own, or one a drag would conflict with: a
@@ -299,9 +302,10 @@
   }
 }
 
-/* A talk too short for its grip and menu button becomes the button, which
-   makes every move. Its ring sits inside it, so the block can't cut it. */
-@container (max-inline-size: 3.5rem) {
+/* A talk too short for its grip, a gap and its menu button, about 4.25rem,
+   becomes the button, which makes every move. Its ring sits inside it, so
+   the block can't cut it. */
+@container (max-inline-size: 4.25rem) {
   .grip,
   .edge {
     display: none;

@@ -182,14 +182,44 @@ describe('the sticky stage names', () => {
     await expect.poll(() => Math.abs(day.getBoundingClientRect().left - names.right) < 1).toBe(true);
   });
 
-  it('keeps the time at the board’s start when the zoom changes', async () => {
+  it('keeps the time just past the names column when the zoom changes', async () => {
     setup();
     reveal(400);
-    const before = (board().scrollLeft / lane('Main stage').getBoundingClientRect().width) * UNITS;
+    // The time on the axis at the first point the names column leaves visible.
+    const shown = () => {
+      const box = lane('Main stage').getBoundingClientRect();
+      const x = stage('Main stage').firstElementChild!.getBoundingClientRect().right + 1;
+      return ((x - box.left) / box.width) * UNITS;
+    };
+    const before = shown();
+    expect(before).toBeGreaterThan(300);
     await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
-    const after = (board().scrollLeft / lane('Main stage').getBoundingClientRect().width) * UNITS;
-    expect(Math.abs(after - before)).toBeLessThan(2);
+    expect(Math.abs(shown() - before)).toBeLessThan(2);
   });
+});
+
+describe('the talks', () => {
+  // A talk too short for its grip becomes its menu button, so no zoom leaves a button cut off.
+  for (const zoom of ['One day', 'Whole event']) {
+    it(`show every menu button whole, ${zoom}`, async () => {
+      setup();
+      await userEvent.click(screen.getByRole('button', { name: zoom }));
+      for (const name of ['Main stage', 'Hall B', 'Workshop room']) {
+        for (const button of within(stage(name)).getAllByRole('button')) {
+          const block = button.closest('li')!;
+          block.scrollIntoView({ block: 'nearest', inline: 'center' });
+          const box = button.getBoundingClientRect();
+          const outer = block.getBoundingClientRect();
+          const label = button.getAttribute('aria-label');
+          expect(box.width, label!).toBeGreaterThan(0);
+          expect(box.left, label!).toBeGreaterThanOrEqual(outer.left - 0.5);
+          expect(box.right, label!).toBeLessThanOrEqual(outer.right + 0.5);
+          const at = centre(button);
+          expect(button.contains(document.elementFromPoint(at.x, at.y)), `${label} covered`).toBe(true);
+        }
+      }
+    });
+  }
 });
 
 describe('the dialog', () => {
@@ -199,9 +229,21 @@ describe('the dialog', () => {
     return screen.findByRole('dialog', { name: `Move ${title}` });
   }
 
+  it('takes focus when it opens, and gives it back to a queued talk on Cancel', async () => {
+    setup();
+    await open('Dark mode, done right', 'Schedule…');
+    await userEvent.keyboard('{Enter}');
+    const dialog = await screen.findByRole('dialog', { name: 'Schedule Dark mode, done right' });
+    await expect.poll(() => dialog.contains(document.activeElement)).toBe(true);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(within(screen.getByRole('list', { name: 'Unscheduled' })).getByRole('button', { name: /^Dark mode, done right,/ })).toBeTruthy();
+    await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
+  });
+
   it('moves a talk to the stage it picks and hands focus to the talk in its new place', async () => {
     setup();
     const dialog = await openDialog('Motion with purpose');
+    await expect.poll(() => dialog.contains(document.activeElement)).toBe(true);
     await userEvent.selectOptions(within(dialog).getByRole('combobox', { name: 'Stage' }), 'Hall B');
     expect(within(dialog).getByText('Expects 400, Hall B seats 300.')).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
