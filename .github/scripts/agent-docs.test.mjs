@@ -214,6 +214,21 @@ test('sections are read however the groups are laid out', () => {
   assert.match(result.out, /adds:\n {2}- docs section recipes\nagent-docs: change/);
 });
 
+test('a group with a comment before its id is read, and one whose id is not a plain string fails', () => {
+  const commented = check({
+    'apps/docs/components/siteGroups.ts':
+      "export const SITE_GROUPS = [\n  { id: 'foundations' },\n  { id: 'components' },\n" +
+      "  { label: 'Recipes', // shown in the sidebar\n    /* key */ id: 'recipes' },\n];\n",
+  });
+  assert.match(commented.out, /docs section recipes/);
+  const computed = check(
+    { 'apps/docs/components/siteGroups.ts': "export const SITE_GROUPS = [\n  { id: 'foundations' },\n  { id: 'components' },\n  { id: RECIPES },\n];\n" },
+    'Agent docs unchanged: a constant\n',
+  );
+  assert.equal(computed.status, 1, computed.out);
+  assert.match(computed.out, /1 group\(s\) in SITE_GROUPS .* have no id written as a plain string/);
+});
+
 test('a sidebar that the script can no longer read fails, even with the body line, rather than hide new sections', () => {
   const layout = check(
     { 'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components').replace('export const SITE_GROUPS', 'const SITE_GROUPS') },

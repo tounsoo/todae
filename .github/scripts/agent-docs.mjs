@@ -37,36 +37,48 @@ function pageRoute(path) {
   return `/${segments.join('/')}`;
 }
 
-// The id of each group in SITE_GROUPS, the sidebar's sections: an `id` key of an object right inside the array,
-// however the file is laid out. It walks the array's brackets, skipping strings and comments.
+// The id of each group in SITE_GROUPS, the sidebar's sections: the `id` key of each object right inside the array,
+// however the file is laid out. It walks the array's brackets, skipping strings and comments, and counts the groups
+// whose id isn't a plain string it can read, since those would hide a new section.
 function sectionIds(text) {
   const declaration = text == null ? null : /export const SITE_GROUPS\b[^=]*=\s*\[/.exec(text);
   const ids = new Set();
-  if (!declaration) return ids;
+  let unread = 0;
+  if (!declaration) return { ids, unread };
   let depth = 1;
+  let previous = '[';
+  let group = null;
   for (let at = declaration.index + declaration[0].length; at < text.length && depth > 0; at++) {
     const char = text[at];
+    if (/\s/.test(char)) continue;
+    if (text.startsWith('//', at) || text.startsWith('/*', at)) {
+      const end = text.indexOf(text[at + 1] === '/' ? '\n' : '*/', at + 2);
+      if (end === -1) break;
+      at = text[at + 1] === '/' ? end : end + 1;
+      continue;
+    }
+    if (depth === 2 && group && (previous === '{' || previous === ',')) {
+      const key = /^(?:id|'id'|"id")\s*:\s*(['"`])([^'"`\n$]+)\1\s*[,}]/.exec(text.slice(at, at + 200));
+      if (key) {
+        ids.add(key[2]);
+        group.id = true;
+      }
+    }
     if (char === "'" || char === '"' || char === '`') {
       let end = at + 1;
       while (end < text.length && text[end] !== char) end += text[end] === '\\' ? 2 : 1;
       at = end;
-    } else if (text.startsWith('//', at)) {
-      at = text.indexOf('\n', at);
-      if (at === -1) break;
-    } else if (text.startsWith('/*', at)) {
-      at = text.indexOf('*/', at);
-      if (at === -1) break;
-      at += 1;
     } else if ('[{('.includes(char)) {
       depth += 1;
+      if (depth === 2 && char === '{') group = { id: false };
     } else if (']})'.includes(char)) {
+      if (depth === 2 && char === '}' && group && !group.id) unread += 1;
+      if (depth === 2) group = null;
       depth -= 1;
-    } else if (depth === 2 && /[{,]\s*$/.test(text.slice(Math.max(0, at - 200), at))) {
-      const key = /^id\s*:\s*(['"])([^'"\n]+)\1/.exec(text.slice(at, at + 200));
-      if (key) ids.add(key[2]);
     }
+    previous = char;
   }
-  return ids;
+  return { ids, unread };
 }
 
 function triggersOnPullRequests(on) {
@@ -124,10 +136,12 @@ function inventory(ref) {
   const workflows = git(['ls-tree', '-z', '--name-only', ref, WORKFLOWS])
     .split('\0')
     .filter((file) => /\.ya?ml$/.test(file));
-  const sections = [...sectionIds(show(ref, SITE_GROUPS))].map((id) => `docs section ${id}`);
+  const { ids, unread } = sectionIds(show(ref, SITE_GROUPS));
+  const sections = [...ids].map((id) => `docs section ${id}`);
   return {
     pages: new Set(routes.map((route) => `docs page ${route}`)),
     sections: sections.length,
+    unreadSections: unread,
     others: new Set([
       ...sections,
       ...workflows.flatMap((file) => workflowChecks(file.slice(WORKFLOWS.length), show(ref, file))),
@@ -139,9 +153,9 @@ function inventory(ref) {
 const minus = (a, b) => [...a].filter((item) => !b.has(item));
 
 // What the diff adds, and whether it changes the files agents read. Pages count only when the diff adds more
-// routes than it removes, so a page that moves, however much it changes on the way, isn't new. When the base has
-// sections and the head shows none, the sidebar moved or changed its declaration, and the script has to learn it, or
-// it would stop seeing new sections.
+// routes than it removes, so a page that moves, however much it changes on the way, isn't new. The sidebar is
+// unreadable when the base has sections and the head shows none, because it moved or changed its declaration, or
+// when a group at the head has no id the script can read. Either would hide a new section.
 function review(base, head) {
   const mergeBase = git(['merge-base', base, head]).trim();
   const before = inventory(mergeBase);
@@ -154,7 +168,14 @@ function review(base, head) {
   const changes = (paths) => paths.some((path) => changed.has(path));
   return {
     added: [...pages, ...minus(after.others, before.others)],
-    sectionsLost: before.sections > 0 && after.sections === 0,
+    sidebar:
+      before.sections > 0 && after.sections === 0
+        ? `${SITE_GROUPS} shows no sections where this script looks for them, so it moved or SITE_GROUPS is no ` +
+          'longer an exported array. Update sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read it'
+        : after.unreadSections > 0
+          ? `${after.unreadSections} group(s) in SITE_GROUPS in ${SITE_GROUPS} have no id written as a plain string, ` +
+            "such as id: 'recipes'. Write each id that way"
+          : null,
     claudeMd: changes(AGENT_DOCS.claude),
     verifySkill: changes(AGENT_DOCS.verify),
   };
@@ -197,13 +218,9 @@ function main() {
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
     return 1;
   }
-  const { added, sectionsLost, claudeMd, verifySkill } = result;
-  if (sectionsLost) {
-    say(
-      `agent-docs: ${SITE_GROUPS} shows no sections where this script looks for them, so it moved or SITE_GROUPS ` +
-        'is no longer an exported array. Update sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read ' +
-        'it, so the check keeps seeing new sections.',
-    );
+  const { added, sidebar, claudeMd, verifySkill } = result;
+  if (sidebar) {
+    say(`agent-docs: ${sidebar}, so the check keeps seeing new sections.`);
     status = 1;
   } else if (added.length === 0) {
     say('agent-docs: this pull request adds no docs page, docs section or check.');
