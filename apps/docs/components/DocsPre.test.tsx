@@ -225,11 +225,15 @@ describe('long code blocks', () => {
     expect(rest?.hasAttribute('hidden')).toBe(false);
     expect(scrollBy).not.toHaveBeenCalled();
 
+    // Folding keeps the button where it was in the viewport: it sat 500px down, and the shorter block puts it at 100px.
+    vi.spyOn(button, 'getBoundingClientRect')
+      .mockReturnValueOnce(DOMRect.fromRect({ y: 500, height: 40 }))
+      .mockReturnValueOnce(DOMRect.fromRect({ y: 100, height: 40 }));
     fireEvent.click(button);
     expect(button.getAttribute('aria-expanded')).toBe('false');
     expect(rest?.hasAttribute('hidden')).toBe(true);
-    // Folding keeps the button where it was in the viewport.
-    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: -400, behavior: 'instant' });
+    expect(document.documentElement.style.overflowAnchor).toBe('');
   });
 
   it('opens when find in page reveals the rest', () => {
@@ -241,8 +245,8 @@ describe('long code blocks', () => {
     const button = screen.getByRole('button', { name: 'Show all code' });
     const rest = document.getElementById(button.getAttribute('aria-controls') ?? '');
     act(() => {
-      rest?.removeAttribute('hidden');
       rest?.dispatchEvent(new Event('beforematch'));
+      rest?.removeAttribute('hidden');
     });
     expect(button.getAttribute('aria-expanded')).toBe('true');
     expect(rest?.hasAttribute('hidden')).toBe(false);

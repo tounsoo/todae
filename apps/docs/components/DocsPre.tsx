@@ -6,7 +6,6 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   cloneElement,
   isValidElement,
-  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -67,22 +66,26 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
 
   useLayoutEffect(() => {
     const el = restRef.current;
-    if (!expanded && el && 'onbeforematch' in el) el.setAttribute('hidden', 'until-found');
-    const from = foldFrom.current;
-    foldFrom.current = null;
-    // The block shrank above the button, so scroll the page by as much, which keeps the button under the reader's
-    // pointer and focus, with the peek just above it.
-    if (!expanded && from !== null && toggleRef.current) scrollBy({ top: toggleRef.current.getBoundingClientRect().top - from, behavior: 'instant' });
-  }, [expanded]);
-
-  useEffect(() => {
-    const el = restRef.current;
     if (!el) return;
-    // Find in page matched text in the rest, and the browser has already removed `hidden`.
+    // A find in page match in the rest fires this, and the browser then removes `hidden`. Attached before the
+    // effect below sets `until-found`, so the state never misses a reveal.
     const open = () => setExpanded(true);
     el.addEventListener('beforematch', open);
     return () => el.removeEventListener('beforematch', open);
   }, []);
+
+  useLayoutEffect(() => {
+    const el = restRef.current;
+    if (!expanded && el && 'onbeforematch' in el) el.setAttribute('hidden', 'until-found');
+    const from = foldFrom.current;
+    if (expanded || from === null || !toggleRef.current) return;
+    foldFrom.current = null;
+    // The block shrank above the button, so scroll the page by as much, which keeps the button under the reader's
+    // pointer and focus, with the peek just above it. The click turned off scroll anchoring for this layout, so
+    // the browser doesn't move the page too.
+    scrollBy({ top: toggleRef.current.getBoundingClientRect().top - from, behavior: 'instant' });
+    document.documentElement.style.removeProperty('overflow-anchor');
+  }, [expanded]);
 
   return (
     <div className="docs-code-fold" data-expanded={expanded ? '' : undefined}>
@@ -105,7 +108,10 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
           aria-expanded={expanded}
           aria-controls={id}
           onClick={(event) => {
-            if (expanded) foldFrom.current = event.currentTarget.getBoundingClientRect().top;
+            if (expanded) {
+              foldFrom.current = event.currentTarget.getBoundingClientRect().top;
+              document.documentElement.style.setProperty('overflow-anchor', 'none');
+            }
             setExpanded(!expanded);
           }}
         >

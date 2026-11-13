@@ -481,8 +481,8 @@ main:focus {
   }
 }
 
-/* Paper shows every block whole. */
-@media print {
+/* Paper, and a page whose scripts don't run, where the button can't open the block, show every block whole. */
+@media print, (scripting: none) {
   .docs-code-fold .docs-code-rest[hidden] {
     display: inline;
     content-visibility: visible;
