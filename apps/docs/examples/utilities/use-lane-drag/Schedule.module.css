@@ -1,6 +1,6 @@
-/* The board scrolls sideways: each stage's lane is 120rem wide, 4px a
-   minute at the default font size, so a half-hour talk has room for its grip,
-   title and menu button. The stage names stay in view as it scrolls. */
+/* The board scrolls sideways: each stage's lane is at least 120rem wide, 4px
+   a minute at the default font size, so a half-hour talk has room for its
+   grip, title and menu button. The stage names stay in view as it scrolls. */
 .schedule {
   display: flex;
   flex-direction: column;
@@ -8,47 +8,48 @@
   inline-size: 100%;
 }
 
+/* The board is one grid: a column for the stage names and one for the day.
+   Each row spans both on a subgrid, so it is as wide as the whole day, not only
+   the visible board. A sticky name can't leave its row, so a row as narrow as
+   the board would carry its name away once the board scrolled past it. Focus
+   that scrolls the board stops clear of the names. */
 .board {
   --schedule-name: 7rem;
   --schedule-day: 120rem;
-  display: flex;
-  flex-direction: column;
-  gap: var(--todae-space-2);
+  display: grid;
+  grid-template-columns: var(--schedule-name) minmax(var(--schedule-day), 1fr);
+  row-gap: var(--todae-space-2);
   overflow-x: auto;
   padding-block-end: var(--todae-space-2);
+  scroll-padding-inline-start: var(--schedule-name);
 }
 
-/* Every row is as wide as the whole day, not only the visible board. A sticky
-   name stays inside its row, so a row no wider than the board would carry its
-   name away once the board scrolls past that width. The rows share one column
-   template, so the hours line up with the lanes. */
 .hours,
 .stage {
   display: grid;
-  grid-template-columns: var(--schedule-name) minmax(var(--schedule-day), 1fr);
-  inline-size: max-content;
-  min-inline-size: 100%;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
 }
 
-.stage {
-  align-items: stretch;
-}
-
-.ticks {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  color: var(--todae-color-fg-muted);
-  font-size: var(--todae-text-label-font-size);
-}
-
-/* The corner holds the stage-name column above the names, so the hours pass
-   under it as the board scrolls, as they pass under the names. */
-.name,
-.corner {
+/* The corner covers the hours' start, so the hours pass under it as the board
+   scrolls, as the lanes pass under the names. */
+.hours::before,
+.name {
   position: sticky;
   inset-inline-start: 0;
   z-index: 2;
   background: var(--todae-color-bg-canvas);
+}
+
+.hours::before {
+  content: '';
+}
+
+.ticks {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-text-label-font-size);
 }
 
 .name {
