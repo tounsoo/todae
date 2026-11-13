@@ -22,11 +22,13 @@ function Board({
   dir,
   axis,
   width = 600,
+  smooth = false,
 }: {
   onDrop?: (change: LaneDragChange) => void;
   dir?: 'rtl';
   axis?: 'block';
   width?: number;
+  smooth?: boolean;
 }) {
   const [talks, setTalks] = useState<Talk[]>([{ id: 't1', at: { lane: 'a', start: 10, end: 20 } }]);
   const lanes = useLaneDrag({
@@ -43,7 +45,7 @@ function Board({
     <div
       {...lanes.getBoardProps({ 'data-testid': 'board' })}
       dir={dir}
-      style={{ display: 'flex', flexDirection: block ? 'row' : 'column', inlineSize: width, overflow: 'auto', margin: 0 }}
+      style={{ display: 'flex', flexDirection: block ? 'row' : 'column', inlineSize: width, overflow: 'auto', margin: 0, scrollBehavior: smooth ? 'smooth' : undefined }}
     >
       {['a', 'b'].map((lane) => (
         <div
@@ -117,8 +119,8 @@ it('runs down each lane with axis block', () => {
   expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ to: { lane: 'b', start: 25, end: 35 } }));
 });
 
-it('scrolls the board while the pointer stays near its edge, and moves the place with it', async () => {
-  render(<Board width={300} />);
+it.each([false, true])('scrolls the board while the pointer stays near its edge, and moves the place with it (smooth scrolling %s)', async (smooth) => {
+  render(<Board width={300} smooth={smooth} />);
   const board = screen.getByTestId('board');
   const box = board.getBoundingClientRect();
   const handle = screen.getByTestId('t1-move');

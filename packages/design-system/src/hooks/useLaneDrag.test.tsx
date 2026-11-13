@@ -250,7 +250,7 @@ it('keeps a resized end on the grid when the range ends between grid points', ()
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-end', to: { lane: 'a', start: 10, end: 90 } }));
 });
 
-it('ends the drag without a drop when check throws, on a move or on the release', () => {
+it('ends the drag without a drop when check throws, on a move or on the release, and drops the click the release sends', () => {
   const onDrop = vi.fn();
   let fail = false;
   const check = () => {
@@ -274,6 +274,9 @@ it('ends the drag without a drop when check throws, on a move or on the release'
     expect(screen.queryByTestId('ghost-a')).toBeNull();
     move(450, 20);
     release(450, 20);
+    // The click that release sends is dropped, as after Escape.
+    fireEvent.click(screen.getByTestId('t1-button'), { detail: 1 });
+    expect(renders['click-t1']).toBeUndefined();
 
     fail = false;
     press(screen.getByTestId('t1-move'), 150, 20);

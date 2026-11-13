@@ -222,6 +222,14 @@ function createLaneDrag(
   const mine = (element: Element) => element.getAttribute(PARTS) === id;
   const rootOf = (current: Session) => current.node.getRootNode() as Document | ShadowRoot;
 
+  /** The lane with the key `key` in `node`'s document, wherever `node` sits. */
+  const laneOf = (node: Element, key: string): Element | null => {
+    for (const element of (node.getRootNode() as Document | ShadowRoot).querySelectorAll(`[${LANE}]`)) {
+      if (mine(element) && element.getAttribute(LANE) === key) return element;
+    }
+    return null;
+  };
+
   /** This board's lane or queue under x, y. */
   const hit = (current: Session, x: number, y: number): { lane: string; element: Element } | { queue: Element } | null => {
     for (let node = rootOf(current).elementFromPoint?.(x, y) ?? null; node; node = node.parentElement) {
@@ -267,10 +275,12 @@ function createLaneDrag(
   /** What a drop at x, y would do and the element it would drop on, or undefined to keep the last one, as for a resize past `minSpan`. */
   const locate = (current: Session, x: number, y: number): Target | undefined => {
     const { range, minSpan = 0 } = options();
-    const { id: item, from, lane } = current;
+    const { id: item, from } = current;
     if (current.part !== 'move' && from !== null) {
-      // A lane put back by a render reads as no place, so the shown one stays.
-      if (lane === null || !lane.isConnected) return undefined;
+      // A lane a render put back is found again by its key.
+      if (current.lane?.isConnected === false) current.lane = laneOf(current.node, from.lane);
+      const { lane } = current;
+      if (lane === null) return undefined;
       const value = valueAt(current, lane, x, y);
       // An end stays inside the range and at least `minSpan` from the other, and never reaches it.
       if (current.part === 'end') {
@@ -345,13 +355,15 @@ function createLaneDrag(
     store.set(change);
   };
 
-  /** What `check` says of `to`. A `check` that throws ends the drag, and its error still reaches the page. */
-  const judge = (current: Session, to: LanePlace | null): LaneVerdict | null => {
-    if (to === null) return null;
+  /** What `check` says of `to`. */
+  const judge = (current: Session, to: LanePlace | null): LaneVerdict | null => (to === null ? null : (options().check?.(current.id, to) ?? null));
+
+  /** Runs `step` while the press is down. A `check` that throws in it ends the drag as Escape does, and its error still reaches the page. */
+  const guard = (current: Session, step: () => void) => {
     try {
-      return options().check?.(current.id, to) ?? null;
+      step();
     } catch (error) {
-      teardown(current);
+      if (session === current) abort(current);
       throw error;
     }
   };
@@ -381,11 +393,16 @@ function createLaneDrag(
       }
       const left = board.scrollLeft;
       const top = board.scrollTop;
-      board.scrollLeft = left + step.dx;
-      board.scrollTop = top + step.dy;
+      // Instant whatever scroll-behavior the board has, so this frame reads where it went. jsdom, where a product's tests run, has no scrollBy.
+      if (typeof board.scrollBy === 'function') board.scrollBy({ left: step.dx, top: step.dy, behavior: 'instant' });
+      else {
+        board.scrollLeft = left + step.dx;
+        board.scrollTop = top + step.dy;
+      }
+      const moved = board.scrollLeft !== left || board.scrollTop !== top;
       // At the end of the scroll the loop stops; the next move starts it again.
-      current.frame = board.scrollLeft !== left || board.scrollTop !== top ? requestAnimationFrame(tick) : 0;
-      if (current.frame !== 0) update(current, current.last.x, current.last.y);
+      current.frame = moved ? requestAnimationFrame(tick) : 0;
+      if (moved) guard(current, () => update(current, current.last.x, current.last.y));
     };
     current.frame = requestAnimationFrame(tick);
   };
@@ -446,6 +463,13 @@ function createLaneDrag(
     if (ended.started) onActive(null);
   };
 
+  /** Ends a drag while the press is still down, without a drop, and drops the click its release sends. */
+  const abort = (current: Session) => {
+    const { started, pointerId } = current;
+    teardown(current);
+    if (started) awaitRelease(pointerId);
+  };
+
   function onMove(event: globalThis.PointerEvent) {
     const current = session;
     if (current === null || event.pointerId !== current.pointerId) return;
@@ -468,7 +492,7 @@ function createLaneDrag(
       }
       onActive(current.node);
     }
-    update(current, event.clientX, event.clientY);
+    guard(current, () => update(current, event.clientX, event.clientY));
     steer(current);
   }
 
@@ -477,10 +501,15 @@ function createLaneDrag(
     if (ended === null || event.pointerId !== ended.pointerId) return;
     if (ended.started) armQuiet();
     if (!ended.started || !ended.node.isConnected || options().disabled) return teardown(ended);
-    // `check` again, since what it reads may have changed while the pointer stayed on one place.
-    update(ended, event.clientX, event.clientY, true);
-    const change = store.get();
-    teardown(ended);
+    let change: LaneDragChange | null;
+    try {
+      // `check` again, since what it reads may have changed while the pointer stayed on one place.
+      update(ended, event.clientX, event.clientY, true);
+    } finally {
+      // A `check` that throws still ends the drag; the click this release sends is already dropped.
+      change = store.get();
+      teardown(ended);
+    }
     if (change === null) return;
     if (change.kind === 'unassign') {
       if (change.from !== null) options().onDrop(change);
@@ -513,15 +542,7 @@ function createLaneDrag(
       if (read === null || (part !== 'move' && read.from === null)) return;
       const { from, span } = read;
       // The item's lane, by its key, wherever the item's element sits.
-      let lane: Element | null = null;
-      if (from !== null) {
-        for (const element of (node.getRootNode() as Document | ShadowRoot).querySelectorAll(`[${LANE}]`)) {
-          if (mine(element) && element.getAttribute(LANE) === from.lane) {
-            lane = element;
-            break;
-          }
-        }
-      }
+      const lane = from === null ? null : laneOf(node, from.lane);
       // A resize needs the lane it runs along.
       if (part !== 'move' && lane === null) return;
       const next: Session = {
@@ -554,10 +575,7 @@ function createLaneDrag(
     },
     /** Stops a started drag without a drop, and drops the click its release sends. */
     cancel() {
-      if (session === null || !session.started) return;
-      const { pointerId } = session;
-      teardown(session);
-      awaitRelease(pointerId);
+      if (session !== null && session.started) abort(session);
     },
     /** Ends everything, for the hook's unmount. */
     destroy() {
