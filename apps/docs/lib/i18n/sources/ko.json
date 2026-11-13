@@ -821,14 +821,14 @@
   },
   "recipes/scheduler": {
     "(top)": "a19d294efb1e",
-    "# Scheduler": "ef004717822a",
+    "# Scheduler": "515351c560f5",
     "## The time axis": "9a2d242cb763",
-    "## Stages and talks": "bcfe866f321f",
+    "## Stages and talks": "0a24bc47732d",
     "## The rules": "30c66bc94469",
     "## Moving without dragging": "ef83b5f6f9fc",
     "## Dragging": "c39fe10c47e7",
     "## Undo and saving": "a3b619f56583",
-    "## Accessible composition": "d58ef98d635b",
+    "## Accessible composition": "e39b59e6519d",
     "## When to use": "238b83521806",
     "(section order)": "4a8a9a3a8d20"
   },
@@ -1278,7 +1278,7 @@
   },
   "utilities/use-lane-drag": {
     "(top)": "eb186fb551e5",
-    "# useLaneDrag": "6904950d881e",
+    "# useLaneDrag": "14a0c7064498",
     "## Places": "f4f54b92ba05",
     "## Checking a place": "8612d14aa3db",
     "## Showing the drag": "02443dfa404d",

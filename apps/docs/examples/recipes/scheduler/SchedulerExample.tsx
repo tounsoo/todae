@@ -363,7 +363,8 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
   const handoff = useFocusHandoff({ to: shared.landing });
   const at = laneOf(talk.at!);
   const verdict = verdictFor(shared.talks, talk.id, at);
-  const name = [talk.title, talk.speakers.join(', '), talk.track, stageOf(at.lane).name, during(talk.at!, shared.locale), verdict ? `warning: ${verdict.reason}` : null].filter(Boolean).join(', ');
+  // The name starts with what the talk shows, in its order: the title, then its time and speakers.
+  const name = [talk.title, during(talk.at!, shared.locale), talk.speakers.join(', '), talk.track, stageOf(at.lane).name, verdict ? `warning: ${verdict.reason}` : null].filter(Boolean).join(', ');
   return (
     <li
       ref={handoff}
@@ -389,7 +390,7 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
           <Text.Root as="span" lines={2} weight="medium" className={styles.title}>
             {talk.title}
           </Text.Root>
-          <Text.Root as="span" lines={1} tone="muted" className={styles.meta}>
+          <Text.Root as="span" lines={1} tooltip={false} tone="muted" className={styles.meta}>
             {clock(talk.at!.starts, shared.locale)} · {talk.speakers.join(', ')}
           </Text.Root>
         </span>
@@ -527,9 +528,9 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
-// One day gives every talk room for its grip and text and snaps to 5 minutes. The whole event is
-// the overview and snaps to 15; an hour there is 7.5rem, so a half-hour talk still shows the start
-// of its title.
+// One day gives a talk of 25 minutes or more room for its grip and text and snaps to 5 minutes. The
+// whole event is the overview and snaps to 15; an hour there is 7.5rem, so a half-hour talk still
+// shows the start of its title.
 const ZOOM = { event: { step: 15, minute: '0.125rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 export default function SchedulerExample({ locale = 'en-US' }: { locale?: string }) {

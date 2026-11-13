@@ -87,7 +87,7 @@ describe('dragging', () => {
     reveal(100);
     // 11:15 on day 1 is 135 minutes into the axis, clear of Tokens that travel's changeover.
     dragTo('Dark mode, done right', along('Main stage', 135)).drop();
-    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
     expect(onStage('Dark mode, done right', 'Main stage')).toBe(true);
     await expect.poll(() => politeRegion()?.textContent).toBe('Dark mode, done right moved to Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
   });
@@ -115,7 +115,7 @@ describe('dragging', () => {
     await expect.poll(() => Math.abs(along('Main stage', 540).x - names.right)).toBeLessThan(0.5);
     // The board's scroll-padding marks the names, so a drop over them lands at the first place in view.
     dragTo('Dark mode, done right', { x: names.left + names.width / 2, y: along('Main stage', 540).y }).drop();
-    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Thu, Jun 3, 9:00 AM to 9:30 AM');
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Thu, Jun 3, 9:00 AM to 9:30 AM, Mira Patel, Design, Main stage');
     expect(talk('Dark mode, done right').getBoundingClientRect().left).toBeGreaterThanOrEqual(names.right - 0.5);
   });
 
@@ -257,7 +257,7 @@ describe('the talks', () => {
   }
 
   // The overview still says what each slot is: every placed talk shows the start of its title.
-  it('shows a few characters of every title, Whole event', async () => {
+  it('gives every title at least 2.5em, Whole event', async () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     for (const name of ['Main stage', 'Hall B', 'Workshop room']) {
@@ -302,7 +302,7 @@ describe('the dialog', () => {
     await userEvent.keyboard('{Enter}');
     const dialog = await screen.findByRole('dialog', { name: 'Schedule Dark mode, done right' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
-    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
     await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
   });
 
