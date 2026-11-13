@@ -29,4 +29,5 @@ Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.m
 - Do not force-push or rebase unless Ben agrees.
 - Agents do not merge. A merge waits until Ben approves it.
 - Change `.claude/`, `.agents/`, `CLAUDE.md`, and the `.claude/**` entry in the `ignores` list in `eslint.config.mjs` only with Ben's yes.
+- A pull request that adds a docs page, a docs section or a check also changes `CLAUDE.md` and `.claude/skills/verify/`, or says why neither needs to on a line `Agent docs unchanged: <reason>` in its body. CI's Agent docs job checks it, and [0016](docs/decisions/0016-agent-docs-check.md) says what counts.
 - A pull request that changes a decision or a spec also edits that decision's file in `docs/decisions/` in the same pull request. A design-system rule still belongs in [ARCHITECTURE.md](ARCHITECTURE.md), updated in that same pull request.

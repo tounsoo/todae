@@ -7,7 +7,7 @@ permissions:
 # Every push and pull request runs, so Checks always reports and release.yml can wait for it. A change
 # that is only Markdown no tool reads runs Changes, Forbidden paths and Checks, and skips the rest;
 # .github/scripts/change-class.sh decides which files those are. Drafts run Changes, Check, Token API,
-# Token consumers and Forbidden paths, and Checks fails until the pull request is ready.
+# Token consumers, Agent docs and Forbidden paths, and Checks fails until the pull request is ready.
 on:
   push:
     branches: [main]
@@ -217,11 +217,11 @@ jobs:
   # One result named Checks that covers every blocking job, so branch protection can require that name alone,
   # and release.yml waits for it before publishing. Token consumers is informational and Check only runs on
   # drafts, so neither is here. A job may be skipped only where this workflow skips it on purpose: every job
-  # but Changes and Forbidden paths on a Markdown-only change, and Token API on a push. On a draft, Checks
-  # fails instead of reporting skipped, which a required check would count as passing.
+  # but Changes and Forbidden paths on a Markdown-only change, and Token API and Agent docs on a push. On a draft,
+  # Checks fails instead of reporting skipped, which a required check would count as passing.
   checks:
     name: Checks
-    needs: [changes, static, build, fernway, engines, docs, token-api, forbidden-paths]
+    needs: [changes, static, build, fernway, engines, docs, token-api, agent-docs, forbidden-paths]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -244,7 +244,7 @@ jobs:
               .value.result == "success"
               or (.value.result == "skipped" and (
                 ($class == "markdown" and (.key | IN("changes", "forbidden-paths") | not))
-                or (.key == "token-api" and $event != "pull_request")
+                or ((.key | IN("token-api", "agent-docs")) and $event != "pull_request")
               ))
             )' >/dev/null
 
@@ -283,6 +283,28 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "$BASE" --head "$HEAD"
+
+  # Checks fails on drafts. This job still runs, as Token API does, so a missing agent docs change fails before review.
+  # Fails when the pull request adds a docs page, a docs section or a check without changing CLAUDE.md and
+  # .claude/skills/verify/, unless its body has a line `Agent docs unchanged: <reason>`. The body is read when the
+  # job runs, so a line added later counts at the next push or re-run. A Markdown-only change adds none of those.
+  agent-docs:
+    name: Agent docs
+    needs: changes
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.class != 'markdown' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: CLAUDE.md and the verify skill keep up
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node .github/scripts/agent-docs.mjs "$BASE" "$HEAD"
 
   # Informational. Lists components that read a changed token. Never fails the build.
   token-consumers:

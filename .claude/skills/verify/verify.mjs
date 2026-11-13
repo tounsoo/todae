@@ -55,8 +55,8 @@ export const CHANGE_TYPES = [
     id: 'docs',
     label: 'Docs app',
     match: under('apps/docs/'),
-    steps: ['typecheck', 'lint', 'docs-unit', 'docs-build', 'drive'],
-    proof: 'docs typecheck, tests and build, and the touched routes driven in English and Korean',
+    steps: ['typecheck', 'lint', 'docs-unit', 'docs-build', 'drive', 'agent-docs'],
+    proof: 'docs typecheck, tests and build, the touched routes driven in English and Korean, and the agent docs check',
   },
   {
     id: 'example',
@@ -92,8 +92,8 @@ export const CHANGE_TYPES = [
         '.changeset/config.json',
       ),
     ),
-    steps: ['check', 'unit'],
-    proof: 'pnpm check and unit tests here; the CI run on the pull request head is the rest of the proof',
+    steps: ['check', 'unit', 'agent-docs'],
+    proof: 'pnpm check, unit tests and the agent docs check here; the CI run on the pull request head is the rest of the proof',
   },
   {
     id: 'prose',
@@ -159,6 +159,11 @@ export const STEPS = {
     id: 'pstack-check',
     label: 'Pinned pstack copy and playbook anchors',
     cmd: ['sh', '.agents/pstack/check.sh'],
+  },
+  'agent-docs': {
+    id: 'agent-docs',
+    label: 'CLAUDE.md and this skill change with a new docs page, docs section or check',
+    cmd: ['node', '.github/scripts/agent-docs.mjs', 'origin/main', 'HEAD'],
   },
   drive: { id: 'drive', label: 'Drive the touched docs routes in English and Korean', drive: true },
 };
