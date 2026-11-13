@@ -33,16 +33,22 @@ A run ends in one of three verdicts. The exit code carries it.
 | --- | --- | --- |
 | `tokens` | `packages/design-system/tokens/` | `pnpm tokens:check`, `pnpm tokens:api:check` and the unit tests. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
 | `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build and `pnpm publish:check`. |
-| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, and a drive of the touched routes in English and Korean. |
+| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, a drive of the touched routes in English and Korean, and the agent docs check. |
 | `example` | `examples/` | the package build and the Fernway example build. |
 | `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test, `verify.test.mjs` and `sh .agents/pstack/check.sh`. Review covers the rest. |
-| `ci` | `.github/`, root config, `scripts/` | `pnpm check` and the unit tests. The CI run on the pull request head is the rest of the proof, so cite its link. |
+| `ci` | `.github/`, root config, `scripts/` | `pnpm check`, the unit tests and the agent docs check. The CI run on the pull request head is the rest of the proof, so cite its link. |
 | `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
 | `other` | anything else | `pnpm check` and the unit tests. |
 
 The unit, docs and browser tests, the publish check and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. `run --only` adds that build too.
 
 A passing step for one type does not prove another. A unit test does not show a docs page, and a page that renders does not show a failing test is fixed.
+
+## AGENT DOCS
+
+The `agent-docs` step runs `.github/scripts/agent-docs.mjs` on the branch against `origin/main`, as CI's Agent docs job runs it on the pull request, so run `git fetch origin main` first. It fails when the branch adds a docs page, a docs section or a check and leaves `CLAUDE.md`, or both this page and `verify.mjs`, unchanged, and it lists what it found. [0016](../../../docs/decisions/0016-agent-docs-check.md) says what counts.
+
+Change both with what an agent needs to know. A new check that a change type should run goes into `STEPS` and `CHANGE_TYPES` in `verify.mjs` and the table above. A new section, or a page whose layout the drive doesn't reach, goes into `SHARED_ROUTES` or the route rules under DRIVE. `CLAUDE.md` names the new check, section or kind of page where a thread would look for it. Where one or both need no change, as for a page the drive already reaches through its route, write a line `Agent docs unchanged: <reason>` in the pull request body, outside any HTML comment or code block, and run with `PR_BODY` set to that body so the step reads it too.
 
 ## LAUNCH
 

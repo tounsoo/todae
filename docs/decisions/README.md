@@ -4,6 +4,7 @@ These files record dated decisions. Design-system rules stay in [ARCHITECTURE.md
 
 Copy [template.md](template.md) for a new decision. Name it `NNNN-short-slug.md` and use the next number. The newest number is first.
 
+- [0016. CI fails a new page, section or check that leaves CLAUDE.md and the verify skill behind](0016-agent-docs-check.md). Active, 2026-11-13.
 - [0015. Threads read a pinned pstack copy that a weekly workflow updates](0015-pinned-pstack-copy.md). Active, 2026-11-12.
 - [0014. Typed inputs are Field parts, and pickers are composed](0014-typed-inputs-and-field-picker.md). Active, 2026-11-09.
 - [0013. Motion comes from role and component tokens](0013-motion.md). Active, 2026-11-07.
