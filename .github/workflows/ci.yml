@@ -285,15 +285,18 @@ jobs:
         run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "$BASE" --head "$HEAD"
 
   # Checks fails on drafts. This job still runs, as Token API does, so a missing agent docs change fails before review.
-  # Fails when the pull request adds a docs page, a docs section or a check without changing CLAUDE.md and
-  # .claude/skills/verify/, unless its body has a line `Agent docs unchanged: <reason>`. The body is read when the
-  # job runs, so a line added later counts at the next push or re-run. A Markdown-only change adds none of those.
+  # Fails when the pull request adds a docs page, a docs section or a check without changing CLAUDE.md and the verify
+  # skill, unless its body has a line `Agent docs unchanged: <reason>`. It reads the body from the API, not from the
+  # event, so a re-run sees a line added after the push. A Markdown-only change adds none of those.
   agent-docs:
     name: Agent docs
     needs: changes
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.class != 'markdown' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -303,8 +306,12 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: node .github/scripts/agent-docs.mjs "$BASE" "$HEAD"
+          NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_BODY="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$NUMBER" --jq '.body // ""')"
+          export PR_BODY
+          node .github/scripts/agent-docs.mjs "$BASE" "$HEAD"
 
   # Informational. Lists components that read a changed token. Never fails the build.
   token-consumers:

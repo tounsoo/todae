@@ -36,5 +36,5 @@ Verdict: <PASS, FAIL or BLOCKED>
 Also, when it applies:
 - A user-facing change has a changeset, or `pnpm changeset --empty` when it ships nothing.
 - A changed decision or spec edits its file in docs/decisions/.
-- A new docs page, docs section or check changes CLAUDE.md and .claude/skills/verify/, or the body says why on its own line, starting with "Agent docs unchanged:" and a reason.
+- A new docs page, docs section or check changes CLAUDE.md and the verify skill's SKILL.md or verify.mjs. Where one or both need no change, the body says why on its own line outside this comment, starting with "Agent docs unchanged:" and a reason.
 -->

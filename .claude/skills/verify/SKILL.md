@@ -46,9 +46,9 @@ A passing step for one type does not prove another. A unit test does not show a 
 
 ## AGENT DOCS
 
-The `agent-docs` step runs `.github/scripts/agent-docs.mjs` on the branch against `origin/main`, as CI's Agent docs job runs it on the pull request. It fails when the branch adds a docs page, a docs section or a check and leaves `CLAUDE.md` or this skill unchanged, and it lists what it found. [0016](../../../docs/decisions/0016-agent-docs-check.md) says what counts.
+The `agent-docs` step runs `.github/scripts/agent-docs.mjs` on the branch against `origin/main`, as CI's Agent docs job runs it on the pull request. It fails when the branch adds a docs page, a docs section or a check and leaves `CLAUDE.md`, or both this page and `verify.mjs`, unchanged, and it lists what it found. [0016](../../../docs/decisions/0016-agent-docs-check.md) says what counts.
 
-Change both with what an agent needs to know. A new check that a change type should run goes into `STEPS` and `CHANGE_TYPES` in `verify.mjs` and the table above. A new section, or a page whose layout the drive doesn't reach, goes into `SHARED_ROUTES` or the route rules under DRIVE. `CLAUDE.md` names the new check, section or kind of page where a thread would look for it. When neither needs to change, as for a page the drive already reaches through its route, write a line `Agent docs unchanged: <reason>` in the pull request body, and run with `PR_BODY` set to that body so the step reads it too.
+Change both with what an agent needs to know. A new check that a change type should run goes into `STEPS` and `CHANGE_TYPES` in `verify.mjs` and the table above. A new section, or a page whose layout the drive doesn't reach, goes into `SHARED_ROUTES` or the route rules under DRIVE. `CLAUDE.md` names the new check, section or kind of page where a thread would look for it. Where one or both need no change, as for a page the drive already reaches through its route, write a line `Agent docs unchanged: <reason>` in the pull request body, outside any HTML comment, and run with `PR_BODY` set to that body so the step reads it too.
 
 ## LAUNCH
 

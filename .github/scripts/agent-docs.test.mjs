@@ -38,7 +38,7 @@ const ci = (steps, jobs = '') =>
   `on:\n  pull_request:\njobs:\n  static:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: actions/checkout@v4\n${steps}${jobs}`;
 
 const siteGroups = (...ids) =>
-  `export const SITE_GROUPS = [\n${ids.map((id) => `  {\n    id: '${id}',\n    links: [],\n  },\n`).join('')}] as const;\n`;
+  `export const SITE_GROUPS = [\n${ids.map((id) => `  {\n    id: '${id}',\n    links: [],\n  },\n`).join('')}] as const;\n\nexport const LINKS = [{ id: 'not-a-section' }];\n`;
 
 const base = {
   'CLAUDE.md': '# Claude\n',
@@ -99,12 +99,22 @@ test('a Korean page alone, or a file beside a page, is not a new page', () => {
   assert.equal(result.status, 0, result.out);
 });
 
-test('a page that moves is not a new page', () => {
+test('a page that moves is not a new page, however much it changes', () => {
   const result = check({
     'apps/docs/app/(en)/button/page.mdx': null,
-    'apps/docs/app/(en)/actions/button/page.mdx': '# Button\n\nA button does a thing when pressed.\n',
+    'apps/docs/app/(en)/actions/button/page.mdx': '# Actions\n\nEverything here is new text about something else.\n',
   });
   assert.equal(result.status, 0, result.out);
+});
+
+test('more new routes than removed ones count every new route', () => {
+  const result = check({
+    'apps/docs/app/(en)/button/page.mdx': null,
+    'apps/docs/app/(en)/actions/button/page.mdx': '# Button\n',
+    'apps/docs/app/(en)/actions/link/page.mdx': '# Link\n',
+  });
+  assert.equal(result.status, 1, result.out);
+  assert.match(result.out, /docs page \/actions\/button\n {2}- docs page \/actions\/link/);
 });
 
 test('a page.mdx that becomes a page.tsx keeps its route', () => {
@@ -112,10 +122,13 @@ test('a page.mdx that becomes a page.tsx keeps its route', () => {
   assert.equal(result.status, 0, result.out);
 });
 
-test('a new docs section fails', () => {
-  const result = check({ 'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components', 'recipes') });
+test('a new docs section fails, and an id outside the groups is not a section', () => {
+  const result = check({
+    'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components', 'recipes').replace('not-a-section', 'still-not'),
+  });
   assert.equal(result.status, 1, result.out);
   assert.match(result.out, /docs section recipes/);
+  assert.doesNotMatch(result.out, /still-not/);
 });
 
 test('a new job or a new run step in a pull request workflow fails', () => {
@@ -126,8 +139,8 @@ test('a new job or a new run step in a pull request workflow fails', () => {
     ),
   });
   assert.equal(result.status, 1, result.out);
-  assert.match(result.out, /check ci\.yml: step "Pinned actions"/);
-  assert.match(result.out, /check ci\.yml: step `pnpm test:axe`/);
+  assert.match(result.out, /check step "Pinned actions"/);
+  assert.match(result.out, /check step `pnpm test:axe`/);
   assert.match(result.out, /check ci\.yml: job docs/);
 });
 
@@ -139,16 +152,18 @@ test('a new workflow that pull requests start fails', () => {
   assert.match(result.out, /check links\.yaml: job links/);
 });
 
-test('a step that only uses an action, a step copied into another job, or a push-only workflow is not a check', () => {
+test('a step that only uses an action, a step copied into another job or workflow, or a push-only workflow is not a check', () => {
   const result = check({
     '.github/workflows/ci.yml': ci(
       '      - name: Lint\n        run: pnpm lint\n      - uses: actions/cache/save@v4\n',
       '  static:\n    runs-on: ubuntu-24.04\n    steps:\n      - name: Lint\n        run: pnpm lint\n',
     ).replace(/jobs:\n {2}static:/, 'jobs:\n  lint:'),
+    '.github/workflows/lint.yml': 'on: pull_request\njobs:\n  static:\n    runs-on: ubuntu-24.04\n    steps:\n      - name: Lint\n        run: pnpm lint\n',
     '.github/workflows/release.yml': 'on:\n  push:\njobs:\n  publish:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: npm publish\n  tag:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: git tag v1\n',
   });
   assert.match(result.out, /check ci\.yml: job lint/);
-  assert.doesNotMatch(result.out, /step|release/);
+  assert.match(result.out, /check lint\.yml: job static/);
+  assert.doesNotMatch(result.out, /check step|release/);
 });
 
 test('a new part of pnpm check fails', () => {
@@ -166,10 +181,26 @@ test('a new page passes with CLAUDE.md and the verify skill changed', () => {
 test('changing only one of the two still fails and names the other', () => {
   const onlyClaude = check({ 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n', 'CLAUDE.md': '# Claude\n\nMore.\n' });
   assert.equal(onlyClaude.status, 1, onlyClaude.out);
-  assert.match(onlyClaude.out, /change the verify skill in \.claude\/skills\/verify\//);
+  assert.match(onlyClaude.out, /change the verify skill \(\.claude\/skills\/verify\/SKILL\.md or verify\.mjs\)/);
   const onlyVerify = check({ 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n', '.claude/skills/verify/verify.mjs': 'x\n' });
   assert.equal(onlyVerify.status, 1, onlyVerify.out);
   assert.match(onlyVerify.out, /change CLAUDE\.md in this pull request/);
+});
+
+test('deleting CLAUDE.md, or changing only the verify tests, is not changing the agent docs', () => {
+  const result = check({
+    'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n',
+    'CLAUDE.md': null,
+    '.claude/skills/verify/verify.test.mjs': 'x\n',
+  });
+  assert.equal(result.status, 1, result.out);
+  assert.match(result.out, /change CLAUDE\.md and the verify skill/);
+});
+
+test('a workflow that is not valid YAML fails with its name', () => {
+  const result = check({ '.github/workflows/ci.yml': 'on: [\n' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.out, /\.github\/workflows\/ci\.yml is not valid YAML/);
 });
 
 test('a body line with a reason lets it pass, and one without a reason does not', () => {
@@ -177,8 +208,13 @@ test('a body line with a reason lets it pass, and one without a reason does not'
   const passed = check(page, '## Why\n\nA recipe.\n\nAgent docs unchanged: verify drives new routes from the diff\n');
   assert.equal(passed.status, 0, passed.out);
   assert.match(passed.out, /stay as they are: verify drives new routes from the diff$/m);
+  assert.doesNotMatch(passed.out, /PR_BODY/);
   const crlf = check(page, '## Why\r\n\r\nAgent docs unchanged: a recipe\r\n');
   assert.match(crlf.out, /stay as they are: a recipe\n/);
   assert.equal(check(page, 'Agent docs unchanged:   \r\n').status, 1);
   assert.equal(check(page, 'We left the agent docs unchanged: no reason\n').status, 1);
+  assert.equal(check(page, 'Agent docs unchanged: <reason>\n').status, 1);
+  assert.equal(check(page, '<!--\nAgent docs unchanged: hidden from the page\n-->\n').status, 1);
+  assert.equal(check(page, '<!-- a note -->\nAgent docs unchanged: shown on the page\n').status, 0);
+  assert.match(check(page).out, /For a run outside CI, set PR_BODY to that body\./);
 });
