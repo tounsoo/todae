@@ -247,8 +247,7 @@
   container-type: inline-size;
   min-inline-size: 0;
   overflow: hidden;
-  /* The end handle's width, so the menu button sits clear of it and its ring
-     inside the clipped block. */
+  /* The end handle's width, so the menu button sits clear of it. */
   padding-inline-end: var(--todae-space-2);
   border-inline-start: 0.25rem solid var(--track);
 }
@@ -300,17 +299,10 @@
 
 .title,
 .meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.title {
-  font-weight: var(--todae-text-weight-medium);
+  line-height: var(--todae-text-leading-tight);
 }
 
 .meta {
-  color: var(--todae-color-fg-muted);
   font-size: var(--todae-text-label-font-size);
 }
 
@@ -319,38 +311,45 @@
   color: var(--todae-color-status-warning-fg);
 }
 
-/* A short talk keeps only its grip and menu, which names the talk in full. */
-@container (max-inline-size: 6rem) {
-  .body,
-  .flag {
-    display: none;
-  }
+/* A placed talk is its menu button, which fills the talk past its grip and
+   shows its title, time and any warning, so a narrow talk spends its room on
+   text, not on controls. Its ring sits inside it, so the block can't cut it. */
+.block .menu {
+  flex: 1;
+  align-self: stretch;
+  justify-content: flex-start;
+  gap: var(--todae-space-1);
+  min-inline-size: 0;
+  padding-block: 0;
+  padding-inline: var(--todae-space-1);
+  border: 0;
+  border-radius: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: start;
 }
 
-/* A talk too short for its grip, a gap and its menu button, about 4.25rem
-   at comfortable density, becomes the button, which makes every move. A
+.block .menu:focus-visible {
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
+}
+
+/* A talk too narrow for its grip and some text, about 5rem at comfortable
+   density, drops its grip, ends and warning icon and keeps its text; its
+   button still makes every move, and its outline still marks a warning. A
    container query can't read a token, so a denser or roomier product sets
-   its own number. Its ring sits inside it, so the block can't cut it. */
-@container (max-inline-size: 4.25rem) {
+   its own number. */
+@container (max-inline-size: 5rem) {
   /* Specific enough to beat the grip's own display, which comes later. */
   .block .grip,
-  .block .edge {
+  .block .edge,
+  .block .flag {
     display: none;
   }
 
+  /* With no end handle to clear, the button takes the block's end room too. */
   .block .menu {
-    position: absolute;
-    inset: 0;
-    inline-size: auto;
-    min-inline-size: 0;
-    block-size: auto;
-    min-block-size: 0;
-    padding: 0;
-    border-radius: 0;
-  }
-
-  .block .menu:focus-visible {
-    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    margin-inline-end: calc(-1 * var(--todae-space-2));
   }
 }
 

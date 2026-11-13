@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import ConferenceSchedule, {
+import SchedulerExample, {
   findConflicts,
   fromUnits,
   segmentAt,
@@ -9,8 +9,8 @@ import ConferenceSchedule, {
   timeline,
   toUnits,
   verdictFor,
-} from '../../examples/recipes/conference-schedule/ConferenceSchedule';
-import type { Talk } from '../../examples/recipes/conference-schedule/ConferenceSchedule';
+} from '../../examples/recipes/scheduler/SchedulerExample';
+import type { Talk } from '../../examples/recipes/scheduler/SchedulerExample';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -121,7 +121,7 @@ describe('verdictFor', () => {
 describe('the schedule', () => {
   afterEach(cleanup);
   const setup = () =>
-    render(<ConferenceSchedule locale="en-US" />);
+    render(<SchedulerExample locale="en-US" />);
   const talksOn = (stage: string) =>
     within(within(screen.getByRole('region', { name: stage })).getByRole('list'))
       .queryAllByRole('button')
