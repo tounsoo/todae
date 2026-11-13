@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "@tounsoo/todae": "workspace:*",
-    "next": "^15.5.28",
+    "next": "^16.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "typescript": "^6.0.2"
+    "typescript": "^7.0.2"
   }
 }
