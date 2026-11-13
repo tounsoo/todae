@@ -48,11 +48,13 @@
 /* The board scrolls both ways, and its stacking stays inside it. */
 .board {
   isolation: isolate;
-  /* Focus and scrolling stop clear of the sticky names column and header
-     row, with room for a focus ring past them. */
+  /* The scroll-padding marks exactly what the sticky names column and header
+     row cover, so useLaneDrag counts its auto-scroll edge from past them and
+     a drop over the names lands at the first place in view. The scroll-margin
+     on each day and talk menu adds a focus ring's room past them. */
   --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
-  scroll-padding-block-start: calc(var(--header) + var(--todae-border-width) + var(--_ring-room));
-  scroll-padding-inline-start: calc(var(--names) + var(--_ring-room));
+  scroll-padding-block-start: calc(var(--header) + var(--todae-border-width));
+  scroll-padding-inline-start: var(--names);
   max-block-size: 32rem;
   border: var(--todae-border-width) solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
@@ -122,6 +124,7 @@
   padding-block-start: var(--todae-space-2);
   padding-inline-start: var(--todae-space-2);
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-default);
+  scroll-margin-inline-start: var(--_ring-room);
 }
 
 .bands {
@@ -392,6 +395,8 @@
 
 .menu {
   flex: none;
+  scroll-margin-block-start: var(--_ring-room);
+  scroll-margin-inline-start: var(--_ring-room);
 }
 
 .preview {

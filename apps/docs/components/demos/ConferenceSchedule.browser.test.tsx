@@ -102,6 +102,23 @@ describe('dragging', () => {
     expect(talk('Motion with purpose').getAttribute('data-conflict')).toBe('warning');
   });
 
+  it('drops at the start of a day with the pointer over the stage names', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
+    // The day stops a focus ring's room past the names, so its start is just in view.
+    await expect.poll(() => along('Main stage', 540).x - names.right).toBeLessThan(6);
+    expect(along('Main stage', 540).x - names.right).toBeCloseTo(4, 0);
+    // Put the day's start right at the names' edge. A scroll-padding wider than the names would
+    // count the first place in view a step later, and the drop would land at 9:05.
+    board().scrollLeft += along('Main stage', 540).x - names.right;
+    await expect.poll(() => Math.abs(along('Main stage', 540).x - names.right)).toBeLessThan(0.5);
+    // The board's scroll-padding marks the names, so a drop over them lands at the first place in view.
+    dragTo('Dark mode, done right', { x: names.left + names.width / 2, y: along('Main stage', 540).y }).drop();
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Thu, Jun 3, 9:00 AM to 9:30 AM');
+    expect(talk('Dark mode, done right').getBoundingClientRect().left).toBeGreaterThanOrEqual(names.right - 0.5);
+  });
+
   it('marks the talk a speaker gives on another stage, refuses the drop and puts the mark back', async () => {
     setup();
     reveal(895);
@@ -189,7 +206,7 @@ describe('the sticky stage names', () => {
     expect(day.textContent).toContain('Thu, Jun 3');
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
-    // The board's scroll-padding leaves a focus ring's room past the names.
+    // The day's scroll-margin leaves a focus ring's room past the names.
     await expect.poll(() => day.getBoundingClientRect().left - names.right).toBeLessThan(6);
     expect(day.getBoundingClientRect().left - names.right).toBeCloseTo(4, 0);
   });
