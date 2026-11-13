@@ -16,14 +16,14 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "temporal-polyfill": "^1.0.5",
-    "vite": "^6.4.5"
+    "vite": "^8.3.6"
   },
   "devDependencies": {
-    "@types/node": "^22.13.10",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "jsdom": "^26.1.0",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.12"
+    "jsdom": "^31.0.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }
