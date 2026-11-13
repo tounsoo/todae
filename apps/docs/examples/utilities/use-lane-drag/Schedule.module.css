@@ -15,6 +15,7 @@
   gap: var(--todae-space-2);
   overflow-x: auto;
   padding-block-end: var(--todae-space-2);
+  scroll-padding-inline-start: var(--schedule-name);
 }
 
 .hours {
