@@ -384,10 +384,11 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
         <GripVertical size="1em" />
       </span>
       {/* The talk is its menu button, so its title and time take the room a separate button would. The
-          button's name says it all; a title the clamp cuts shows whole in a tooltip on hover or focus. */}
+          button's name says it all; a title the clamp cuts shows whole in a tooltip on hover or focus. The
+          seeded titles are English on every locale, so the title says so, and hyphenation follows it. */}
       <TalkMenu talk={talk} talks={shared.talks} move={shared.move} edit={shared.edit} trigger={talk.id === shared.landed ? shared.landing : undefined} name={name}>
         <span className={styles.body}>
-          <Text.Root as="span" lines={2} weight="medium" className={styles.title}>
+          <Text.Root as="span" lang="en" lines={2} weight="medium" className={styles.title}>
             {talk.title}
           </Text.Root>
           <Text.Root as="span" lines={1} tooltip={false} tone="muted" className={styles.meta}>

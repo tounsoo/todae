@@ -364,18 +364,25 @@
 }
 
 /* The whole talk takes the button's hover and press fill, grip included, so
-   it reads as one card. */
+   it reads as one card. The fill is translucent, so it is layered over the
+   talk's own surface rather than replacing it. */
 .block .menu {
   --_button-bg-hover: transparent;
   --_button-bg-active: transparent;
 }
 
 .block:has(.menu:hover) {
-  background: var(--todae-button-ghost-bg-hover);
+  background-image: linear-gradient(
+    var(--todae-button-ghost-bg-hover),
+    var(--todae-button-ghost-bg-hover)
+  );
 }
 
 .block:has(.menu:active) {
-  background: var(--todae-button-ghost-bg-active);
+  background-image: linear-gradient(
+    var(--todae-button-ghost-bg-active),
+    var(--todae-button-ghost-bg-active)
+  );
 }
 
 /* A talk with too little room past its leading edge and end handle for its
