@@ -171,15 +171,16 @@ function samePlace(a: LanePlace | null, b: LanePlace | null): boolean {
   return a === b || (a !== null && b !== null && a.lane === b.lane && a.start === b.start && a.end === b.end);
 }
 
-/** An item's place or span, read from the attributes `getItemProps` wrote on its element. */
-function readPlace(node: Element): { from: LanePlace | null; span: number } {
+/** An item's place or span, read from the attributes `getItemProps` wrote on its element, or null when they make no place. */
+function readPlace(node: Element): { from: LanePlace | null; span: number } | null {
   const lane = node.getAttribute(IN);
   if (lane !== null) {
     const start = Number(node.getAttribute(START));
     const end = Number(node.getAttribute(END));
-    return { from: { lane, start, end }, span: end - start };
+    return Number.isFinite(start) && Number.isFinite(end) && end > start ? { from: { lane, start, end }, span: end - start } : null;
   }
-  return { from: null, span: Number(node.getAttribute(SPAN) ?? 0) };
+  const span = Number(node.getAttribute(SPAN));
+  return Number.isFinite(span) && span > 0 ? { from: null, span } : null;
 }
 
 function createStore(): LaneDragStore & { set: (next: LaneDragChange | null) => void } {
@@ -462,8 +463,9 @@ function createLaneDrag(
       let node: HTMLElement | null = handle;
       while (node !== null && !(mine(node) && node.getAttribute(ITEM) === item)) node = node.parentElement;
       if (node === null) return;
-      const { from, span } = readPlace(node);
-      if (part !== 'move' && from === null) return;
+      const read = readPlace(node);
+      if (read === null || (part !== 'move' && read.from === null)) return;
+      const { from, span } = read;
       let lane: Element | null = null;
       for (let parent = node.parentElement; from !== null && parent !== null && lane === null; parent = parent.parentElement) {
         if (mine(parent) && parent.getAttribute(LANE) === from.lane) lane = parent;
@@ -500,6 +502,7 @@ function createLaneDrag(
       if (session === null || !session.started || session.cancelled) return;
       cancelAnimationFrame(session.frame);
       clear(session, true);
+      window.removeEventListener('selectstart', onSelectStart, true);
       session.cancelled = true;
       store.set(null);
       onActive(null);

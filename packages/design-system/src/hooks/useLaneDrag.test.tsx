@@ -222,6 +222,26 @@ it('finds no place for an item longer than the range', () => {
   expect(onDrop).not.toHaveBeenCalled();
 });
 
+it('takes no drag from an item whose span is missing', () => {
+  const onDrop = vi.fn();
+  function Host() {
+    const lanes = useLaneDrag({ range: { start: 0, end: 100 }, onDrop });
+    return (
+      <div {...lanes.getBoardProps()} data-r="0,0,1000,1000">
+        <div {...lanes.getLaneProps('a')} data-r="0,0,1000,40" />
+        <div {...lanes.getQueueProps()} data-r="0,100,1000,100">
+          <div {...lanes.getItemProps('none', { span: Number.NaN })} data-r="0,120,200,40">
+            <span {...lanes.getHandleProps('none', 'move')} data-testid="none" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  render(<Host />);
+  drag(screen.getByTestId('none'), 20, 130, [[60, 100], [100, 20]]);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
 it('takes a placed item back to the queue', () => {
   const onDrop = vi.fn();
   render(<Board onDrop={onDrop} />);
@@ -374,6 +394,10 @@ it('cancels a drag on Escape and drops its release\'s click', () => {
   expect(screen.getByTestId('ghost-a').textContent).toBe('40-55');
   act(() => void document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
   expect(screen.queryByTestId('ghost-a')).toBeNull();
+  // Text selection works again at once, before the release.
+  const selection = new Event('selectstart', { bubbles: true, cancelable: true });
+  document.body.dispatchEvent(selection);
+  expect(selection.defaultPrevented).toBe(false);
   expect(screen.getByTestId('q1').hasAttribute('data-dragging')).toBe(false);
   move(500, 20);
   expect(screen.queryByTestId('ghost-a')).toBeNull();

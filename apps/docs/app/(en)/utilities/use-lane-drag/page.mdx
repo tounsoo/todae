@@ -63,7 +63,7 @@ A drop that changes a place calls `onDrop(change)`, where `change` is `{ id, kin
 
 ## Checking a place
 
-`check(id, to)` runs each time the place under the pointer changes, not on every pointer move, and returns `null` or a verdict: `{ level, reason, with }`. A `blocked` place takes no drop. A `warning` place does, and `onDrop` gets the verdict, so you can say why. `with` lists the ids of the other items the place conflicts with, which is how a rule that crosses lanes shows: in the example, a speaker in Room A at 10:30 blocks their other talk at 10:30 on any stage. The rules are yours, and the hook knows nothing about times, stages or speakers.
+`check(id, to)` runs each time the place under the pointer changes, not on every pointer move, and returns `null` or a verdict: `{ level, reason, with }`. A `blocked` place takes no drop. A `warning` place does, and `onDrop` gets the verdict, so you can say why. `with` lists the ids of the other items the place conflicts with, which is how a rule that crosses lanes shows: in the example, a speaker in Room A at 10:30 blocks their other talk at 10:30 on any stage. The rules are yours, and the hook knows nothing about times, stages or speakers. Taking an item back to the queue isn't checked: to keep an item on the board, such as a talk that's been announced, leave its `unassign` out of `onDrop`.
 
 ## Showing the drag
 
