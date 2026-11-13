@@ -531,7 +531,7 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // One day gives a talk of half an hour or more room for its grip and text and snaps to 5 minutes. The
 // whole event is the overview and snaps to 15; an hour there is 9.375rem, so a half-hour talk still
-// shows a word or two of its title.
+// shows a word or two of its title in the smaller label size.
 const ZOOM = { event: { step: 15, minute: '0.15625rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 export default function SchedulerExample({ locale = 'en-US' }: { locale?: string }) {
@@ -605,7 +605,7 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
   const queue = talks.filter((talk) => talk.at === null);
 
   return (
-    <div className={styles.schedule} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: AXIS.range.end }}>
+    <div className={styles.schedule} data-zoom={zoom} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: AXIS.range.end }}>
       <div className={styles.controls}>
         <div className={styles.jump} role="group" aria-label="Go to day">
           {DAYS.map((day, index) => (

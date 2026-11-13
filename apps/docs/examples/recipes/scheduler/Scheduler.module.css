@@ -332,6 +332,13 @@
   font-size: var(--todae-text-label-font-size);
 }
 
+/* The whole event is the overview, so a talk's title takes the smaller
+   label size there, as a calendar's dense views do, and a short word fits
+   whole in a half-hour talk. */
+.schedule[data-zoom='event'] .title {
+  font-size: var(--todae-text-label-font-size);
+}
+
 .flag {
   flex: none;
   color: var(--todae-color-status-warning-fg);
