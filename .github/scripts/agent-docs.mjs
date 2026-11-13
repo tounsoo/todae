@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import tseslint from 'typescript-eslint';
 import { parse } from 'yaml';
 
 const PAGES = 'apps/docs/app/(en)';
@@ -37,48 +38,50 @@ function pageRoute(path) {
   return `/${segments.join('/')}`;
 }
 
-// The id of each group in SITE_GROUPS, the sidebar's sections: the `id` key of each object right inside the array,
-// however the file is laid out. It walks the array's brackets, skipping strings and comments, and counts the groups
-// whose id isn't a plain string it can read, since those would hide a new section.
+// What the parser gives for an expression, with `as` and `satisfies` taken off.
+function bare(node) {
+  return node?.type === 'TSAsExpression' || node?.type === 'TSSatisfiesExpression' ? bare(node.expression) : node;
+}
+
+// The id of each group in the exported SITE_GROUPS array, the sidebar's sections, read with the TypeScript parser.
+// A group that isn't an object with an id written as a plain string, such as a spread, a constant or a call, is
+// counted as unread, since it could hide a new section. `found` says whether the array is there at all.
 function sectionIds(text) {
-  const declaration = text == null ? null : /export const SITE_GROUPS\b[^=]*=\s*\[/.exec(text);
   const ids = new Set();
   let unread = 0;
-  if (!declaration) return { ids, unread };
-  let depth = 1;
-  let previous = '[';
-  let group = null;
-  for (let at = declaration.index + declaration[0].length; at < text.length && depth > 0; at++) {
-    const char = text[at];
-    if (/\s/.test(char)) continue;
-    if (text.startsWith('//', at) || text.startsWith('/*', at)) {
-      const end = text.indexOf(text[at + 1] === '/' ? '\n' : '*/', at + 2);
-      if (end === -1) break;
-      at = text[at + 1] === '/' ? end : end + 1;
-      continue;
-    }
-    if (depth === 2 && group && (previous === '{' || previous === ',')) {
-      const key = /^(?:id|'id'|"id")\s*:\s*(['"`])([^'"`\n$]+)\1\s*[,}]/.exec(text.slice(at, at + 200));
-      if (key) {
-        ids.add(key[2]);
-        group.id = true;
-      }
-    }
-    if (char === "'" || char === '"' || char === '`') {
-      let end = at + 1;
-      while (end < text.length && text[end] !== char) end += text[end] === '\\' ? 2 : 1;
-      at = end;
-    } else if ('[{('.includes(char)) {
-      depth += 1;
-      if (depth === 2 && char === '{') group = { id: false };
-    } else if (']})'.includes(char)) {
-      if (depth === 2 && char === '}' && group && !group.id) unread += 1;
-      if (depth === 2) group = null;
-      depth -= 1;
-    }
-    previous = char;
+  if (text == null) return { ids, unread, found: false };
+  let program;
+  try {
+    program = tseslint.parser.parseForESLint(text).ast;
+  } catch (error) {
+    throw new Error(`${SITE_GROUPS} is not valid TypeScript: ${error.message}`, { cause: error });
   }
-  return { ids, unread };
+  const array = bare(
+    program.body
+      .filter((node) => node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration')
+      .flatMap((node) => node.declaration.declarations)
+      .find((declarator) => declarator.id.type === 'Identifier' && declarator.id.name === 'SITE_GROUPS')?.init,
+  );
+  if (array?.type !== 'ArrayExpression') return { ids, unread, found: false };
+  for (const element of array.elements) {
+    const group = bare(element);
+    const property =
+      group?.type === 'ObjectExpression'
+        ? group.properties.find(
+            (item) => item.type === 'Property' && !item.computed && (item.key.name ?? item.key.value) === 'id',
+          )
+        : null;
+    const value = bare(property?.value);
+    const id =
+      value?.type === 'Literal' && typeof value.value === 'string'
+        ? value.value
+        : value?.type === 'TemplateLiteral' && value.expressions.length === 0
+          ? value.quasis[0].value.cooked
+          : null;
+    if (id === null) unread += 1;
+    else ids.add(id);
+  }
+  return { ids, unread, found: true };
 }
 
 function triggersOnPullRequests(on) {
@@ -136,11 +139,12 @@ function inventory(ref) {
   const workflows = git(['ls-tree', '-z', '--name-only', ref, WORKFLOWS])
     .split('\0')
     .filter((file) => /\.ya?ml$/.test(file));
-  const { ids, unread } = sectionIds(show(ref, SITE_GROUPS));
+  const { ids, unread, found } = sectionIds(show(ref, SITE_GROUPS));
   const sections = [...ids].map((id) => `docs section ${id}`);
   return {
     pages: new Set(routes.map((route) => `docs page ${route}`)),
     sections: sections.length,
+    sidebarFound: found,
     unreadSections: unread,
     others: new Set([
       ...sections,
@@ -154,8 +158,8 @@ const minus = (a, b) => [...a].filter((item) => !b.has(item));
 
 // What the diff adds, and whether it changes the files agents read. Pages count only when the diff adds more
 // routes than it removes, so a page that moves, however much it changes on the way, isn't new. The sidebar is
-// unreadable when the base has sections and the head shows none, because it moved or changed its declaration, or
-// when a group at the head has no id the script can read. Either would hide a new section.
+// unreadable when a group at the head has no id the script can read, or when the base has sections and the head has
+// no exported SITE_GROUPS array, because it moved or changed its declaration. Either would hide a new section.
 function review(base, head) {
   const mergeBase = git(['merge-base', base, head]).trim();
   const before = inventory(mergeBase);
@@ -168,14 +172,8 @@ function review(base, head) {
   const changes = (paths) => paths.some((path) => changed.has(path));
   return {
     added: [...pages, ...minus(after.others, before.others)],
-    sidebar:
-      before.sections > 0 && after.sections === 0
-        ? `${SITE_GROUPS} shows no sections where this script looks for them, so it moved or SITE_GROUPS is no ` +
-          'longer an exported array. Update sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read it'
-        : after.unreadSections > 0
-          ? `${after.unreadSections} group(s) in SITE_GROUPS in ${SITE_GROUPS} have no id written as a plain string, ` +
-            "such as id: 'recipes'. Write each id that way"
-          : null,
+    unreadGroups: after.unreadSections,
+    sidebarLost: before.sections > 0 && !after.sidebarFound,
     claudeMd: changes(AGENT_DOCS.claude),
     verifySkill: changes(AGENT_DOCS.verify),
   };
@@ -219,9 +217,20 @@ function main() {
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
     return 1;
   }
-  const { added, sidebar, claudeMd, verifySkill } = result;
-  if (sidebar) {
-    say(`agent-docs: ${sidebar}, so the check keeps seeing new sections.`);
+  const { added, unreadGroups, sidebarLost, claudeMd, verifySkill } = result;
+  if (unreadGroups > 0) {
+    say(
+      `agent-docs: ${unreadGroups} entry or entries in SITE_GROUPS in ${SITE_GROUPS} are not an object with an id ` +
+        "written as a plain string, such as { id: 'recipes', ... }. Write each group that way, so the check keeps " +
+        'seeing new sections.',
+    );
+    status = 1;
+  } else if (sidebarLost) {
+    say(
+      `agent-docs: ${SITE_GROUPS} has no exported SITE_GROUPS array, so it moved or changed its declaration. Update ` +
+        'sectionIds and SITE_GROUPS in .github/scripts/agent-docs.mjs to read it, so the check keeps seeing new ' +
+        'sections.',
+    );
     status = 1;
   } else if (added.length === 0) {
     say('agent-docs: this pull request adds no docs page, docs section or check.');

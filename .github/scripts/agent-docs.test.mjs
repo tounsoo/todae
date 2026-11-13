@@ -214,19 +214,30 @@ test('sections are read however the groups are laid out', () => {
   assert.match(result.out, /adds:\n {2}- docs section recipes\nagent-docs: change/);
 });
 
-test('a group with a comment before its id is read, and one whose id is not a plain string fails', () => {
-  const commented = check({
+test('a group with comments around its id, a quoted key or a template id is read', () => {
+  const result = check({
     'apps/docs/components/siteGroups.ts':
-      "export const SITE_GROUPS = [\n  { id: 'foundations' },\n  { id: 'components' },\n" +
-      "  { label: 'Recipes', // shown in the sidebar\n    /* key */ id: 'recipes' },\n];\n",
+      "export const SITE_GROUPS = [\n  { 'id': 'foundations' },\n  { id: `components` },\n" +
+      "  { label: 'Recipes', // shown in the sidebar\n    /* key */ id: 'recipes' as const // last\n  },\n] satisfies Group[];\n",
   });
-  assert.match(commented.out, /docs section recipes/);
-  const computed = check(
-    { 'apps/docs/components/siteGroups.ts': "export const SITE_GROUPS = [\n  { id: 'foundations' },\n  { id: 'components' },\n  { id: RECIPES },\n];\n" },
-    'Agent docs unchanged: a constant\n',
+  assert.equal(result.status, 1, result.out);
+  assert.match(result.out, /adds:\n {2}- docs section recipes\nagent-docs: change/);
+});
+
+test('a group that is not an object with a plain string id fails, even with the body line', () => {
+  const groups = (...entries) => ({
+    'apps/docs/components/siteGroups.ts': `export const SITE_GROUPS = [\n  { id: 'foundations' },\n  { id: 'components' },\n  ${entries.join(',\n  ')},\n];\n`,
+  });
+  for (const entry of ['{ id: RECIPES }', '{ id: `r${x}` }', 'RECIPES', '...MORE', "group({ id: 'recipes' })", "{ label: 'divider' }"]) {
+    const result = check(groups(entry), 'Agent docs unchanged: a constant\n');
+    assert.equal(result.status, 1, `${entry}: ${result.out}`);
+    assert.match(result.out, /1 entry or entries in SITE_GROUPS .* are not an object with an id written as a plain string/, entry);
+  }
+  const allConstants = check(
+    { 'apps/docs/components/siteGroups.ts': 'export const SITE_GROUPS = [{ id: A }, { id: B }];\n' },
+    'Agent docs unchanged: constants\n',
   );
-  assert.equal(computed.status, 1, computed.out);
-  assert.match(computed.out, /1 group\(s\) in SITE_GROUPS .* have no id written as a plain string/);
+  assert.match(allConstants.out, /2 entry or entries in SITE_GROUPS/);
 });
 
 test('a sidebar that the script can no longer read fails, even with the body line, rather than hide new sections', () => {
@@ -235,10 +246,10 @@ test('a sidebar that the script can no longer read fails, even with the body lin
     'Agent docs unchanged: a new type\n',
   );
   assert.equal(layout.status, 1, layout.out);
-  assert.match(layout.out, /shows no sections where this script looks for them/);
+  assert.match(layout.out, /has no exported SITE_GROUPS array/);
   const moved = check({ 'apps/docs/components/siteGroups.ts': null, 'apps/docs/components/siteGroups.tsx': siteGroups('foundations', 'components') });
   assert.equal(moved.status, 1, moved.out);
-  assert.match(moved.out, /moved or SITE_GROUPS is no longer an exported array/);
+  assert.match(moved.out, /has no exported SITE_GROUPS array, so it moved/);
 });
 
 test('a long unnamed step shows its first line', () => {
