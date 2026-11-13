@@ -35,7 +35,7 @@ The board is a [ScrollArea](/scroll-area) that scrolls both ways and takes a Tab
 - **Blocked:** a closed window, a stage or speaker already busy, past closing, or a recorded talk on a stage that isn't recorded.
 - **Warning:** more people expected than the stage seats, less than the changeover, or two talks of one track at once.
 
-The drag, the menu and the dialog all ask `verdictFor()`, so they can't disagree. A talk that sits with a warning shows an outline, a warning icon where it has room, and the warning in its name between drags. A place blocked by a closed window, a busy stage or speaker, or a stage that isn't recorded marks every talk it overlaps. One that runs past closing marks none, since the rest of it would fall on the next morning. The example checks every talk against every other, which is quick for a few dozen; for hundreds, index the bookings by key, so a check reads only the dragged talk's stage and speakers.
+The drag, the menu and the dialog all ask `verdictFor()`, so they can't disagree. A talk that sits with a warning shows an outline, a warning icon where it has room, and the warning in its name between drags. A blocked place marks every talk it overlaps on its stage or with one of its speakers, even when a closed window is the reason. One that runs past closing marks none, since the rest of it would fall on the next morning. The example checks every talk against every other, which is quick for a few dozen; for hundreds, index the bookings by key, so a check reads only the dragged talk's stage and speakers.
 
 ## Moving without dragging
 

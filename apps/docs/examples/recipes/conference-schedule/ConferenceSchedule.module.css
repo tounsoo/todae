@@ -260,8 +260,6 @@
 
 .block[data-highlight='dimmed'] {
   border-color: var(--todae-color-border-subtle);
-  /* The track's edge recedes too. */
-  border-inline-start-color: var(--todae-color-border-subtle);
   background: var(--todae-color-bg-subtle);
 }
 
@@ -323,8 +321,7 @@
 /* A talk too short for its grip, a gap and its menu button, about 4.25rem
    at comfortable density, becomes the button, which makes every move. A
    container query can't read a token, so a denser or roomier product sets
-   its own number. Its ring sits inside it, so
-   the block can't cut it. */
+   its own number. Its ring sits inside it, so the block can't cut it. */
 @container (max-inline-size: 4.25rem) {
   .grip,
   .edge {
@@ -493,7 +490,12 @@
   }
 
   /* Forced colors drop the picked ring's shadow, so a picked talk takes a
-     double border, a cue outlines for conflicts don't use. */
+     double border, a style the conflict outlines don't use. A queue card's
+     border is that wide already, so picking a speaker doesn't move the queue. */
+  .card {
+    border-width: calc(3 * var(--todae-border-width));
+  }
+
   .block[data-highlight='picked'],
   .card[data-highlight='picked'] {
     border: calc(3 * var(--todae-border-width)) double CanvasText;

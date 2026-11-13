@@ -181,7 +181,7 @@ describe('the sticky stage names', () => {
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
     // The board's scroll-padding leaves a focus ring's room past the names.
     await expect.poll(() => day.getBoundingClientRect().left - names.right).toBeLessThan(6);
-    expect(day.getBoundingClientRect().left - names.right).toBeGreaterThan(-0.5);
+    expect(day.getBoundingClientRect().left - names.right).toBeCloseTo(4, 0);
   });
 
   it('keeps the time just past the names column when the zoom changes', async () => {
