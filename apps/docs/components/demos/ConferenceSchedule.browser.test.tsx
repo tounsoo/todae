@@ -104,17 +104,16 @@ describe('dragging', () => {
 
   it('marks the talk a speaker gives on another stage, refuses the drop and puts the mark back', async () => {
     setup();
-    reveal(60);
-    // Kenji Sato gives Tokens that travel on Main stage from 10:15 to 11:00 on day 1, and it has a
-    // warning of its own: Hands-on theming, also Engineering, runs at the same time.
-    const own = talk('Tokens that travel').getAttribute('data-conflict');
-    expect(own).toBe('warning');
-    const drag = dragTo('Migrating to 1.0', along('Hall B', 90));
-    await expect.poll(() => talk('Tokens that travel').getAttribute('data-conflict')).toBe('blocked');
-    expect(lane('Hall B').textContent).toContain('Kenji Sato is in Tokens that travel then');
+    reveal(895);
+    // Kenji Sato is on Panel: shipping 1.0 on Main stage from 15:00 to 16:00 on day 2, 900 to 960,
+    // and Hall B is free then, so the speaker is the one thing in the way.
+    const own = talk('Panel: shipping 1.0').getAttribute('data-conflict');
+    const drag = dragTo('Migrating to 1.0', along('Hall B', 915));
+    await expect.poll(() => talk('Panel: shipping 1.0').getAttribute('data-conflict')).toBe('blocked');
+    expect(lane('Hall B').textContent).toContain('Kenji Sato is in Panel: shipping 1.0 then');
     drag.drop();
     expect(within(screen.getByRole('list', { name: 'Unscheduled' })).getByRole('button', { name: /^Migrating to 1\.0,/ })).toBeTruthy();
-    expect(talk('Tokens that travel').getAttribute('data-conflict')).toBe(own);
+    expect(talk('Panel: shipping 1.0').getAttribute('data-conflict')).toBe(own);
   });
 });
 

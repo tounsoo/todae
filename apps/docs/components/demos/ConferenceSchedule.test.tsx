@@ -10,6 +10,7 @@ import ConferenceSchedule, {
   toUnits,
   verdictFor,
 } from '../../examples/recipes/conference-schedule/ConferenceSchedule';
+import type { Talk } from '../../examples/recipes/conference-schedule/ConferenceSchedule';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -90,7 +91,7 @@ describe('findConflicts', () => {
 
 describe('verdictFor', () => {
   const zone = 'America/Los_Angeles';
-  const talk = (id: string, from: string, to: string) => ({
+  const talk = (id: string, from: string, to: string): Talk => ({
     id,
     title: id,
     speakers: [id],
@@ -101,7 +102,7 @@ describe('verdictFor', () => {
     recorded: true,
     at: { stage: 'hall', starts: Temporal.PlainDateTime.from(from).toZonedDateTime(zone), ends: Temporal.PlainDateTime.from(to).toZonedDateTime(zone) },
   });
-  const talks = (from: string, to: string) => [talk('earlier', from, to), { ...talk('moved', from, to), at: null }] as unknown as Parameters<typeof verdictFor>[0];
+  const talks = (from: string, to: string) => [talk('earlier', from, to), { ...talk('moved', from, to), at: null }];
 
   it('counts a changeover only within a day, though the axis leaves the night out', () => {
     // 18:00 on day 1 and 9:00 on day 2 are both 540 on the axis.
@@ -110,10 +111,10 @@ describe('verdictFor', () => {
     expect(verdictFor(talks('2027-06-03T09:00', '2027-06-03T09:30'), 'moved', { lane: 'hall', start: 575, end: 605 })).toEqual({ level: 'warning', reason: 'Under 10 minutes from earlier', with: ['earlier'] });
   });
 
-  it('marks only the talks a blocked place overlaps, not those under a closed window', () => {
-    // Lunch on day 1 runs 12:30 to 13:30, units 210 to 270.
-    const verdict = verdictFor(talks('2027-06-02T12:00', '2027-06-02T12:45'), 'moved', { lane: 'hall', start: 210, end: 240 });
-    expect(verdict).toEqual({ level: 'blocked', reason: 'Overlaps Lunch', with: [] });
+  it('marks the talks a blocked place overlaps, even when a closed window is the reason', () => {
+    // Lunch on day 1 runs 12:30 to 13:30. 12:00 to 13:00 is units 180 to 240, over 11:30 to 12:15.
+    const verdict = verdictFor(talks('2027-06-02T11:30', '2027-06-02T12:15'), 'moved', { lane: 'hall', start: 180, end: 240 });
+    expect(verdict).toEqual({ level: 'blocked', reason: 'Overlaps Lunch', with: ['earlier'] });
   });
 });
 
@@ -156,6 +157,15 @@ describe('the schedule', () => {
     expect(screen.getByRole('button', { name: /^Research ops at scale,/ }).getAttribute('aria-label')).toBe(
       'Research ops at scale, Priya Nair, Research, Hall B, Wed, Jun 2, 11:00 AM to 11:30 AM, warning: Expects 350, Hall B seats 300',
     );
+  });
+
+  it('marks a picked speaker’s talks and lets the rest recede', () => {
+    setup();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Highlight speaker' }), { target: { value: 'Kenji Sato' } });
+    const highlight = (title: string) => screen.getByRole('button', { name: new RegExp(`^${title},`) }).closest('li')!.getAttribute('data-highlight');
+    expect(highlight('Tokens that travel')).toBe('picked');
+    expect(highlight('Migrating to 1\\.0')).toBe('picked');
+    expect(highlight('Motion with purpose')).toBe('dimmed');
   });
 
   it('moves a talk to another stage from its menu and announces it', async () => {

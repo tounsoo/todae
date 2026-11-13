@@ -48,14 +48,22 @@
 /* The board scrolls both ways, and its stacking stays inside it. */
 .board {
   isolation: isolate;
-  /* Focus and scrolling stop clear of the sticky names column and header row. */
-  scroll-padding-block-start: calc(var(--header) + var(--todae-border-width));
-  scroll-padding-inline-start: var(--names);
+  /* Focus and scrolling stop clear of the sticky names column and header
+     row, with room for a focus ring past them. */
+  --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+  scroll-padding-block-start: calc(var(--header) + var(--todae-border-width) + var(--_ring-room));
+  scroll-padding-inline-start: calc(var(--names) + var(--_ring-room));
   max-block-size: 32rem;
   border: var(--todae-border-width) solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
   background: var(--todae-color-bg-canvas);
   overscroll-behavior-inline: contain;
+}
+
+/* The board's own ring goes outside it, where the sticky names and the talks
+   that scroll under its edges can't paint over it. */
+.board:focus-visible {
+  outline-offset: 0;
 }
 
 /* The rows line up at the start and each is as wide as its content, the
@@ -238,16 +246,21 @@
   opacity: 0.5;
 }
 
-/* Talks without the speaker picked recede without fading their text or
-   controls, so they keep their contrast. On the board they take the subtle
-   background; in the queue, which already has it, they lose their surface
-   and their border turns dashed. */
-.block[data-dimmed] {
+/* With a speaker picked, their talks take a heavy ring, a cue that isn't
+   color alone, and the rest recede without fading their text or controls,
+   so every talk keeps its contrast. In the queue, which has the subtle
+   background already, a receding card loses its surface instead. */
+.block[data-highlight='picked'],
+.card[data-highlight='picked'] {
+  box-shadow: inset 0 0 0 calc(2 * var(--todae-border-width)) var(--todae-color-fg-default);
+}
+
+.block[data-highlight='dimmed'] {
   border-color: var(--todae-color-border-subtle);
   background: var(--todae-color-bg-subtle);
 }
 
-.card[data-dimmed] {
+.card[data-highlight='dimmed'] {
   border-style: dashed;
   background: transparent;
 }

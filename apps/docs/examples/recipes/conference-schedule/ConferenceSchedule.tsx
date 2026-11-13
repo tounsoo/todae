@@ -140,7 +140,7 @@ const SHORTEST = 15;
 type Stage = { id: string; name: string; seats: number; recorded: boolean; hours?: [string, string] };
 type Track = 'Design' | 'Engineering' | 'Research';
 type Place = { stage: string; starts: Temporal.ZonedDateTime; ends: Temporal.ZonedDateTime };
-type Talk = {
+export type Talk = {
   id: string;
   title: string;
   speakers: readonly string[];
@@ -229,8 +229,7 @@ export function verdictFor(talks: readonly Talk[], id: string, to: LanePlace): L
   const reason = found.shut[0]?.reason
     ?? (overlap && (overlap.key.startsWith('stage:') ? `Overlaps ${title(overlap.id)}` : `${overlap.key.slice('speaker:'.length)} is in ${title(overlap.id)} then`))
     ?? (talk.recorded && !stage.recorded ? `${stage.name} isn't recorded` : null);
-  // Only an overlap names other talks, so a drop on lunch doesn't mark a talk it also overlaps.
-  if (reason) return { level: 'blocked', reason, with: found.shut[0] ? [] : found.overlaps.map((each) => each.id) };
+  if (reason) return { level: 'blocked', reason, with: found.overlaps.map((each) => each.id) };
 
   const warnings: string[] = [];
   // The axis leaves the nights out, so a talk that ends one day sits next to one that opens the next.
@@ -299,10 +298,6 @@ const Preview = memo(function Preview({ drag, stage, locale }: { drag: UseLaneDr
 });
 
 function TalkMenu({ talk, talks, move, edit, trigger, name }: Pick<Shared, 'talks' | 'move' | 'edit'> & { talk: Talk; trigger?: RefObject<HTMLButtonElement | null>; name: string }) {
-  const at = talk.at ? laneOf(talk.at) : null;
-  const open = (to: LanePlace | null) => (to !== null && verdictFor(talks, talk.id, to)?.level !== 'blocked' ? to : null);
-  const shift = (by: number) => (at ? open({ ...at, start: at.start + by, end: at.end + by }) : null);
-  const go = (to: LanePlace | null) => to && move(talk.id, to, verdictFor(talks, talk.id, to));
   return (
     <Menu.Root>
       <Menu.Trigger ref={trigger} variant="ghost" aria-label={name} className={styles.menu}>
@@ -311,39 +306,55 @@ function TalkMenu({ talk, talks, move, edit, trigger, name }: Pick<Shared, 'talk
         </Button.Icon>
       </Menu.Trigger>
       <Menu.Content>
-        <Menu.Item onSelect={() => edit(talk.id)}>{at ? 'Change time or stage…' : 'Schedule…'}</Menu.Item>
-        <Menu.Separator />
-        {at ? (
-          <>
-            <Menu.Item disabled={shift(-15) === null} onSelect={() => go(shift(-15))}>
-              15 minutes earlier
-            </Menu.Item>
-            <Menu.Item disabled={shift(15) === null} onSelect={() => go(shift(15))}>
-              15 minutes later
-            </Menu.Item>
-            <Menu.Separator />
-          </>
-        ) : null}
-        {STAGES.filter((stage) => stage.id !== at?.lane).map((stage) => {
-          const to = at ? open({ ...at, lane: stage.id }) : firstFree(talks, talk, stage.id);
-          return (
-            <Menu.Item key={stage.id} disabled={to === null} onSelect={() => go(to)}>
-              {at ? `Move to ${stage.name}` : `First free time on ${stage.name}`}
-            </Menu.Item>
-          );
-        })}
-        {at ? (
-          <>
-            <Menu.Separator />
-            <Menu.Item onSelect={() => move(talk.id, null, null)}>Back to unscheduled</Menu.Item>
-          </>
-        ) : null}
+        <TalkMoves talk={talk} talks={talks} move={move} edit={edit} />
       </Menu.Content>
     </Menu.Root>
   );
 }
 
-function Block({ talk, dimmed, ...shared }: Shared & { talk: Talk; dimmed: boolean }) {
+/** A talk's moves, each asked of the rules. Menu mounts its items on the first open, so a menu nobody opened checks nothing. */
+function TalkMoves({ talk, talks, move, edit }: Pick<Shared, 'talks' | 'move' | 'edit'> & { talk: Talk }) {
+  const at = talk.at ? laneOf(talk.at) : null;
+  const open = (to: LanePlace | null) => (to !== null && verdictFor(talks, talk.id, to)?.level !== 'blocked' ? to : null);
+  const shift = (by: number) => (at ? open({ ...at, start: at.start + by, end: at.end + by }) : null);
+  const go = (to: LanePlace | null) => to && move(talk.id, to, verdictFor(talks, talk.id, to));
+  return (
+    <>
+      <Menu.Item onSelect={() => edit(talk.id)}>{at ? 'Change time or stage…' : 'Schedule…'}</Menu.Item>
+      <Menu.Separator />
+      {at ? (
+        <>
+          <Menu.Item disabled={shift(-15) === null} onSelect={() => go(shift(-15))}>
+            15 minutes earlier
+          </Menu.Item>
+          <Menu.Item disabled={shift(15) === null} onSelect={() => go(shift(15))}>
+            15 minutes later
+          </Menu.Item>
+          <Menu.Separator />
+        </>
+      ) : null}
+      {STAGES.filter((stage) => stage.id !== at?.lane).map((stage) => {
+        const to = at ? open({ ...at, lane: stage.id }) : firstFree(talks, talk, stage.id);
+        return (
+          <Menu.Item key={stage.id} disabled={to === null} onSelect={() => go(to)}>
+            {at ? `Move to ${stage.name}` : `First free time on ${stage.name}`}
+          </Menu.Item>
+        );
+      })}
+      {at ? (
+        <>
+          <Menu.Separator />
+          <Menu.Item onSelect={() => move(talk.id, null, null)}>Back to unscheduled</Menu.Item>
+        </>
+      ) : null}
+    </>
+  );
+}
+
+/** With a speaker picked, their talks are marked and the rest recede. */
+type Highlight = 'picked' | 'dimmed' | undefined;
+
+function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight: Highlight }) {
   // A talk that changes stage, or goes back to the queue, leaves its old element while its menu
   // holds focus. Focus goes on to the talk's menu button in its new place.
   const handoff = useFocusHandoff({ to: shared.landing });
@@ -357,7 +368,7 @@ function Block({ talk, dimmed, ...shared }: Shared & { talk: Talk; dimmed: boole
       className={styles.block}
       // Between drags a talk shows its own warning; the hook puts this back after each drag.
       data-conflict={verdict?.level}
-      data-dimmed={dimmed || undefined}
+      data-highlight={highlight}
       style={{
         insetInlineStart: `${(at.start / AXIS.range.end) * 100}%`,
         inlineSize: `${((at.end - at.start) / AXIS.range.end) * 100}%`,
@@ -381,10 +392,10 @@ function Block({ talk, dimmed, ...shared }: Shared & { talk: Talk; dimmed: boole
   );
 }
 
-function QueueCard({ talk, dimmed, ...shared }: Shared & { talk: Talk; dimmed: boolean }) {
+function QueueCard({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight: Highlight }) {
   const handoff = useFocusHandoff({ to: shared.landing });
   return (
-    <li ref={handoff} {...shared.lanes.getItemProps(talk.id, { span: talk.length })} className={styles.card} data-dimmed={dimmed || undefined}>
+    <li ref={handoff} {...shared.lanes.getItemProps(talk.id, { span: talk.length })} className={styles.card} data-highlight={highlight}>
       <span {...shared.lanes.getHandleProps(talk.id, 'move')} aria-hidden className={styles.grip}>
         <GripVertical size="1em" />
       </span>
@@ -565,7 +576,8 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
 
   // A zoom keeps the time at the board's start in view.
   const kept = useRef<number | null>(null);
-  const perMinute = () => (board.current?.querySelector('[data-todae-lane]')?.getBoundingClientRect().width ?? 0) / AXIS.range.end;
+  // In layout pixels, as scrollLeft is, so a scaled page doesn't skew it.
+  const perMinute = () => (board.current?.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0) / AXIS.range.end;
   const zoomTo = (next: keyof typeof ZOOM) => {
     kept.current = board.current && perMinute() > 0 ? board.current.scrollLeft / perMinute() : null;
     setZoom(next);
@@ -577,7 +589,7 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
   }, [zoom]);
 
   const shared: Shared = { talks, lanes, move, edit, landing, landed, locale };
-  const dim = (talk: Talk) => speaker !== '' && !talk.speakers.includes(speaker);
+  const highlight = (talk: Talk): Highlight => (speaker === '' ? undefined : talk.speakers.includes(speaker) ? 'picked' : 'dimmed');
   const shownTalk = shown && talks.find((talk) => talk.id === shown.id);
   const queue = talks.filter((talk) => talk.at === null);
 
@@ -646,7 +658,7 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
               </div>
             </div>
             {STAGES.map((stage) => (
-              <StageRow key={stage.id} stage={stage} shared={shared} dim={dim} />
+              <StageRow key={stage.id} stage={stage} shared={shared} highlight={highlight} />
             ))}
           </div>
         </ScrollArea.Root>
@@ -657,7 +669,7 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
           </Text.Root>
           <ul {...lanes.getQueueProps()} className={styles.queue} aria-labelledby={ids.queue}>
             {queue.map((talk) => (
-              <QueueCard key={talk.id} talk={talk} dimmed={dim(talk)} {...shared} />
+              <QueueCard key={talk.id} talk={talk} highlight={highlight(talk)} {...shared} />
             ))}
             {queue.length === 0 ? <li className={styles.empty}>Every talk is scheduled</li> : null}
           </ul>
@@ -682,7 +694,7 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
   );
 }
 
-function StageRow({ stage, shared, dim }: { stage: Stage; shared: Shared; dim: (talk: Talk) => boolean }) {
+function StageRow({ stage, shared, highlight }: { stage: Stage; shared: Shared; highlight: (talk: Talk) => Highlight }) {
   const nameId = useId();
   const talks = shared.talks.filter((talk) => talk.at?.stage === stage.id).sort((a, b) => a.at!.starts.epochMilliseconds - b.at!.starts.epochMilliseconds);
   const closed = CLOSED.filter((window) => window.keys === 'all' || window.keys.includes(`stage:${stage.id}`));
@@ -715,7 +727,7 @@ function StageRow({ stage, shared, dim }: { stage: Stage; shared: Shared; dim: (
         ))}
         <ol className={styles.talks} aria-labelledby={nameId}>
           {talks.map((talk) => (
-            <Block key={talk.id} talk={talk} dimmed={dim(talk)} {...shared} />
+            <Block key={talk.id} talk={talk} highlight={highlight(talk)} {...shared} />
           ))}
         </ol>
         <Preview drag={shared.lanes.drag} stage={stage.id} locale={shared.locale} />
