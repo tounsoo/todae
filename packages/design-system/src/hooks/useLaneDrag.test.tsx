@@ -175,12 +175,22 @@ it('moves an item along its lane, keeping the point it was grabbed at, snapped t
 it('drops over a strip the board\'s scroll-padding marks at the first place past it, in the lane under the strip', () => {
   const onDrop = vi.fn();
   render(<Board onDrop={onDrop} cover={200} />);
-  // t1 is grabbed 5 units in. Over the strip, the pointer reads at 201, so the start goes to 15.1 and snaps to 15.
+  // t1 is grabbed 5 units in. Over the strip, the pointer reads at 201, which would put the start at 15.1, under
+  // the strip; it lands wholly in view instead, at 20, the first place on the grid past the strip.
   drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
-  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 15, end: 35 } }));
-  // A resize of the start over the strip holds there too.
-  drag(screen.getByTestId('t1-start'), 155, 60, [[160, 60], [10, 60]]);
-  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-start', to: { lane: 'b', start: 20, end: 35 } }));
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 20, end: 40 } }));
+  // A resize of t2's start over the strip stops at the strip's edge too.
+  drag(screen.getByTestId('t2-start'), 505, 60, [[500, 60], [10, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-start', to: { lane: 'b', start: 20, end: 60 } }));
+});
+
+it('drops at the pointer where a lane shows through the board\'s scroll-padding', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  // Nothing covers the lanes here, as under a scroll-snap offset, so the pointer counts as it is.
+  screen.getByTestId('cover').remove();
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 0, end: 20 } }));
 });
 
 it('drops nothing over a strip that covers the lanes without the board\'s scroll-padding', () => {

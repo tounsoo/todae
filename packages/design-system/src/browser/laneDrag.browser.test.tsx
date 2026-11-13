@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Dialog, useLaneDrag, useLaneDragState, type LaneDragChange, type LanePlace } from '../index.js';
 
@@ -30,7 +30,7 @@ function Board({
   axis?: 'block';
   width?: number;
   smooth?: boolean;
-  /** Puts a sticky 100px name before each lane, which the board's scroll-padding marks. */
+  /** Puts a sticky 100px name before each lane, which the board's scroll-padding marks, inside a 4px border. */
   names?: boolean;
 }) {
   const [talks, setTalks] = useState<Talk[]>([{ id: 't1', at: { lane: 'a', start: 10, end: 20 } }]);
@@ -56,15 +56,11 @@ function Board({
         margin: 0,
         scrollBehavior: smooth ? 'smooth' : undefined,
         scrollPaddingInlineStart: names ? 100 : undefined,
+        border: names ? '4px solid' : undefined,
       }}
     >
-      {['a', 'b'].map((lane) => (
-        <div key={lane} style={names ? { display: 'flex', inlineSize: 'max-content' } : { display: 'contents' }}>
-          {names ? (
-            <span data-testid={`name-${lane}`} style={{ position: 'sticky', insetInlineStart: 0, zIndex: 1, flex: 'none', inlineSize: 100, background: 'white' }}>
-              {lane}
-            </span>
-          ) : null}
+      {['a', 'b'].map((lane) => {
+        const track = (
           <div
             {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })}
             style={{ position: 'relative', flex: 'none', inlineSize: block ? 100 : 600, blockSize: block ? 600 : 40 }}
@@ -87,8 +83,18 @@ function Board({
               ))}
             <Preview drag={lanes.drag} lane={lane} />
           </div>
-        </div>
-      ))}
+        );
+        return names ? (
+          <div key={lane} style={{ display: 'flex', inlineSize: 'max-content' }}>
+            <span data-testid={`name-${lane}`} style={{ position: 'sticky', insetInlineStart: 0, zIndex: 1, flex: 'none', inlineSize: 100, background: 'white' }}>
+              {lane}
+            </span>
+            {track}
+          </div>
+        ) : (
+          <Fragment key={lane}>{track}</Fragment>
+        );
+      })}
     </div>
   );
 }
@@ -163,8 +169,9 @@ it.each([undefined, 'rtl'] as const)('scrolls back past sticky names the scroll-
   const at = (px: number) => ({ x: dir === 'rtl' ? box.right - px : box.left + px, y: along('a', 0).y });
   const name = screen.getByTestId('name-a').getBoundingClientRect();
   expect(name.width).toBe(100);
-  expect(dir === 'rtl' ? box.right - name.right : name.left - box.left).toBeCloseTo(0, 0);
-  // t1 spans 10 to 20. The lane starts 100px in, so scrolled 120px the item shows from 80 to 180, partly under the name.
+  // The names sit inside the border, where the scroll-padding counts from.
+  expect(dir === 'rtl' ? box.right - name.right : name.left - box.left).toBeCloseTo(4, 0);
+  // t1 spans 10 to 20. The lane starts 100px into the scrollport, so scrolled 120px the item shows from 80 to 180, partly under the name.
   const handle = screen.getByTestId('t1-move');
   const grab = at(150);
   pointer('pointerdown', handle, grab.x, grab.y);
@@ -176,7 +183,12 @@ it.each([undefined, 'rtl'] as const)('scrolls back past sticky names the scroll-
   // Over the name, the board scrolls the rest of the way and the place follows the first point in view.
   const over = at(50);
   pointer('pointermove', handle, over.x, over.y);
-  await vi.waitFor(() => expect(board.scrollLeft).toBe(0));
+  // Wherever the scroll stands, the place shown starts in view, within one grid step of the name's edge.
+  const shown = Number(screen.getByTestId('preview-a').textContent?.split('-')[0]) * 10;
+  const scrolled = Math.abs(board.scrollLeft);
+  expect(shown).toBeGreaterThanOrEqual(scrolled);
+  expect(shown).toBeLessThanOrEqual(scrolled + 50);
+  await vi.waitFor(() => expect(Math.abs(board.scrollLeft)).toBe(0));
   await vi.waitFor(() => expect(screen.getByTestId('preview-a').textContent).toBe('0-10'));
   pointer('pointerup', handle, over.x, over.y);
   expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'a', start: 0, end: 10 } }));

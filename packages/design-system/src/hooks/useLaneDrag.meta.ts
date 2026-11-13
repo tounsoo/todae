@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useLaneDrag',
   description:
-    'useLaneDrag({ range, onDrop }) returns { getBoardProps, getLaneProps, getQueueProps, getItemProps, getHandleProps, drag }, prop getters that let a person drag items along lanes that share one axis, such as talks on a conference\'s stages: place an item from a queue, move it along its lane or to another, resize either end, or take it back to the queue. Places snap to grid, check says whether a place conflicts with others, and a drop calls onDrop(change). Escape cancels a drag. It has no keyboard path: pair it with a way to move an item without dragging, such as a dialog.',
+    'useLaneDrag({ range, onDrop }) returns { getBoardProps, getLaneProps, getQueueProps, getItemProps, getHandleProps, drag }, prop getters that let a person drag items along lanes that share one axis, such as talks on a conference\'s stages: place an item from a queue, move it along its lane or to another, resize either end, or take it back to the queue. Places snap to grid, check says whether a place conflicts with others, and a drop calls onDrop(change). The board scrolls while the pointer is near its edge, counted from past its scroll-padding, which marks a strip sticky parts such as lane names cover. Escape cancels a drag. It has no keyboard path: pair it with a way to move an item without dragging, such as a dialog.',
   props: [
     {
       name: 'range',

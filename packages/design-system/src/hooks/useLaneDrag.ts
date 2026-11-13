@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type DragEvent, type PointerEvent } from 'react';
 import { capturePointer } from '../internal/pointerCapture.js';
+import { pixels } from '../internal/cssLength.js';
 import { composeHandlers } from '../internal/props.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 
@@ -113,10 +114,8 @@ const INTERACTIVE = 'button, a[href], input, select, textarea, [contenteditable]
 
 type Part = 'move' | 'start' | 'end';
 
-/** Distances from each side of a box, in CSS pixels. */
+/** The sides of a box, in CSS pixels: from the viewport for a rectangle, or from the box's own sides for padding. */
 type Sides = { left: number; right: number; top: number; bottom: number };
-
-const NO_SIDES: Sides = { left: 0, right: 0, top: 0, bottom: 0 };
 
 type Session = {
   pointerId: number;
@@ -131,9 +130,8 @@ type Session = {
   node: HTMLElement;
   handle: HTMLElement;
   lane: Element | null;
-  /** The board, found when the drag starts, and its scroll-padding, read then. */
+  /** The board, found when the drag starts. */
   board: HTMLElement | null;
-  padding: Sides;
   from: LanePlace | null;
   span: number;
   /** For a move, how far into the item the press went down, so the item keeps its place under the pointer. */
@@ -178,17 +176,13 @@ const below = (grid: readonly number[], max: number, ceiling: number): number | 
   grid[firstWhere(grid, (point) => point > max || point >= ceiling) - 1];
 
 /**
- * The board's scroll-padding on each side, in pixels. It marks the strip along an edge that something
- * sticky covers, such as a column of lane names, as it does for the browser's own scrolling.
+ * The board's scroll-padding on each side, in pixels, from a length or a percentage of the scrollport.
+ * It marks the strip along an edge that something sticky covers, such as a column of lane names, as it
+ * does for the browser's own scrolling.
  */
 function scrollPadding(board: HTMLElement): Sides {
   const style = getComputedStyle(board);
-  const side = (name: string, size: number) => {
-    const value = style.getPropertyValue(`scroll-padding-${name}`).trim();
-    const amount = Number.parseFloat(value);
-    if (!(amount > 0)) return 0;
-    return value.endsWith('%') ? (amount / 100) * size : amount;
-  };
+  const side = (name: string, size: number) => Math.max(0, pixels(style.getPropertyValue(`scroll-padding-${name}`).trim(), size));
   return {
     left: side('left', board.clientWidth),
     right: side('right', board.clientWidth),
@@ -306,21 +300,37 @@ function createLaneDrag(
     return grid?.length ? fit(nearest(grid, value), above(grid, lo, floor), below(grid, hi, ceiling)) : fit(value, lo, hi);
   };
 
-  /** What a drop at x, y would do and the element it would drop on, or undefined to keep the last one, as for a resize past `minSpan`. */
-  const locate = (current: Session, x: number, y: number): Target | undefined => {
+  /** The span of `lane` in view between the open part's sides, inside the range, or the range when that is empty. */
+  const inView = (current: Session, lane: Element): { start: number; end: number } => {
+    const { range, axis = 'inline' } = options();
+    const open = view(current)?.open;
+    if (open === undefined) return range;
+    const a = valueAt(current, lane, open.left, open.top);
+    const b = axis === 'block' ? valueAt(current, lane, open.left, open.bottom) : valueAt(current, lane, open.right, open.top);
+    const start = Math.max(range.start, Math.min(a, b));
+    const end = Math.min(range.end, Math.max(a, b));
+    return start < end ? { start, end } : range;
+  };
+
+  /**
+   * What a drop at x, y would do and the element it would drop on, or undefined to keep the last one, as for a resize past `minSpan`.
+   * With `held`, the pointer was held off a strip that covers the lanes, and the place stays in view.
+   */
+  const locate = (current: Session, x: number, y: number, held: boolean): Target | undefined => {
     const { range, minSpan = 0 } = options();
     const { id: item, from } = current;
     if (current.part !== 'move' && from !== null) {
       const { lane } = current;
       if (lane === null) return undefined;
       const value = valueAt(current, lane, x, y);
+      const bounds = held ? inView(current, lane) : range;
       // An end stays inside the range and at least `minSpan` from the other, and never reaches it.
       if (current.part === 'end') {
-        const end = onGrid(value, from.start + minSpan, range.end, from.start);
+        const end = onGrid(value, from.start + minSpan, bounds.end, from.start);
         if (end === undefined || end <= from.start) return undefined;
         return { change: { id: item, kind: 'resize-end', from, to: { lane: from.lane, start: from.start, end } }, element: lane };
       }
-      const start = onGrid(value, range.start, from.end - minSpan, -Infinity, from.end);
+      const start = onGrid(value, bounds.start, from.end - minSpan, -Infinity, from.end);
       if (start === undefined || start >= from.end) return undefined;
       return { change: { id: item, kind: 'resize-start', from, to: { lane: from.lane, start, end: from.end } }, element: lane };
     }
@@ -328,8 +338,12 @@ function createLaneDrag(
     const over = hit(current, x, y);
     if (over === null) return { change: { id: item, kind, from, to: null }, element: null };
     if ('queue' in over) return { change: { id: item, kind: from === null ? 'assign' : 'unassign', from, to: null }, element: over.queue };
-    // The item keeps its length inside the range; one longer than the range has no place.
-    const start = onGrid(valueAt(current, over.element, x, y) - current.offset, range.start, range.end - current.span);
+    // The item keeps its length inside the range; one longer than the range has no place. Held off a covering
+    // strip, it lands wholly in view where it fits.
+    const value = valueAt(current, over.element, x, y) - current.offset;
+    const bounds = held ? inView(current, over.element) : range;
+    const start =
+      onGrid(value, bounds.start, bounds.end - current.span) ?? (bounds === range ? undefined : onGrid(value, range.start, range.end - current.span));
     if (start === undefined) return { change: { id: item, kind, from, to: null }, element: null };
     return { change: { id: item, kind, from, to: { lane: over.lane, start, end: start + current.span } }, element: over.element };
   };
@@ -375,7 +389,7 @@ function createLaneDrag(
   const update = (current: Session, x: number, y: number, fresh = false) => {
     current.last = { x, y };
     const point = aim(current, x, y);
-    const next = locate(current, point.x, point.y);
+    const next = locate(current, point.x, point.y, point.held);
     const shown = store.get();
     if (next === undefined) {
       // A resize past what it allows keeps the place shown, which a drop still checks again.
@@ -401,31 +415,49 @@ function createLaneDrag(
     }
   };
 
-  /** The board's box, and the part of it its scroll-padding leaves open, where the lanes show. */
-  const view = (current: Session): { box: DOMRect; open: Sides } | null => {
-    const { board, padding } = current;
+  /**
+   * The board's box, and the part of its scrollport that its scroll-padding leaves open, where the lanes
+   * show. Padding that leaves no room between two sides counts as none on that axis.
+   */
+  const view = (current: Session): { box: DOMRect; open: Sides; padded: boolean } | null => {
+    const { board } = current;
     if (board === null) return null;
     const box = board.getBoundingClientRect();
+    const padding = scrollPadding(board);
+    // The scrollport, inside the border and clear of scrollbars, is what scroll-padding counts from.
+    const left = box.left + board.clientLeft;
+    const top = box.top + board.clientTop;
+    const right = box.right - (board.offsetWidth - board.clientLeft - board.clientWidth);
+    const bottom = box.bottom - (board.offsetHeight - board.clientTop - board.clientHeight);
+    const across = padding.left + padding.right > 0 && left + padding.left + 1 < right - padding.right - 1;
+    const down = padding.top + padding.bottom > 0 && top + padding.top + 1 < bottom - padding.bottom - 1;
     return {
       box,
-      open: { left: box.left + padding.left, right: box.right - padding.right, top: box.top + padding.top, bottom: box.bottom - padding.bottom },
+      open: {
+        left: across ? left + padding.left : left,
+        right: across ? right - padding.right : right,
+        top: down ? top + padding.top : top,
+        bottom: down ? bottom - padding.bottom : bottom,
+      },
+      padded: across || down,
     };
   };
 
-  const inside = (box: DOMRect, x: number, y: number) => x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+  const inside = (box: Sides, x: number, y: number) => x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
 
   /**
-   * Where a drop reads the pointer. Over the board's scroll-padding, as over sticky lane names, it reads
-   * just inside the open part instead, so the drop goes to the first place the names leave in view
-   * while the board scrolls toward them.
+   * Where a drop reads the pointer. Over a part of the board's scroll-padding that covers the lanes, as
+   * sticky lane names do, it reads one pixel inside the open part instead, so the drop goes to the first
+   * place in view while the board scrolls toward the names. Where a lane shows through the padding, as
+   * under a scroll-snap offset, it reads the pointer.
    */
-  const aim = (current: Session, x: number, y: number): { x: number; y: number } => {
+  const aim = (current: Session, x: number, y: number): { x: number; y: number; held: boolean } => {
     const shown = view(current);
-    if (shown === null || !inside(shown.box, x, y)) return { x, y };
+    if (shown === null || !shown.padded || !inside(shown.box, x, y)) return { x, y, held: false };
     const { open } = shown;
-    // One pixel in, so the hit lands on the lane and not on the edge of what covers it.
-    const hold = (value: number, lo: number, hi: number) => (lo + 1 > hi - 1 ? value : value < lo ? lo + 1 : value > hi ? hi - 1 : value);
-    return { x: hold(x, open.left, open.right), y: hold(y, open.top, open.bottom) };
+    if (inside(open, x, y) || hit(current, x, y) !== null) return { x, y, held: false };
+    const hold = (value: number, lo: number, hi: number) => Math.min(Math.max(value, lo + 1), hi - 1);
+    return { x: hold(x, open.left, open.right), y: hold(y, open.top, open.bottom), held: true };
   };
 
   /** How far the board scrolls this frame: only while the pointer is inside it, near an edge of its open part or over its scroll-padding. */
@@ -434,8 +466,9 @@ function createLaneDrag(
     const { x, y } = current.last;
     if (shown === null || !inside(shown.box, x, y)) return null;
     const { open } = shown;
+    // Toward the nearer side, when an open part narrower than two edges puts the pointer near both.
     const speed = (near: number, far: number) =>
-      near < EDGE ? -STEP * (1 - Math.max(near, 0) / EDGE) : far < EDGE ? STEP * (1 - Math.max(far, 0) / EDGE) : 0;
+      Math.min(near, far) >= EDGE ? 0 : near <= far ? -STEP * (1 - Math.max(near, 0) / EDGE) : STEP * (1 - Math.max(far, 0) / EDGE);
     const dx = Math.round(speed(x - open.left, open.right - x));
     const dy = Math.round(speed(y - open.top, open.bottom - y));
     return dx !== 0 || dy !== 0 ? { dx, dy } : null;
@@ -548,7 +581,6 @@ function createLaneDrag(
       for (const element of rootOf(current).querySelectorAll<HTMLElement>(`[${BOARD}]`)) {
         if (mine(element)) {
           current.board = element;
-          current.padding = scrollPadding(element);
           mark(current, element, 'data-dragging', '');
           break;
         }
@@ -619,7 +651,6 @@ function createLaneDrag(
         handle,
         lane,
         board: null,
-        padding: NO_SIDES,
         from,
         span,
         offset: 0,
