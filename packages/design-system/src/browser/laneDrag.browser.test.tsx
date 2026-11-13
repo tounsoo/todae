@@ -24,6 +24,7 @@ function Board({
   width = 600,
   smooth = false,
   names = false,
+  scale,
 }: {
   onDrop?: (change: LaneDragChange) => void;
   dir?: 'rtl';
@@ -32,6 +33,8 @@ function Board({
   smooth?: boolean;
   /** Puts a sticky 100px name before each lane, which the board's scroll-padding marks, inside a 4px border. */
   names?: boolean;
+  /** Draws the board at this scale with a transform, as a dialog's opening does. */
+  scale?: number;
 }) {
   const [talks, setTalks] = useState<Talk[]>([{ id: 't1', at: { lane: 'a', start: 10, end: 20 } }]);
   const lanes = useLaneDrag({
@@ -57,6 +60,8 @@ function Board({
         scrollBehavior: smooth ? 'smooth' : undefined,
         scrollPaddingInlineStart: names ? 100 : undefined,
         border: names ? '4px solid' : undefined,
+        transform: scale ? `scale(${scale})` : undefined,
+        transformOrigin: scale ? '0 0' : undefined,
       }}
     >
       {['a', 'b'].map((lane) => {
@@ -158,19 +163,23 @@ it.each([false, true])('scrolls the board while the pointer stays near its edge,
   expect(screen.queryByTestId('preview-a')).toBeNull();
 });
 
-it.each([undefined, 'rtl'] as const)('scrolls back past sticky names the scroll-padding marks, and drops at the start under them (%s)', async (dir) => {
+it.each([
+  [undefined, 1],
+  ['rtl', 1],
+  [undefined, 0.5],
+] as const)('scrolls back past sticky names the scroll-padding marks, and drops at the start under them (%s, scale %d)', async (dir, scale) => {
   const onDrop = vi.fn();
-  render(<Board width={300} names dir={dir} onDrop={onDrop} />);
+  render(<Board width={300} names dir={dir} scale={scale === 1 ? undefined : scale} onDrop={onDrop} />);
   const board = screen.getByTestId('board');
   const sign = dir === 'rtl' ? -1 : 1;
   board.scrollLeft = sign * 120;
   const box = board.getBoundingClientRect();
-  // A point `px` from the board's inline start, in lane a.
-  const at = (px: number) => ({ x: dir === 'rtl' ? box.right - px : box.left + px, y: along('a', 0).y });
+  // A point `px` of the board's own from its inline start, in lane a, on screen.
+  const at = (px: number) => ({ x: dir === 'rtl' ? box.right - px * scale : box.left + px * scale, y: along('a', 0).y });
   const name = screen.getByTestId('name-a').getBoundingClientRect();
-  expect(name.width).toBe(100);
+  expect(name.width).toBeCloseTo(100 * scale, 1);
   // The names sit inside the border, where the scroll-padding counts from.
-  expect(dir === 'rtl' ? box.right - name.right : name.left - box.left).toBeCloseTo(4, 0);
+  expect(dir === 'rtl' ? box.right - name.right : name.left - box.left).toBeCloseTo(4 * scale, 0);
   // t1 spans 10 to 20. The lane starts 100px into the scrollport, so scrolled 120px the item shows from 80 to 180, partly under the name.
   const handle = screen.getByTestId('t1-move');
   const grab = at(150);

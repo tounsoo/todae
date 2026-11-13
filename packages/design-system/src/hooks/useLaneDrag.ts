@@ -414,9 +414,9 @@ function createLaneDrag(
   const judge = (current: Session, to: LanePlace | null): LaneVerdict | null => (to === null ? null : (options().check?.(current.id, to) ?? null));
 
   /** Runs `step` while the press is down. A `check` that throws in it ends the drag as Escape does, and its error still reaches the page. */
-  const guard = (current: Session, step: () => void) => {
+  const guard = <T>(current: Session, step: () => T): T => {
     try {
-      step();
+      return step();
     } catch (error) {
       if (session === current) abort(current);
       throw error;
@@ -432,9 +432,10 @@ function createLaneDrag(
     if (board === null) return null;
     const box = board.getBoundingClientRect();
     const padding = scrollPadding(board);
-    // Layout sizes, scaled to the screen as the box is, as under a transform.
-    const sx = board.offsetWidth > 0 ? box.width / board.offsetWidth : 1;
-    const sy = board.offsetHeight > 0 ? box.height / board.offsetHeight : 1;
+    // Layout sizes, scaled to the screen as the box is under a transform. Within a pixel, the gap is rounding.
+    const scale = (screen: number, layout: number) => (layout > 0 && Math.abs(screen - layout) > 1 ? screen / layout : 1);
+    const sx = scale(box.width, board.offsetWidth);
+    const sy = scale(box.height, board.offsetHeight);
     // The scrollport, inside the border and clear of scrollbars, is what scroll-padding counts from.
     const port = {
       left: box.left + board.clientLeft * sx,
@@ -457,13 +458,21 @@ function createLaneDrag(
 
   const inside = (box: Sides, x: number, y: number) => x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
 
-  /** Whether a lane shows at x, y: the topmost element there is a lane itself, an item or a queue, and not, say, a name over a lane. */
+  /**
+   * Whether a lane shows at x, y: the topmost element there is in a lane, an item or a queue, and nothing
+   * sticky or fixed inside the lane, such as its name, is over it.
+   */
   const shows = (current: Session, x: number, y: number): boolean => {
     const top = rootOf(current).elementFromPoint?.(x, y) ?? null;
+    let pinned = false;
     for (let node = top; node; node = node.parentElement) {
-      if (!mine(node)) continue;
-      if (node.hasAttribute(ITEM) || node.hasAttribute(QUEUE)) return true;
-      if (node.hasAttribute(LANE)) return node === top;
+      if (mine(node)) {
+        if (node.hasAttribute(ITEM) || node.hasAttribute(QUEUE)) return true;
+        if (node.hasAttribute(LANE)) return !pinned;
+      } else if (!pinned) {
+        const { position } = getComputedStyle(node);
+        pinned = position === 'sticky' || position === 'fixed';
+      }
     }
     return false;
   };
@@ -489,9 +498,9 @@ function createLaneDrag(
     const { open } = shown;
     /** Toward the nearer side within the edge, faster closer to it, and at full speed past it. */
     const speed = (near: number, far: number) => {
-      if (Math.min(near, far) >= EDGE) return 0;
-      // An open part narrower than two edges puts the pointer near both sides.
-      if (near <= far) return -STEP * (1 - Math.max(near, 0) / EDGE);
+      // An open part narrower than two edges puts the pointer near both sides, and still at its middle.
+      if (Math.min(near, far) >= EDGE || Math.abs(near - far) < 1) return 0;
+      if (near < far) return -STEP * (1 - Math.max(near, 0) / EDGE);
       return STEP * (1 - Math.max(far, 0) / EDGE);
     };
     const dx = Math.round(speed(x - open.left, open.right - x));
@@ -612,9 +621,7 @@ function createLaneDrag(
       }
       onActive(current.node);
     }
-    let shown: View | null = null;
-    guard(current, () => void (shown = update(current, event.clientX, event.clientY)));
-    steer(current, shown);
+    steer(current, guard(current, () => update(current, event.clientX, event.clientY)));
   }
 
   function onUp(event: globalThis.PointerEvent) {

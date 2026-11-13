@@ -209,12 +209,59 @@ it('lands where it fits in the range when an item is longer than the part in vie
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 80, end: 100 } }));
 });
 
-it('drops in view over a name inside a lane, which covers the lane though the pointer is over it', () => {
+it('drops in view over a sticky name inside a lane, which covers the lane though the pointer is over it', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  const name = screen.getByTestId('cover');
+  name.style.position = 'sticky';
+  screen.getByTestId('lane-b').append(name);
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 20, end: 40 } }));
+});
+
+it('drops at the pointer over a part of a lane that scrolls with it, such as an hour line, in the scroll-padding', () => {
   const onDrop = vi.fn();
   render(<Board onDrop={onDrop} cover={200} />);
   screen.getByTestId('lane-b').append(screen.getByTestId('cover'));
   drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
-  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 20, end: 40 } }));
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 0, end: 20 } }));
+});
+
+/** Gives the board layout sizes, which jsdom leaves at 0. */
+function layout(board: HTMLElement, sizes: { clientLeft?: number; clientWidth?: number; offsetWidth?: number }) {
+  for (const [name, value] of Object.entries(sizes)) Object.defineProperty(board, name, { configurable: true, value });
+}
+
+it('reads the scroll-padding at the board\'s scale on screen, as under a transform', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={100} />);
+  const board = screen.getByTestId('board');
+  // Laid out 2000px wide and drawn 1000px wide, the board's 200px of scroll-padding covers 100px on screen.
+  board.style.scrollPaddingLeft = '200px';
+  layout(board, { clientWidth: 2000, offsetWidth: 2000 });
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 10, end: 30 } }));
+});
+
+it('holds nothing over the board\'s border, outside the scrollport its scroll-padding counts from', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  layout(screen.getByTestId('board'), { clientLeft: 10, clientWidth: 980, offsetWidth: 1000 });
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [5, 60]]);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
+it('keeps an end resized over a strip at the end side in view', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} />);
+  const board = screen.getByTestId('board');
+  board.style.scrollPaddingRight = '300px';
+  const cover = document.createElement('div');
+  cover.setAttribute('data-r', '700,0,300,80');
+  board.append(cover);
+  // t2 spans 50 to 60, and the strip covers 70 onward. Its end held over the strip stops at 70, not under the strip at 100.
+  drag(screen.getByTestId('t2-end'), 595, 60, [[590, 60], [990, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-end', to: { lane: 'b', start: 50, end: 70 } }));
 });
 
 it('reads the scroll-padding as the drag goes, so padding set after the press still counts', () => {
