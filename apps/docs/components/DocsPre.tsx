@@ -14,6 +14,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';
 import { ScrollRegion } from './ScrollRegion';
@@ -59,16 +60,13 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
   const words = DICTIONARIES[useLocale()].codeFold;
   const id = useId();
   const restRef = useRef<HTMLSpanElement>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
-  // Where the button sat in the viewport when the reader pressed it to fold the block.
-  const foldFrom = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(false);
 
+  // A find in page match in the rest fires this, and the browser then removes `hidden`. Its own effect, so
+  // toggling the block doesn't attach it again.
   useLayoutEffect(() => {
     const el = restRef.current;
     if (!el) return;
-    // A find in page match in the rest fires this, and the browser then removes `hidden`. Attached before the
-    // effect below sets `until-found`, so the state never misses a reveal.
     const open = () => setExpanded(true);
     el.addEventListener('beforematch', open);
     return () => el.removeEventListener('beforematch', open);
@@ -77,15 +75,26 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
   useLayoutEffect(() => {
     const el = restRef.current;
     if (!expanded && el && 'onbeforematch' in el) el.setAttribute('hidden', 'until-found');
-    const from = foldFrom.current;
-    if (expanded || from === null || !toggleRef.current) return;
-    foldFrom.current = null;
-    // The block shrank above the button, so scroll the page by as much, which keeps the button under the reader's
-    // pointer and focus, with the peek just above it. The click turned off scroll anchoring for this layout, so
-    // the browser doesn't move the page too.
-    scrollBy({ top: toggleRef.current.getBoundingClientRect().top - from, behavior: 'instant' });
-    document.documentElement.style.removeProperty('overflow-anchor');
   }, [expanded]);
+
+  /**
+   * Folds the block in one step: the block shrinks above the button, so scroll the page by as much, which keeps the
+   * button under the reader's pointer and focus with the peek just above it. Scroll anchoring is off while it
+   * happens, so the browser doesn't move the page too.
+   */
+  const fold = (button: HTMLElement) => {
+    const from = button.getBoundingClientRect().top;
+    const root = document.documentElement.style;
+    const anchor = root.getPropertyValue('overflow-anchor');
+    root.setProperty('overflow-anchor', 'none');
+    try {
+      flushSync(() => setExpanded(false));
+      scrollBy({ top: button.getBoundingClientRect().top - from, behavior: 'instant' });
+    } finally {
+      if (anchor) root.setProperty('overflow-anchor', anchor);
+      else root.removeProperty('overflow-anchor');
+    }
+  };
 
   return (
     <div className="docs-code-fold" data-expanded={expanded ? '' : undefined}>
@@ -103,17 +112,10 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
       </ScrollRegion>
       <div className="docs-code-toggle">
         <Button.Root
-          ref={toggleRef}
           variant="ghost"
           aria-expanded={expanded}
           aria-controls={id}
-          onClick={(event) => {
-            if (expanded) {
-              foldFrom.current = event.currentTarget.getBoundingClientRect().top;
-              document.documentElement.style.setProperty('overflow-anchor', 'none');
-            }
-            setExpanded(!expanded);
-          }}
+          onClick={(event) => (expanded ? fold(event.currentTarget) : setExpanded(true))}
         >
           {expanded ? words.hide : words.show}
           <Button.Icon>{expanded ? <ChevronUp /> : <ChevronDown />}</Button.Icon>

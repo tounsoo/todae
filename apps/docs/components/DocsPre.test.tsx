@@ -196,7 +196,8 @@ describe('long code blocks', () => {
 
   it('shows the first 20 lines of a longer block, and the rest on Show all code', () => {
     const text = fence(41);
-    const scrollBy = vi.fn();
+    // Records whether scroll anchoring was off when the page scrolled.
+    const scrollBy = vi.fn((_: ScrollToOptions) => document.documentElement.style.overflowAnchor);
     vi.stubGlobal('scrollBy', scrollBy);
     const { container } = render(
       <>
@@ -226,13 +227,14 @@ describe('long code blocks', () => {
     expect(scrollBy).not.toHaveBeenCalled();
 
     // Folding keeps the button where it was in the viewport: it sat 500px down, and the shorter block puts it at 100px.
-    vi.spyOn(button, 'getBoundingClientRect')
-      .mockReturnValueOnce(DOMRect.fromRect({ y: 500, height: 40 }))
-      .mockReturnValueOnce(DOMRect.fromRect({ y: 100, height: 40 }));
+    vi.spyOn(button, 'getBoundingClientRect').mockImplementation(() =>
+      DOMRect.fromRect({ y: button.getAttribute('aria-expanded') === 'true' ? 500 : 100, height: 40 }),
+    );
     fireEvent.click(button);
     expect(button.getAttribute('aria-expanded')).toBe('false');
     expect(rest?.hasAttribute('hidden')).toBe(true);
     expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: -400, behavior: 'instant' });
+    expect(scrollBy).toHaveReturnedWith('none');
     expect(document.documentElement.style.overflowAnchor).toBe('');
   });
 

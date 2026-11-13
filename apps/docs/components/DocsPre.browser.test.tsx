@@ -10,7 +10,10 @@ import { DocsPre } from './DocsPre';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/recipes/kanban' }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  scrollTo({ top: 0, behavior: 'instant' });
+});
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 const LONG_LINE = `const wide = '${'x'.repeat(300)}';`;
@@ -41,7 +44,9 @@ describe('a long code block in a browser', () => {
     expect(getComputedStyle(pre).maskImage).toContain('linear-gradient');
     // The mask clips at the pre's box, so the pre has to be as wide as its longest line for a sideways scroll to show it.
     expect(pre.scrollWidth).toBeLessThanOrEqual(pre.clientWidth);
-    expect(pre.clientWidth).toBeGreaterThan((pre.parentElement?.parentElement as HTMLElement).clientWidth);
+    const frameEl = pre.closest('[data-scroll-kind="code"]');
+    expect(frameEl).not.toBeNull();
+    expect(pre.clientWidth).toBeGreaterThan(frameEl?.clientWidth ?? Infinity);
     expect(describeViolations(await axe.run(container, AXE_OPTIONS))).toEqual([]);
 
     button.click();
@@ -74,7 +79,6 @@ describe('a long code block in a browser', () => {
     await frame();
     expect(button.getAttribute('aria-expanded')).toBe('false');
     expect(Math.abs(button.getBoundingClientRect().top - before)).toBeLessThanOrEqual(1);
-    scrollTo({ top: 0, behavior: 'instant' });
   });
 
   it('keeps the button in place when the reader folds the block from just past its end', async () => {
@@ -100,7 +104,6 @@ describe('a long code block in a browser', () => {
     await frame();
     expect(Math.abs(button.getBoundingClientRect().top - before)).toBeLessThanOrEqual(1);
     expect(document.documentElement.style.overflowAnchor).toBe('');
-    scrollTo({ top: 0, behavior: 'instant' });
   });
 
   it('opens when the browser reveals the rest for find in page', async () => {
