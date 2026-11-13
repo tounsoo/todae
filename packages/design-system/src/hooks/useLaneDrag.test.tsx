@@ -193,6 +193,72 @@ it('drops at the pointer where a lane shows through the board\'s scroll-padding'
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 0, end: 20 } }));
 });
 
+it('keeps an end resized over the strip in view', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={223} />);
+  // Over the strip the pointer reads at 22.4, nearest 20 on the grid, which the strip covers; the end goes to 25, the first point past it.
+  drag(screen.getByTestId('t1-end'), 295, 20, [[290, 20], [10, 20]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-end', to: { lane: 'a', start: 10, end: 25 } }));
+});
+
+it('lands where it fits in the range when an item is longer than the part in view', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={900} />);
+  // 10 units show past the strip and t1 is 20 long, so it goes as near the pointer as the range allows: at the range's end.
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 80, end: 100 } }));
+});
+
+it('drops in view over a name inside a lane, which covers the lane though the pointer is over it', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  screen.getByTestId('lane-b').append(screen.getByTestId('cover'));
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 20, end: 40 } }));
+});
+
+it('reads the scroll-padding as the drag goes, so padding set after the press still counts', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  const board = screen.getByTestId('board');
+  board.style.scrollPaddingLeft = '';
+  press(screen.getByTestId('t1-move'), 150, 20);
+  move(200, 20);
+  board.style.scrollPaddingLeft = '200px';
+  move(40, 60);
+  release(40, 60);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 20, end: 40 } }));
+});
+
+it('counts no strip where the scroll-padding leaves no room for the lanes', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} cover={200} />);
+  screen.getByTestId('board').style.scrollPaddingLeft = '1000px';
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [40, 60]]);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
+it('scrolls toward the nearer side when the part in view is narrower than two edges', () => {
+  vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+  try {
+    render(<Board cover={940} />);
+    const board = screen.getByTestId('board');
+    // 60px show past the strip: at 990 the pointer is 50px from the strip and 10px from the right side.
+    press(screen.getByTestId('t1-move'), 150, 20);
+    move(200, 20);
+    move(990, 20);
+    act(() => void vi.advanceTimersByTime(16));
+    expect(board.scrollLeft).toBe(12);
+    // At 950, 10px past the strip, it scrolls back toward the strip.
+    move(950, 20);
+    act(() => void vi.advanceTimersByTime(16));
+    expect(board.scrollLeft).toBe(0);
+    release(950, 20);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 it('drops nothing over a strip that covers the lanes without the board\'s scroll-padding', () => {
   const onDrop = vi.fn();
   render(<Board onDrop={onDrop} cover={200} />);
