@@ -249,7 +249,7 @@ test('the body line counts as a list item or quote, after a placeholder, and not
   assert.equal(check(page, '```\nx\n```\nAgent docs unchanged: after the block\n').status, 0);
 });
 
-test('the body line is read as GitHub shows it', () => {
+test('the body line counts only where it shows as text', () => {
   const page = { 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n' };
   const passes = (body) => assert.equal(check(page, body).status, 0, body);
   const fails = (body) => assert.equal(check(page, body).status, 1, body);
@@ -263,4 +263,9 @@ test('the body line is read as GitHub shows it', () => {
   fails('Why.\n\n    Agent docs unchanged: indented code\n');
   fails('> ```\n> Agent docs unchanged: quoted rule\n> ```\n');
   fails('Agent docs unchanged: <reason>.\n');
+  fails('- ```\n  Agent docs unchanged: in a list item\'s code\n  ```\n');
+  passes('Why this change\n    Agent docs unchanged: a lazy line of the paragraph\n');
+  passes('> ```\nAgent docs unchanged: after the quote\n');
+  passes('**Agent docs unchanged:** a recipe\n');
+  passes('## Agent docs unchanged: a recipe\n');
 });

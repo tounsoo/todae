@@ -7,6 +7,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parse } from 'yaml';
 
 const PAGES = 'apps/docs/app/(en)';
@@ -14,7 +15,7 @@ const PAGE = /^apps\/docs\/app\/\(en\)\/(?:(.+)\/)?page\.(?:mdx?|[jt]sx?)$/;
 const SITE_GROUPS = 'apps/docs/components/siteGroups.ts';
 const WORKFLOWS = '.github/workflows/';
 const AGENT_DOCS = { claude: ['CLAUDE.md'], verify: ['.claude/skills/verify/SKILL.md', '.claude/skills/verify/verify.mjs'] };
-const ESCAPE = /^(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?Agent docs unchanged:[ \t]*(\S.*?)[ \t]*$/;
+const ESCAPE = /^Agent docs unchanged:[ \t]*(\S.*?)$/;
 
 const git = (args, stderr = 'inherit') =>
   execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', stderr] });
@@ -136,48 +137,23 @@ function review(base, head) {
   };
 }
 
-// The reason a body gives for leaving the agent docs as they are, or null. It reads the body line by line as GitHub
-// shows it: the first line with a reason counts, as a plain line, a list item or a quote. A line in an HTML comment
-// doesn't show, and one in a code block only quotes the rule, so neither counts, and neither does a placeholder such
-// as <reason>.
+// The reason a body gives for leaving the agent docs as they are, or null. The body is read as Markdown, so only text
+// that shows on the pull request counts: a line in a code block or an HTML comment doesn't. The first line of shown
+// text that starts with the label and gives a reason counts, as in a paragraph, a list item, a quote or a heading,
+// and a placeholder such as <reason>, or a reason with no word in it, doesn't.
 function escapeReason(body) {
-  let fence = null;
-  let comment = false;
-  for (const line of (body ?? '').split(/\r?\n/)) {
-    // A quote's markers come off first, so a fence or the line inside a quote reads as it would outside one.
-    const content = line.replace(/^(?: {0,3}>[ \t]?)+/, '');
-    if (fence) {
-      if (fence.test(content)) fence = null;
-      continue;
-    }
-    if (!comment) {
-      const opener = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(content);
-      // A backtick fence's info string has no backtick, so ```x``` on one line is inline code, not a fence.
-      if (opener && !(opener[1][0] === '`' && opener[2].includes('`'))) {
-        fence = new RegExp(`^ {0,3}${opener[1][0]}{${opener[1].length},}[ \\t]*$`);
-        continue;
-      }
-      if (/^(?: {4}|\t)/.test(content)) continue;
-    }
-    // What shows of the line once comments are out. A `<!--` in a code span opens no comment.
-    const masked = content.replace(/`[^`]*`/g, (span) => ' '.repeat(span.length));
-    let shown = '';
-    for (let at = 0; at < content.length; ) {
-      if (comment) {
-        const end = content.indexOf('-->', at);
-        if (end === -1) break;
-        comment = false;
-        at = end + 3;
-      } else {
-        const start = masked.indexOf('<!--', at);
-        shown += content.slice(at, start === -1 ? undefined : start);
-        if (start === -1) break;
-        comment = true;
-        at = start + 4;
-      }
-    }
-    const reason = ESCAPE.exec(shown.trim())?.[1];
-    if (reason && !/^\W*<[^>]*>\W*$/.test(reason)) return reason;
+  const shown = (node) => {
+    if (node.type === 'code') return '';
+    if (node.type === 'html') return node.value.replace(/<!--[\s\S]*?(?:-->|$)/g, '').replace(/<[^>]*>/g, '');
+    if (node.type === 'inlineCode') return `\`${node.value}\``;
+    if (node.type === 'break') return '\n';
+    if ('value' in node) return node.value;
+    const blocks = ['root', 'blockquote', 'list', 'listItem'].includes(node.type);
+    return (node.children ?? []).map(shown).join(blocks ? '\n' : '');
+  };
+  for (const line of shown(fromMarkdown(body ?? '')).split('\n')) {
+    const reason = ESCAPE.exec(line.trim())?.[1];
+    if (reason && /[\p{L}\p{N}]/u.test(reason) && !/^\W*<[^>]*>\W*$/.test(reason)) return reason;
   }
   return null;
 }
