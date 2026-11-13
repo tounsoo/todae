@@ -147,6 +147,7 @@ export const SITE_GROUPS = [
       ['/recipes/citations', 'Citations'],
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
+      ['/recipes/conference-schedule', 'Conference schedule'],
       ['/recipes/data-table', 'Data table'],
       ['/recipes/date-time-picker', 'Date and time picker'],
       ['/recipes/date-range-presets', 'Date range with presets'],

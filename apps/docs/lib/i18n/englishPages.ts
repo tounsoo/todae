@@ -72,6 +72,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/citations': () => import('../../app/(en)/recipes/citations/page.mdx'),
   'recipes/combobox': () => import('../../app/(en)/recipes/combobox/page.mdx'),
   'recipes/command-palette': () => import('../../app/(en)/recipes/command-palette/page.mdx'),
+  'recipes/conference-schedule': () => import('../../app/(en)/recipes/conference-schedule/page.mdx'),
   'recipes/data-table': () => import('../../app/(en)/recipes/data-table/page.mdx'),
   'recipes/date-time-picker': () => import('../../app/(en)/recipes/date-time-picker/page.mdx'),
   'recipes/date-range-presets': () => import('../../app/(en)/recipes/date-range-presets/page.mdx'),

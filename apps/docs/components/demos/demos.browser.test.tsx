@@ -288,6 +288,7 @@ const OVERLAY_DEMOS = [
   'examples/popover/',
   'examples/recipes/combobox/',
   'examples/recipes/command-palette/',
+  'examples/recipes/conference-schedule/',
   'examples/recipes/date-range-presets/',
   'examples/recipes/date-time-picker/',
   'examples/utilities/use-popover/',

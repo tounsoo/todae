@@ -1,0 +1,70 @@
+import ConferenceSchedule from '../../../../examples/recipes/conference-schedule/ConferenceSchedule';
+
+export const description = 'A recipe for a multi-day conference schedule: stages as lanes, talks dragged from a queue, and conflicts across stages, with a menu and a dialog for every move.';
+
+# Conference schedule
+
+A recipe, not a package namespace. Organizers place talks on stages across the days of an event. Each stage is a lane along one time axis, talks wait in a queue until they are placed, and a talk can't go where its stage or one of its speakers is busy, even on another stage. Dragging comes from [`useLaneDrag`](/utilities/use-lane-drag), and each talk's [Menu](/menu) and a [Dialog](/dialog) make the same moves from the keyboard. The time helpers and the conflict rule live in the recipe, so change them to fit your event. There is no `Schedule.*` export.
+
+Drag a talk by its grip to another time, stage or day, or an end of it to change its length. Open a talk's menu to move it without dragging, or pick a speaker to see their talks on every stage.
+
+<Example of={ConferenceSchedule} />
+
+## The time axis
+
+`useLaneDrag` places items along plain numbers, so the recipe counts minutes of open hours only: `timeline()` turns each day's opening and closing in the venue's time zone into a segment, and the nights drop out. Here day 1 is 0 to 540 and day 2 is 540 to 1080, so a drag from one day to the next is a drag along one lane. `toUnits()` and `fromUnits()` turn a `Temporal.ZonedDateTime` into a point and back, and `snapGrid()` lists the points a talk snaps to, every step from each opening and at each closing.
+
+The end of one day and the start of the next are the same point, so each helper takes an `edge`: a start at 540 is 9:00 on day 2, and an end at 540 is 18:00 on day 1. A talk whose end lands past its day's closing is blocked as running past closing, since it would cross the night.
+
+Units are elapsed minutes. A day the clock changes is as long as it really is, and a wall time the change skips or repeats becomes the later or the earlier one, as Temporal's `compatible` does. The board shows times in the venue's zone, as most event schedules do.
+
+## Stages and talks
+
+Each stage is a `section` named by its heading, with its talks in an `ol` that the same heading names, in start order. The name, its seats, whether it's recorded and any opening hours stay in a sticky first column. Every row is as wide as the names column and the whole axis: a sticky element stays inside its parent, so a row only as wide as the board would carry its stage name away once the board scrolled past the row's end. The header row is sticky too, and its corner covers the hours as they scroll under the names. Each day's header names the day and lists its breaks and keynotes in text, which the board draws as stripes across every stage.
+
+A talk is an `li` placed with `inset-inline-start` and `inline-size` as fractions of the axis, so nothing is measured. Its leading edge takes its track's category color. Its menu button is the one part a screen reader reads, and its name says everything the block shows and more: the title, speakers, track, stage, day, times and any warning. A short talk hides its text, and one too short for its grip becomes its menu button alone, which makes every move a drag would. In "One day", a talk of 25 minutes or more keeps its grip, and one of half an hour or more its text too. Unscheduled talks wait in a queue beside the board on a wide screen and under it on a narrow one, each with its length, speakers, track and format.
+
+The board is a [ScrollArea](/scroll-area) that scrolls both ways and takes a Tab stop, so a keyboard can scroll it. It opens on "One day", which snaps to 5 minutes, and "Whole event" snaps to 15. "Whole event" is for seeing the event at a glance, where most talks are their menu button alone, so drag in "One day". A zoom keeps the time at the board's start in view. The day buttons scroll the board to a day, and the board's `scroll-padding` keeps a day's stop and a focused talk clear of the sticky names column and header row.
+
+## The rules
+
+`findConflicts()` is the one conflict rule. Each booking lists the keys it uses, here its stage and each speaker, and two bookings that share a key and overlap conflict, on whatever lanes they sit. A closed window takes keys too, or every key: breaks and keynotes close every stage and speaker, the workshop room's hours close that stage, and a speaker who arrives on day 2 closes their key on day 1. A `buffer` finds bookings that share a key and sit too close, such as talks on one stage with less than 10 minutes to change over. The axis leaves the nights out, so the end of one day sits next to the start of the next, and the recipe counts a changeover only within a day.
+
+`verdictFor()` turns what it finds into the verdict `useLaneDrag`'s `check` returns:
+
+- **Blocked:** a closed window, a stage or speaker already busy, past closing, or a recorded talk on a stage that isn't recorded.
+- **Warning:** more people expected than the stage seats, less than the changeover, or two talks of one track at once.
+
+The drag, the menu and the dialog all ask `verdictFor()`, so they can't disagree. A talk that sits with a warning shows an outline, a warning icon where it has room, and the warning in its name between drags. A blocked place marks every talk it overlaps on its stage or with one of its speakers, even when a closed window is the reason. One that runs past closing marks none, since the rest of it would fall on the next morning. The example checks every talk against every other, which is quick for a few dozen; for hundreds, index the bookings by key, so a check reads only the dragged talk's stage and speakers.
+
+## Moving without dragging
+
+Each talk's menu moves it 15 minutes earlier or later, to another stage at the same time, or back to the queue, and a talk in the queue goes to the first time on a stage with no warning, or else the first a rule allows. A move a rule blocks stays in the menu as unavailable, with `disabled`. "Change time or stage…" opens a dialog with a [Field.Select](/field/select) for the stage and the day, a [Field.TimeInput](/field/time-input) for the start and a [Field.NumberInput](/field/number-input) for the length. A blocked place is a [Form](/form) error on the start time, which a change to any field clears, and a warning shows in an [Alert](/alert) as the fields change.
+
+A talk that changes stage leaves one list and joins another, so its old element goes away. [`useFocusHandoff`](/utilities/use-focus-handoff) sends focus from it to the moved talk's menu button. The Dialog stays mounted and opens from state, since a dialog removed while open has no close to restore focus on. Its `restoreFocusRef` holds the menu button of the talk it edits, so focus goes back to that talk wherever it is when the dialog closes. Every move is announced with [`useAnnouncer`](/utilities/use-announcer), with the stage, day, times and any warning.
+
+## Dragging
+
+`useLaneDrag` takes the axis's `range`, the zoom's grid, the shortest talk as `minSpan`, `verdictFor()` as `check`, and an `onDrop` that calls the same move function as the menu. Spread `getBoardProps()` on the element that scrolls, `getLaneProps(stage)` on each lane, `getQueueProps()` on the queue's list, `getItemProps()` on each talk, and `getHandleProps()` on its grip and its two ends. A talk in the queue drags out at its length, and a placed one dropped on the queue goes back to it.
+
+During a drag the hook marks the lane under the pointer and the talks the place conflicts with, such as a speaker's other talk on another stage, with `data-conflict`, and the stylesheet outlines them without a render. A preview in each lane reads the drag with `useLaneDragState` and draws the place, its times and the verdict's reason with an icon. A blocked place takes no drop.
+
+The grip and the ends are `aria-hidden` and not tab stops, since the menu and the dialog are the keyboard's way. Each has `touch-action: none`, so a finger drags from them while a swipe anywhere else scrolls the board.
+
+## Undo and saving
+
+Each move keeps the schedule it replaced, and Undo puts the last one back and says what it undid. The example saves nothing. If your product saves a move and the save fails, put the talk back and say so with a [Toast](/toast), since the announcement already said it moved. When two organizers edit at once, check the version you saved against before applying a move.
+
+## Accessible composition
+
+**Todae handles:** `useLaneDrag` drags a talk from its grip or an end with a mouse, a finger or a pen, works out the snapped place from the lane's box and the text direction, asks the rules, refuses a blocked drop, marks the talks in conflict, and cancels on Escape. `Menu` reads a `disabled` move as unavailable and returns focus to its button. The Dialog moves focus in and back, and the Form puts the error on the field. `useFocusHandoff` moves focus from a talk that changed stage, and `useAnnouncer` writes each message to a live region.
+
+**You supply:** A name for each stage that names its `section` and its list. A name for each talk's menu button with its title, speakers, stage, day, times and any warning. A menu and a dialog that make every move a drag makes. The rules and their reasons. A cue for each verdict besides color. Grips and ends hidden from screen readers. Breaks and closed hours in text, not only as stripes. A ref on the menu button of the talk that last moved or opened the dialog. Highlighting that marks the picked talks with more than color and leaves the other talks' text and controls at full contrast.
+
+**Watch for:** A row only as wide as the board, which lets a sticky stage name scroll away. Rows that start inside the scroll area's room for focus rings, which lets the names and header row slide by that room before they stick. A dialog unmounted while open, which drops focus on the page. A changeover counted across a night. Times shown in the browser's zone when the event's are meant. A talk crossing a night on a collapsed axis. A conflict that only shows on the talk's own stage. A move that only dragging can make (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A conflict shown by color alone (SC 1.4.1). Many stages of talks, each a tab stop: arrow keys inside a lane with [`useRovingFocus`](/utilities/use-roving-focus) keep Tab to one stop a stage.
+
+## When to use
+
+**When:** People place items on parallel lanes along time, where an item's resources can clash across lanes, such as talks on stages, shifts on a rota or bookings of rooms.
+
+**When not:** One ordered list → the [Reorder](/recipes/reorder) recipe. Items that move between stages of work with no time → the [Kanban](/recipes/kanban) recipe. Picking one date or time → the [Date and time picker](/recipes/date-time-picker) recipe.
