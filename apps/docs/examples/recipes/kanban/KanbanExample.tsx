@@ -19,7 +19,7 @@ import {
   type UseReorderItemProps,
 } from '@tounsoo/todae';
 import { EllipsisVertical, GripVertical } from 'lucide-react';
-import { memo, useId, useRef, useState, type RefObject } from 'react';
+import { memo, useCallback, useId, useRef, useState, type RefObject } from 'react';
 import styles from './Kanban.module.css';
 
 type Task = { id: string; title: string; label: string };
@@ -197,14 +197,18 @@ export function KanbanBoard({
   const landing = useRef<HTMLButtonElement | null>(null);
   const [landed, setLanded] = useState<string | null>(null);
 
-  const move: Move = (fromColumn, from, toColumn, to) => {
-    const task = columns[fromColumn]!.tasks[from]!;
-    const next = moveTask(columns, fromColumn, from, toColumn, to);
-    if (toColumn !== fromColumn) setLanded(task.id);
-    onChange(next);
-    const column = next[toColumn]!;
-    announce(`${task.title} moved to ${column.name}, position ${to + 1} of ${column.tasks.length}`);
-  };
+  // One move for every card, kept the same until the columns change, so a memoized card can skip a render.
+  const move: Move = useCallback(
+    (fromColumn, from, toColumn, to) => {
+      const task = columns[fromColumn]!.tasks[from]!;
+      const next = moveTask(columns, fromColumn, from, toColumn, to);
+      if (toColumn !== fromColumn) setLanded(task.id);
+      onChange(next);
+      const column = next[toColumn]!;
+      announce(`${task.title} moved to ${column.name}, position ${to + 1} of ${column.tasks.length}`);
+    },
+    [columns, onChange, announce],
+  );
   // A drag between columns calls the same move as the menu.
   const group = useReorderGroup<number>({
     onMove: (from, to) => move(from.list, from.index, to.list, to.index),

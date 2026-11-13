@@ -445,20 +445,24 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   // dialog around the list, as does a modal's close request, such as the Android back gesture.
   useEscapeKey(touch !== null && dragging !== null, true, end, sourceRef);
 
-  // What the handlers read when an event runs: this render's state and options. The handlers are made
-  // once per index and read these, so they keep their identity and a memoized row can skip a render.
-  const live = useRef({ armed, dragging, drop, disabled, orientation, group });
-  live.current = { armed, dragging, drop, disabled, orientation, group };
+  // What the handlers read when an event runs: the committed render's state and options. The handlers
+  // are made once per index and read these, so they keep their identity and a memoized row can skip a
+  // render. Written after the commit, so a render React drops never reaches an event.
+  const live = useRef({ armed, disabled, orientation });
+  useLayoutEffect(() => {
+    live.current = { armed, disabled, orientation };
+  });
 
   /** Clears this list's line, without touching another list's. */
   const hide = () => {
     show(null);
-    if (live.current.group.shown === id) live.current.group.shown = null;
+    if (groupRef.current.shown === id) groupRef.current.shown = null;
   };
 
   /** The group's drag under way, or null when this event isn't one this list can take. */
   const source = (event: DragEvent<HTMLElement>): Source | null => {
-    const { group, disabled } = live.current;
+    const { disabled } = live.current;
+    const group = groupRef.current;
     const drag = group.drag;
     if (drag === null || !event.dataTransfer.types.includes(group.type)) return null;
     // An item can't go into a list inside itself.
@@ -482,11 +486,11 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     handled.add(event.nativeEvent);
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    display(live.current.group, id, landing(from, id, locate(event)));
+    display(groupRef.current, id, landing(from, id, locate(event)));
   };
 
   const take = (event: DragEvent<HTMLElement>, locate: Locate) => {
-    const { group } = live.current;
+    const group = groupRef.current;
     if (handled.has(event.nativeEvent) || group.drag === null || !event.dataTransfer.types.includes(group.type)) return;
     // The drop is the group's own drag, so the browser does nothing else with it, such as open a link.
     event.preventDefault();
@@ -505,7 +509,8 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     });
     return {
       onDragStart: (event) => {
-        const { armed, disabled, group } = live.current;
+        const { armed, disabled } = live.current;
+        const group = groupRef.current;
         if (armed !== index || disabled) return;
         event.stopPropagation();
         event.dataTransfer.effectAllowed = 'move';
@@ -520,7 +525,7 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
       onDragLeave: (event) => {
         // WebKit fires dragleave on every move inside an item, with no relatedTarget, so ask the
         // pointer instead.
-        if (live.current.group.drag !== null && !inside(event) && dropRef.current?.index === index) hide();
+        if (groupRef.current.drag !== null && !inside(event) && dropRef.current?.index === index) hide();
       },
       onDrop: (event) => take(event, locate),
       onDragEnd: () => {
@@ -568,7 +573,9 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     },
   });
 
-  // Each index's handlers, made on first use. The list's handlers are made once.
+  // Each index's handlers, made on first use and kept, so the functions above run as the render that
+  // first asked for them made them: they read the drag through refs and stable callbacks only, never a
+  // value of a later render. The list's handlers are made once.
   const [handlers] = useState(() => ({
     items: new Map<number, ItemHandlers>(),
     handles: new Map<number, HandleHandlers>(),
@@ -581,7 +588,8 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   };
   const ownHandle = (index: number) => {
     let own = handlers.handles.get(index);
-    if (own === undefined) handlers.handles.set(index, (own = handleHandlers(index)));
+    // Frozen, since the same object goes to every render that asks for this handle.
+    if (own === undefined) handlers.handles.set(index, (own = Object.freeze(handleHandlers(index))));
     return own;
   };
   // A drag over the list but not over one of its items, such as in a gap, past the last item or in an
@@ -591,16 +599,16 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
       onDragEnter: (event) => over(event, locate),
       onDragOver: (event) => over(event, locate),
       onDragLeave: (event) => {
-        if (live.current.group.drag !== null && !inside(event)) hide();
+        if (groupRef.current.drag !== null && !inside(event)) hide();
       },
       onDrop: (event) => take(event, locate),
     }))((event) => insertion(event.currentTarget, id, event.clientX, event.clientY, live.current.orientation)));
 
-  // The getters keep their identity too, and read this render's state when they're called.
-  const getItemProps = useCallback(<P extends UseReorderItemUserProps>(index: number, props?: P) => {
+  // The item and list getters are this render's, as their props carry its state. The handlers in them
+  // keep their identity.
+  const getItemProps = <P extends UseReorderItemUserProps>(index: number, props?: P) => {
     const user = (props ?? {}) as P;
     const own = ownItem(index);
-    const { armed, dragging, drop, disabled } = live.current;
     return {
       ...user,
       draggable: armed === index && !disabled ? true : undefined,
@@ -615,10 +623,9 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
       'data-dragging': dragging === index ? ('' as const) : undefined,
       'data-drop': drop?.index === index ? drop.position : undefined,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads live state through refs, so it never changes
-  }, []);
+  };
 
-  const getListProps = useCallback(<P extends UseReorderListUserProps>(props?: P) => {
+  const getListProps = <P extends UseReorderListUserProps>(props?: P) => {
     const user = (props ?? {}) as P;
     const own = ownList();
     return {
@@ -628,11 +635,11 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
       onDragLeave: compose(user.onDragLeave, own.onDragLeave),
       onDrop: compose(user.onDrop, own.onDrop),
       [ROOT]: id,
-      'data-drop-target': live.current.drop !== null ? ('' as const) : undefined,
+      'data-drop-target': drop !== null ? ('' as const) : undefined,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads live state through refs, so it never changes
-  }, []);
+  };
 
+  // The handle's props carry no state, so this getter keeps its identity too.
   const getHandleProps = useCallback(<P extends UseReorderHandleUserProps>(index: number, props?: P) => {
     const own = ownHandle(index);
     // With no props of the caller's, the same object every time, so a row can take it as one prop.
@@ -642,7 +649,7 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
       onPointerDown: compose(props.onPointerDown, own.onPointerDown),
       onMouseDown: compose(props.onMouseDown, own.onMouseDown),
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads live state through refs, so it never changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ownHandle hands out handlers made once per index, which read state through refs
   }, []);
 
   return { dragging, drop, getItemProps, getHandleProps, getListProps };

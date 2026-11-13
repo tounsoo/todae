@@ -60,7 +60,7 @@ const Row = memo(function Row({ name, grip, ...item }: UseReorderItemProps & { n
 </ol>
 ```
 
-항목은 자기 상태를 `dragging`과 `drop`이 아니라 자기 `data-dragging`과 `data-drop` props에서 읽습니다. `dragging`과 `drop`을 넘기면 단계마다 props가 바뀝니다. 항목의 다른 props도 `useCallback`으로 만든 이동 함수처럼 단계마다 그대로 두세요. getter에 직접 넣은 핸들러는 부를 때마다 다시 감싸지므로, 그런 핸들러를 받는 항목은 단계마다 렌더됩니다. [Reorder](/recipes/reorder) 레시피와 [Kanban](/recipes/kanban) 레시피가 행을 이렇게 그립니다.
+`getItemProps(index)`는 목록이 렌더될 때 불러 그 결과를 항목에 넘기고, getter 자체는 넘기지 마세요. 항목은 자기 상태를 `dragging`과 `drop`이 아니라 자기 `draggable`, `data-dragging`, `data-drop` props에서 읽습니다. `dragging`과 `drop`을 넘기면 끌기나 놓일 자리가 바뀔 때마다 모든 항목이 렌더됩니다. 항목의 다른 props도 `useCallback`으로 만든 이동 함수처럼 단계마다 그대로 두세요. getter에 직접 넣은 핸들러는 부를 때마다 다시 감싸지므로, 그런 핸들러를 받는 항목은 단계마다 렌더됩니다. [Reorder](/recipes/reorder) 레시피와 [Kanban](/recipes/kanban) 레시피가 행을 이렇게 그립니다.
 
 ## 터치
 

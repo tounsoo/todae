@@ -60,7 +60,7 @@ const Row = memo(function Row({ name, grip, ...item }: UseReorderItemProps & { n
 </ol>
 ```
 
-An item reads its own state from its `data-dragging` and `data-drop` props, not from `dragging` and `drop`, which would change its props on every step. Keep its other props the same from step to step too, such as a move function from `useCallback`. A handler of your own given to a getter is wrapped again on each call, so an item that takes one renders on every step. The [Reorder](/recipes/reorder) and [Kanban](/recipes/kanban) recipes draw their rows this way.
+Call `getItemProps(index)` in the list's render and pass the item what it returns, not the getter. An item reads its own state from its `draggable`, `data-dragging` and `data-drop` props, not from `dragging` and `drop`, which would render every item whenever the drag or its landing place changes. Keep its other props the same from step to step too, such as a move function from `useCallback`. A handler of your own given to a getter is wrapped again on each call, so an item that takes one renders on every step. The [Reorder](/recipes/reorder) and [Kanban](/recipes/kanban) recipes draw their rows this way.
 
 ## Touch
 
