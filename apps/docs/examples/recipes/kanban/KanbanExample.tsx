@@ -15,10 +15,11 @@ import {
   useReorder,
   useReorderGroup,
   type ReorderGroup,
-  type UseReorderResult,
+  type UseReorderHandleProps,
+  type UseReorderItemProps,
 } from '@tounsoo/todae';
 import { EllipsisVertical, GripVertical } from 'lucide-react';
-import { useId, useRef, useState, type RefObject } from 'react';
+import { memo, useId, useRef, useState, type RefObject } from 'react';
 import styles from './Kanban.module.css';
 
 type Task = { id: string; title: string; label: string };
@@ -32,37 +33,42 @@ function moveTask(columns: readonly Column[], fromColumn: number, from: number, 
   return next;
 }
 
-function BoardCard({
-  task,
-  index,
-  columnIndex,
-  columns,
-  reorder,
-  move,
-  landing,
-  landed,
-}: {
+type BoardCardProps = UseReorderItemProps & {
   task: Task;
   index: number;
   columnIndex: number;
   columns: readonly Column[];
-  reorder: UseReorderResult;
+  grip: UseReorderHandleProps;
   move: Move;
   landing: RefObject<HTMLButtonElement | null>;
   landed: string | null;
-}) {
+};
+
+// A card takes its item props spread, so a drag step renders only the cards
+// whose own drag state changed.
+const BoardCard = memo(function BoardCard({
+  task,
+  index,
+  columnIndex,
+  columns,
+  grip,
+  move,
+  landing,
+  landed,
+  ...item
+}: BoardCardProps) {
   // A card moved to another column leaves its list while its menu holds
   // focus. Focus goes on to the card's trigger in its new column.
   const handoff = useFocusHandoff({ to: landing });
   const last = columns[columnIndex]!.tasks.length - 1;
 
   return (
-    <li ref={handoff} {...reorder.getItemProps(index)} className={styles.card}>
+    <li ref={handoff} {...item} className={styles.card}>
       <Card.Root>
         {/* The grip runs down the card's leading edge and the menu sits at its trailing edge,
             both with their icons on the title's first line. The label sits under the title. */}
         <Stack.Root direction="row" gap="condensed">
-          <span {...reorder.getHandleProps(index)} aria-hidden className={styles.grip}>
+          <span {...grip} aria-hidden className={styles.grip}>
             <GripVertical size="1em" />
           </span>
           <Stack.Root style={{ flex: 1, minInlineSize: 0 }}>
@@ -116,7 +122,7 @@ function BoardCard({
       </Card.Root>
     </li>
   );
-}
+});
 
 function BoardColumn({
   group,
@@ -159,11 +165,12 @@ function BoardColumn({
           {column.tasks.map((task, index) => (
             <BoardCard
               key={task.id}
+              {...reorder.getItemProps(index)}
               task={task}
               index={index}
               columnIndex={columnIndex}
               columns={columns}
-              reorder={reorder}
+              grip={reorder.getHandleProps(index)}
               move={move}
               landing={landing}
               landed={landed}

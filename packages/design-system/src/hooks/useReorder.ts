@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent, type SyntheticEvent } from 'react';
 import { composeHandlers } from '../internal/props.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 
@@ -147,6 +147,14 @@ type Source = { from: number; list: string };
 
 type Locate = (event: DragEvent<HTMLElement>) => ReorderDrop;
 
+type ItemHandlers = Pick<UseReorderItemProps, 'onDragStart' | 'onDragEnter' | 'onDragOver' | 'onDragLeave' | 'onDrop' | 'onDragEnd'>;
+type HandleHandlers = UseReorderHandleProps;
+type ListHandlers = Pick<UseReorderListProps, 'onDragEnter' | 'onDragOver' | 'onDragLeave' | 'onDrop'>;
+
+/** The caller's handler before ours, or ours alone, which keeps its identity, when the caller has none. */
+const compose = <E extends SyntheticEvent>(theirs: ((event: E) => void) | undefined, ours: (event: E) => void) =>
+  theirs ? composeHandlers(theirs, ours) : ours;
+
 const INDEX = 'data-todae-reorder-index';
 const LIST = 'data-todae-reorder-list';
 const ROOT = 'data-todae-reorder-root';
@@ -257,7 +265,6 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   // A list with no group is a group of one, with a drag type of its own.
   const [own] = useState(() => createGroup(typeFor(id), null));
   const group = (options.group as unknown as Group | undefined) ?? own;
-  const { type } = group;
   // The item a press on its handle may start dragging. Only that item is draggable, so text in the
   // others stays selectable and a drag of one can't start from anywhere else.
   const [armed, setArmed] = useState<number | null>(null);
@@ -438,16 +445,22 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
   // dialog around the list, as does a modal's close request, such as the Android back gesture.
   useEscapeKey(touch !== null && dragging !== null, true, end, sourceRef);
 
+  // What the handlers read when an event runs: this render's state and options. The handlers are made
+  // once per index and read these, so they keep their identity and a memoized row can skip a render.
+  const live = useRef({ armed, dragging, drop, disabled, orientation, group });
+  live.current = { armed, dragging, drop, disabled, orientation, group };
+
   /** Clears this list's line, without touching another list's. */
   const hide = () => {
     show(null);
-    if (group.shown === id) group.shown = null;
+    if (live.current.group.shown === id) live.current.group.shown = null;
   };
 
   /** The group's drag under way, or null when this event isn't one this list can take. */
   const source = (event: DragEvent<HTMLElement>): Source | null => {
+    const { group, disabled } = live.current;
     const drag = group.drag;
-    if (drag === null || !event.dataTransfer.types.includes(type)) return null;
+    if (drag === null || !event.dataTransfer.types.includes(group.type)) return null;
     // An item can't go into a list inside itself.
     if (drag.node !== event.currentTarget && drag.node.contains(event.currentTarget)) return null;
     const owner = group.members.get(drag.list)?.current;
@@ -469,11 +482,12 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     handled.add(event.nativeEvent);
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    display(group, id, landing(from, id, locate(event)));
+    display(live.current.group, id, landing(from, id, locate(event)));
   };
 
   const take = (event: DragEvent<HTMLElement>, locate: Locate) => {
-    if (handled.has(event.nativeEvent) || group.drag === null || !event.dataTransfer.types.includes(type)) return;
+    const { group } = live.current;
+    if (handled.has(event.nativeEvent) || group.drag === null || !event.dataTransfer.types.includes(group.type)) return;
     // The drop is the group's own drag, so the browser does nothing else with it, such as open a link.
     event.preventDefault();
     const from = source(event);
@@ -484,99 +498,153 @@ export function useReorder<L = never>(options: UseReorderOptions<L>): UseReorder
     commit(group, from, id, locate(event));
   };
 
-  const getItemProps = <P extends UseReorderItemUserProps>(index: number, props?: P) => {
-    const user = (props ?? {}) as P;
-    const locate: Locate = (event) => ({ index, position: sideOf(event.currentTarget, event.clientX, event.clientY, orientation) });
+  const itemHandlers = (index: number): ItemHandlers => {
+    const locate: Locate = (event) => ({
+      index,
+      position: sideOf(event.currentTarget, event.clientX, event.clientY, live.current.orientation),
+    });
     return {
-      ...user,
-      draggable: armed === index && !disabled ? true : undefined,
-      onDragStart: composeHandlers(user.onDragStart, (event) => {
+      onDragStart: (event) => {
+        const { armed, disabled, group } = live.current;
         if (armed !== index || disabled) return;
         event.stopPropagation();
         event.dataTransfer.effectAllowed = 'move';
         // Firefox starts a drag only when it carries data.
-        event.dataTransfer.setData(type, String(index));
+        event.dataTransfer.setData(group.type, String(index));
         sourceRef.current = event.currentTarget;
         group.drag = { node: event.currentTarget, list: id };
         setDragging(index);
-      }),
-      onDragEnter: composeHandlers(user.onDragEnter, (event) => over(event, locate)),
-      onDragOver: composeHandlers(user.onDragOver, (event) => over(event, locate)),
-      onDragLeave: composeHandlers(user.onDragLeave, (event) => {
+      },
+      onDragEnter: (event) => over(event, locate),
+      onDragOver: (event) => over(event, locate),
+      onDragLeave: (event) => {
         // WebKit fires dragleave on every move inside an item, with no relatedTarget, so ask the
         // pointer instead.
-        if (group.drag !== null && !inside(event) && dropRef.current?.index === index) hide();
-      }),
-      onDrop: composeHandlers(user.onDrop, (event) => take(event, locate)),
-      onDragEnd: composeHandlers(user.onDragEnd, () => {
-        if (sourceRef.current !== null || armed !== null) end();
-      }),
+        if (live.current.group.drag !== null && !inside(event) && dropRef.current?.index === index) hide();
+      },
+      onDrop: (event) => take(event, locate),
+      onDragEnd: () => {
+        if (sourceRef.current !== null || live.current.armed !== null) end();
+      },
+    };
+  };
+
+  const handleHandlers = (index: number): HandleHandlers => ({
+    onPointerDown: (event) => {
+      if (live.current.disabled || event.button !== 0) return;
+      const finger = event.pointerType === 'touch' || event.pointerType === 'pen';
+      // Another finger during a touch drag starts nothing. A primary press, a mouse's, a pen's or a
+      // first finger's, means the touch drag's pointerup never came, so that drag is over. A pen and
+      // a finger are each primary for their own type, so a palm on a handle ends a pen's drag.
+      if (touchRef.current !== null) {
+        if (finger && !event.isPrimary) return;
+        end();
+      }
+      fingerRef.current = finger;
+      // A drag whose dragend never reached the list is over by now.
+      if (sourceRef.current !== null) end();
+      const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
+      armedRef.current = item && indexOf(item) === index ? item : null;
+      if (fingerRef.current) {
+        setArmed(null);
+        if (armedRef.current === null) return;
+        // No mouse events follow, so a pen dragging across the rows doesn't select their text.
+        event.preventDefault();
+        touchRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        setTouch(touchRef.current);
+        return;
+      }
+      setArmed(index);
+    },
+    // WebKit sends no pointerdown for the press after a drag, as if the button were still down from
+    // it, but it does send mousedown.
+    onMouseDown: (event) => {
+      if (live.current.disabled || event.button !== 0 || fingerRef.current || touchRef.current !== null) return;
+      if (live.current.armed === index) return;
+      if (sourceRef.current !== null) end();
+      const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
+      armedRef.current = item && indexOf(item) === index ? item : null;
+      setArmed(index);
+    },
+  });
+
+  // Each index's handlers, made on first use. The list's handlers are made once.
+  const [handlers] = useState(() => ({
+    items: new Map<number, ItemHandlers>(),
+    handles: new Map<number, HandleHandlers>(),
+    list: null as ListHandlers | null,
+  }));
+  const ownItem = (index: number) => {
+    let own = handlers.items.get(index);
+    if (own === undefined) handlers.items.set(index, (own = itemHandlers(index)));
+    return own;
+  };
+  const ownHandle = (index: number) => {
+    let own = handlers.handles.get(index);
+    if (own === undefined) handlers.handles.set(index, (own = handleHandlers(index)));
+    return own;
+  };
+  // A drag over the list but not over one of its items, such as in a gap, past the last item or in an
+  // empty list, lands by the pointer among the items.
+  const ownList = () =>
+    (handlers.list ??= ((locate: Locate): ListHandlers => ({
+      onDragEnter: (event) => over(event, locate),
+      onDragOver: (event) => over(event, locate),
+      onDragLeave: (event) => {
+        if (live.current.group.drag !== null && !inside(event)) hide();
+      },
+      onDrop: (event) => take(event, locate),
+    }))((event) => insertion(event.currentTarget, id, event.clientX, event.clientY, live.current.orientation)));
+
+  // The getters keep their identity too, and read this render's state when they're called.
+  const getItemProps = useCallback(<P extends UseReorderItemUserProps>(index: number, props?: P) => {
+    const user = (props ?? {}) as P;
+    const own = ownItem(index);
+    const { armed, dragging, drop, disabled } = live.current;
+    return {
+      ...user,
+      draggable: armed === index && !disabled ? true : undefined,
+      onDragStart: compose(user.onDragStart, own.onDragStart),
+      onDragEnter: compose(user.onDragEnter, own.onDragEnter),
+      onDragOver: compose(user.onDragOver, own.onDragOver),
+      onDragLeave: compose(user.onDragLeave, own.onDragLeave),
+      onDrop: compose(user.onDrop, own.onDrop),
+      onDragEnd: compose(user.onDragEnd, own.onDragEnd),
       [INDEX]: index,
       [LIST]: id,
       'data-dragging': dragging === index ? ('' as const) : undefined,
       'data-drop': drop?.index === index ? drop.position : undefined,
     };
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads live state through refs, so it never changes
+  }, []);
 
-  const getListProps = <P extends UseReorderListUserProps>(props?: P) => {
+  const getListProps = useCallback(<P extends UseReorderListUserProps>(props?: P) => {
     const user = (props ?? {}) as P;
-    // A drag over the list but not over one of its items, such as in a gap, past the last item or
-    // in an empty list, lands by the pointer among the items.
-    const locate: Locate = (event) => insertion(event.currentTarget, id, event.clientX, event.clientY, orientation);
+    const own = ownList();
     return {
       ...user,
-      onDragEnter: composeHandlers(user.onDragEnter, (event) => over(event, locate)),
-      onDragOver: composeHandlers(user.onDragOver, (event) => over(event, locate)),
-      onDragLeave: composeHandlers(user.onDragLeave, (event) => {
-        if (group.drag !== null && !inside(event)) hide();
-      }),
-      onDrop: composeHandlers(user.onDrop, (event) => take(event, locate)),
+      onDragEnter: compose(user.onDragEnter, own.onDragEnter),
+      onDragOver: compose(user.onDragOver, own.onDragOver),
+      onDragLeave: compose(user.onDragLeave, own.onDragLeave),
+      onDrop: compose(user.onDrop, own.onDrop),
       [ROOT]: id,
-      'data-drop-target': drop !== null ? ('' as const) : undefined,
+      'data-drop-target': live.current.drop !== null ? ('' as const) : undefined,
     };
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads live state through refs, so it never changes
+  }, []);
 
-  const getHandleProps = <P extends UseReorderHandleUserProps>(index: number, props?: P) => {
-    const user = (props ?? {}) as P;
+  const getHandleProps = useCallback(<P extends UseReorderHandleUserProps>(index: number, props?: P) => {
+    const own = ownHandle(index);
+    // With no props of the caller's, the same object every time, so a row can take it as one prop.
+    if (props === undefined) return own as Omit<P, keyof UseReorderHandleProps> & UseReorderHandleProps;
     return {
-      ...user,
-      onPointerDown: composeHandlers(user.onPointerDown, (event: PointerEvent<HTMLElement>) => {
-        if (disabled || event.button !== 0) return;
-        const finger = event.pointerType === 'touch' || event.pointerType === 'pen';
-        // Another finger during a touch drag starts nothing. A primary press, a mouse's, a pen's or a
-        // first finger's, means the touch drag's pointerup never came, so that drag is over. A pen and
-        // a finger are each primary for their own type, so a palm on a handle ends a pen's drag.
-        if (touchRef.current !== null) {
-          if (finger && !event.isPrimary) return;
-          end();
-        }
-        fingerRef.current = finger;
-        // A drag whose dragend never reached the list is over by now.
-        if (sourceRef.current !== null) end();
-        const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
-        armedRef.current = item && indexOf(item) === index ? item : null;
-        if (fingerRef.current) {
-          setArmed(null);
-          if (armedRef.current === null) return;
-          // No mouse events follow, so a pen dragging across the rows doesn't select their text.
-          event.preventDefault();
-          touchRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-          setTouch(touchRef.current);
-          return;
-        }
-        setArmed(index);
-      }),
-      // WebKit sends no pointerdown for the press after a drag, as if the button were still down from
-      // it, but it does send mousedown.
-      onMouseDown: composeHandlers(user.onMouseDown, (event: MouseEvent<HTMLElement>) => {
-        if (disabled || event.button !== 0 || fingerRef.current || touchRef.current !== null || armed === index) return;
-        if (sourceRef.current !== null) end();
-        const item = event.currentTarget.closest<HTMLElement>(`[${INDEX}]`);
-        armedRef.current = item && indexOf(item) === index ? item : null;
-        setArmed(index);
-      }),
+      ...props,
+      onPointerDown: compose(props.onPointerDown, own.onPointerDown),
+      onMouseDown: compose(props.onMouseDown, own.onMouseDown),
     };
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads live state through refs, so it never changes
+  }, []);
 
   return { dragging, drop, getItemProps, getHandleProps, getListProps };
 }
+

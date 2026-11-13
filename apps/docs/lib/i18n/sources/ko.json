@@ -764,7 +764,7 @@
     "# Kanban": "0008a1f55d5b",
     "## Columns and cards": "70d9decd98d8",
     "## The move menu": "4c7e3f09bc24",
-    "## Dragging": "4556d1a520d9",
+    "## Dragging": "e8fb5f4e761f",
     "## Saving the board": "c74bdf1783e2",
     "## Accessible composition": "186181013735",
     "## When to use": "69ed21d4e222",
@@ -813,7 +813,7 @@
     "(top)": "685206a12dc5",
     "# Reorder": "faa00c223919",
     "## The move menu": "03270099c955",
-    "## Dragging": "b4c71ef5fa59",
+    "## Dragging": "503adccad669",
     "## Saving the order": "ccbed730f477",
     "## Accessible composition": "87e67664f2d5",
     "## When to use": "38f06c41410c",
@@ -1292,12 +1292,13 @@
   "utilities/use-reorder": {
     "(top)": "a98b70dcfcf0",
     "# useReorder": "82802c6ad052",
+    "## Long lists": "d8875392e784",
     "## Touch": "55459a623454",
     "## Between lists": "d29cfb5356d7",
     "## Accessible composition": "ca0b01ac5bf3",
     "## When to use": "0d34d15d0e85",
     "## Props": "48fcb5146827",
-    "(section order)": "890fa6f5839e"
+    "(section order)": "921000e74523"
   },
   "utilities/use-roving-focus": {
     "(top)": "f424b205a893",

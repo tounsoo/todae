@@ -1,7 +1,14 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useReorder, useReorderGroup, type ReorderGroup, type ReorderPlace } from './useReorder.js';
+import {
+  useReorder,
+  useReorderGroup,
+  type ReorderGroup,
+  type ReorderPlace,
+  type UseReorderHandleProps,
+  type UseReorderItemProps,
+} from './useReorder.js';
 
 // jsdom has no layout, no DragEvent and no DataTransfer: items stand 40px tall in a column, or
 // 100px wide in a row, and drag events carry a stand-in DataTransfer that lasts the drag.
@@ -9,16 +16,40 @@ import { useReorder, useReorderGroup, type ReorderGroup, type ReorderPlace } fro
 
 type Orientation = 'vertical' | 'horizontal';
 
+// The names of the memoized rows that rendered, in order.
+let renders: string[] = [];
+const rendered = () => {
+  const names = renders;
+  renders = [];
+  return names;
+};
+
+/** A row the way a long list draws it: memoized, with its item props spread and its handle's props as one prop. */
+const Row = memo(function Row({ name, grip, ...item }: UseReorderItemProps & { name: string; grip: UseReorderHandleProps }) {
+  renders.push(name);
+  return (
+    <li {...item}>
+      <span data-testid={`handle-${name}`} {...grip}>
+        ::
+      </span>
+      <span>{name}</span>
+    </li>
+  );
+});
+
 function List({
   onMove,
   orientation,
   disabled,
   dir,
+  memoized,
 }: {
   onMove?: (from: number, to: number) => void;
   orientation?: Orientation;
   disabled?: boolean;
   dir?: 'rtl';
+  /** Draw the items as memoized rows. */
+  memoized?: boolean;
 }) {
   const [items, setItems] = useState(['A', 'B', 'C', 'D']);
   const reorder = useReorder({
@@ -36,14 +67,18 @@ function List({
   });
   return (
     <ul data-orientation={orientation ?? 'vertical'}>
-      {items.map((name, index) => (
-        <li key={name} {...reorder.getItemProps(index)} style={dir ? { direction: dir } : undefined}>
-          <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)}>
-            ::
-          </span>
-          <span>{name}</span>
-        </li>
-      ))}
+      {items.map((name, index) =>
+        memoized ? (
+          <Row key={name} {...reorder.getItemProps(index)} name={name} grip={reorder.getHandleProps(index)} />
+        ) : (
+          <li key={name} {...reorder.getItemProps(index)} style={dir ? { direction: dir } : undefined}>
+            <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)}>
+              ::
+            </span>
+            <span>{name}</span>
+          </li>
+        ),
+      )}
     </ul>
   );
 }
@@ -383,6 +418,7 @@ function Column({
   x,
   disabled,
   onMove,
+  memoized,
 }: {
   group: ReorderGroup<Key>;
   list: Key;
@@ -390,18 +426,23 @@ function Column({
   x: number;
   disabled?: boolean;
   onMove: (from: number, to: number) => void;
+  memoized?: boolean;
 }) {
   const reorder = useReorder({ group, list, disabled, onMove });
   return (
     <ul data-x={x} data-testid={`list-${list}`} {...reorder.getListProps()}>
-      {items.map((name, index) => (
-        <li key={name} {...reorder.getItemProps(index)}>
-          <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)}>
-            ::
-          </span>
-          <span>{name}</span>
-        </li>
-      ))}
+      {items.map((name, index) =>
+        memoized ? (
+          <Row key={name} {...reorder.getItemProps(index)} name={name} grip={reorder.getHandleProps(index)} />
+        ) : (
+          <li key={name} {...reorder.getItemProps(index)}>
+            <span data-testid={`handle-${name}`} {...reorder.getHandleProps(index)}>
+              ::
+            </span>
+            <span>{name}</span>
+          </li>
+        ),
+      )}
     </ul>
   );
 }
@@ -412,9 +453,11 @@ function Board({
   onWithin,
   rightDisabled,
   hideLeft,
+  memoized,
 }: {
   right?: string[];
   hideLeft?: boolean;
+  memoized?: boolean;
   onBetween?: (from: ReorderPlace<Key>, to: ReorderPlace<Key>) => void;
   onWithin?: (list: Key, from: number, to: number) => void;
   rightDisabled?: boolean;
@@ -439,8 +482,16 @@ function Board({
   };
   return (
     <>
-      {!hideLeft && <Column group={group} list="left" items={lists.left} x={0} onMove={within('left')} />}
-      <Column group={group} list="right" items={lists.right} x={300} disabled={rightDisabled} onMove={within('right')} />
+      {!hideLeft && <Column group={group} list="left" items={lists.left} x={0} onMove={within('left')} memoized={memoized} />}
+      <Column
+        group={group}
+        list="right"
+        items={lists.right}
+        x={300}
+        disabled={rightDisabled}
+        onMove={within('right')}
+        memoized={memoized}
+      />
     </>
   );
 }
@@ -689,4 +740,62 @@ it('moves nothing when an item is dropped on a list inside itself', () => {
   fire('pointerup', at.clientX, at.clientY);
   expect(onBetween).not.toHaveBeenCalled();
   expect(onOuter).not.toHaveBeenCalled();
+});
+
+// A long list memoizes its rows, so a drag step costs the rows whose own state changed: at most the
+// one it leaves and the one it reaches.
+it('renders only the memoized rows whose own drag state changes, at each step of a mouse drag', () => {
+  render(<List memoized />);
+  rendered();
+  fireEvent.pointerDown(screen.getByTestId('handle-A'), { button: 0, pointerType: 'mouse' });
+  expect(item('A').getAttribute('draggable')).toBe('true');
+  expect(rendered()).toEqual(['A']);
+  const dataTransfer = stubDataTransfer();
+  fireDrag(item('A'), 'dragstart', dataTransfer);
+  expect(item('A').getAttribute('data-dragging')).toBe('');
+  expect(rendered()).toEqual(['A']);
+  fireDrag(item('C'), 'dragover', dataTransfer, point('C', 'end'));
+  expect(item('C').getAttribute('data-drop')).toBe('after');
+  expect(rendered()).toEqual(['C']);
+  fireDrag(item('C'), 'dragover', dataTransfer, point('C', 'end'));
+  expect(rendered()).toEqual([]);
+  fireDrag(item('D'), 'dragover', dataTransfer, point('D', 'end'));
+  expect(rendered()).toEqual(['C', 'D']);
+  fireDrag(item('A'), 'dragend', dataTransfer);
+  expect(item('A').getAttribute('data-dragging')).toBeNull();
+  expect(item('D').getAttribute('data-drop')).toBeNull();
+  expect(rendered().sort()).toEqual(['A', 'D']);
+});
+
+it('renders only the memoized rows whose own drag state changes, at each step of a finger drag', () => {
+  const onMove = vi.fn();
+  render(<List memoized onMove={onMove} />);
+  rendered();
+  const t = touch('B');
+  expect(rendered()).toEqual([]);
+  t.move('C', 'end');
+  expect(item('B').getAttribute('data-dragging')).toBe('');
+  expect(item('C').getAttribute('data-drop')).toBe('after');
+  expect(rendered().sort()).toEqual(['B', 'C']);
+  t.move('D', 'end');
+  expect(rendered()).toEqual(['C', 'D']);
+  t.up('D', 'end');
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(1, 3);
+  expect(order()).toEqual(['A', 'C', 'D', 'B']);
+});
+
+it('renders only the memoized rows whose line moves when a drag crosses to another list of its group', () => {
+  render(<Board memoized />);
+  rendered();
+  const d = mouseDrag('B');
+  // Once for the press and once for dragstart.
+  expect(rendered()).toEqual(['B', 'B']);
+  d.over('C', 'end');
+  expect(rendered()).toEqual(['C']);
+  d.over('W', 'end');
+  expect(item('W').getAttribute('data-drop')).toBe('after');
+  expect(item('C').getAttribute('data-drop')).toBeNull();
+  expect(rendered().sort()).toEqual(['C', 'W']);
+  d.drop('W', 'end');
+  expect(orderIn('right')).toEqual(['W', 'B', 'X']);
 });
