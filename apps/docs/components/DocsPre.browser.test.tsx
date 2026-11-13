@@ -59,8 +59,10 @@ describe('a long code block in a browser', () => {
   });
 
   it('keeps the button in place in the viewport when the reader folds the block', async () => {
+    // Room above the block, so the page can scroll up by as much as the block shrinks.
     render(
       <main>
+        <div style={{ blockSize: '200vh' }} />
         <DocsPre>
           <Code.Root className="language-tsx">{fence(300)}</Code.Root>
         </DocsPre>
@@ -81,9 +83,10 @@ describe('a long code block in a browser', () => {
     expect(Math.abs(button.getBoundingClientRect().top - before)).toBeLessThanOrEqual(1);
   });
 
-  it('keeps the button in place when the reader folds the block from just past its end', async () => {
+  it('keeps the button in place when the reader folds the block with its end on screen', async () => {
     render(
       <main>
+        <div style={{ blockSize: '200vh' }} />
         <DocsPre>
           <Code.Root className="language-tsx">{fence(300)}</Code.Root>
         </DocsPre>
@@ -94,11 +97,13 @@ describe('a long code block in a browser', () => {
     screen.getByRole('button', { name: 'Show all code' }).click();
     await frame();
     const button = screen.getByRole('button', { name: 'Show less code' });
-    // The button is back in the flow, above the next paragraph, which a browser could pick as its scroll anchor.
-    scrollBy({ top: button.getBoundingClientRect().top - innerHeight / 3, behavior: 'instant' });
+    // Scroll the block's end to a third of the way down, so the button is back in the flow, no longer stuck to the
+    // bottom of the screen, with the next paragraph under it.
+    const block = button.closest('.docs-code-fold') as HTMLElement;
+    scrollBy({ top: block.getBoundingClientRect().bottom - innerHeight / 3, behavior: 'instant' });
     await frame();
     const before = button.getBoundingClientRect().top;
-    expect(before).toBeCloseTo(innerHeight / 3, -1);
+    expect(before).toBeLessThan(innerHeight / 2);
     button.click();
     await frame();
     await frame();
