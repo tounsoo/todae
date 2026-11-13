@@ -59,7 +59,7 @@ function workflowChecks(file, text) {
   try {
     workflow = parse(text);
   } catch (error) {
-    throw new Error(`${WORKFLOWS}${file} is not valid YAML: ${error.message}`);
+    throw new Error(`${WORKFLOWS}${file} is not valid YAML: ${error.message}`, { cause: error });
   }
   if (!workflow || !triggersOnPullRequests(workflow.on)) return [];
   const checks = [];
@@ -80,7 +80,7 @@ function checkScriptParts(text) {
   try {
     manifest = JSON.parse(text);
   } catch (error) {
-    throw new Error(`package.json is not valid JSON: ${error.message}`);
+    throw new Error(`package.json is not valid JSON: ${error.message}`, { cause: error });
   }
   const script = manifest.scripts?.check;
   if (typeof script !== 'string') return [];
