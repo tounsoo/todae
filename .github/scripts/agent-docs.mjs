@@ -196,7 +196,8 @@ function escapeReason(body) {
     return (node.children ?? []).map(shown).join(blocks ? '\n' : '');
   };
   for (const line of shown(fromMarkdown(body ?? '')).split('\n')) {
-    const reason = ESCAPE.exec(line.trim())?.[1];
+    // GitHub shows a task-list item's box, which the parser reads as text.
+    const reason = ESCAPE.exec(line.trim().replace(/^\[[ xX]\][ \t]+/, ''))?.[1];
     if (reason && /[\p{L}\p{N}]/u.test(reason) && !/^\W*<[^>]*>\W*$/.test(reason)) return reason;
   }
   return null;

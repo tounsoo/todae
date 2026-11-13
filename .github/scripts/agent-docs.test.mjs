@@ -294,6 +294,7 @@ test('the body line counts only where it shows as text', () => {
   passes('> ```\nAgent docs unchanged: after the quote\n');
   passes('**Agent docs unchanged:** a recipe\n');
   passes('## Agent docs unchanged: a recipe\n');
+  passes('- [x] Agent docs unchanged: a recipe\n');
   passes('- What changed\n    - Agent docs unchanged: a recipe\n');
   passes('- What changed\n\t- Agent docs unchanged: a recipe\n');
   passes('I removed the <!-- note from the page.\n\nAgent docs unchanged: a recipe\n');
