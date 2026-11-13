@@ -231,13 +231,19 @@ test('a group that is not an object with a plain string id fails, even with the 
   for (const entry of ['{ id: RECIPES }', '{ id: `r${x}` }', 'RECIPES', '...MORE', "group({ id: 'recipes' })", "{ label: 'divider' }"]) {
     const result = check(groups(entry), 'Agent docs unchanged: a constant\n');
     assert.equal(result.status, 1, `${entry}: ${result.out}`);
-    assert.match(result.out, /1 entry or entries in SITE_GROUPS .* are not an object with an id written as a plain string/, entry);
+    assert.match(result.out, /1 entry in SITE_GROUPS .* is not an object with an id written as a plain string/, entry);
   }
   const allConstants = check(
     { 'apps/docs/components/siteGroups.ts': 'export const SITE_GROUPS = [{ id: A }, { id: B }];\n' },
     'Agent docs unchanged: constants\n',
   );
-  assert.match(allConstants.out, /2 entry or entries in SITE_GROUPS/);
+  assert.match(allConstants.out, /2 entries in SITE_GROUPS .* are not an object/);
+});
+
+test('a sidebar that is not valid TypeScript fails with its name', () => {
+  const result = check({ 'apps/docs/components/siteGroups.ts': "export const SITE_GROUPS = [{ id: 'a' ];\n" });
+  assert.equal(result.status, 1, result.out);
+  assert.match(result.out, /siteGroups\.ts is not valid TypeScript/);
 });
 
 test('a sidebar that the script can no longer read fails, even with the body line, rather than hide new sections', () => {

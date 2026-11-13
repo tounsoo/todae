@@ -6,9 +6,9 @@
 // PR_BODY holds the pull request body. When GITHUB_STEP_SUMMARY is set, the result is written there too.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import tseslint from 'typescript-eslint';
 import { parse } from 'yaml';
 
 const PAGES = 'apps/docs/app/(en)';
@@ -40,19 +40,21 @@ function pageRoute(path) {
 
 // What the parser gives for an expression, with `as` and `satisfies` taken off.
 function bare(node) {
-  return node?.type === 'TSAsExpression' || node?.type === 'TSSatisfiesExpression' ? bare(node.expression) : node;
+  const wrappers = ['TSAsExpression', 'TSSatisfiesExpression', 'TSTypeAssertion', 'TSNonNullExpression'];
+  return wrappers.includes(node?.type) ? bare(node.expression) : node;
 }
 
 // The id of each group in the exported SITE_GROUPS array, the sidebar's sections, read with the TypeScript parser.
 // A group that isn't an object with an id written as a plain string, such as a spread, a constant or a call, is
-// counted as unread, since it could hide a new section. `found` says whether the array is there at all.
+// counted as unread, since it could hide a new section. `found` says whether the array is there at all. The parser
+// takes about a second to load, so it loads only for a pull request that changes the file.
 function sectionIds(text) {
   const ids = new Set();
   let unread = 0;
   if (text == null) return { ids, unread, found: false };
   let program;
   try {
-    program = tseslint.parser.parseForESLint(text).ast;
+    program = createRequire(import.meta.url)('typescript-eslint').parser.parseForESLint(text).ast;
   } catch (error) {
     throw new Error(`${SITE_GROUPS} is not valid TypeScript: ${error.message}`, { cause: error });
   }
@@ -130,8 +132,9 @@ function checkScriptParts(text) {
     .map((part) => `check \`pnpm check\` runs \`${part}\``);
 }
 
-// The docs routes, sections and checks at a commit, each as the line the report prints.
-function inventory(ref) {
+// The docs routes, sections and checks at a commit, each as the line the report prints. Sections are read only when
+// asked, since an unchanged sidebar can't add, hide or lose one.
+function inventory(ref, withSections) {
   const routes = git(['ls-tree', '-r', '-z', '--name-only', ref, '--', PAGES])
     .split('\0')
     .map(pageRoute)
@@ -139,13 +142,11 @@ function inventory(ref) {
   const workflows = git(['ls-tree', '-z', '--name-only', ref, WORKFLOWS])
     .split('\0')
     .filter((file) => /\.ya?ml$/.test(file));
-  const { ids, unread, found } = sectionIds(show(ref, SITE_GROUPS));
-  const sections = [...ids].map((id) => `docs section ${id}`);
+  const sidebar = withSections ? sectionIds(show(ref, SITE_GROUPS)) : { ids: new Set(), unread: 0, found: true };
+  const sections = [...sidebar.ids].map((id) => `docs section ${id}`);
   return {
     pages: new Set(routes.map((route) => `docs page ${route}`)),
-    sections: sections.length,
-    sidebarFound: found,
-    unreadSections: unread,
+    sidebar,
     others: new Set([
       ...sections,
       ...workflows.flatMap((file) => workflowChecks(file.slice(WORKFLOWS.length), show(ref, file))),
@@ -162,8 +163,16 @@ const minus = (a, b) => [...a].filter((item) => !b.has(item));
 // no exported SITE_GROUPS array, because it moved or changed its declaration. Either would hide a new section.
 function review(base, head) {
   const mergeBase = git(['merge-base', base, head]).trim();
-  const before = inventory(mergeBase);
-  const after = inventory(head);
+  const blob = (ref) => {
+    try {
+      return git(['rev-parse', `${ref}:${SITE_GROUPS}`], 'ignore').trim();
+    } catch {
+      return null;
+    }
+  };
+  const sidebarChanged = blob(mergeBase) !== blob(head);
+  const before = inventory(mergeBase, sidebarChanged);
+  const after = inventory(head, sidebarChanged);
   const addedPages = minus(after.pages, before.pages);
   const pages = addedPages.length > minus(before.pages, after.pages).length ? addedPages : [];
   const changed = new Set(
@@ -172,8 +181,8 @@ function review(base, head) {
   const changes = (paths) => paths.some((path) => changed.has(path));
   return {
     added: [...pages, ...minus(after.others, before.others)],
-    unreadGroups: after.unreadSections,
-    sidebarLost: before.sections > 0 && !after.sidebarFound,
+    unreadGroups: after.sidebar.unread,
+    sidebarLost: before.sidebar.ids.size > 0 && !after.sidebar.found,
     claudeMd: changes(AGENT_DOCS.claude),
     verifySkill: changes(AGENT_DOCS.verify),
   };
@@ -220,7 +229,8 @@ function main() {
   const { added, unreadGroups, sidebarLost, claudeMd, verifySkill } = result;
   if (unreadGroups > 0) {
     say(
-      `agent-docs: ${unreadGroups} entry or entries in SITE_GROUPS in ${SITE_GROUPS} are not an object with an id ` +
+      `agent-docs: ${unreadGroups === 1 ? '1 entry' : `${unreadGroups} entries`} in SITE_GROUPS in ${SITE_GROUPS} ` +
+        `${unreadGroups === 1 ? 'is' : 'are'} not an object with an id ` +
         "written as a plain string, such as { id: 'recipes', ... }. Write each group that way, so the check keeps " +
         'seeing new sections.',
     );
