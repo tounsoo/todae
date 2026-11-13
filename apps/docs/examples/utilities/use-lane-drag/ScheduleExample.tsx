@@ -267,9 +267,11 @@ export default function ScheduleExample() {
     <div className={styles.schedule}>
       <div {...lanes.getBoardProps()} className={styles.board}>
         <div className={styles.hours} aria-hidden>
-          {Array.from({ length: 8 }, (_, hour) => (
-            <span key={hour}>{clock(hour * 60)}</span>
-          ))}
+          <div className={styles.ticks}>
+            {Array.from({ length: 8 }, (_, hour) => (
+              <span key={hour}>{clock(hour * 60)}</span>
+            ))}
+          </div>
         </div>
         {STAGES.map((stage) => (
           <section key={stage.id} className={styles.stage} aria-label={stage.name}>
