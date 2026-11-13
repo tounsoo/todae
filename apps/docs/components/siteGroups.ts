@@ -126,6 +126,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-highlight', 'useHighlight'],
       ['/utilities/use-hotkey', 'useHotkey'],
       ['/utilities/use-inline-edit', 'useInlineEdit'],
+      ['/utilities/use-lane-drag', 'useLaneDrag'],
       ['/utilities/use-mentions', 'useMentions'],
       ['/utilities/use-modal-layer', 'useModalLayer'],
       ['/utilities/use-popover', 'usePopover'],

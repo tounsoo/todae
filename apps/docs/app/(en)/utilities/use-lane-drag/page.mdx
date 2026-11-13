@@ -1,0 +1,110 @@
+import ScheduleExample from '../../../../examples/utilities/use-lane-drag/ScheduleExample';
+
+# useLaneDrag
+
+`useLaneDrag({ range, onDrop })` lets a person drag items along lanes that share one axis, such as talks on a conference's stages or shifts on a rota. A drag places an item from a queue, moves it along its lane or to another lane, resizes either end, or takes it back to the queue. `check` says whether a place conflicts with other items, and a drop calls `onDrop(change)`.
+
+```tsx
+import { useLaneDrag } from '@tounsoo/todae';
+import { GripVertical } from 'lucide-react';
+
+const lanes = useLaneDrag({
+  range: { start: 0, end: 480 },
+  grid: quarterHours,
+  check: (id, to) => conflicts(talks, id, to),
+  onDrop: ({ id, to }) => schedule(id, to),
+});
+
+<div {...lanes.getBoardProps()}>
+  {stages.map((stage) => (
+    <div key={stage.id} {...lanes.getLaneProps(stage.id)}>
+      {talksOn(stage).map((talk) => (
+        <div key={talk.id} {...lanes.getItemProps(talk.id, talk.at)}>
+          <span {...lanes.getHandleProps(talk.id, 'start')} aria-hidden style={{ touchAction: 'none' }} />
+          <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
+            <GripVertical />
+          </span>
+          {talk.title}
+          <span {...lanes.getHandleProps(talk.id, 'end')} aria-hidden style={{ touchAction: 'none' }} />
+        </div>
+      ))}
+    </div>
+  ))}
+</div>
+<ul {...lanes.getQueueProps()}>
+  {unscheduled.map((talk) => (
+    <li key={talk.id} {...lanes.getItemProps(talk.id, { span: talk.length })}>
+      <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
+        <GripVertical />
+      </span>
+      {talk.title}
+    </li>
+  ))}
+</ul>
+```
+
+Drag a talk by its grip to another time or stage, or an end of it to change its length. Each talk's menu does the same from the keyboard.
+
+<Example of={ScheduleExample} />
+
+## Places
+
+Every lane covers the same `range` along the axis, in units you choose, such as minutes from the start of the first day. A place is `{ lane, start, end }` in those units, with the lane's key from `getLaneProps(lane)`. The hook maps the pointer to a value from the lane element's own box, so that box covers `range` exactly: give it no padding or border along the axis. With `axis="inline"`, the default, the range runs in the text direction, so it starts at the right in a right-to-left page; with `axis="block"`, it runs down, as in a day view's columns.
+
+`grid` lists the points a start or end snaps to, in ascending order, such as every quarter hour. The hook finds the nearest one by binary search, so a long grid costs little per move, and a day you count in your own units, such as one with the nights left out, snaps the same way. Without `grid`, places don't snap.
+
+`getItemProps(id, at)` takes a placed item's place, or `{ span }` for an item in the queue, the length it takes when it is placed. The hook reads them from the item's element when a drag starts.
+
+- **Move.** `getHandleProps(id, 'move')` drags the item. A placed item keeps the point it was grabbed at under the pointer, and an item from the queue starts at the pointer. The item keeps its length and stays inside `range`, starting at the nearest grid point that fits. An item longer than `range` has no place, so its drag drops nothing.
+- **Resize.** `getHandleProps(id, 'start')` and `getHandleProps(id, 'end')` move that end along the item's own lane. An end stops `minSpan` from the other, and never reaches it.
+- **Back to the queue.** A placed item dropped on the element with `getQueueProps()` leaves the board.
+
+A drop that changes a place calls `onDrop(change)`, where `change` is `{ id, kind, from, to, verdict }`. `kind` is `assign`, `move`, `resize-start`, `resize-end` or `unassign`. `from` is the item's place when the drag started, or `null` for an item from the queue, and `to` is where it goes, or `null` for `unassign`. A resize changes the item's length, so give its `{ span }` the new length if it goes back to the queue. A drop outside the lanes and the queue, or one that leaves the item where it was, calls nothing.
+
+## Checking a place
+
+`check(id, to)` runs each time the place under the pointer changes, not on every pointer move, and once more at the drop, so a rule that changed meanwhile still holds. It returns `null` or a verdict: `{ level, reason, with }`. A `blocked` place takes no drop. A `warning` place does, and `onDrop` gets the verdict, so you can say why. `with` lists the ids of the other items the place conflicts with, which is how a rule that crosses lanes shows: in the example, a speaker in Room A at 10:30 blocks their other talk at 10:30 on any stage. The rules are yours, and the hook knows nothing about times, stages or speakers. Taking an item back to the queue isn't checked: to keep an item on the board, such as a talk that's been announced, leave its `unassign` out of `onDrop`. A `check` that throws ends the drag without a drop, and its error still reaches the page.
+
+## Showing the drag
+
+The hook renders nothing and sets state on the elements during a drag, so the board doesn't render on every pointer move:
+
+- `data-dragging` on the dragged item and on the board,
+- `data-drop-target` on the lane the item would go to, or on the queue for `unassign`,
+- `data-conflict`, the verdict's level, on that lane and on each item in `with`.
+
+When the drag ends, each element gets back the value it had, so an item can carry its own `data-conflict` between drags.
+
+Style those, and draw the item's future place with `useLaneDragState(lanes.drag, select)`. It returns `select` of the drag under way, or of `null` when there is none, and renders again only when that selection changes. Select the drag while its place is in one lane, as the example's preview does, and that lane renders each time the place in it changes, not on every pointer move, and not while the drag is in other lanes. Pass `isEqual` as a third argument when `select` builds a new object each time.
+
+```tsx
+const change = useLaneDragState(lanes.drag, (state) => (state?.to?.lane === stage.id ? state : null));
+```
+
+The owner of `useLaneDrag` renders as a drag starts and ends. Keep the dragged item, its lane and the board mounted during a drag: a render that replaces one of them ends the drag without a drop. While the pointer is inside the element with `getBoardProps()` and near its edge, the board scrolls, so make that element the one that scrolls. Outside it, such as over a queue beside it, the board stays still.
+
+## Touch and the pointer
+
+A mouse, a finger and a pen drag the same way, with pointer events. The item drags once the pointer moves a few pixels from the press, so a click or a tap on a handle drags nothing, and the click a drop sends to its handle is dropped. A press on a button or link inside a handle is that control's, and the browser's own drag of an image or link inside a handle is stopped. Every handle needs `touch-action: none`, or the browser takes a finger to scroll the page and the drag ends. Keep them small, such as a grip, so a swipe on the rest of the board still scrolls it. A drag ends without a drop when its release is lost, as when the pointer moves with no button down or the window loses focus, so a test that sends pointer events by hand gives every move `buttons: 1`.
+
+Escape cancels a drag and leaves every item where it was, before a [Dialog](/dialog) around the board, which stays open until the next Escape.
+
+## Accessible composition
+
+**Todae handles:** Dragging an item from a handle with a mouse, a finger or a pen. Working out the place a drop lands on from the lane's box and the text direction, snapping it, and keeping it inside the range. Asking your `check` and refusing a blocked drop. Marking the dragged item, the drop target and the items in conflict. Cancelling a drag on Escape.
+
+**You supply:** Another way to place, move, resize and unschedule an item that needs no dragging and works from the keyboard, such as the example's menu or a dialog with a time field: dragging has no keyboard path. Handles hidden from screen readers with `aria-hidden`, since that other way is the one they use. The rules in `check`, and a reason a person can read. A cue for each verdict besides color, such as the example's icons and outline styles. The announcement of a change. For an item that moves to another lane, a place for the focus its old element held.
+
+**Watch for:** Drag as the only way to place or move an item (WCAG 2.2 SC 2.1.1 and SC 2.5.7). A conflict shown by color alone (SC 1.4.1). A handle that is a button or a tab stop: it does nothing from the keyboard. Resize ends narrower than 24 CSS pixels, which pass SC 2.5.8 only because another control does the same. A move handle that covers the whole item on a touch screen, which keeps a swipe over the items from scrolling the board. Touch dragging is tested with pointer events, not on a phone.
+
+## When to use
+
+**When:** Letting a person place items on lanes along a shared axis, such as talks on stages over a conference's days or shifts on a rota, beside a way to move them without dragging.
+
+**When not:** Reordering a list → [`useReorder`](/utilities/use-reorder). Moving cards between columns with no axis → `useReorderGroup`. Picking a time → [Field](/field) with a time input.
+
+## Props
+
+<PropsTable name="useLaneDrag" />
+
+<PropsTable name="useLaneDragState" />

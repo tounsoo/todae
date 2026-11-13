@@ -1,0 +1,238 @@
+/* The board scrolls sideways: each stage's lane is 120rem wide, 4px a
+   minute at the default font size, so a half-hour talk has room for its grip,
+   title and menu button. The stage names stay in view as it scrolls. */
+.schedule {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-4);
+  inline-size: 100%;
+}
+
+.board {
+  --schedule-name: 7rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-2);
+  overflow-x: auto;
+  padding-block-end: var(--todae-space-2);
+}
+
+.hours {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  min-inline-size: 120rem;
+  margin-inline-start: var(--schedule-name);
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-text-label-font-size);
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: var(--schedule-name) 1fr;
+  align-items: stretch;
+}
+
+.name {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding-inline-end: var(--todae-space-2);
+  background: var(--todae-color-bg-canvas);
+}
+
+/* The lane's box covers the day, 9:00 to 17:00, so it has no padding or
+   border along the axis. Lines mark each hour. */
+.lane {
+  position: relative;
+  min-inline-size: 120rem;
+  block-size: 4rem;
+  border-radius: var(--todae-radius-md);
+  background:
+    repeating-linear-gradient(
+      to right,
+      var(--todae-color-border-subtle) 0 var(--todae-border-width),
+      transparent var(--todae-border-width) calc(100% / 8)
+    ),
+    var(--todae-color-bg-subtle);
+}
+
+.lane:dir(rtl) {
+  background:
+    repeating-linear-gradient(
+      to left,
+      var(--todae-color-border-subtle) 0 var(--todae-border-width),
+      transparent var(--todae-border-width) calc(100% / 8)
+    ),
+    var(--todae-color-bg-subtle);
+}
+
+.lane[data-drop-target] {
+  outline: var(--todae-focus-ring-width) dashed var(--todae-color-accent-default);
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
+}
+
+.block,
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--todae-space-1);
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  border-radius: var(--todae-radius-sm);
+  background: var(--todae-color-bg-surface);
+  font-size: var(--todae-text-font-size);
+  line-height: var(--todae-text-leading-tight);
+}
+
+.block {
+  position: absolute;
+  inset-block: var(--todae-space-1);
+  z-index: 1;
+  min-inline-size: 0;
+  padding-inline: var(--todae-space-1);
+}
+
+.block[data-dragging],
+.card[data-dragging] {
+  opacity: 0.5;
+}
+
+/* A talk the dragged one would conflict with: a dashed outline for a
+   warning, a thick solid one for a block, so the two differ without color. */
+.block[data-conflict='warning'] {
+  outline: var(--todae-focus-ring-width) dashed var(--todae-color-status-warning-border);
+}
+
+.block[data-conflict='blocked'] {
+  outline: calc(2 * var(--todae-focus-ring-width)) solid var(--todae-color-status-critical-border);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+/* The grip runs the talk's height, so it is easy to hit. Touch drags from it
+   alone, so a swipe elsewhere still scrolls the board. */
+.grip {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding-inline: var(--todae-space-1);
+  color: var(--todae-color-fg-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Each end resizes the talk. The menu moves either end by a quarter hour as
+   well, so the narrow ends aren't the only way. */
+.edge {
+  position: absolute;
+  inset-block: 0;
+  inline-size: var(--todae-space-2);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.edge[data-edge='start'] {
+  inset-inline-start: 0;
+}
+
+.edge[data-edge='end'] {
+  inset-inline-end: 0;
+}
+
+.menu {
+  flex: none;
+}
+
+.preview {
+  position: absolute;
+  inset-block: var(--todae-space-1);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding-inline: var(--todae-space-2);
+  border: var(--todae-focus-ring-width) dashed var(--todae-color-accent-default);
+  border-radius: var(--todae-radius-sm);
+  background: var(--todae-color-accent-soft);
+  font-size: var(--todae-text-label-font-size);
+  pointer-events: none;
+}
+
+.preview[data-level='warning'] {
+  border-color: var(--todae-color-status-warning-border);
+  background: var(--todae-color-status-warning-bg);
+  color: var(--todae-color-status-warning-fg);
+}
+
+.preview[data-level='blocked'] {
+  border-style: solid;
+  border-color: var(--todae-color-status-critical-border);
+  background: var(--todae-color-status-critical-bg);
+  color: var(--todae-color-status-critical-fg);
+}
+
+.time {
+  font-weight: var(--todae-text-weight-medium);
+}
+
+.reason {
+  display: flex;
+  align-items: center;
+  gap: var(--todae-space-1);
+  white-space: nowrap;
+}
+
+.queueArea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-2);
+}
+
+.queue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--todae-space-2);
+  min-block-size: 4rem;
+  margin: 0;
+  padding: var(--todae-space-2);
+  border-radius: var(--todae-radius-md);
+  background: var(--todae-color-bg-subtle);
+  list-style: none;
+}
+
+.card {
+  padding: var(--todae-space-2) var(--todae-space-1);
+}
+
+.queue[data-drop-target] {
+  outline: var(--todae-focus-ring-width) dashed var(--todae-color-accent-default);
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
+}
+
+.empty {
+  color: var(--todae-color-fg-muted);
+}
+
+/* Forced colors replace backgrounds and borders, so the drop targets and
+   conflicts take system colors. */
+@media (forced-colors: active) {
+  .lane[data-drop-target],
+  .queue[data-drop-target] {
+    outline-color: Highlight;
+  }
+
+  .block[data-conflict] {
+    outline-color: Mark;
+  }
+
+  .preview {
+    border-color: Highlight;
+  }
+}

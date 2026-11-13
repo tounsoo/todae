@@ -1,0 +1,110 @@
+import ScheduleExample from '../../../../examples/utilities/use-lane-drag/ScheduleExample';
+
+# useLaneDrag
+
+`useLaneDrag({ range, onDrop })`는 컨퍼런스 무대의 발표나 근무표의 교대처럼, 한 축을 함께 쓰는 레인을 따라 항목을 끌게 합니다. 끌어서 대기열의 항목을 배치하고, 항목을 레인 안에서나 다른 레인으로 옮기고, 양 끝의 크기를 바꾸고, 대기열로 되돌립니다. `check`는 어떤 자리가 다른 항목과 충돌하는지 알려 주고, 놓으면 `onDrop(change)`를 부릅니다.
+
+```tsx
+import { useLaneDrag } from '@tounsoo/todae';
+import { GripVertical } from 'lucide-react';
+
+const lanes = useLaneDrag({
+  range: { start: 0, end: 480 },
+  grid: quarterHours,
+  check: (id, to) => conflicts(talks, id, to),
+  onDrop: ({ id, to }) => schedule(id, to),
+});
+
+<div {...lanes.getBoardProps()}>
+  {stages.map((stage) => (
+    <div key={stage.id} {...lanes.getLaneProps(stage.id)}>
+      {talksOn(stage).map((talk) => (
+        <div key={talk.id} {...lanes.getItemProps(talk.id, talk.at)}>
+          <span {...lanes.getHandleProps(talk.id, 'start')} aria-hidden style={{ touchAction: 'none' }} />
+          <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
+            <GripVertical />
+          </span>
+          {talk.title}
+          <span {...lanes.getHandleProps(talk.id, 'end')} aria-hidden style={{ touchAction: 'none' }} />
+        </div>
+      ))}
+    </div>
+  ))}
+</div>
+<ul {...lanes.getQueueProps()}>
+  {unscheduled.map((talk) => (
+    <li key={talk.id} {...lanes.getItemProps(talk.id, { span: talk.length })}>
+      <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
+        <GripVertical />
+      </span>
+      {talk.title}
+    </li>
+  ))}
+</ul>
+```
+
+발표를 손잡이로 끌어 다른 시간이나 무대로 옮기거나, 한쪽 끝을 끌어 길이를 바꿔 보세요. 각 발표의 메뉴는 키보드로 같은 일을 합니다.
+
+<Example of={ScheduleExample} />
+
+## 자리 {/*#places*/}
+
+모든 레인은 첫날 시작부터 센 분처럼 직접 정한 단위로, 축을 따라 같은 `range`를 덮습니다. 자리는 그 단위로 쓴 `{ lane, start, end }`이고, 레인의 키는 `getLaneProps(lane)`에 넘긴 값입니다. 훅은 포인터를 레인 요소 자신의 상자에서 값으로 바꾸므로, 그 상자가 `range`를 정확히 덮어야 합니다. 축 방향으로는 패딩이나 테두리를 주지 마세요. 기본값인 `axis="inline"`에서 구간은 글의 방향으로 흐르므로, 오른쪽에서 왼쪽으로 쓰는 페이지에서는 오른쪽에서 시작합니다. `axis="block"`에서는 하루 보기의 열처럼 아래로 흐릅니다.
+
+`grid`는 매 15분처럼 시작이나 끝이 맞춰지는 지점을 오름차순으로 나열합니다. 훅은 이진 탐색으로 가장 가까운 지점을 찾으므로 긴 grid도 움직일 때마다 드는 비용이 작고, 밤을 뺀 날처럼 직접 정한 단위로 센 날도 같은 방식으로 맞춰집니다. `grid`가 없으면 자리가 맞춰지지 않습니다.
+
+`getItemProps(id, at)`는 배치된 항목의 자리를, 대기열의 항목이라면 배치될 때 차지할 길이인 `{ span }`을 받습니다. 훅은 끌기가 시작될 때 항목의 요소에서 이 값을 읽습니다.
+
+- **옮기기.** `getHandleProps(id, 'move')`는 항목을 끕니다. 배치된 항목은 잡은 지점이 포인터 아래에 그대로 있고, 대기열에서 온 항목은 포인터에서 시작합니다. 항목은 길이를 그대로 두고 `range` 안에 머물며, 들어맞는 가장 가까운 grid 지점에서 시작합니다. `range`보다 긴 항목은 자리가 없으므로 끌어도 아무것도 놓이지 않습니다.
+- **크기 바꾸기.** `getHandleProps(id, 'start')`와 `getHandleProps(id, 'end')`는 항목 자신의 레인을 따라 그 끝을 옮깁니다. 한쪽 끝은 다른 끝에서 `minSpan`만큼 떨어진 곳에서 멈추고, 다른 끝에 닿지 않습니다.
+- **대기열로 되돌리기.** 배치된 항목을 `getQueueProps()`를 받은 요소에 놓으면 보드를 떠납니다.
+
+자리를 바꾸는 놓기는 `onDrop(change)`를 부르고, `change`는 `{ id, kind, from, to, verdict }`입니다. `kind`는 `assign`, `move`, `resize-start`, `resize-end`, `unassign` 중 하나입니다. `from`은 끌기가 시작될 때 항목의 자리이고 대기열에서 온 항목이면 `null`이며, `to`는 항목이 갈 자리이고 `unassign`이면 `null`입니다. 크기를 바꾸면 항목의 길이가 바뀌므로, 대기열로 돌아가는 항목의 `{ span }`에는 새 길이를 주세요. 레인과 대기열 밖에 놓거나 항목을 원래 자리에 두는 놓기는 아무것도 부르지 않습니다.
+
+## 자리 확인하기 {/*#checking-a-place*/}
+
+`check(id, to)`는 포인터가 움직일 때마다가 아니라 포인터 아래의 자리가 바뀔 때마다, 그리고 놓을 때 한 번 더 실행되므로 그사이 바뀐 규칙도 지켜집니다. 이 함수는 `null`이나 판정 `{ level, reason, with }`를 돌려줍니다. `blocked`인 자리에는 놓을 수 없습니다. `warning`인 자리에는 놓을 수 있고, `onDrop`이 판정을 받으므로 이유를 알릴 수 있습니다. `with`는 그 자리와 충돌하는 다른 항목의 id를 나열하며, 레인을 넘는 규칙은 이렇게 드러납니다. 예제에서 10:30에 Room A에서 발표하는 연사는 어느 무대에서든 10:30에 있는 자신의 다른 발표를 막습니다. 규칙은 직접 정하며, 훅은 시간, 무대, 연사에 대해 아무것도 모릅니다. 대기열로 되돌리는 것은 확인하지 않으므로, 이미 발표된 발표처럼 보드에 남겨야 하는 항목은 `onDrop`에서 그 `unassign`을 처리하지 마세요. 예외를 던지는 `check`는 놓지 않고 끌기를 끝내며, 그 오류는 그대로 페이지에 전해집니다.
+
+## 끌기 보여 주기 {/*#showing-the-drag*/}
+
+훅은 아무것도 렌더링하지 않고 끄는 동안 요소에 상태를 붙이므로, 포인터가 움직일 때마다 보드가 렌더링되지 않습니다.
+
+- 끄는 항목과 보드에 `data-dragging`,
+- 항목이 갈 레인에, `unassign`이면 대기열에 `data-drop-target`,
+- 그 레인과 `with`의 각 항목에 판정의 수준인 `data-conflict`.
+
+끌기가 끝나면 각 요소는 원래 값을 돌려받으므로, 항목은 끌기 사이에 자신의 `data-conflict`를 가질 수 있습니다.
+
+이 속성들에 스타일을 주고, 항목이 갈 자리는 `useLaneDragState(lanes.drag, select)`로 그리세요. 진행 중인 끌기에 `select`를 적용한 값을, 끌기가 없으면 `null`에 적용한 값을 돌려주고, 그 선택이 바뀔 때만 다시 렌더링됩니다. 예제의 미리 보기처럼 자리가 한 레인에 있을 때의 끌기를 고르면, 그 레인은 포인터가 움직일 때마다가 아니라 그 레인 안의 자리가 바뀔 때마다 렌더링되고, 끌기가 다른 레인에 있는 동안에는 렌더링되지 않습니다. `select`가 매번 새 객체를 만든다면 세 번째 인자로 `isEqual`을 넘기세요.
+
+```tsx
+const change = useLaneDragState(lanes.drag, (state) => (state?.to?.lane === stage.id ? state : null));
+```
+
+`useLaneDrag`를 쓰는 컴포넌트는 끌기가 시작하고 끝날 때 렌더링됩니다. 끌기 중에는 끄는 항목, 그 레인, 보드를 그대로 두세요. 렌더링이 그중 하나를 바꾸면 끌기는 놓지 않고 끝납니다. 포인터가 `getBoardProps()`를 받은 요소 안의 가장자리 가까이에 있는 동안 보드가 스크롤되므로, 그 요소를 스크롤되는 요소로 만드세요. 옆에 둔 대기열 위처럼 요소 밖에서는 보드가 움직이지 않습니다.
+
+## 터치와 포인터 {/*#touch-and-the-pointer*/}
+
+마우스, 손가락, 펜은 모두 포인터 이벤트로 같은 방식으로 끕니다. 포인터가 누른 곳에서 몇 픽셀 움직여야 항목이 끌리므로, 손잡이를 클릭하거나 탭해도 아무것도 끌리지 않고, 놓을 때 손잡이에 가는 클릭은 버려집니다. 손잡이 안의 버튼이나 링크를 누르면 그 컨트롤이 받고, 손잡이 안의 이미지나 링크를 브라우저가 직접 끄는 동작은 막힙니다. 모든 손잡이에는 `touch-action: none`이 필요합니다. 없으면 브라우저가 손가락을 페이지 스크롤에 쓰고 끌기가 끝납니다. 손잡이는 손잡이 아이콘처럼 작게 두어, 보드의 나머지를 밀면 계속 스크롤되게 하세요. 버튼을 누르지 않은 채 포인터가 움직이거나 창이 포커스를 잃는 것처럼 놓기를 놓치면 끌기는 놓지 않고 끝납니다. 그래서 포인터 이벤트를 직접 보내는 테스트는 모든 움직임에 `buttons: 1`을 줍니다.
+
+Escape는 끌기를 취소하고 모든 항목을 그대로 둡니다. 보드를 감싼 [Dialog](/dialog)보다 먼저 받으므로, 대화상자는 다음 Escape까지 열려 있습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 마우스, 손가락, 펜으로 손잡이에서 항목을 끌게 하는 것. 레인의 상자와 글의 방향으로 놓일 자리를 계산하고, 맞추고, 구간 안에 두는 것. `check`에 묻고 막힌 놓기를 거부하는 것. 끄는 항목, 놓일 대상, 충돌하는 항목에 표시를 붙이는 것. Escape로 끌기를 취소하는 것.
+
+**직접 제공할 것:** 예제의 메뉴나 시간 필드가 있는 대화상자처럼, 끌지 않고 키보드로도 항목을 배치하고, 옮기고, 크기를 바꾸고, 일정에서 빼는 다른 방법. 끌기에는 키보드 방법이 없습니다. 화면 낭독기 사용자는 그 다른 방법을 쓰므로 `aria-hidden`으로 숨긴 손잡이. `check`의 규칙과 사람이 읽을 수 있는 이유. 예제의 아이콘과 윤곽선 모양처럼 색 말고도 판정마다 다른 단서. 변경의 알림. 다른 레인으로 옮긴 항목의 옛 요소가 쥐던 포커스를 받을 곳.
+
+**주의할 점:** 끌기만으로 항목을 배치하거나 옮기게 하는 것(WCAG 2.2 SC 2.1.1, SC 2.5.7). 색으로만 보여 주는 충돌(SC 1.4.1). 버튼이거나 탭 정지인 손잡이. 키보드로는 아무것도 하지 않습니다. 24 CSS 픽셀보다 좁은 크기 조절 끝은 다른 컨트롤이 같은 일을 하기 때문에만 SC 2.5.8을 통과합니다. 터치 화면에서 항목 전체를 덮는 옮기기 손잡이. 항목 위를 밀어도 보드가 스크롤되지 않습니다. 터치 끌기는 포인터 이벤트로 테스트했으며, 휴대전화에서는 확인하지 않았습니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 컨퍼런스 여러 날에 걸친 무대의 발표나 근무표의 교대처럼, 함께 쓰는 축을 따라 레인에 항목을 배치하게 할 때, 끌지 않고 옮기는 방법과 함께.
+
+**쓰지 않을 때:** 목록의 순서 바꾸기 → [`useReorder`](/utilities/use-reorder). 축이 없는 열 사이로 카드 옮기기 → `useReorderGroup`. 시간 고르기 → 시간 입력이 있는 [Field](/field).
+
+## Props
+
+<PropsTable name="useLaneDrag" />
+
+<PropsTable name="useLaneDragState" />

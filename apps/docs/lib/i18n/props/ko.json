@@ -3500,5 +3500,49 @@
       "en": "The locale for the labels, such as \"ko\". The runtime's own when not set.",
       "ko": "레이블의 로캘, 예: \"ko\". 없으면 런타임의 로캘입니다."
     }
+  },
+  "useLaneDrag": {
+    "range": {
+      "en": "The span every lane's element covers along the axis, in the board's units, such as minutes from the first day's start.",
+      "ko": "각 레인 요소가 축을 따라 덮는 구간. 첫날 시작부터 센 분처럼 보드의 단위로 씁니다."
+    },
+    "onDrop": {
+      "en": "Called on a drop that changes an item's place, with the change.",
+      "ko": "항목의 자리를 바꾸는 놓기에서 그 변경을 받아 불립니다."
+    },
+    "axis": {
+      "en": "The direction the range runs in each lane. `inline` follows the text direction, and `block` runs down. Default `inline`.",
+      "ko": "각 레인에서 구간이 흐르는 방향. `inline`은 글의 방향을 따르고 `block`은 아래로 흐릅니다. 기본값은 `inline`입니다."
+    },
+    "grid": {
+      "en": "The points a start or end snaps to, in ascending order. Without it, places don't snap.",
+      "ko": "시작이나 끝이 맞춰지는 지점들로, 오름차순입니다. 없으면 자리가 맞춰지지 않습니다."
+    },
+    "minSpan": {
+      "en": "The shortest span a resize leaves. Default 0.",
+      "ko": "크기 조절이 남기는 가장 짧은 구간. 기본값은 0입니다."
+    },
+    "check": {
+      "en": "Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop.",
+      "ko": "포인터 아래의 자리가 바뀔 때마다, 그리고 놓을 때 한 번 더 항목 `id`가 `to`로 갈 수 있는지 알려 줍니다."
+    },
+    "disabled": {
+      "en": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",
+      "ko": "끌기를 끕니다. `disabled`가 true인 동안 진행 중인 끌기는 놓을 수 없습니다."
+    }
+  },
+  "useLaneDragState": {
+    "drag": {
+      "en": "The `drag` that `useLaneDrag` returns.",
+      "ko": "`useLaneDrag`가 돌려주는 `drag`."
+    },
+    "select": {
+      "en": "Picks what this component shows from the drag under way, or from null when there is none.",
+      "ko": "진행 중인 끌기에서, 끌기가 없으면 null에서 이 컴포넌트가 보여 줄 것을 고릅니다."
+    },
+    "isEqual": {
+      "en": "Says when two selections are the same, so a selection built anew on each move renders only when it changes. Default `Object.is`.",
+      "ko": "두 선택이 같은지 알려 주어, 움직일 때마다 새로 만드는 선택도 바뀔 때만 다시 렌더링되게 합니다. 기본값은 `Object.is`입니다."
+    }
   }
 }
