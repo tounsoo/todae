@@ -258,10 +258,10 @@ function createLaneDrag(
   const fit = (value: number, lo: number | undefined, hi: number | undefined): number | undefined =>
     lo === undefined || hi === undefined || lo > hi ? undefined : Math.min(Math.max(value, lo), hi);
 
-  /** `value` on the grid between `lo` and `hi`, or between them when there is no grid. */
-  const onGrid = (value: number, lo: number, hi: number): number | undefined => {
+  /** `value` on the grid between `lo` and `hi`, and past `floor` and short of `ceiling`, or between `lo` and `hi` when there is no grid. */
+  const onGrid = (value: number, lo: number, hi: number, floor = -Infinity, ceiling = Infinity): number | undefined => {
     const { grid } = options();
-    return grid?.length ? fit(nearest(grid, value), above(grid, lo, -Infinity), below(grid, hi, Infinity)) : fit(value, lo, hi);
+    return grid?.length ? fit(nearest(grid, value), above(grid, lo, floor), below(grid, hi, ceiling)) : fit(value, lo, hi);
   };
 
   /** What a drop at x, y would do and the element it would drop on, or undefined to keep the last one, as for a resize past `minSpan`. */
@@ -269,15 +269,16 @@ function createLaneDrag(
     const { range, minSpan = 0 } = options();
     const { id: item, from, lane } = current;
     if (current.part !== 'move' && from !== null) {
-      if (lane === null) return undefined;
+      // A lane put back by a render reads as no place, so the shown one stays.
+      if (lane === null || !lane.isConnected) return undefined;
       const value = valueAt(current, lane, x, y);
       // An end stays inside the range and at least `minSpan` from the other, and never reaches it.
       if (current.part === 'end') {
-        const end = onGrid(value, from.start + minSpan, range.end);
+        const end = onGrid(value, from.start + minSpan, range.end, from.start);
         if (end === undefined || end <= from.start) return undefined;
         return { change: { id: item, kind: 'resize-end', from, to: { lane: from.lane, start: from.start, end } }, element: lane };
       }
-      const start = onGrid(value, range.start, from.end - minSpan);
+      const start = onGrid(value, range.start, from.end - minSpan, -Infinity, from.end);
       if (start === undefined || start >= from.end) return undefined;
       return { change: { id: item, kind: 'resize-start', from, to: { lane: from.lane, start, end: from.end } }, element: lane };
     }
@@ -332,13 +333,27 @@ function createLaneDrag(
   const update = (current: Session, x: number, y: number, fresh = false) => {
     current.last = { x, y };
     const next = locate(current, x, y);
-    if (next === undefined) return;
     const shown = store.get();
+    if (next === undefined) {
+      // A resize past what it allows keeps the place shown, which a drop still checks again.
+      if (fresh && shown !== null) store.set({ ...shown, verdict: judge(current, shown.to) });
+      return;
+    }
     if (!fresh && shown !== null && shown.kind === next.change.kind && samePlace(shown.to, next.change.to)) return;
-    const verdict = next.change.to !== null ? (options().check?.(current.id, next.change.to) ?? null) : null;
-    const change = { ...next.change, verdict };
+    const change = { ...next.change, verdict: judge(current, next.change.to) };
     paint(current, change, next.element);
     store.set(change);
+  };
+
+  /** What `check` says of `to`. A `check` that throws ends the drag, and its error still reaches the page. */
+  const judge = (current: Session, to: LanePlace | null): LaneVerdict | null => {
+    if (to === null) return null;
+    try {
+      return options().check?.(current.id, to) ?? null;
+    } catch (error) {
+      teardown(current);
+      throw error;
+    }
   };
 
   /** How far the board scrolls this frame: only while the pointer is inside it, near an edge. */
@@ -368,8 +383,9 @@ function createLaneDrag(
       const top = board.scrollTop;
       board.scrollLeft = left + step.dx;
       board.scrollTop = top + step.dy;
-      if (board.scrollLeft !== left || board.scrollTop !== top) update(current, current.last.x, current.last.y);
-      current.frame = requestAnimationFrame(tick);
+      // At the end of the scroll the loop stops; the next move starts it again.
+      current.frame = board.scrollLeft !== left || board.scrollTop !== top ? requestAnimationFrame(tick) : 0;
+      if (current.frame !== 0) update(current, current.last.x, current.last.y);
     };
     current.frame = requestAnimationFrame(tick);
   };
@@ -423,7 +439,6 @@ function createLaneDrag(
     window.removeEventListener('pointermove', onMove, true);
     window.removeEventListener('pointerup', onUp, true);
     window.removeEventListener('pointercancel', onEnd, true);
-    window.removeEventListener('contextmenu', onEnd, true);
     window.removeEventListener('blur', onEnd);
     window.removeEventListener('selectstart', onSelectStart, true);
     if (session === ended) session = null;
@@ -462,15 +477,10 @@ function createLaneDrag(
     if (ended === null || event.pointerId !== ended.pointerId) return;
     if (ended.started) armQuiet();
     if (!ended.started || !ended.node.isConnected || options().disabled) return teardown(ended);
-    let change: LaneDragChange | null;
-    try {
-      // `check` again, since what it reads may have changed while the pointer stayed on one place.
-      update(ended, event.clientX, event.clientY, true);
-    } finally {
-      // A `check` that throws still ends the drag.
-      change = store.get();
-      teardown(ended);
-    }
+    // `check` again, since what it reads may have changed while the pointer stayed on one place.
+    update(ended, event.clientX, event.clientY, true);
+    const change = store.get();
+    teardown(ended);
     if (change === null) return;
     if (change.kind === 'unassign') {
       if (change.from !== null) options().onDrop(change);
@@ -539,7 +549,6 @@ function createLaneDrag(
       window.addEventListener('pointermove', onMove, true);
       window.addEventListener('pointerup', onUp, true);
       window.addEventListener('pointercancel', onEnd, true);
-      window.addEventListener('contextmenu', onEnd, true);
       // A release while the window is in the background never comes back.
       window.addEventListener('blur', onEnd);
     },

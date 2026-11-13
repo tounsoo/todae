@@ -250,16 +250,14 @@ it('keeps a resized end on the grid when the range ends between grid points', ()
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-end', to: { lane: 'a', start: 10, end: 90 } }));
 });
 
-it('ends the drag when check throws on the release', () => {
+it('ends the drag without a drop when check throws, on a move or on the release', () => {
+  const onDrop = vi.fn();
   let fail = false;
   const check = () => {
     if (fail) throw new Error('rules broke');
     return null;
   };
-  render(<Board check={check} />);
-  press(screen.getByTestId('t1-move'), 150, 20);
-  move(200, 20);
-  fail = true;
+  render(<Board onDrop={onDrop} check={check} />);
   // An error thrown in a window listener goes to the window's error event, not to the dispatcher.
   const errors: unknown[] = [];
   const onError = (event: ErrorEvent) => {
@@ -267,19 +265,43 @@ it('ends the drag when check throws on the release', () => {
     event.preventDefault();
   };
   window.addEventListener('error', onError);
-  release(600, 20);
-  window.removeEventListener('error', onError);
-  expect(errors).toEqual([new Error('rules broke')]);
-  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
-  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  try {
+    press(screen.getByTestId('t1-move'), 150, 20);
+    move(200, 20);
+    fail = true;
+    move(410, 20);
+    expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+    expect(screen.queryByTestId('ghost-a')).toBeNull();
+    move(450, 20);
+    release(450, 20);
+
+    fail = false;
+    press(screen.getByTestId('t1-move'), 150, 20);
+    move(200, 20);
+    fail = true;
+    release(600, 20);
+    expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+    expect(screen.queryByTestId('ghost-a')).toBeNull();
+  } finally {
+    window.removeEventListener('error', onError);
+  }
+  expect(errors).toEqual([new Error('rules broke'), new Error('rules broke')]);
+  expect(onDrop).not.toHaveBeenCalled();
 });
 
-it('starts nothing from a second finger', () => {
+it('starts nothing from a second finger, and keeps the first finger\'s drag', () => {
   const onDrop = vi.fn();
   render(<Board onDrop={onDrop} />);
-  fireEvent.pointerDown(screen.getByTestId('t1-move'), { clientX: 150, clientY: 20, pointerId: 2, pointerType: 'touch', isPrimary: false, button: 0 });
-  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: 400, clientY: 20, pointerId: 2, pointerType: 'touch', buttons: 1 })));
-  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(false);
+  const finger = (type: string, target: EventTarget, x: number, pointerId: number) =>
+    act(() => void target.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: 20, pointerId, pointerType: 'touch', isPrimary: pointerId === 1, button: 0, buttons: type === 'pointerup' ? 0 : 1 })));
+  finger('pointerdown', screen.getByTestId('t1-move'), 150, 1);
+  finger('pointermove', window, 200, 1);
+  finger('pointerdown', screen.getByTestId('t1-move'), 160, 2);
+  finger('pointermove', window, 400, 2);
+  expect(screen.getByTestId('t1').hasAttribute('data-dragging')).toBe(true);
+  finger('pointermove', window, 410, 1);
+  finger('pointerup', window, 410, 1);
+  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ to: { lane: 'a', start: 35, end: 55 } }));
 });
 
 it('drags the same way in StrictMode', () => {
@@ -389,6 +411,30 @@ it('resizes either end along the item\'s lane, snapped, within the range and min
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-start', to: { lane: 'a', start: 0, end: 20 } }));
   drag(screen.getByTestId('t1-start'), 0, 20, [[100, 20], [900, 20]]);
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-start', to: { lane: 'a', start: 10, end: 20 } }));
+});
+
+it('stops a resized end one grid point past the other end with no minSpan, however far the pointer flings', () => {
+  const onDrop = vi.fn();
+  const { unmount } = render(<Board onDrop={onDrop} />);
+  drag(screen.getByTestId('t1-end'), 200, 20, [[350, 20], [0, 20]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-end', to: { lane: 'a', start: 10, end: 15 } }));
+  unmount();
+  render(<Board onDrop={onDrop} />);
+  drag(screen.getByTestId('t1-start'), 100, 20, [[50, 20], [900, 20]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'resize-start', to: { lane: 'a', start: 25, end: 30 } }));
+});
+
+it('asks check again at the drop of a resize that keeps the place shown', () => {
+  const onDrop = vi.fn();
+  let blocked = false;
+  render(<Board onDrop={onDrop} grid={[]} check={() => (blocked ? { level: 'blocked', reason: 'Taken now' } : null)} />);
+  press(screen.getByTestId('t1-end'), 200, 20);
+  move(250, 20);
+  blocked = true;
+  // Past the start, the end keeps the place shown, 25.
+  move(50, 20);
+  release(50, 20);
+  expect(onDrop).not.toHaveBeenCalled();
 });
 
 it('never leaves a resized item without length, even with no grid and no minSpan', () => {
