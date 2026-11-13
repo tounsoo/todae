@@ -20,65 +20,59 @@ import { useLocale } from '../lib/i18n/useLocale';
 import { ScrollRegion } from './ScrollRegion';
 
 /** A block longer than this many lines shows only its first {@link PEEK_LINES} until the reader asks for the rest. */
-export const FOLD_AFTER_LINES = 40;
-export const PEEK_LINES = 20;
+const FOLD_AFTER_LINES = 40;
+const PEEK_LINES = 20;
 
 type CodeChild = ReactElement<{ children?: ReactNode }>;
 
-/** The `code` child of a fenced block and its text, when that child holds nothing but text, as MDX writes it. */
-function codeText(children: ReactNode): { code: CodeChild; text: string } | null {
+/**
+ * A fenced block's `code` child split after line {@link PEEK_LINES}, when the child holds nothing but text, as MDX
+ * writes it, and the text runs past {@link FOLD_AFTER_LINES} lines. `rest` starts with the newline that ends the peek,
+ * so `peek + rest` is the fence's text.
+ */
+function splitFence(children: ReactNode): { code: CodeChild; peek: string; rest: string } | null {
   if (!isValidElement<{ children?: ReactNode }>(children)) return null;
   const text = children.props.children;
-  return typeof text === 'string' ? { code: children, text } : null;
-}
-
-/** The index of the newline that ends line {@link PEEK_LINES}, or -1 when the block is short enough to show whole. */
-export function foldPoint(text: string): number {
-  if (text.replace(/\n$/, '').split('\n').length <= FOLD_AFTER_LINES) return -1;
-  let index = -1;
-  for (let line = 0; line < PEEK_LINES; line += 1) index = text.indexOf('\n', index + 1);
-  return index;
+  if (typeof text !== 'string' || text.replace(/\n+$/, '').split('\n').length <= FOLD_AFTER_LINES) return null;
+  let fold = -1;
+  for (let line = 0; line < PEEK_LINES; line += 1) fold = text.indexOf('\n', fold + 1);
+  return { code: children, peek: text.slice(0, fold), rest: text.slice(fold) };
 }
 
 export function DocsPre({ children, ...props }: ComponentProps<'pre'>) {
-  const found = codeText(children);
-  const fold = found ? foldPoint(found.text) : -1;
-  if (!found || fold < 0) {
+  const split = splitFence(children);
+  if (!split) {
     return (
       <ScrollRegion kind="code" className="docs-pre">
         <CodeBlock.Root {...props}>{children}</CodeBlock.Root>
       </ScrollRegion>
     );
   }
-  return <FoldedPre {...props} code={found.code} peek={found.text.slice(0, fold)} rest={found.text.slice(fold + 1)} />;
+  return <FoldedPre {...props} {...split} />;
 }
 
-const supportsUntilFound = () => 'onbeforematch' in document.body;
-
 /**
- * A long block that shows its first lines under a fade, with a button that shows the rest. The rest stays in the
- * page, hidden with `hidden="until-found"` where the browser has it, so find in page still reaches it and opens the
- * block. React writes `hidden` only as a boolean, so an effect sets the attribute. Until it runs, `data-ready` is
- * absent and the stylesheet hides the rest, so the server's HTML and the first paint match.
- * Expanded, a newline joins the two parts, so the block's text is the fence's text again.
+ * A long block that shows its first lines under a fade, with a button that shows the rest. Folded, the rest is
+ * `hidden`, which the server writes too. React writes `hidden` only as a boolean, so where the browser has
+ * `hidden="until-found"` a layout effect upgrades it, so find in page still reaches the rest and opens the block.
  */
 function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { code: CodeChild; peek: string; rest: string }) {
   const words = DICTIONARIES[useLocale()].codeFold;
   const id = useId();
   const restRef = useRef<HTMLSpanElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const foldedByReader = useRef(false);
+  // Where the button sat in the viewport when the reader pressed it to fold the block.
+  const foldFrom = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
     const el = restRef.current;
-    if (!el) return;
-    if (expanded) el.removeAttribute('hidden');
-    else el.setAttribute('hidden', supportsUntilFound() ? 'until-found' : '');
-    setReady(true);
-    // Folding shrinks the block above the button, so bring the button back into view.
-    if (!expanded && foldedByReader.current) toggleRef.current?.scrollIntoView({ block: 'nearest' });
+    if (!expanded && el && 'onbeforematch' in el) el.setAttribute('hidden', 'until-found');
+    const from = foldFrom.current;
+    foldFrom.current = null;
+    // The block shrank above the button, so scroll the page by as much, which keeps the button under the reader's
+    // pointer and focus, with the peek just above it.
+    if (!expanded && from !== null && toggleRef.current) scrollBy({ top: toggleRef.current.getBoundingClientRect().top - from, behavior: 'instant' });
   }, [expanded]);
 
   useEffect(() => {
@@ -91,15 +85,14 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
   }, []);
 
   return (
-    <div className="docs-code-fold" data-expanded={expanded ? '' : undefined} data-ready={ready ? '' : undefined}>
+    <div className="docs-code-fold" data-expanded={expanded ? '' : undefined}>
       <ScrollRegion kind="code" className="docs-pre">
         <CodeBlock.Root {...props}>
           {cloneElement(
             code,
             undefined,
             peek,
-            expanded ? '\n' : null,
-            <span key="rest" ref={restRef} id={id} className="docs-code-rest">
+            <span ref={restRef} id={id} className="docs-code-rest" hidden={!expanded}>
               {rest}
             </span>,
           )}
@@ -111,8 +104,8 @@ function FoldedPre({ code, peek, rest, ...props }: ComponentProps<'pre'> & { cod
           variant="ghost"
           aria-expanded={expanded}
           aria-controls={id}
-          onClick={() => {
-            foldedByReader.current = expanded;
+          onClick={(event) => {
+            if (expanded) foldFrom.current = event.currentTarget.getBoundingClientRect().top;
             setExpanded(!expanded);
           }}
         >

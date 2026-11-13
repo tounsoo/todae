@@ -443,40 +443,25 @@ main:focus {
   border-end-end-radius: 0;
 }
 
+/* The fade over the last lines of the peek says the code goes on. It masks the code itself, so the
+   scroll area's focus ring and sideways scrollbar, which are on the frame, stay whole. */
+.docs-code-fold:not([data-expanded]) .docs-pre pre {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 4.5rem), transparent);
+}
+
 /* Hidden as `hidden="until-found"`, the rest needs a box for the browser to skip its contents.
-   Before the effect sets that attribute, and where the browser lacks it, the rest is not drawn. */
-.docs-code-rest {
+   Plain `hidden`, before that or where the browser lacks it, draws nothing. */
+.docs-code-rest[hidden="until-found" i] {
   display: block;
 }
 
-.docs-code-fold:not([data-ready]) .docs-code-rest,
-.docs-code-rest[hidden]:not([hidden="until-found" i]) {
-  display: none;
-}
-
-.docs-code-fold[data-expanded] .docs-code-rest {
-  display: inline;
-}
-
 .docs-code-toggle {
-  position: relative;
   display: flex;
   justify-content: center;
   padding: 0.25rem;
   border-end-start-radius: inherit;
   border-end-end-radius: inherit;
   background: var(--todae-code-block-bg);
-}
-
-/* The fade over the last lines of the peek says the code goes on. */
-.docs-code-fold:not([data-expanded]) .docs-code-toggle::before {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  inset-block-end: 100%;
-  block-size: 4.5rem;
-  background: linear-gradient(to bottom, transparent, var(--todae-code-block-bg));
-  pointer-events: none;
 }
 
 /* Open, the button stays at the bottom of the screen while the block runs past it. */
@@ -487,8 +472,8 @@ main:focus {
 }
 
 @media (forced-colors: active) {
-  .docs-code-fold:not([data-expanded]) .docs-code-toggle::before {
-    display: none;
+  .docs-code-fold:not([data-expanded]) .docs-pre pre {
+    mask-image: none;
   }
 
   .docs-code-toggle {
@@ -496,11 +481,15 @@ main:focus {
   }
 }
 
+/* Paper shows every block whole. */
 @media print {
-  /* Folded, the peek ends without its newline, so the rest starts its own line as a block. */
-  .docs-code-fold:not([data-expanded]) .docs-code-rest {
-    display: block;
+  .docs-code-fold .docs-code-rest[hidden] {
+    display: inline;
     content-visibility: visible;
+  }
+
+  .docs-code-fold:not([data-expanded]) .docs-pre pre {
+    mask-image: none;
   }
 
   .docs-code-toggle {
