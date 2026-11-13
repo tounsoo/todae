@@ -108,6 +108,7 @@ describe('dragging', () => {
     // Kenji Sato is on Panel: shipping 1.0 on Main stage from 15:00 to 16:00 on day 2, 900 to 960,
     // and Hall B is free then, so the speaker is the one thing in the way.
     const own = talk('Panel: shipping 1.0').getAttribute('data-conflict');
+    expect(own).toBeNull();
     const drag = dragTo('Migrating to 1.0', along('Hall B', 915));
     await expect.poll(() => talk('Panel: shipping 1.0').getAttribute('data-conflict')).toBe('blocked');
     expect(lane('Hall B').textContent).toContain('Kenji Sato is in Panel: shipping 1.0 then');
@@ -171,14 +172,16 @@ describe('the sticky stage names', () => {
     }
   }
 
-  it('scrolls a day to just past the names column from its button', async () => {
+  it('scrolls a day to just past the names column, with room for a focus ring, from its button', async () => {
     setup();
     // The header row's axis holds a cell for each day.
     const day = rows().firstElementChild!.children[1]!.children[1] as HTMLElement;
     expect(day.textContent).toContain('Thu, Jun 3');
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
-    await expect.poll(() => Math.abs(day.getBoundingClientRect().left - names.right) < 1).toBe(true);
+    // The board's scroll-padding leaves a focus ring's room past the names.
+    await expect.poll(() => day.getBoundingClientRect().left - names.right).toBeLessThan(6);
+    expect(day.getBoundingClientRect().left - names.right).toBeGreaterThan(-0.5);
   });
 
   it('keeps the time just past the names column when the zoom changes', async () => {
@@ -236,6 +239,16 @@ describe('the dialog', () => {
     await expect.poll(() => dialog.contains(document.activeElement)).toBe(true);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(within(screen.getByRole('list', { name: 'Unscheduled' })).getByRole('button', { name: /^Dark mode, done right,/ })).toBeTruthy();
+    await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
+  });
+
+  it('schedules a queued talk at the first free time it opens on', async () => {
+    setup();
+    await open('Dark mode, done right', 'Schedule…');
+    await userEvent.keyboard('{Enter}');
+    const dialog = await screen.findByRole('dialog', { name: 'Schedule Dark mode, done right' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
     await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
   });
 
