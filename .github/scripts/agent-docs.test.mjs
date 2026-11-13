@@ -38,7 +38,7 @@ const ci = (steps, jobs = '') =>
   `on:\n  pull_request:\njobs:\n  static:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: actions/checkout@v4\n${steps}${jobs}`;
 
 const siteGroups = (...ids) =>
-  `export const SITE_GROUPS = [\n${ids.map((id) => `  {\n    id: '${id}',\n    links: [],\n  },\n`).join('')}] as const;\n\nexport const LINKS = [{ id: 'not-a-section' }];\n`;
+  `export const SITE_GROUPS = [\n${ids.map((id) => `  {\n    id: '${id}',\n    links: [],\n  },\n`).join('')}] as const;\n\nexport const LINKS = [\n  {\n    id: 'not-a-section',\n  },\n];\n`;
 
 const base = {
   'CLAUDE.md': '# Claude\n',
@@ -203,6 +203,20 @@ test('a workflow that is not valid YAML fails with its name', () => {
   assert.match(result.out, /\.github\/workflows\/ci\.yml is not valid YAML/);
 });
 
+test('a SITE_GROUPS that the script cannot read fails rather than hide new sections', () => {
+  const result = check({
+    'apps/docs/components/siteGroups.ts': siteGroups('foundations', 'components').replace('SITE_GROUPS = [', 'SITE_GROUPS: readonly Group[] = ['),
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.out, /siteGroups\.ts has no group ids where agent-docs\.mjs looks for them/);
+});
+
+test('a long unnamed step shows its first line', () => {
+  const result = check({ '.github/workflows/ci.yml': ci('      - name: Lint\n        run: pnpm lint\n      - run: |\n          pnpm a\n          pnpm b\n') });
+  assert.match(result.out, /check step `pnpm a …`\n/);
+  assert.doesNotMatch(result.out, /pnpm b/);
+});
+
 test('a body line with a reason lets it pass, and one without a reason does not', () => {
   const page = { 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n' };
   const passed = check(page, '## Why\n\nA recipe.\n\nAgent docs unchanged: verify drives new routes from the diff\n');
@@ -217,4 +231,16 @@ test('a body line with a reason lets it pass, and one without a reason does not'
   assert.equal(check(page, '<!--\nAgent docs unchanged: hidden from the page\n-->\n').status, 1);
   assert.equal(check(page, '<!-- a note -->\nAgent docs unchanged: shown on the page\n').status, 0);
   assert.match(check(page).out, /For a run outside CI, set PR_BODY to that body\./);
+});
+
+test('the body line counts as a list item or quote, after a placeholder, and not in a code block', () => {
+  const page = { 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n' };
+  assert.equal(check(page, '- Agent docs unchanged: a recipe\n').status, 0);
+  assert.equal(check(page, '> Agent docs unchanged: a recipe\n').status, 0);
+  const second = check(page, 'Agent docs unchanged: <reason>\nAgent docs unchanged: a recipe\n');
+  assert.match(second.out, /stay as they are: a recipe\n/);
+  assert.equal(check(page, 'Agent docs unchanged: `<reason>`\n').status, 1);
+  assert.equal(check(page, '```\nAgent docs unchanged: quoted rule\n```\n').status, 1);
+  assert.equal(check(page, '~~~md\nAgent docs unchanged: quoted rule\n').status, 1);
+  assert.equal(check(page, '```\nx\n```\nAgent docs unchanged: after the block\n').status, 0);
 });

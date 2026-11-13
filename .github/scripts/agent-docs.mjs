@@ -14,7 +14,7 @@ const PAGE = /^apps\/docs\/app\/\(en\)\/(?:(.+)\/)?page\.(?:mdx?|[jt]sx?)$/;
 const SITE_GROUPS = 'apps/docs/components/siteGroups.ts';
 const WORKFLOWS = '.github/workflows/';
 const AGENT_DOCS = { claude: ['CLAUDE.md'], verify: ['.claude/skills/verify/SKILL.md', '.claude/skills/verify/verify.mjs'] };
-const ESCAPE = /^[ \t]*Agent docs unchanged:[ \t]*(\S.*?)[ \t\r]*$/m;
+const ESCAPE = /^[ \t]*(?:[-*+>][ \t]+)?Agent docs unchanged:[ \t]*(\S.*?)[ \t\r]*$/gm;
 
 const git = (args, stderr = 'inherit') =>
   execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', stderr] });
@@ -36,13 +36,18 @@ function pageRoute(path) {
   return `/${segments.join('/')}`;
 }
 
-// The id of each group in SITE_GROUPS, the sidebar's sections. A group's id sits one level inside the array.
+// The id of each group in SITE_GROUPS, the sidebar's sections. A group's id sits one level inside the array. When
+// the file is there and no id is found, its layout changed, and the check fails rather than stop seeing sections.
 function sectionIds(text) {
-  const start = text?.indexOf('export const SITE_GROUPS = [') ?? -1;
-  if (start === -1) return new Set();
-  const end = text.indexOf('\n]', start);
-  const groups = text.slice(start, end === -1 ? undefined : end);
-  return new Set([...groups.matchAll(/^ {4}id: ['"]([^'"]+)['"]/gm)].map((match) => match[1]));
+  if (text == null) return new Set();
+  const start = text.indexOf('export const SITE_GROUPS = [');
+  const end = start === -1 ? -1 : text.indexOf('\n]', start);
+  const groups = start === -1 ? '' : text.slice(start, end === -1 ? undefined : end);
+  const ids = new Set([...groups.matchAll(/^ {4}id: ['"]([^'"]+)['"]/gm)].map((match) => match[1]));
+  if (ids.size === 0) {
+    throw new Error(`${SITE_GROUPS} has no group ids where agent-docs.mjs looks for them, so update sectionIds to match it.`);
+  }
+  return ids;
 }
 
 function triggersOnPullRequests(on) {
@@ -131,11 +136,17 @@ function review(base, head) {
   };
 }
 
-// The reason a body gives for leaving the agent docs as they are, or null. A line in an HTML comment doesn't show on
-// the pull request, so it doesn't count, and neither does a placeholder such as <reason>.
+// The reason a body gives for leaving the agent docs as they are, or null. The first line with a reason counts, as a
+// plain line, a list item or a quote. A line in an HTML comment doesn't show on the pull request and one in a code
+// block only quotes the rule, so neither counts, and neither does a placeholder such as <reason>.
 function escapeReason(body) {
-  const reason = ESCAPE.exec((body ?? '').replace(/<!--[\s\S]*?(?:-->|$)/g, ''))?.[1] ?? null;
-  return reason === null || /^<[^>]*>$/.test(reason) ? null : reason;
+  const shown = (body ?? '')
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, '')
+    .replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?(?:^[ \t]*\1[ \t]*$|(?![\s\S]))/gm, '');
+  for (const [, reason] of shown.matchAll(ESCAPE)) {
+    if (!/^`?<[^>]*>`?$/.test(reason)) return reason;
+  }
+  return null;
 }
 
 function main() {
@@ -151,7 +162,8 @@ function main() {
     say('agent-docs: this pull request adds no docs page, docs section or check.');
   } else {
     say('agent-docs: this pull request adds:');
-    for (const item of added) say(`  - ${item}`);
+    // An unnamed step with a long script shows its first line.
+    for (const item of added) say(`  - ${item.replace(/\n[\s\S]*`$/, ' …`')}`);
     const reason = escapeReason(process.env.PR_BODY);
     if (claudeMd && verifySkill) {
       say('agent-docs: it changes CLAUDE.md and the verify skill too.');
@@ -161,7 +173,7 @@ function main() {
       const missing = [!claudeMd && 'CLAUDE.md', !verifySkill && 'the verify skill (.claude/skills/verify/SKILL.md or verify.mjs)'];
       say(
         `agent-docs: change ${missing.filter(Boolean).join(' and ')} in this pull request too, so agents know what it ` +
-          'adds. Both need Ben\'s yes. Where one or both need no change, add a line "Agent docs unchanged: <reason>" ' +
+          'adds. Where one or both need no change, add a line "Agent docs unchanged: <reason>" ' +
           'to the pull request body, with the reason in place of <reason>, then re-run this job.' +
           (process.env.PR_BODY === undefined ? ' For a run outside CI, set PR_BODY to that body.' : ''),
       );
