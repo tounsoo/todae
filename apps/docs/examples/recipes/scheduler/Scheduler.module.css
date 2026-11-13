@@ -322,6 +322,12 @@
   line-height: var(--todae-text-leading-tight);
 }
 
+/* A narrow talk breaks a long word with a hyphen where the language allows,
+   before the clamp breaks it anywhere. */
+.title {
+  hyphens: auto;
+}
+
 .meta {
   font-size: var(--todae-text-label-font-size);
 }
@@ -358,11 +364,11 @@
 }
 
 /* A talk with too little room past its leading edge and end handle for its
-   grip and some text, about 5rem at comfortable density, drops its grip,
+   grip and some text, about 6rem at comfortable density, drops its grip,
    ends and warning icon and keeps its text; its button still makes every
    move, and its outline still marks a warning. A container query can't read
    a token, so a denser or roomier product sets its own number. */
-@container (max-inline-size: 5rem) {
+@container (max-inline-size: 6rem) {
   /* Specific enough to beat the grip's own display, which comes later. */
   .block .grip,
   .block .edge,

@@ -528,10 +528,10 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
-// One day gives a talk of 25 minutes or more room for its grip and text and snaps to 5 minutes. The
-// whole event is the overview and snaps to 15; an hour there is 7.5rem, so a half-hour talk still
-// shows the start of its title.
-const ZOOM = { event: { step: 15, minute: '0.125rem' }, day: { step: 5, minute: '0.25rem' } } as const;
+// One day gives a talk of half an hour or more room for its grip and text and snaps to 5 minutes. The
+// whole event is the overview and snaps to 15; an hour there is 9.375rem, so a half-hour talk still
+// shows a word or two of its title.
+const ZOOM = { event: { step: 15, minute: '0.15625rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 export default function SchedulerExample({ locale = 'en-US' }: { locale?: string }) {
   const [talks, setTalks] = useState(TALKS);
