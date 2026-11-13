@@ -54,6 +54,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   Reflect.deleteProperty(HTMLElement.prototype, 'scrollWidth');
   Reflect.deleteProperty(HTMLElement.prototype, 'clientWidth');
+  Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
 });
 
 async function remeasure() {
@@ -176,5 +177,83 @@ describe('overflow regions', () => {
     fireEvent.blur(table);
     expect(table.getAttribute('tabindex')).toBeNull();
     expect(table.getAttribute('role')).toBeNull();
+  });
+});
+
+describe('long code blocks', () => {
+  const lines = (count: number) => Array.from({ length: count }, (_, index) => `const line${index + 1} = ${index + 1};`).join('\n');
+
+  it('shows a block of 40 lines whole, with no button', () => {
+    const { container } = render(
+      <DocsPre>
+        <code className="language-ts">{lines(40)}</code>
+      </DocsPre>,
+    );
+    expect(container.querySelector('code')?.textContent).toBe(lines(40));
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('shows the first 20 lines of a longer block, and the rest on Show all code', () => {
+    const text = lines(41);
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    const { container } = render(
+      <>
+        <h2>Recipe</h2>
+        <DocsPre>
+          <code className="language-tsx">{text}</code>
+        </DocsPre>
+      </>,
+    );
+    const code = container.querySelector('code');
+    const button = screen.getByRole('button', { name: 'Show all code' });
+    const rest = document.getElementById(button.getAttribute('aria-controls') ?? '');
+    expect(code?.className).toBe('language-tsx');
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(rest?.hasAttribute('hidden')).toBe(true);
+    expect(code?.contains(rest)).toBe(true);
+    // The rest stays in the page, for find in page and for anything that reads the HTML.
+    expect(rest?.textContent).toBe(text.split('\n').slice(20).join('\n'));
+    expect(code?.textContent?.split(rest?.textContent ?? '')[0]).toBe(text.split('\n').slice(0, 20).join('\n'));
+    expect(screen.getByRole('region', { name: 'Code example, Recipe' })).not.toBeNull();
+
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.textContent).toBe('Show less code');
+    expect(rest?.hasAttribute('hidden')).toBe(false);
+    // Open, the block's text is the fence's text, so selecting and copying it gives the whole code.
+    expect(code?.textContent).toBe(text);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(rest?.hasAttribute('hidden')).toBe(true);
+    // The block shrank above the button, which comes back into view.
+    expect(scrollIntoView.mock.contexts).toEqual([button]);
+  });
+
+  it('opens when find in page reveals the rest', () => {
+    render(
+      <DocsPre>
+        <code className="language-tsx">{lines(60)}</code>
+      </DocsPre>,
+    );
+    const button = screen.getByRole('button', { name: 'Show all code' });
+    const rest = document.getElementById(button.getAttribute('aria-controls') ?? '');
+    act(() => {
+      rest?.dispatchEvent(new Event('beforematch'));
+    });
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('names the button in the page language', () => {
+    path.current = '/ko/recipes/kanban';
+    render(
+      <DocsPre>
+        <code className="language-tsx">{lines(41)}</code>
+      </DocsPre>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '코드 전체 보기' }));
+    expect(screen.getByRole('button', { name: '코드 접기' }).getAttribute('aria-expanded')).toBe('true');
   });
 });
