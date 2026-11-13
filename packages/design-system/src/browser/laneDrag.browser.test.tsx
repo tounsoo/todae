@@ -133,6 +133,20 @@ it('scrolls the board while the pointer stays near its edge, and moves the place
   expect(screen.queryByTestId('preview-a')).toBeNull();
 });
 
+it('leaves the board still while the pointer is outside it, such as over a queue beside it', async () => {
+  render(<Board width={300} />);
+  const board = screen.getByTestId('board');
+  const box = board.getBoundingClientRect();
+  const handle = screen.getByTestId('t1-move');
+  const start = along('a', 12);
+  pointer('pointerdown', handle, start.x, start.y);
+  pointer('pointermove', handle, start.x + 6, start.y);
+  pointer('pointermove', handle, box.right + 30, start.y);
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  expect(board.scrollLeft).toBe(0);
+  pointer('pointerup', handle, box.right + 30, start.y);
+});
+
 it('cancels a drag on Escape before a dialog around the board, which stays open', async () => {
   const onDrop = vi.fn();
   const onOpenChange = vi.fn();

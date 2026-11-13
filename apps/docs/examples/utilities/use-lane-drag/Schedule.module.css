@@ -127,8 +127,8 @@
   touch-action: none;
 }
 
-/* Each end resizes the talk. The menu moves it by a quarter hour as well, so
-   the narrow ends aren't the only way. */
+/* Each end resizes the talk. The menu makes it a quarter hour shorter or
+   longer as well, so the narrow ends aren't the only way. */
 .edge {
   position: absolute;
   inset-block: 0;

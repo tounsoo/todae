@@ -108,13 +108,19 @@ const Preview = memo(function Preview({ drag, stage, talks }: { drag: UseLaneDra
 
 function TalkMenu({ talk, talks, move, trigger }: { talk: Talk; talks: readonly Talk[]; move: Move; trigger?: RefObject<HTMLButtonElement | null> }) {
   const at = talk.at;
-  const shift = (by: number) => {
+  // The talk's place with its start and end moved, or null where it doesn't fit the day or a rule blocks it.
+  const shift = (start: number, end: number) => {
     if (at === null) return null;
-    const to = { lane: at.lane, start: at.start + by, end: at.end + by };
-    return to.start < DAY.start || to.end > DAY.end || verdictFor(talks, talk.id, to)?.level === 'blocked' ? null : to;
+    const to = { lane: at.lane, start: at.start + start, end: at.end + end };
+    const fits = to.start >= DAY.start && to.end <= DAY.end && to.end - to.start >= 15;
+    return fits && verdictFor(talks, talk.id, to)?.level !== 'blocked' ? to : null;
   };
-  const earlier = shift(-15);
-  const later = shift(15);
+  const items = [
+    { label: '15 minutes earlier', to: shift(-15, -15) },
+    { label: '15 minutes later', to: shift(15, 15) },
+    { label: '15 minutes shorter', to: shift(0, -15) },
+    { label: '15 minutes longer', to: shift(0, 15) },
+  ];
   return (
     <Menu.Root>
       <Menu.Trigger ref={trigger} variant="ghost" aria-label={`Move ${talk.title}`} className={styles.menu}>
@@ -125,12 +131,11 @@ function TalkMenu({ talk, talks, move, trigger }: { talk: Talk; talks: readonly 
       <Menu.Content>
         {at !== null ? (
           <>
-            <Menu.Item disabled={earlier === null} onSelect={() => earlier && move(talk.id, earlier, verdictFor(talks, talk.id, earlier))}>
-              15 minutes earlier
-            </Menu.Item>
-            <Menu.Item disabled={later === null} onSelect={() => later && move(talk.id, later, verdictFor(talks, talk.id, later))}>
-              15 minutes later
-            </Menu.Item>
+            {items.map(({ label, to }) => (
+              <Menu.Item key={label} disabled={to === null} onSelect={() => to && move(talk.id, to, verdictFor(talks, talk.id, to))}>
+                {label}
+              </Menu.Item>
+            ))}
             <Menu.Separator />
           </>
         ) : null}
@@ -238,11 +243,11 @@ export default function ScheduleExample() {
   const landing = useRef<HTMLButtonElement | null>(null);
   const [landed, setLanded] = useState<string | null>(null);
 
-  // A drag and a menu item both move a talk here.
+  // A drag and a menu item both move a talk here. A talk keeps the length it was last given.
   const move: Move = (id, to, verdict) => {
     const talk = talks.find((each) => each.id === id)!;
     setLanded(id);
-    setTalks((list) => list.map((each) => (each.id === id ? { ...each, at: to } : each)));
+    setTalks((list) => list.map((each) => (each.id === id ? { ...each, at: to, length: to === null ? each.length : to.end - to.start } : each)));
     const where = to === null ? 'unscheduled' : `${stageName(to.lane)}, ${clock(to.start)} to ${clock(to.end)}`;
     announce(`${talk.title} moved to ${where}${verdict ? `. ${verdict.reason}` : ''}`);
   };

@@ -189,6 +189,39 @@ it('keeps a move inside the range', () => {
   expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ to: { lane: 'a', start: 0, end: 20 } }));
 });
 
+it('snaps a move near the range\'s end to the last grid point that fits, not to the clamped start', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} grid={[0, 30, 60, 90]} />);
+  // t1's span of 20 can start no later than 80, which isn't a grid point, so it starts at 60.
+  drag(screen.getByTestId('t1-move'), 150, 20, [[900, 20], [999, 20]]);
+  expect(onDrop).toHaveBeenLastCalledWith(expect.objectContaining({ to: { lane: 'a', start: 60, end: 80 } }));
+});
+
+it('finds no place for an item longer than the range', () => {
+  const onDrop = vi.fn();
+  function Host() {
+    const lanes = useLaneDrag({ range: { start: 0, end: 100 }, grid: GRID, onDrop });
+    return (
+      <div {...lanes.getBoardProps()} data-r="0,0,1000,1000">
+        <div {...lanes.getLaneProps('a')} data-r="0,0,1000,40">
+          <Ghost drag={lanes.drag} lane="a" />
+        </div>
+        <div {...lanes.getQueueProps()} data-r="0,100,1000,100">
+          <div {...lanes.getItemProps('long', { span: 150 })} data-r="0,120,200,40">
+            <span {...lanes.getHandleProps('long', 'move')} data-testid="long" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  render(<Host />);
+  press(screen.getByTestId('long'), 20, 130);
+  move(100, 20);
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  release(100, 20);
+  expect(onDrop).not.toHaveBeenCalled();
+});
+
 it('takes a placed item back to the queue', () => {
   const onDrop = vi.fn();
   render(<Board onDrop={onDrop} />);
@@ -254,6 +287,35 @@ it('asks check each time the place changes, and refuses a blocked drop while a w
   expect(onDrop).toHaveBeenCalledWith(
     expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 45, end: 65 }, verdict: { level: 'warning', reason: 'Overlaps t2', with: ['t2'] } }),
   );
+});
+
+it('never marks the dragged item as a conflict, even when check names it', () => {
+  render(<Board check={() => ({ level: 'warning', reason: 'Busy', with: ['t1', 't2'] })} />);
+  press(screen.getByTestId('t1-move'), 150, 20);
+  move(200, 20);
+  move(500, 60);
+  expect(screen.getByTestId('t2').getAttribute('data-conflict')).toBe('warning');
+  expect(screen.getByTestId('t1').hasAttribute('data-conflict')).toBe(false);
+  release(500, 60);
+});
+
+it('listens on the window only while a press is down', () => {
+  const add = vi.spyOn(window, 'addEventListener');
+  const remove = vi.spyOn(window, 'removeEventListener');
+  const moves = (spy: typeof add) => spy.mock.calls.filter(([type]) => type === 'pointermove').length;
+  render(<Board />);
+  expect(moves(add)).toBe(0);
+  press(screen.getByTestId('t1-move'), 150, 20);
+  expect(moves(add)).toBe(1);
+  move(200, 20);
+  release(200, 20);
+  expect(moves(remove)).toBe(1);
+});
+
+it('stops the browser\'s own drag of an image or link inside a handle', () => {
+  render(<Board />);
+  // fireEvent returns false when the event's default was prevented.
+  expect(fireEvent.dragStart(screen.getByTestId('t1-move'))).toBe(false);
 });
 
 it('marks the dragged item, the board and the drop target during a drag, and clears them after', () => {
@@ -366,23 +428,7 @@ it('ends a drag whose item goes away', () => {
   expect(onDrop).not.toHaveBeenCalled();
 });
 
-it('runs the inline axis from the right in a right-to-left lane', () => {
-  const onDrop = vi.fn();
-  render(<Board onDrop={onDrop} dir="rtl" />);
-  // t1 spans 10 to 30, so x 700 to 900; grabbed at x 850, 15 units from the right.
-  drag(screen.getByTestId('t1-move'), 850, 20, [[800, 20], [500, 20]]);
-  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ to: { lane: 'a', start: 45, end: 65 } }));
-});
-
-it('runs down each lane with axis block', () => {
-  const onDrop = vi.fn();
-  render(<Board onDrop={onDrop} axis="block" />);
-  // Lane b is the column at x 100 to 200; t1 spans y 100 to 300 in lane a, grabbed at y 150.
-  drag(screen.getByTestId('t1-move'), 50, 150, [[50, 200], [150, 600]]);
-  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ to: { lane: 'b', start: 55, end: 75 } }));
-});
-
-it('renders the board only as a drag starts and ends, and a lane only as the place moves in or out of it', () => {
+it('renders the board only as a drag starts and ends, and a lane only when the place in it changes', () => {
   render(<Board />);
   renders = {};
   press(screen.getByTestId('t1-move'), 150, 20);

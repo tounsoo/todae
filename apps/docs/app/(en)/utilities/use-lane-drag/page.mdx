@@ -20,12 +20,12 @@ const lanes = useLaneDrag({
     <div key={stage.id} {...lanes.getLaneProps(stage.id)}>
       {talksOn(stage).map((talk) => (
         <div key={talk.id} {...lanes.getItemProps(talk.id, talk.at)}>
-          <span {...lanes.getHandleProps(talk.id, 'start')} aria-hidden />
+          <span {...lanes.getHandleProps(talk.id, 'start')} aria-hidden style={{ touchAction: 'none' }} />
           <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
             <GripVertical />
           </span>
           {talk.title}
-          <span {...lanes.getHandleProps(talk.id, 'end')} aria-hidden />
+          <span {...lanes.getHandleProps(talk.id, 'end')} aria-hidden style={{ touchAction: 'none' }} />
         </div>
       ))}
     </div>
@@ -34,7 +34,7 @@ const lanes = useLaneDrag({
 <ul {...lanes.getQueueProps()}>
   {unscheduled.map((talk) => (
     <li key={talk.id} {...lanes.getItemProps(talk.id, { span: talk.length })}>
-      <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden>
+      <span {...lanes.getHandleProps(talk.id, 'move')} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
         <GripVertical />
       </span>
       {talk.title}
@@ -55,11 +55,11 @@ Every lane covers the same `range` along the axis, in units you choose, such as 
 
 `getItemProps(id, at)` takes a placed item's place, or `{ span }` for an item in the queue, the length it takes when it is placed. The hook reads them from the item's element when a drag starts.
 
-- **Move.** `getHandleProps(id, 'move')` drags the item. A placed item keeps the point it was grabbed at under the pointer, and an item from the queue starts at the pointer. The item keeps its length and stays inside `range`.
+- **Move.** `getHandleProps(id, 'move')` drags the item. A placed item keeps the point it was grabbed at under the pointer, and an item from the queue starts at the pointer. The item keeps its length and stays inside `range`, starting at the nearest grid point that fits. An item longer than `range` has no place, so its drag drops nothing.
 - **Resize.** `getHandleProps(id, 'start')` and `getHandleProps(id, 'end')` move that end along the item's own lane. An end stops `minSpan` from the other, and never reaches it.
 - **Back to the queue.** A placed item dropped on the element with `getQueueProps()` leaves the board.
 
-A drop that changes a place calls `onDrop(change)`, where `change` is `{ id, kind, from, to, verdict }`. `kind` is `assign`, `move`, `resize-start`, `resize-end` or `unassign`. `from` is the item's place when the drag started, or `null` for an item from the queue, and `to` is where it goes, or `null` for `unassign`. A drop outside the lanes and the queue, or one that leaves the item where it was, calls nothing.
+A drop that changes a place calls `onDrop(change)`, where `change` is `{ id, kind, from, to, verdict }`. `kind` is `assign`, `move`, `resize-start`, `resize-end` or `unassign`. `from` is the item's place when the drag started, or `null` for an item from the queue, and `to` is where it goes, or `null` for `unassign`. A resize changes the item's length, so give its `{ span }` the new length if it goes back to the queue. A drop outside the lanes and the queue, or one that leaves the item where it was, calls nothing.
 
 ## Checking a place
 
@@ -73,17 +73,17 @@ The hook renders nothing and sets state on the elements during a drag, so the bo
 - `data-drop-target` on the lane the item would go to, or on the queue for `unassign`,
 - `data-conflict`, the verdict's level, on that lane and on each item in `with`.
 
-Style those, and draw the item's future place with `useLaneDragState(lanes.drag, select)`. It returns `select` of the drag under way, or of `null` when there is none, and renders again only when that selection changes. Select the place in one lane, as the example's preview does, and that lane renders when the place moves in or out of it, not on every move. Pass `isEqual` as a third argument when `select` builds a new object each time.
+Style those, and draw the item's future place with `useLaneDragState(lanes.drag, select)`. It returns `select` of the drag under way, or of `null` when there is none, and renders again only when that selection changes. Select the drag while its place is in one lane, as the example's preview does, and that lane renders each time the place in it changes, not on every pointer move, and not while the drag is in other lanes. Pass `isEqual` as a third argument when `select` builds a new object each time.
 
 ```tsx
 const change = useLaneDragState(lanes.drag, (state) => (state?.to?.lane === stage.id ? state : null));
 ```
 
-The owner of `useLaneDrag` renders as a drag starts and ends. Near an edge of the element with `getBoardProps()`, the board scrolls, so make that element the one that scrolls.
+The owner of `useLaneDrag` renders as a drag starts and ends. While the pointer is inside the element with `getBoardProps()` and near its edge, the board scrolls, so make that element the one that scrolls. Outside it, such as over a queue beside it, the board stays still.
 
 ## Touch and the pointer
 
-A mouse, a finger and a pen drag the same way, with pointer events. The item drags once the pointer moves a few pixels from the press, so a click or a tap on a handle drags nothing, and the click a drop sends to its handle is dropped. A press on a button or link inside a handle is that control's. Handles need `touch-action: none`, or the browser takes a finger to scroll the page and the drag ends. Keep them small, such as a grip, so a swipe on the rest of the board still scrolls it.
+A mouse, a finger and a pen drag the same way, with pointer events. The item drags once the pointer moves a few pixels from the press, so a click or a tap on a handle drags nothing, and the click a drop sends to its handle is dropped. A press on a button or link inside a handle is that control's, and the browser's own drag of an image or link inside a handle is stopped. Every handle needs `touch-action: none`, or the browser takes a finger to scroll the page and the drag ends. Keep them small, such as a grip, so a swipe on the rest of the board still scrolls it.
 
 Escape cancels a drag and leaves every item where it was, before a [Dialog](/dialog) around the board, which stays open until the next Escape.
 

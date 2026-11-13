@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useLaneDragState',
   description:
-    'useLaneDragState(drag, select) returns select of the drag under way from useLaneDrag, or of null when there is none, and renders again only when that selection changes. A lane that selects the place a drag would take in it renders when the place moves in or out of it, not on every move.',
+    'useLaneDragState(drag, select) returns select of the drag under way from useLaneDrag, or of null when there is none, and renders again only when that selection changes. A lane that selects the drag while its place is in that lane renders each time the place in it changes, not on every pointer move, and not while the drag is in other lanes.',
   props: [
     {
       name: 'drag',
