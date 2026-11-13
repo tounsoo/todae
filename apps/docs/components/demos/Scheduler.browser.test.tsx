@@ -3,7 +3,7 @@ import { page, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Providers } from '../Providers';
-import ConferenceSchedule from '../../examples/recipes/conference-schedule/ConferenceSchedule';
+import SchedulerExample from '../../examples/recipes/scheduler/SchedulerExample';
 
 // The board's axis runs over the three days' open minutes, 9:00 to 18:00 each, so 0 to 1620.
 const UNITS = 1620;
@@ -13,7 +13,7 @@ afterEach(cleanup);
 function setup() {
   render(
     <Providers>
-      <ConferenceSchedule locale="en-US" />
+      <SchedulerExample locale="en-US" />
     </Providers>,
   );
 }
@@ -87,7 +87,7 @@ describe('dragging', () => {
     reveal(100);
     // 11:15 on day 1 is 135 minutes into the axis, clear of Tokens that travel's changeover.
     dragTo('Dark mode, done right', along('Main stage', 135)).drop();
-    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
     expect(onStage('Dark mode, done right', 'Main stage')).toBe(true);
     await expect.poll(() => politeRegion()?.textContent).toBe('Dark mode, done right moved to Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
   });
@@ -115,7 +115,7 @@ describe('dragging', () => {
     await expect.poll(() => Math.abs(along('Main stage', 540).x - names.right)).toBeLessThan(0.5);
     // The board's scroll-padding marks the names, so a drop over them lands at the first place in view.
     dragTo('Dark mode, done right', { x: names.left + names.width / 2, y: along('Main stage', 540).y }).drop();
-    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Thu, Jun 3, 9:00 AM to 9:30 AM');
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Thu, Jun 3, 9:00 AM to 9:30 AM, Mira Patel, Design, Main stage');
     expect(talk('Dark mode, done right').getBoundingClientRect().left).toBeGreaterThanOrEqual(names.right - 0.5);
   });
 
@@ -228,7 +228,7 @@ describe('the sticky stage names', () => {
 });
 
 describe('the talks', () => {
-  // A talk too short for its grip becomes its menu button, so no zoom leaves a button cut off.
+  // A placed talk is its menu button past its grip, so no zoom leaves a button cut off.
   for (const zoom of ['One day', 'Whole event']) {
     it(`show every menu button whole, ${zoom}`, async () => {
       setup();
@@ -245,7 +245,7 @@ describe('the talks', () => {
           expect(box.right, label!).toBeLessThanOrEqual(outer.right + 0.5);
           const at = centre(button);
           expect(button.contains(document.elementFromPoint(at.x, at.y)), `${label} covered`).toBe(true);
-          // A visible grip sits beside the button, never under it: a talk that becomes its button hides its grip.
+          // A visible grip sits beside the button, never under it: a talk too narrow for both hides its grip.
           const grip = block.querySelector('.lucide-grip-vertical')!.parentElement!;
           if (getComputedStyle(grip).display !== 'none') {
             const side = grip.getBoundingClientRect();
@@ -255,6 +255,27 @@ describe('the talks', () => {
       }
     });
   }
+
+  // The overview still says what each slot is: every placed talk shows the start of its title.
+  it('gives every title at least 2.5em, Whole event', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    for (const name of ['Main stage', 'Hall B', 'Workshop room']) {
+      for (const button of within(stage(name)).getAllByRole('button')) {
+        const label = button.getAttribute('aria-label')!;
+        const title = [...button.querySelectorAll('span')].find((el) => el.childElementCount === 0 && el.textContent !== '' && label.startsWith(`${el.textContent},`));
+        expect(title, `${label} shows no title`).toBeDefined();
+        const box = title!.getBoundingClientRect();
+        const outer = button.closest('li')!.getBoundingClientRect();
+        const em = parseFloat(getComputedStyle(title!).fontSize);
+        expect(getComputedStyle(title!).visibility, label).toBe('visible');
+        expect(box.width, `${label} title too narrow`).toBeGreaterThanOrEqual(2.5 * em);
+        expect(box.height, label).toBeGreaterThanOrEqual(em);
+        expect(box.left, label).toBeGreaterThanOrEqual(outer.left - 0.5);
+        expect(box.right, label).toBeLessThanOrEqual(outer.right + 0.5);
+      }
+    }
+  });
 });
 
 describe('the dialog', () => {
@@ -281,7 +302,7 @@ describe('the dialog', () => {
     await userEvent.keyboard('{Enter}');
     const dialog = await screen.findByRole('dialog', { name: 'Schedule Dark mode, done right' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
-    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
+    expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
     await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
   });
 

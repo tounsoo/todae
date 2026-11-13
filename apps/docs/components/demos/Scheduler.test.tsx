@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import ConferenceSchedule, {
+import SchedulerExample, {
   findConflicts,
   fromUnits,
   segmentAt,
@@ -9,8 +9,8 @@ import ConferenceSchedule, {
   timeline,
   toUnits,
   verdictFor,
-} from '../../examples/recipes/conference-schedule/ConferenceSchedule';
-import type { Talk } from '../../examples/recipes/conference-schedule/ConferenceSchedule';
+} from '../../examples/recipes/scheduler/SchedulerExample';
+import type { Talk } from '../../examples/recipes/scheduler/SchedulerExample';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -121,7 +121,7 @@ describe('verdictFor', () => {
 describe('the schedule', () => {
   afterEach(cleanup);
   const setup = () =>
-    render(<ConferenceSchedule locale="en-US" />);
+    render(<SchedulerExample locale="en-US" />);
   const talksOn = (stage: string) =>
     within(within(screen.getByRole('region', { name: stage })).getByRole('list'))
       .queryAllByRole('button')
@@ -151,11 +151,11 @@ describe('the schedule', () => {
     });
   }
 
-  it('names each talk with its speakers, stage, time and any warning', () => {
+  it('names each talk with what it shows first, then its speakers, stage and any warning', () => {
     setup();
     expect(talksOn('Main stage')).toEqual(['Tokens that travel', 'Motion with purpose', 'Auditing a design system', 'Panel: shipping 1.0', 'Writing UI copy']);
     expect(screen.getByRole('button', { name: /^Research ops at scale,/ }).getAttribute('aria-label')).toBe(
-      'Research ops at scale, Priya Nair, Research, Hall B, Wed, Jun 2, 11:00 AM to 11:30 AM, warning: Expects 350, Hall B seats 300',
+      'Research ops at scale, Wed, Jun 2, 11:00 AM to 11:30 AM, Priya Nair, Research, Hall B, warning: Expects 350, Hall B seats 300',
     );
   });
 
@@ -192,7 +192,7 @@ describe('the schedule', () => {
     expect(talksOn('Main stage')).toContain('Dark mode, done right');
     // The opening keynote holds 9:00 to 10:00, and Tokens that travel runs 10:15 to 11:00, so 11:00 is
     // allowed but leaves no time to change over. 11:15 is the first time with no warning.
-    expect(screen.getByRole('button', { name: /^Dark mode, done right,/ }).getAttribute('aria-label')).toBe('Dark mode, done right, Mira Patel, Design, Main stage, Wed, Jun 2, 11:15 AM to 11:45 AM');
+    expect(screen.getByRole('button', { name: /^Dark mode, done right,/ }).getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     });

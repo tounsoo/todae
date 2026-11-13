@@ -25,8 +25,8 @@ import {
   type UseLaneDragResult,
 } from '@tounsoo/todae';
 import { Ban, EllipsisVertical, GripVertical, TriangleAlert, Undo2, Video } from 'lucide-react';
-import { memo, useId, useLayoutEffect, useMemo, useRef, useState, type RefObject, type SubmitEvent } from 'react';
-import styles from './ConferenceSchedule.module.css';
+import { memo, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject, type SubmitEvent } from 'react';
+import styles from './Scheduler.module.css';
 
 // ─── The time axis ─────────────────────────────────────────────────────────
 // The board counts minutes of open hours only, so three days with the nights
@@ -297,13 +297,16 @@ const Preview = memo(function Preview({ drag, stage, locale }: { drag: UseLaneDr
   );
 });
 
-function TalkMenu({ talk, talks, move, edit, trigger, name }: Pick<Shared, 'talks' | 'move' | 'edit'> & { talk: Talk; trigger?: RefObject<HTMLButtonElement | null>; name: string }) {
+/** A talk's menu. A placed talk passes what it shows as `children`, so the talk is its button. */
+function TalkMenu({ talk, talks, move, edit, trigger, name, children }: Pick<Shared, 'talks' | 'move' | 'edit'> & { talk: Talk; trigger?: RefObject<HTMLButtonElement | null>; name: string; children?: ReactNode }) {
   return (
     <Menu.Root>
       <Menu.Trigger ref={trigger} variant="ghost" aria-label={name} className={styles.menu}>
-        <Button.Icon>
-          <EllipsisVertical />
-        </Button.Icon>
+        {children ?? (
+          <Button.Icon>
+            <EllipsisVertical />
+          </Button.Icon>
+        )}
       </Menu.Trigger>
       <Menu.Content>
         <TalkMoves talk={talk} talks={talks} move={move} edit={edit} />
@@ -360,7 +363,8 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
   const handoff = useFocusHandoff({ to: shared.landing });
   const at = laneOf(talk.at!);
   const verdict = verdictFor(shared.talks, talk.id, at);
-  const name = [talk.title, talk.speakers.join(', '), talk.track, stageOf(at.lane).name, during(talk.at!, shared.locale), verdict ? `warning: ${verdict.reason}` : null].filter(Boolean).join(', ');
+  // The name starts with what the talk shows, in its order: the title, then its time and speakers.
+  const name = [talk.title, during(talk.at!, shared.locale), talk.speakers.join(', '), talk.track, stageOf(at.lane).name, verdict ? `warning: ${verdict.reason}` : null].filter(Boolean).join(', ');
   return (
     <li
       ref={handoff}
@@ -379,14 +383,20 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
       <span {...shared.lanes.getHandleProps(talk.id, 'move')} aria-hidden className={styles.grip}>
         <GripVertical size="1em" />
       </span>
-      <span className={styles.body} aria-hidden>
-        <span className={styles.title}>{talk.title}</span>
-        <span className={styles.meta}>
-          {clock(talk.at!.starts, shared.locale)} · {talk.speakers.join(', ')}
+      {/* The talk is its menu button, so its title and time take the room a separate button would. The
+          button's name says it all; a title the clamp cuts shows whole in a tooltip on hover or focus. The
+          seeded titles are English on every locale, so the title says so, and hyphenation follows it. */}
+      <TalkMenu talk={talk} talks={shared.talks} move={shared.move} edit={shared.edit} trigger={talk.id === shared.landed ? shared.landing : undefined} name={name}>
+        <span className={styles.body}>
+          <Text.Root as="span" lang="en" lines={2} weight="medium" className={styles.title}>
+            {talk.title}
+          </Text.Root>
+          <Text.Root as="span" lines={1} tooltip={false} tone="muted" className={styles.meta}>
+            {clock(talk.at!.starts, shared.locale)} · {talk.speakers.join(', ')}
+          </Text.Root>
         </span>
-      </span>
-      {verdict ? <TriangleAlert className={styles.flag} size="1em" aria-hidden /> : null}
-      <TalkMenu talk={talk} talks={shared.talks} move={shared.move} edit={shared.edit} trigger={talk.id === shared.landed ? shared.landing : undefined} name={name} />
+        {verdict ? <TriangleAlert className={styles.flag} size="1em" aria-hidden /> : null}
+      </TalkMenu>
       <span {...shared.lanes.getHandleProps(talk.id, 'end')} aria-hidden className={styles.edge} data-edge="end" />
     </li>
   );
@@ -519,11 +529,12 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
-// One day gives most talks room for their grip and text and snaps to 5 minutes. The whole event is
-// the overview, where most talks are their menu button alone, and snaps to 15.
-const ZOOM = { event: { step: 15, minute: '0.09375rem' }, day: { step: 5, minute: '0.25rem' } } as const;
+// One day gives a talk of half an hour or more room for its grip and text and snaps to 5 minutes. The
+// whole event is the overview and snaps to 15; an hour there is 9.375rem, so a half-hour talk still
+// shows a word or two of its title in the smaller label size.
+const ZOOM = { event: { step: 15, minute: '0.15625rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
-export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: string }) {
+export default function SchedulerExample({ locale = 'en-US' }: { locale?: string }) {
   const [talks, setTalks] = useState(TALKS);
   const [history, setHistory] = useState<{ talks: Talk[]; said: string }[]>([]);
   const [zoom, setZoom] = useState<keyof typeof ZOOM>('day');
@@ -594,7 +605,7 @@ export default function ConferenceSchedule({ locale = 'en-US' }: { locale?: stri
   const queue = talks.filter((talk) => talk.at === null);
 
   return (
-    <div className={styles.schedule} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: AXIS.range.end }}>
+    <div className={styles.schedule} data-zoom={zoom} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: AXIS.range.end }}>
       <div className={styles.controls}>
         <div className={styles.jump} role="group" aria-label="Go to day">
           {DAYS.map((day, index) => (

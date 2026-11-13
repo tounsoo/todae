@@ -247,8 +247,7 @@
   container-type: inline-size;
   min-inline-size: 0;
   overflow: hidden;
-  /* The end handle's width, so the menu button sits clear of it and its ring
-     inside the clipped block. */
+  /* The end handle's width, so the menu button sits clear of it. */
   padding-inline-end: var(--todae-space-2);
   border-inline-start: 0.25rem solid var(--track);
 }
@@ -262,9 +261,29 @@
    color alone, and the rest recede without fading their text or controls,
    so every talk keeps its contrast. In the queue, which has the subtle
    background already, a receding card loses its surface instead. */
-.block[data-highlight='picked'],
 .card[data-highlight='picked'] {
   box-shadow: inset 0 0 0 calc(2 * var(--todae-border-width)) var(--todae-color-fg-default);
+}
+
+/* A placed talk's ring sits above its button, so a hover or press fill
+   doesn't hide it. */
+.block[data-highlight='picked']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 calc(2 * var(--todae-border-width)) var(--todae-color-fg-default);
+  pointer-events: none;
+}
+
+/* Inside a warning or blocked outline, so the ring doesn't thin it. */
+.block[data-highlight='picked'][data-conflict='warning']::after {
+  inset: var(--todae-focus-ring-width);
+}
+
+.block[data-highlight='picked'][data-conflict='blocked']::after {
+  inset: calc(2 * var(--todae-focus-ring-width));
 }
 
 .block[data-highlight='dimmed'] {
@@ -300,17 +319,23 @@
 
 .title,
 .meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: var(--todae-text-leading-tight);
 }
 
+/* A narrow talk breaks a long word with a hyphen where the language allows,
+   before the clamp breaks it anywhere. */
 .title {
-  font-weight: var(--todae-text-weight-medium);
+  hyphens: auto;
 }
 
 .meta {
-  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-text-label-font-size);
+}
+
+/* The whole event is the overview, so a talk's title takes the smaller
+   label size there, as a calendar's dense views do, and a short word fits
+   whole in a half-hour talk. */
+.schedule[data-zoom='event'] .title {
   font-size: var(--todae-text-label-font-size);
 }
 
@@ -319,38 +344,71 @@
   color: var(--todae-color-status-warning-fg);
 }
 
-/* A short talk keeps only its grip and menu, which names the talk in full. */
-@container (max-inline-size: 6rem) {
-  .body,
-  .flag {
-    display: none;
-  }
+/* A placed talk is its menu button, which fills the talk past its grip and
+   shows its title, time and any warning, so a narrow talk spends its room on
+   text, not on controls. Its ring sits inside it, so the block can't cut it. */
+.block .menu {
+  flex: 1;
+  align-self: stretch;
+  justify-content: flex-start;
+  gap: var(--todae-space-1);
+  min-inline-size: 0;
+  /* Clear of the block's warning or blocked outline, which would cover the
+     button's focus ring. */
+  margin-block: calc(2 * var(--todae-focus-ring-width));
+  padding-block: 0;
+  padding-inline: var(--todae-space-1);
+  border: 0;
+  border-radius: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: start;
 }
 
-/* A talk too short for its grip, a gap and its menu button, about 4.25rem
-   at comfortable density, becomes the button, which makes every move. A
-   container query can't read a token, so a denser or roomier product sets
-   its own number. Its ring sits inside it, so the block can't cut it. */
-@container (max-inline-size: 4.25rem) {
+.block .menu:focus-visible {
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
+}
+
+/* The whole talk takes the button's hover and press fill, grip included, so
+   it reads as one card. The fill is translucent, so it is layered over the
+   talk's own surface rather than replacing it. */
+.block .menu {
+  --_button-bg-hover: transparent;
+  --_button-bg-active: transparent;
+}
+
+.block:has(.menu:hover) {
+  background-image: linear-gradient(
+    var(--todae-button-ghost-bg-hover),
+    var(--todae-button-ghost-bg-hover)
+  );
+}
+
+.block:has(.menu:active) {
+  background-image: linear-gradient(
+    var(--todae-button-ghost-bg-active),
+    var(--todae-button-ghost-bg-active)
+  );
+}
+
+/* A talk with too little room past its leading edge and end handle for its
+   grip and some text, about 6rem at comfortable density, drops its grip,
+   ends and warning icon and keeps its text; its button still makes every
+   move, and its outline still marks a warning. A container query can't read
+   a token, so a denser or roomier product sets its own number. */
+@container (max-inline-size: 6rem) {
   /* Specific enough to beat the grip's own display, which comes later. */
   .block .grip,
-  .block .edge {
+  .block .edge,
+  .block .flag {
     display: none;
   }
 
+  /* With no end handle to clear, the button takes the block's end room too,
+     short of the outline. */
   .block .menu {
-    position: absolute;
-    inset: 0;
-    inline-size: auto;
-    min-inline-size: 0;
-    block-size: auto;
-    min-block-size: 0;
-    padding: 0;
-    border-radius: 0;
-  }
-
-  .block .menu:focus-visible {
-    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    margin-inline-end: calc(2 * var(--todae-focus-ring-width) - var(--todae-space-2));
   }
 }
 
