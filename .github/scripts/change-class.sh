@@ -76,7 +76,7 @@ self_test() {
 	check changelog all 'packages/design-system/CHANGELOG.md'
 	check 'package readme' all 'packages/design-system/README.md'
 	check 'root markdown' markdown 'README.md'
-	check 'nested markdown' markdown 'docs/decisions/0012-docs-build-in-github.md' '.claude/models.md'
+	check 'nested markdown' markdown 'docs/decisions/0012-docs-build-in-github.md' '.claude/pstack-models.md'
 	check 'markdown plus page' all 'README.md' 'apps/docs/app/(en)/page.mdx'
 	check 'markdown plus source' all 'README.md' 'packages/design-system/src/index.ts'
 	check 'changeset with markdown' all 'README.md' '.changeset/brave-lions-sing.md'

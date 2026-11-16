@@ -11,7 +11,7 @@ A thread brief keeps the Rules part and drops Subagent rules. A subagent brief k
 
 ## Setup
 
-Repo tounsoo/todae. Read `CLAUDE.md`, then follow `AGENTS.md` and `.claude/thread-start.md` before anything else.
+Repo tounsoo/todae. Read `AGENTS.md` first. It points at the shared rules in tounsoo/home. Then read `CLAUDE.md` and `.claude/thread-start.md`.
 <!-- For a subagent: the absolute path of the checkout or worktree, the branch, and the base commit it builds on. -->
 
 ## Scope
@@ -30,11 +30,10 @@ or that each BLOCKED step is listed under Unverified checks.
 
 ## Rules
 
-- One pull request for this task. Its body follows `.github/pull_request_template.md`.
-- Changes to `.claude/`, `.agents/` and `CLAUDE.md` need Ben's yes.
-- Agents don't merge. Report the pull request link with the verdict and wait for Ben.
-- No force-push or rebase without Ben's yes.
-- Don't change a design token without Ben's approval.
+- One pull request for this task. Its body follows `.github/pull_request_template.md`. The repo lines are in `AGENTS.md`.
+- Git follows tounsoo/home `standards/git.md`, as `AGENTS.md` says. Agents don't merge, force-push or rebase. Report the pull request link with the verdict and wait for Ben.
+- Changes to `.claude/`, `.agents/`, `AGENTS.md`, `CLAUDE.md`, and the `.claude/**` entry in `eslint.config.mjs` need Ben's yes.
+- Don't change a design token without Ben's approval. Follow `.agents/playbooks/tokens.md`.
 - Use the GitHub MCP tools, not `gh`.
 
 ## Subagent rules
