@@ -1,6 +1,6 @@
 # Agent notes
 
-This file is for anyone changing todae, including agents. It holds the rules that are specific to this repo. Shared rules live in Ben's home repo, [tounsoo/home](https://github.com/tounsoo/home) (private). Clone it to `~/repos/home` when that directory is missing (`https://github.com/tounsoo/home.git`) and read these before opening or driving a pull request:
+This file is for anyone changing todae, including agents. It holds the rules that are specific to this repo. Shared rules live in Ben's home repo, [tounsoo/home](https://github.com/tounsoo/home) (private). Clone it to `~/repos/home` when that directory is missing (`https://github.com/tounsoo/home.git`). A Cursor cloud agent's git credential is scoped to its own repo and cannot clone home (`repository not found`). When the clone fails, read these files through the GitHub MCP tools instead. Read them before opening or driving a pull request:
 
 - `AGENTS.md` there: the memory split, the learnings ladder, and how Cursor and Claude find pstack. A todae fact in this file overrides home.
 - `CLAUDE.md` there: the Claude-only lines. This repo's `CLAUDE.md` adapts them for the pinned pstack copy.
