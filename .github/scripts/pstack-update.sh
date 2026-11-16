@@ -151,7 +151,7 @@ prepare() {
 		echo "- \`.agents/pstack/pin.json\` records the new commit and its folder's tree id, \`$tree\`.${stat:+ Diff:$stat.}"
 		list "Files upstream added" "$added"
 		list "Files upstream removed" "$removed"
-		list "Changed files that name Fable, which .claude/models.md must still cover" "$fable"
+		list "Changed files that name Fable, which .claude/pstack-models.md must still cover" "$fable"
 		echo
 		echo "## Scope"
 		echo
