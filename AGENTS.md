@@ -50,7 +50,7 @@ Tier: T0
 
 | ID | Rule | Enforcer | Evidence | Status |
 | --- | --- | --- | --- | --- |
-| lint | ESLint | `pnpm lint` | #282 | seeded |
+| lint | ESLint | `pnpm lint` | #44 | seeded |
 | require-description | An eslint-disable comment has a description | `eslint:eslint-comments/require-description` | #282 | seeded |
 | use-client-placement | Keep 'use client' in src/index.ts or a provider, as the first statement | `eslint:todae/use-client-placement` | #282 | seeded |
 | focus-without-scroll | Move focus with focusWithoutScroll when the move must not scroll | `eslint:todae/focus-without-scroll` | #282 | seeded |
@@ -69,7 +69,8 @@ Tier: T0
 | unit-test | Unit tests | `pnpm test` | #3 | seeded |
 | browser-test | Browser tests | `pnpm test:browser` | #45 | seeded |
 | tokens-check | Generated token files match | `pnpm tokens:check` | #3 | seeded |
-| schema | The component schema matches the source | `pnpm schema` | #2 | seeded |
+| schema | The component schema matches the source | `pnpm schema`, `.github/workflows/ci.yml` | #2 | seeded |
+| build | The package builds | `pnpm build:ds` | #2 | seeded |
 | publish-check | The packed tarball passes publint and attw | `pnpm publish:check` | #259 | seeded |
 | ssr-smoke | The packed package loads and renders in Next.js | `pnpm ssr:smoke` | #262 | seeded |
 | forbidden-paths | No scratch paths in a diff | `.github/scripts/forbidden-paths.sh` | #281 | seeded |
@@ -82,7 +83,7 @@ Tier: T0
 | pstack-pin | The vendored pstack copy matches its pin | `.agents/pstack/check.sh` | #457 | seeded |
 | pstack-upstream | The pin is on upstream's default branch | `.github/scripts/pstack-upstream.sh` | #457 | seeded |
 | change-class | The diff is classed all, prose or markdown | `.github/scripts/classify-diff.sh` | #298 | seeded |
-| docs-axe | axe on the built docs site | `apps/docs/playwright.config.ts` | #353 | seeded |
+| docs-axe | axe on the built docs site | `apps/docs/playwright.config.ts` | #189 | seeded |
 | docs-peek | Behavior tests on the built docs site | `apps/docs/playwright.peek.config.ts` | #293 | seeded |
 | fernway-example | The second-brand example builds | `examples/fernway/package.json` | #187 | seeded |
 | docs-build | The docs site builds | `.github/workflows/ci.yml` | #398 | seeded |
