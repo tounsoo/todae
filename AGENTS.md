@@ -91,7 +91,7 @@ Tier: T0
 | docs-deploy | Docs deploy | `.github/workflows/docs-deploy.yml` | #398 | seeded |
 | pstack-update | The weekly pstack update | `.github/workflows/pstack-update.yml` | #457 | seeded |
 | no-code-comments | Code comments are banned except JSDoc on an exported API | text | https://github.com/tounsoo/home/blob/main/standards/self-correcting.md | text |
-| self | Rule table, weeds log and suppressions | `pnpm check:self` | https://github.com/tounsoo/home/blob/main/standards/self-correcting.md | seeded |
+| self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
 
 ## CI jobs
 
