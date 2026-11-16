@@ -89,7 +89,7 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 `pnpm lint` runs ESLint. `pnpm stylelint` runs Stylelint on `packages/design-system/src/**/*.css`.
 
-The [`no-raw-value`](AGENTS.md#rule-table) check is `stylelint/no-raw-value.mjs`. `stylelint/raw-value-allowlist.mjs` lists the other literals it allows, each with a reason.
+The [`no-raw-value`](AGENTS.md#rule-table) check is `stylelint/no-raw-value.mjs`. `stylelint/raw-value-allowlist.mjs` lists literals it allows, each with a reason.
 
 The other Stylelint rules are [`no-raw-literal`](AGENTS.md#rule-table) (`stylelint/no-raw-literal.mjs`), [`token-root-scope`](AGENTS.md#rule-table) (`stylelint/token-root-scope.mjs`), [`local-custom-property`](AGENTS.md#rule-table) (`stylelint/local-custom-property.mjs`), [`focus-ring-token`](AGENTS.md#rule-table) (`stylelint/focus-ring-token.mjs`), and [`disabled-state`](AGENTS.md#rule-table) (`stylelint/disabled-state.mjs`).
 
@@ -109,6 +109,8 @@ pnpm ssr:smoke
 pnpm test
 pnpm test:browser
 ```
+
+A docs change also runs `pnpm --filter docs build`, `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
 
 - `pnpm check` runs `pnpm lint`, `pnpm typecheck`, `pnpm stylelint`, the self-test of Cursor's verify script (`.cursor/skills/verify/verify.mjs self-test`), and `pnpm check:self`. A Stylelint error fails the command. The Static job, which Checks requires, and the draft Check job, both run `pnpm check`. The `rule-checker` job runs `pnpm check:self` on every change class.
 - `node .github/scripts/pinned-actions.mjs` fails when a workflow or `.github/actions` file uses a remote action by tag or branch instead of a full commit SHA. The Static job runs it. [Releases](ARCHITECTURE.md#releases) says why.
