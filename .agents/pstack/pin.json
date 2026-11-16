@@ -1,7 +1,6 @@
 {
   "repository": "michael-denyer/pstack-claude",
   "path": "plugins/pstack",
-  "commit": "49b68501b075ec1eb2755dd0d22fbf2492d67e97",
-  "restored_from": "todae 6e5186ba^, rebuilt by hand, so tree is this copy's own",
-  "tree": "5e918236cee3c2c767b8f1b1a7d816760c602ba6"
+  "commit": "a12b04786023e762f12f5de7bb5fafb8c23f8c36",
+  "tree": "440df0423bfc72d3c3dc0404f13d0ae8197ee67c"
 }
