@@ -156,7 +156,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 - Keep a pull request to one change.
 - Write the body from [`.github/pull_request_template.md`](.github/pull_request_template.md). Its Verification section names the tested commit, the full SHA the checks ran on, and each command with its result.
 - Include the tests, docs (in both languages) and changeset the change needs.
-- On a draft pull request, CI runs only Changes, Check, Token API, Token consumers, Forbidden paths and rule-checker, and Checks fails with a line saying the pull request is a draft. A Markdown-only draft skips Check and still runs rule-checker. Mark it ready for review to run the rest. Checks covers every job that blocks a merge: Static, Build, Fernway, Engines, Docs build and pages, Token API, Forbidden paths and rule-checker. Token consumers is informational.
+- On a draft pull request, CI runs only Changes, Check, Token API, Token consumers, Forbidden paths and rule-checker, and Checks fails with a line saying the pull request is a draft. A Markdown-only draft skips Check and still runs rule-checker. Mark it ready for review to run the rest. Checks covers every job that blocks a merge: Changes, Static, Build, Fernway, Engines, Docs build and pages, Token API, Forbidden paths and rule-checker. Token consumers is informational.
 
 ## Releases
 
