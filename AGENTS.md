@@ -16,14 +16,7 @@ Use Node 24. `.nvmrc` names only that major version. CI reads that file, and `ac
 
 ## Build, test, and check
 
-Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.md#build-the-design-system) says what that writes. [Check your change](CONTRIBUTING.md#check-your-change) lists every command CI expects, and which change class skips which jobs. Run `pnpm build:ds` before `pnpm test` in a fresh checkout, because the docs unit tests import the built package.
-
-- `pnpm check` runs lint, typecheck, Stylelint, the self-test of Cursor's verify script (`.cursor/skills/verify/verify.mjs self-test`), and `pnpm check:self`. The Static job runs it when the change class is `all` and the pull request is not a draft. The draft `Check` job runs it when the class is not `markdown`. The `rule-checker` job runs `pnpm check:self` on every change class, drafts included.
-- `pnpm test` runs the root script tests (Stylelint, ESLint, Claude's verify script, and `.github/scripts`) and then each workspace's unit tests. The Build job runs it.
-- `pnpm test:browser` runs the browser tests in every engine its configs list. The Fernway job runs them with `--project chromium`, and the Engines jobs run the package's in Firefox and in WebKit, all inside Playwright's Docker image. In Firefox in CI, a failure of a test on the quarantine in `packages/design-system/scripts/firefox-quarantine.ts` (issue 367) warns instead of failing the job. A local Firefox run fails on those tests.
-- `pnpm tokens:check` fails when generated token files drift. The Static job runs it for a change classed `all`.
-- `pnpm schema` writes `packages/design-system/schema/components.json`. The Static job fails when that file has a diff.
-- The Docs build and pages job builds the package and the docs site, then runs `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`.
+Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.md#build-the-design-system) says what that writes. [Check your change](CONTRIBUTING.md#check-your-change) lists every command, and which change class skips which jobs. The [rule table](#rule-table) names each check. Run `pnpm build:ds` before `pnpm test` in a fresh checkout, because the docs unit tests import the built package.
 
 The blocking check name is `Checks`. `Token consumers` is informational (`continue-on-error: true`) and lists the components that read a changed token. [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
 
@@ -32,7 +25,7 @@ The blocking check name is `Checks`. `Token consumers` is informational (`contin
 These fill the **Repo lines** in home's `playbooks/review-before-pr.md` and `playbooks/waiting-on-ci.md`. [0016](docs/decisions/0016-shared-agent-rules-live-in-home.md) records why the copies are not in this repo.
 
 - Base branch: `main`.
-- Checks, in this order: `pnpm check`, `pnpm check:self`, `pnpm tokens:check`, `pnpm schema` (no diff in `packages/design-system/schema/components.json`), `pnpm build:ds`, `pnpm publish:check`, `pnpm ssr:smoke`, `pnpm test`, `pnpm test:browser`. A docs change also runs `pnpm --filter docs build`, `pnpm --filter docs test:axe` and `pnpm --filter docs test:peek`. Claude proves the change with `node .claude/skills/verify/verify.mjs run` and puts `node .claude/skills/verify/verify.mjs body` under Verification. Cursor drives the docs site with `.cursor/skills/verify/SKILL.md`.
+- Checks, in the order [Check your change](CONTRIBUTING.md#check-your-change) lists. The [rule table](#rule-table) names each check. Claude proves the change with `node .claude/skills/verify/verify.mjs run` and puts `node .claude/skills/verify/verify.mjs body` under Verification. Cursor drives the docs site with `.cursor/skills/verify/SKILL.md`.
 - Dependents to pass as context: importers of a changed export; CSS that uses a changed token, custom property or selector; tokens that alias a changed token; the English and Korean docs pages that describe the changed behavior; the tests that cover it.
 - Push builds a preview: yes. Every push to GitHub builds a Vercel preview, so push only after a clean round.
 - Drafts: allowed. Mark a draft ready after a clean round. `Checks` fails on a draft on purpose. The error says the pull request is a draft and that marking it ready runs the checks. That failure is the mark-ready signal. A `Checks` conclusion from while the pull request was a draft does not count as done.
