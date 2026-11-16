@@ -89,7 +89,7 @@ The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packag
 
 `pnpm lint` runs ESLint. `pnpm stylelint` runs Stylelint on `packages/design-system/src/**/*.css`.
 
-The [`no-raw-value`](AGENTS.md#rule-table) check is `stylelint/no-raw-value.mjs`. Literals `stylelint/raw-value-allowlist.mjs` lists are allowed, each with a reason, and an entry that names sheets allows that literal only in those sheets.
+The [`no-raw-value`](AGENTS.md#rule-table) check is `stylelint/no-raw-value.mjs`. `stylelint/raw-value-allowlist.mjs` lists the other literals it allows, each with a reason.
 
 The other Stylelint rules are [`no-raw-literal`](AGENTS.md#rule-table) (`stylelint/no-raw-literal.mjs`), [`token-root-scope`](AGENTS.md#rule-table) (`stylelint/token-root-scope.mjs`), [`local-custom-property`](AGENTS.md#rule-table) (`stylelint/local-custom-property.mjs`), [`focus-ring-token`](AGENTS.md#rule-table) (`stylelint/focus-ring-token.mjs`), and [`disabled-state`](AGENTS.md#rule-table) (`stylelint/disabled-state.mjs`).
 
