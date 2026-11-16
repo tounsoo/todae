@@ -15,6 +15,7 @@ import {
 import { useStrings } from '../providers/StringsProvider.js';
 import { hasGlyph } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { pixels } from '../internal/cssLength.js';
 import type { LinkRenderProps } from './Link.js';
 import styles from './Contents.module.css';
 
@@ -88,13 +89,6 @@ function scrollerOf(el: Element): Element | null {
     if (/auto|scroll|overlay/.test(getComputedStyle(node).overflowY) && node.scrollHeight - node.clientHeight > 1) return node;
   }
   return null;
-}
-
-/** A computed length in pixels, with a percentage of `basis`, or 0 for `auto` and the like. */
-function pixels(value: string, basis: number): number {
-  const n = parseFloat(value);
-  if (!Number.isFinite(n)) return 0;
-  return value.endsWith('%') ? (n * basis) / 100 : n;
 }
 
 /**

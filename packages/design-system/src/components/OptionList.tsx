@@ -25,6 +25,7 @@ import { observeMutations } from '../internal/sharedMutations.js';
 import { emptyTypeahead, findTypeahead, isTypeaheadKey, typingAhead } from '../internal/typeahead.js';
 import { isPopoverOpen } from '../overlay/usePopoverSync.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { layoutScale, pixels } from '../internal/cssLength.js';
 import styles from './OptionList.module.css';
 
 /** `id` is derived from the list and value so `aria-activedescendant` can point at it. */
@@ -436,11 +437,6 @@ function px(value: string): number {
   return parseFloat(value) || 0;
 }
 
-/** scroll-padding can be a percentage of the scrollport. */
-function scrollPadding(value: string, box: Element): number {
-  return value.endsWith('%') ? (parseFloat(value) / 100) * box.clientHeight : px(value);
-}
-
 /**
  * Scrolls `option`'s nearest scroll box by the least amount, inside the box's
  * border, padding and scroll-padding. The search stops at a popover or dialog
@@ -457,16 +453,13 @@ function revealInScrollBox(option: HTMLElement) {
   const boxRect = box.getBoundingClientRect();
   // Measured boxes are scaled while a popover grows open; layout lengths and
   // scrollTop are not, so measured lengths are divided back by the scale. A
-  // height off by less than a pixel is offsetHeight's rounding, not a scale.
-  const scale =
-    box instanceof HTMLElement && box.offsetHeight > 0 && Math.abs(boxRect.height - box.offsetHeight) > 1
-      ? boxRect.height / box.offsetHeight
-      : 1;
-  const inset = box.clientTop + px(style.paddingTop) + scrollPadding(style.scrollPaddingTop, box);
+  // height off by a pixel or less is offsetHeight's rounding, not a scale.
+  const scale = box instanceof HTMLElement ? layoutScale(boxRect.height, box.offsetHeight) : 1;
+  const inset = box.clientTop + px(style.paddingTop) + pixels(style.scrollPaddingTop, box.clientHeight);
   const top = boxRect.top + inset * scale;
   const bottom =
     boxRect.top +
-    (box.clientTop + box.clientHeight - px(style.paddingBottom) - scrollPadding(style.scrollPaddingBottom, box)) * scale;
+    (box.clientTop + box.clientHeight - px(style.paddingBottom) - pixels(style.scrollPaddingBottom, box.clientHeight)) * scale;
   const rect = option.getBoundingClientRect();
   if (rect.top < top) box.scrollTop -= (top - rect.top) / scale;
   else if (rect.bottom > bottom) box.scrollTop += (rect.bottom - bottom) / scale;

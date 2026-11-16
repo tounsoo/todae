@@ -1,5 +1,17 @@
 # @tounsoo/todae
 
+## 0.11.2
+
+### Patch Changes
+
+- useReorder: the handlers in the props from getItemProps, getHandleProps and getListProps now keep their identity from render to render when you pass no handler of your own, so a memoized row that takes getItemProps(index) spread renders only when its own item props change, not on every drag step of a long list. ([#462](https://github.com/tounsoo/todae/pull/462))
+
+- OptionList no longer renders a whole list a second time when its option labels change. ([#454](https://github.com/tounsoo/todae/pull/454))
+
+- useLaneDrag counts the board's `scroll-padding` as a strip that sticky parts, such as lane names, cover. The board scrolls while the pointer is near that strip or over it, and a drop over it lands wholly in view where the item fits, so an item reaches the start of a lane under its name. The edge now counts from inside the board's border and scrollbars, and a board that already has `scroll-padding` starts scrolling that far in. ([#466](https://github.com/tounsoo/todae/pull/466))
+
+- Add the `useLaneDrag` hook, which lets people drag items along lanes that share one axis, such as talks on a conference's stages, with snapping, resizing and a conflict check you supply, and `useLaneDragState` to show the drag without rendering the board on every move. ([#463](https://github.com/tounsoo/todae/pull/463))
+
 ## 0.11.1
 
 ### Patch Changes

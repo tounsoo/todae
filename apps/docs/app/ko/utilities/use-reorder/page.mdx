@@ -33,6 +33,35 @@ const reorder = useReorder({ onMove: move });
 
 Escape는 끌기를 취소하고 순서를 그대로 둡니다. 마우스로 끄는 동안에는 브라우저가 Escape를 직접 받아 드롭 없이 끌기를 끝냅니다. 터치로 끄는 동안에는 목록을 감싼 [Dialog](/dialog)보다 훅이 먼저 받으므로, 대화상자는 다음 Escape까지 열려 있습니다.
 
+## 긴 목록 {/*#long-lists*/}
+
+getter에 직접 만든 핸들러를 넣지 않으면 getter가 주는 props의 핸들러는 렌더가 바뀌어도 그대로이고, 직접 넣을 props 없이 부른 `getHandleProps(index)`는 매번 같은 객체를 돌려줍니다. 모든 렌더가 함께 쓰는 객체이므로 고치지 마세요. 그래서 긴 목록에서는 각 항목을 `getItemProps(index)`를 펼쳐 받고 손잡이의 props를 prop 하나로 받는 메모된 컴포넌트로 그리세요. 그러면 끌기의 한 단계마다 모든 항목이 아니라, 선이 떠나는 항목과 선이 닿는 항목처럼 자기 상태가 바뀐 항목만 렌더됩니다.
+
+```tsx
+import { type UseReorderHandleProps, type UseReorderItemProps } from '@tounsoo/todae';
+import { GripVertical } from 'lucide-react';
+import { memo } from 'react';
+
+const Row = memo(function Row({ name, grip, ...item }: UseReorderItemProps & { name: string; grip: UseReorderHandleProps }) {
+  return (
+    <li {...item} style={{ opacity: item['data-dragging'] === undefined ? 1 : 0.5 }}>
+      <span {...grip} aria-hidden style={{ cursor: 'grab', touchAction: 'none' }}>
+        <GripVertical />
+      </span>
+      {name}
+    </li>
+  );
+});
+
+<ol>
+  {items.map((item, index) => (
+    <Row key={item.id} {...reorder.getItemProps(index)} name={item.name} grip={reorder.getHandleProps(index)} />
+  ))}
+</ol>
+```
+
+`getItemProps(index)`는 목록이 렌더될 때 불러 그 결과를 항목에 넘기고, getter 자체는 넘기지 마세요. 항목은 자기 상태를 `dragging`과 `drop`이 아니라 자기 `draggable`, `data-dragging`, `data-drop` props에서 읽습니다. `dragging`과 `drop`을 넘기면 끌기나 놓일 자리가 바뀔 때마다 모든 항목이 렌더됩니다. 항목의 다른 props도 `useCallback`으로 만든 이동 함수처럼 단계마다 그대로 두세요. getter에 직접 넣은 핸들러는 부를 때마다 다시 감싸지므로, 그런 핸들러를 받는 항목은 단계마다 렌더됩니다. [Reorder](/recipes/reorder) 레시피와 [Kanban](/recipes/kanban) 레시피가 행을 이렇게 그립니다.
+
 ## 터치
 
 터치 화면의 브라우저는 서로 다릅니다. 길게 누르면 브라우저의 끌기를 시작하는 곳도 있고, 전혀 시작하지 않는 곳도 있습니다. 그래서 손잡이 위의 손가락이나 펜은 대신 포인터 이벤트로, 어디서나 같은 방식으로 끕니다. 손가락이나 펜이 움직이면 항목이 끌리고, `drop`은 그 아래의 항목을 따라가며, 떼면 놓입니다. 탭은 아무것도 끌지 않고, 펜으로 끌어도 텍스트가 선택되지 않습니다. 손잡이에는 `touch-action: none`이 필요합니다. 없으면 브라우저가 손가락이나 펜을 페이지 스크롤에 쓰고, 그러면 끌기가 취소됩니다. 터치로 끄는 동안 페이지는 스크롤되지 않으므로, 화면보다 긴 목록에서 항목을 멀리 옮길 때는 메뉴를 쓰세요.

@@ -146,6 +146,7 @@ describe('docs mcp tools', () => {
       useStrings: 'utilities/strings-provider',
       useGlyphs: 'utilities/glyphs-provider',
       useReorderGroup: 'utilities/use-reorder',
+      useLaneDragState: 'utilities/use-lane-drag',
     };
     for (const [name, slug] of Object.entries(providerHooks)) {
       expect(getComponent(name).docsUrl, name).toBe(`${DOCS_ORIGIN}/${slug}`);

@@ -99,6 +99,8 @@ export type Dictionary = {
   >;
   /** Accessible names of scrollable code examples and tables, before the nearest heading. */
   regions: Record<'code' | 'table', string>;
+  /** The button under a long code block that shows the rest of it, and hides it again. */
+  codeFold: Record<'show' | 'hide', string>;
   /** Token catalog headings. */
   tokensTable: Record<'path' | 'context' | 'cssVar' | 'value' | 'ref', string>;
   /** Props table caption and column headings; `required` labels a badge on the name and `default` labels a line under the description. `{name}` in the caption is the component name. */
@@ -196,6 +198,7 @@ const en: Dictionary = {
     stage: 'Preview',
   },
   regions: { code: 'Code example', table: 'Table' },
+  codeFold: { show: 'Show all code', hide: 'Show less code' },
   tokensTable: { path: 'Path', context: 'Context', cssVar: 'CSS variable', value: 'Value', ref: 'Ref' },
   propsTable: {
     caption: '{name} props',
@@ -298,6 +301,7 @@ const ko: Dictionary = {
     stage: '미리보기',
   },
   regions: { code: '코드 예시', table: '표' },
+  codeFold: { show: '코드 전체 보기', hide: '코드 접기' },
   tokensTable: { path: '경로', context: '컨텍스트', cssVar: 'CSS 변수', value: '값', ref: '참조' },
   propsTable: {
     caption: '{name} props',

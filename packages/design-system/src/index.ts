@@ -405,6 +405,19 @@ export {
   type UseReorderResult,
 } from './hooks/useReorder.js';
 export {
+  useLaneDrag,
+  useLaneDragState,
+  type LaneDragChange,
+  type LaneDragKind,
+  type LaneDragStore,
+  type LanePlace,
+  type LaneVerdict,
+  type UseLaneDragHandleProps,
+  type UseLaneDragHandleUserProps,
+  type UseLaneDragOptions,
+  type UseLaneDragResult,
+} from './hooks/useLaneDrag.js';
+export {
   useInlineEdit,
   type UseInlineEditGroupProps,
   type UseInlineEditInputProps,

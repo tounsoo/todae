@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Code } from '@tounsoo/todae/code';
 import { DocsPre } from './DocsPre';
 import { ScrollRegion } from './ScrollRegion';
 
@@ -176,5 +177,91 @@ describe('overflow regions', () => {
     fireEvent.blur(table);
     expect(table.getAttribute('tabindex')).toBeNull();
     expect(table.getAttribute('role')).toBeNull();
+  });
+});
+
+describe('long code blocks', () => {
+  // MDX hands the block its text with a closing newline, inside the Code.Root that mdx-components maps `code` to.
+  const fence = (count: number) => `${Array.from({ length: count }, (_, index) => `const line${index + 1} = ${index + 1};`).join('\n')}\n`;
+
+  it('shows a block of 40 lines whole, with no button', () => {
+    const { container } = render(
+      <DocsPre>
+        <Code.Root className="language-ts">{fence(40)}</Code.Root>
+      </DocsPre>,
+    );
+    expect(container.querySelector('code')?.textContent).toBe(fence(40));
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('shows the first 20 lines of a longer block, and the rest on Show all code', () => {
+    const text = fence(41);
+    // Records whether scroll anchoring was off when the page scrolled.
+    const scrollBy = vi.fn((_: ScrollToOptions) => document.documentElement.style.overflowAnchor);
+    vi.stubGlobal('scrollBy', scrollBy);
+    const { container } = render(
+      <>
+        <h2>Recipe</h2>
+        <DocsPre>
+          <Code.Root className="language-tsx">{text}</Code.Root>
+        </DocsPre>
+      </>,
+    );
+    const code = container.querySelector('code');
+    const button = screen.getByRole('button', { name: 'Show all code' });
+    const rest = document.getElementById(button.getAttribute('aria-controls') ?? '');
+    expect(code?.classList.contains('language-tsx')).toBe(true);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(rest?.hasAttribute('hidden')).toBe(true);
+    expect(code?.contains(rest)).toBe(true);
+    // The rest stays in the page, for find in page and for anything that reads the HTML, and the two parts are
+    // the fence's text, so selecting and copying the open block gives the whole code.
+    expect(code?.textContent).toBe(text);
+    expect(code?.firstChild?.textContent).toBe(text.split('\n').slice(0, 20).join('\n'));
+    expect(screen.getByRole('region', { name: 'Code example, Recipe' })).not.toBeNull();
+
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.textContent).toBe('Show less code');
+    expect(rest?.hasAttribute('hidden')).toBe(false);
+    expect(scrollBy).not.toHaveBeenCalled();
+
+    // Folding keeps the button where it was in the viewport: it sat 500px down, and the shorter block puts it at 100px.
+    vi.spyOn(button, 'getBoundingClientRect').mockImplementation(() =>
+      DOMRect.fromRect({ y: button.getAttribute('aria-expanded') === 'true' ? 500 : 100, height: 40 }),
+    );
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(rest?.hasAttribute('hidden')).toBe(true);
+    expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: -400, behavior: 'instant' });
+    expect(scrollBy).toHaveReturnedWith('none');
+    expect(document.documentElement.style.overflowAnchor).toBe('');
+  });
+
+  it('opens when find in page reveals the rest', () => {
+    render(
+      <DocsPre>
+        <Code.Root className="language-tsx">{fence(60)}</Code.Root>
+      </DocsPre>,
+    );
+    const button = screen.getByRole('button', { name: 'Show all code' });
+    const rest = document.getElementById(button.getAttribute('aria-controls') ?? '');
+    act(() => {
+      rest?.dispatchEvent(new Event('beforematch'));
+      rest?.removeAttribute('hidden');
+    });
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(rest?.hasAttribute('hidden')).toBe(false);
+  });
+
+  it('names the button in the page language', () => {
+    path.current = '/ko/recipes/kanban';
+    render(
+      <DocsPre>
+        <Code.Root className="language-tsx">{fence(41)}</Code.Root>
+      </DocsPre>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '코드 전체 보기' }));
+    expect(screen.getByRole('button', { name: '코드 접기' }).getAttribute('aria-expanded')).toBe('true');
   });
 });
