@@ -22,7 +22,7 @@ is_prose() {
 	[[ "$1" =~ ^apps/docs/app/(\(en\)|ko)/(.*/)?page\.mdx$ ]]
 }
 
-# markdown: only Markdown that nothing reads, so no job but Forbidden paths runs.
+# markdown: only Markdown that nothing reads, so no job but Forbidden paths and rule-checker runs.
 # prose: only docs pages and their translation stamp. all: anything else, or nothing.
 classify() {
 	local markdown=true prose=true count=0 line

@@ -5,9 +5,9 @@ permissions:
   contents: read
 
 # Every push and pull request runs, so Checks always reports and release.yml can wait for it. A change
-# that is only Markdown no tool reads runs Changes, Forbidden paths and Checks, and skips the rest;
+# that is only Markdown no tool reads runs Changes, Forbidden paths, rule-checker and Checks, and skips the rest;
 # .github/scripts/change-class.sh decides which files those are. Drafts run Changes, Check, Token API,
-# Token consumers and Forbidden paths, and Checks fails until the pull request is ready.
+# Token consumers, Forbidden paths and rule-checker, and Checks fails until the pull request is ready.
 on:
   push:
     branches: [main]
@@ -217,11 +217,21 @@ jobs:
   # One result named Checks that covers every blocking job, so branch protection can require that name alone,
   # and release.yml waits for it before publishing. Token consumers is informational and Check only runs on
   # drafts, so neither is here. A job may be skipped only where this workflow skips it on purpose: every job
-  # but Changes and Forbidden paths on a Markdown-only change, and Token API on a push. On a draft, Checks
-  # fails instead of reporting skipped, which a required check would count as passing.
+  # but Changes, Forbidden paths and rule-checker on a Markdown-only change, and Token API on a push.
+  # On a draft, Checks fails instead of reporting skipped, which a required check would count as passing.
+  rule-checker:
+    name: rule-checker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Check the rule table
+        run: pnpm check:self
+
   checks:
     name: Checks
-    needs: [changes, static, build, fernway, engines, docs, token-api, forbidden-paths]
+    needs: [changes, static, build, fernway, engines, docs, token-api, forbidden-paths, rule-checker]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -243,7 +253,7 @@ jobs:
             to_entries | all(
               .value.result == "success"
               or (.value.result == "skipped" and (
-                ($class == "markdown" and (.key | IN("changes", "forbidden-paths") | not))
+                ($class == "markdown" and (.key | IN("changes", "forbidden-paths", "rule-checker") | not))
                 or (.key == "token-api" and $event != "pull_request")
               ))
             )' >/dev/null

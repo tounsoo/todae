@@ -1,0 +1,7 @@
+date	class	ref	caught_by	note
+2026-11-05	ci-apt-install	#347	prod	WebKit's browser install pulled packages from Ubuntu's mirror until the job timed out.
+2026-11-06	ci-apt-install	#381	prod	Firefox's browser install still pulled packages from Ubuntu's mirror and the job timed out.
+2026-11-06	popover-mount-chiplist	#393	prod	Mounting Popover content on first open made the ChipList recipe test throw in unscaledBox.
+2026-11-09	field-picker-scroll	#425	review	A fitted Field.Picker popover jumped back to its top after a scroll in Chromium and WebKit.
+2026-11-11	option-list-label-render	#439	review	Putting the label on each option registration rendered the list again when labels changed.
+2026-11-12	lane-drag-scroll-padding	#465	review	The auto-scroll edge sat under the sticky stage names, so a drop near the start of the day missed.
