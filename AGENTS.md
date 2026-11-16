@@ -5,7 +5,7 @@ This file is for anyone changing todae, including agents. It holds the rules tha
 - `AGENTS.md` there: the memory split, the learnings ladder, and how Cursor and Claude find pstack. A todae fact in this file overrides home.
 - `CLAUDE.md` there: the Claude-only lines. This repo's `CLAUDE.md` adapts them for the pinned pstack copy.
 - `standards/git.md` and `standards/pull-requests.md`
-- `playbooks/review-before-pr.md` and `playbooks/waiting-on-ci.md`. The **Repo lines** below fill those in. Home's `AGENTS.md` still says each repo keeps a pinned copy of these two files. This repo reads them from home ([0016](docs/decisions/0016-shared-agent-rules-live-in-home.md)).
+- `playbooks/review-before-pr.md` and `playbooks/waiting-on-ci.md`. The **Repo lines** below fill those in ([0016](docs/decisions/0016-shared-agent-rules-live-in-home.md)).
 - `pstack.pin.json` records the Cursor pstack pin and a pstack-claude pin. Threads in this repo read the pinned copy in `.agents/pstack/` ([0015](docs/decisions/0015-pinned-pstack-copy.md)). Home's pstack-claude pin is a newer commit, and these threads stay on the copy `pin.json` names.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, commands, and pull requests. [ARCHITECTURE.md](ARCHITECTURE.md) records how the design system is built. Read it before adding or changing a component, hook, recipe, token or docs page. Dated decisions are in [docs/decisions](docs/decisions/README.md). A pull request that changes a decision or a spec also edits that decision's file. A design-system rule still belongs in `ARCHITECTURE.md`, updated in that same pull request.
