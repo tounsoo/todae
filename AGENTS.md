@@ -86,12 +86,11 @@ Tier: T0
 | docs-axe | axe on the built docs site | `apps/docs/playwright.config.ts` | #189 | seeded |
 | docs-peek | Behavior tests on the built docs site | `apps/docs/playwright.peek.config.ts` | #293 | seeded |
 | fernway-example | The second-brand example builds | `examples/fernway/package.json` | #187 | seeded |
-| docs-build | The docs site builds | `.github/workflows/ci.yml` | #398 | seeded |
+| docs-build | The docs site builds | `.github/workflows/ci.yml` | #99 | seeded |
 | checks | The Checks aggregate | `.github/workflows/ci.yml` | #241 | seeded |
 | release | The release workflow | `.github/workflows/release.yml` | #171 | seeded |
 | docs-deploy | Docs deploy | `.github/workflows/docs-deploy.yml` | #398 | seeded |
 | pstack-update | The weekly pstack update | `.github/workflows/pstack-update.yml` | #457 | seeded |
-| no-code-comments | Code comments are banned except JSDoc on an exported API | text | https://github.com/tounsoo/home/blob/main/standards/self-correcting.md | text |
 | self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
 
 ## CI jobs

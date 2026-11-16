@@ -214,11 +214,6 @@ jobs:
         if: ${{ !cancelled() && needs.changes.outputs.class == 'all' && matrix.browser == 'webkit' }}
         run: pnpm --filter @tounsoo/todae test:browser --project webkit
 
-  # One result named Checks that covers every blocking job, so branch protection can require that name alone,
-  # and release.yml waits for it before publishing. Token consumers is informational and Check only runs on
-  # drafts, so neither is here. A job may be skipped only where this workflow skips it on purpose: every job
-  # but Changes, Forbidden paths and rule-checker on a Markdown-only change, and Token API on a push.
-  # On a draft, Checks fails instead of reporting skipped, which a required check would count as passing.
   rule-checker:
     name: rule-checker
     runs-on: ubuntu-24.04
@@ -229,6 +224,11 @@ jobs:
       - name: Check the rule table
         run: pnpm check:self
 
+  # One result named Checks that covers every blocking job, so branch protection can require that name alone,
+  # and release.yml waits for it before publishing. Token consumers is informational and Check only runs on
+  # drafts, so neither is here. A job may be skipped only where this workflow skips it on purpose: every job
+  # but Changes, Forbidden paths and rule-checker on a Markdown-only change, and Token API on a push.
+  # On a draft, Checks fails instead of reporting skipped, which a required check would count as passing.
   checks:
     name: Checks
     needs: [changes, static, build, fernway, engines, docs, token-api, forbidden-paths, rule-checker]
