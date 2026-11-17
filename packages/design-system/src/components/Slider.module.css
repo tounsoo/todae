@@ -49,18 +49,6 @@
     background: var(--todae-slider-fill);
   }
 
-  .mask {
-    position: absolute;
-    z-index: 2;
-    inset-inline-start: 0;
-    inset-block: 0;
-    margin-block: auto;
-    inline-size: calc(var(--_thumb) / 2 + var(--_start) / 100 * (100% - var(--_thumb)));
-    block-size: 0.5em;
-    background: ButtonFace;
-    pointer-events: none;
-  }
-
   .thumb {
     z-index: 1;
     grid-area: 1 / 1;
@@ -77,6 +65,7 @@
   .start {
     inset-inline-start: 0;
     inline-size: calc(var(--_end) / 100 * (100% - var(--_thumb)) + var(--_thumb));
+    clip-path: inset(0 0 0 calc(var(--_start) / var(--_end) * (100% - var(--_thumb))));
   }
 
   .end {

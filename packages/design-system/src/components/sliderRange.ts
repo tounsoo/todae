@@ -25,8 +25,12 @@ function finiteNumber(value: number | string): number | null {
 function decimalPlaces(value: number): number {
   if (!Number.isFinite(value)) return 0;
   const text = String(value);
-  const exponent = /e-(\d+)$/i.exec(text);
-  if (exponent) return Number(exponent[1]);
+  const scientific = /^[+-]?\d+(?:\.(\d+))?[eE]([+-]?\d+)$/.exec(text);
+  if (scientific) {
+    const fraction = scientific[1]?.length ?? 0;
+    const places = fraction - Number(scientific[2]);
+    return places > 0 ? places : 0;
+  }
   const dot = text.indexOf('.');
   return dot < 0 ? 0 : text.length - dot - 1;
 }
@@ -55,6 +59,7 @@ export function snap(value: number, scale: SliderScale): number {
   if (step === 'any') return next;
   const places = Math.max(decimalPlaces(step), decimalPlaces(min));
   const factor = 10 ** places;
+  if (!Number.isFinite(factor)) return next;
   const minUnits = Math.round(min * factor);
   const stepUnits = Math.round(step * factor);
   const maxUnits = Math.round(max * factor);

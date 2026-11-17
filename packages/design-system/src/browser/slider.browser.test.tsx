@@ -116,10 +116,25 @@ describe('Slider range in the browser', () => {
     expect(fill.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     const fillWidth = Number.parseFloat(fill.width);
     expect(Math.abs(fillWidth - travel * 0.6)).toBeLessThan(2);
-    const mask = group().querySelector('span');
-    if (!(mask instanceof HTMLElement)) throw new Error('missing mask');
-    const maskBox = mask.getBoundingClientRect();
-    expect(Math.abs(maskBox.width - (thumb / 2 + travel * 0.2))).toBeLessThan(2);
+    expect(getComputedStyle(start()).clipPath).not.toBe('none');
+    expect(group().querySelector('span')).toBeNull();
+  });
+
+  it('keeps a thumb that sits on an end of the scale', () => {
+    const { unmount } = render(<Range initial={[0, 0]} />);
+    const closed = group().getBoundingClientRect();
+    const size = usedThumb();
+    const startBox = start().getBoundingClientRect();
+    expect(startBox.width).toBeGreaterThan(size / 2);
+    expect(startBox.left).toBeGreaterThanOrEqual(closed.left - 1);
+    expect(startBox.right).toBeLessThanOrEqual(closed.left + size + 2);
+    unmount();
+    render(<Range initial={[100, 100]} />);
+    const open = group().getBoundingClientRect();
+    const endBox = end().getBoundingClientRect();
+    expect(endBox.width).toBeGreaterThan(size / 2);
+    expect(endBox.left).toBeGreaterThanOrEqual(open.right - size - 2);
+    expect(endBox.right).toBeLessThanOrEqual(open.right + 2);
   });
 
   it('puts both thumbs on the same point when the values are equal', () => {

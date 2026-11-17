@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ChangeEvent, type ComponentPropsWithRef, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
+import { useContext, useLayoutEffect, useRef, useState, type ChangeEvent, type ComponentPropsWithRef, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { cx } from '../internal/cx.js';
 import { useFormReset } from '../internal/formReset.js';
@@ -7,7 +7,7 @@ import { focusWithoutScroll } from '../internal/revealRing.js';
 import { warnOnce } from '../internal/warnOnce.js';
 import { mergeDescribedBy } from './Field.context.js';
 import { useFieldsetState } from './Fieldset.context.js';
-import { useRevalidate } from './Form.context.js';
+import { FormContext, useRevalidate, ValidationScopeContext } from './Form.context.js';
 import { Slider as ServerSlider, type SliderRootProps } from './Slider.js';
 import styles from './Slider.module.css';
 import {
@@ -178,6 +178,8 @@ function Range({
     },
     () => latest(),
   );
+  const form = useContext(FormContext);
+  const scope = useContext(ValidationScopeContext);
   const startRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{ thumb: SliderThumb; pointerId: number } | null>(null);
@@ -192,10 +194,14 @@ function Range({
   const invalidState = ariaInvalid ?? (invalid || undefined);
   const percents = rangePercents(shown, scale);
 
-  function commit(thumb: SliderThumb, raw: number) {
+  function commit(thumb: SliderThumb, raw: number, fromPointer = false) {
     const current = normalizeRange(latest(), scale);
     const next = moveThumb(current, thumb, raw, scale);
-    if (next !== current) setStored(next);
+    if (next === current) return;
+    setStored(next);
+    if (!fromPointer) return;
+    form?.edited(name ? [name[0], name[1]] : []);
+    scope?.touch();
   }
 
   function atPointer(event: PointerEvent<HTMLDivElement>): number {
@@ -210,17 +216,17 @@ function Range({
     const raw = atPointer(event);
     const thumb = nearestThumb(normalizeRange(latest(), scale), raw);
     drag.current = { thumb, pointerId: event.pointerId };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (typeof event.currentTarget.setPointerCapture === 'function') event.currentTarget.setPointerCapture(event.pointerId);
     const input = thumb === 'start' ? startRef.current : endRef.current;
     if (input) focusWithoutScroll(input);
-    commit(thumb, raw);
+    commit(thumb, raw, true);
   }
 
   function pointerMove(event: PointerEvent<HTMLDivElement>) {
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId || disabled) return;
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    commit(active.thumb, atPointer(event));
+    if (typeof event.currentTarget.hasPointerCapture !== 'function' || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    commit(active.thumb, atPointer(event), true);
   }
 
   function pointerEnd(event: PointerEvent<HTMLDivElement>) {
@@ -228,7 +234,9 @@ function Range({
     if (!active || active.pointerId !== event.pointerId) return;
     const input = active.thumb === 'start' ? startRef.current : endRef.current;
     drag.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (typeof event.currentTarget.releasePointerCapture === 'function' && event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
     if (input) focusWithoutScroll(input);
   }
 
@@ -249,7 +257,6 @@ function Range({
       onPointerCancel={composeHandlers(onPointerCancel, pointerEnd)}
       onLostPointerCapture={composeHandlers(onLostPointerCapture, pointerEnd)}
     >
-      <span className={styles.mask} aria-hidden="true" />
       <input
         ref={startRef}
         className={cx(styles.thumb, styles.start)}

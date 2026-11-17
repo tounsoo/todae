@@ -61,6 +61,13 @@ describe('snap', () => {
     expect(snap(8, stepped)).toBe(9);
   });
 
+  it('keeps a step whose text is a scientific number with a fraction', () => {
+    const fine = readScale({ min: 0, max: 1, step: 1.5e-7 });
+    expect(snap(1.5e-7, fine)).toBeCloseTo(1.5e-7);
+    expect(snap(3e-7, fine)).toBeCloseTo(3e-7);
+    expect(snap(2.5e-7, fine)).toBeCloseTo(3e-7);
+  });
+
   it('places a non-finite value on the snapped midpoint', () => {
     expect(snap(Number.NaN, scale)).toBe(50);
   });

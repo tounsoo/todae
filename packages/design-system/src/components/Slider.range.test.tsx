@@ -2,8 +2,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resetWarnOnce } from '../internal/warnOnce.js';
-import { reset } from '../test/form.js';
+import { mount, reset, settle } from '../test/form.js';
+import { ErrorMessage } from './ErrorMessage.js';
+import { Field } from './Field.js';
 import { Fieldset } from './Fieldset.js';
+import { Form } from './Form.js';
 import { Slider, type SliderRangeValue } from './Slider.client.js';
 
 afterEach(cleanup);
@@ -160,6 +163,28 @@ describe('Slider.Root range', () => {
     expect(end.getAttribute('aria-valuetext')).toBe('High');
     expect(screen.getByRole('group').getAttribute('aria-valuetext')).toBeNull();
     warn.mockRestore();
+  });
+
+  it('counts a press on the track as an edit of the form', async () => {
+    function Price() {
+      const [value, setValue] = useState<SliderRangeValue>([20, 80]);
+      return (
+        <Form.Root errors={{ low: 'Too low.' }}>
+          <Field.Group>
+            <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" name={['low', 'high']} value={value} onValueChange={setValue} />
+            <ErrorMessage.Root />
+          </Field.Group>
+        </Form.Root>
+      );
+    }
+    await mount(<Price />);
+    expect(screen.getByText('Too low.')).toBeTruthy();
+    const track = screen.getByRole('group');
+    vi.spyOn(track, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 100, 16));
+    fireEvent.pointerDown(track, { button: 0, clientX: 90, pointerId: 1 });
+    await settle();
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '90');
+    expect(screen.queryByText('Too low.')).toBeNull();
   });
 
   it('takes a disabled invalid fieldset on both thumbs', () => {
