@@ -1,3 +1,4 @@
+import SliderRange from '../../../examples/slider/SliderRange';
 import SliderVolume from '../../../examples/slider/SliderVolume';
 
 # Slider
@@ -6,7 +7,13 @@ import SliderVolume from '../../../examples/slider/SliderVolume';
 
 <Example of={SliderVolume} block />
 
-Server Components can import it from `@tounsoo/todae/slider`. Inside a [Fieldset](/fieldset), `Slider.Root` from `@tounsoo/todae` takes the Fieldset's `disabled` and `invalid`, and its own `aria-invalid` wins. `@tounsoo/todae/slider` reads no Fieldset, since that needs a client component. Name it with [Label](/label) and show the current value as text nearby when the exact number matters. Restyle through `slider.fill` and `slider.ring.focus`. A slider with two thumbs for a range is not native and is not part of Todae yet.
+Server Components can import it from `@tounsoo/todae/slider`. Inside a [Fieldset](/fieldset), `Slider.Root` from `@tounsoo/todae` takes the Fieldset's `disabled` and `invalid`, and its own `aria-invalid` wins. `@tounsoo/todae/slider` reads no Fieldset, since that needs a client component. Name it with [Label](/label) and show the current value as text nearby when the exact number matters. Restyle through `slider.fill` and `slider.ring.focus`. `mode="range"` puts two thumbs on one track. A thumb stops when it meets the other.
+
+## Range
+
+`mode="range"` places two native range inputs on one track. `startLabel` and `endLabel` name the two thumbs. `value` holds the start and the end. `onValueChange` receives the next pair. `name` is the two field names. Omit `name` and neither input submits.
+
+<Example of={SliderRange} block />
 
 ## Accessible composition
 

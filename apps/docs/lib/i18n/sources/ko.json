@@ -891,12 +891,13 @@
     "(section order)": "eed68fedd5a6"
   },
   "slider": {
-    "(top)": "a3098dd57416",
-    "# Slider": "ee284028df4c",
+    "(top)": "17d07e971791",
+    "# Slider": "c55d6a96e0e5",
+    "## Range": "3309742a0c92",
     "## Accessible composition": "85a57c99624e",
     "## When to use": "ad0bb8c22aff",
     "## Props": "a289d00d67fe",
-    "(section order)": "87884b291211"
+    "(section order)": "5d5e0bc55c64"
   },
   "splitter": {
     "(top)": "f07ec67fc423",
