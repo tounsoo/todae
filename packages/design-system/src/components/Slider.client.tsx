@@ -65,7 +65,6 @@ export type SliderRangeProps = Omit<ComponentPropsWithRef<'div'>, 'defaultValue'
 /** `Slider.Root`: one thumb, or two when `mode` is `"range"`. */
 export type SliderProps = SliderSingleProps | SliderRangeProps;
 
-/** Whether the slider's own `aria-invalid` marks it invalid, such as `true` or `"spelling"`; undefined when it is not set. */
 function ownInvalid(value: SliderRootProps['aria-invalid']): boolean | undefined {
   return value === undefined ? undefined : value !== false && value !== 'false';
 }
