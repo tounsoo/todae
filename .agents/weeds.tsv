@@ -12,3 +12,5 @@ date	class	ref	caught_by	note
 2026-11-16	thumb-paint-rule-text	#477	review	The thumb test read an empty computed style and fell back to the stylesheet rule, and it never looked at the Firefox thumb.
 2026-11-16	slider-fill-floor-unsupported	#477	review	The single fill used clip-path shape() and overflow-inline, which Chrome 128 through 134 do not have, so the thumb shadow painted a block over the page.
 2026-11-16	slider-disabled-unstyled	#477	review	appearance none replaced the native thumb and the disabled state kept the fill color, so a disabled slider looked enabled.
+2026-11-17	one-day-zoom-loses-time	#482	review	Whole event to One day picked the day with the most width past the names, so a time still in the earlier day opened at 9:00 on the later one.
+2026-11-17	one-day-move-loses-focus	#482	review	A talk scheduled onto another day left the One day board, so the menu handoff and the dialog had no button to focus.

@@ -39,15 +39,26 @@ const pointer = (type: string, target: EventTarget, x: number, y: number) =>
     target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
   });
 
+function visibleRange() {
+  const root = document.querySelector<HTMLElement>('[data-zoom]')!;
+  if (root.getAttribute('data-zoom') === 'event') return { start: 0, end: UNITS };
+  const labels = ['Wed, Jun 2', 'Thu, Jun 3', 'Fri, Jun 4'];
+  const index = labels.findIndex((label) => screen.getByRole('button', { name: label }).getAttribute('aria-pressed') === 'true');
+  const start = (index < 0 ? 0 : index) * (UNITS / 3);
+  return { start, end: start + UNITS / 3 };
+}
+
 /** Scrolls the board so the point `units` along the axis sits 200px from where the names column ends. */
 function reveal(units: number) {
-  board().scrollLeft = (units / UNITS) * lane('Main stage').getBoundingClientRect().width - 200;
+  const range = visibleRange();
+  board().scrollLeft = ((units - range.start) / (range.end - range.start)) * lane('Main stage').getBoundingClientRect().width - 200;
 }
 
 /** The point `units` along a stage's lane, in its middle across. */
 function along(name: string, units: number) {
+  const range = visibleRange();
   const box = lane(name).getBoundingClientRect();
-  return { x: box.left + (units / UNITS) * box.width, y: box.top + box.height / 2 };
+  return { x: box.left + ((units - range.start) / (range.end - range.start)) * box.width, y: box.top + box.height / 2 };
 }
 
 /** Presses a talk's grip and moves the pointer so the talk would start at `to`. */
@@ -106,12 +117,7 @@ describe('dragging', () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
-    // The day stops a focus ring's room past the names, so its start is just in view.
-    await expect.poll(() => along('Main stage', 540).x - names.right).toBeLessThan(6);
-    expect(along('Main stage', 540).x - names.right).toBeCloseTo(4, 0);
-    // Put the day's start right at the names' edge. A scroll-padding wider than the names would
-    // count the first place in view a step later, and the drop would land at 9:05.
-    board().scrollLeft += along('Main stage', 540).x - names.right;
+    // A scroll-padding wider than the names would count the first place in view a step later, and the drop would land at 9:05.
     await expect.poll(() => Math.abs(along('Main stage', 540).x - names.right)).toBeLessThan(0.5);
     // The board's scroll-padding marks the names, so a drop over them lands at the first place in view.
     dragTo('Dark mode, done right', { x: names.left + names.width / 2, y: along('Main stage', 540).y }).drop();
@@ -121,6 +127,7 @@ describe('dragging', () => {
 
   it('marks the talk a speaker gives on another stage, refuses the drop and puts the mark back', async () => {
     setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     reveal(895);
     // Kenji Sato is on Panel: shipping 1.0 on Main stage from 15:00 to 16:00 on day 2, 900 to 960,
     // and Hall B is free then, so the speaker is the one thing in the way.
@@ -201,6 +208,7 @@ describe('the sticky stage names', () => {
 
   it('scrolls a day to just past the names column, with room for a focus ring, from its button', async () => {
     setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     // The header row's axis holds a cell for each day.
     const day = rows().firstElementChild!.children[1]!.children[1] as HTMLElement;
     expect(day.textContent).toContain('Thu, Jun 3');
@@ -211,19 +219,97 @@ describe('the sticky stage names', () => {
     expect(day.getBoundingClientRect().left - names.right).toBeCloseTo(4, 0);
   });
 
+  it('shows no second day at the far end of the board at 1280px, One day', async () => {
+    await page.viewport(1280, 800);
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const scroller = board();
+    scroller.scrollLeft = scroller.scrollWidth;
+    const view = scroller.getBoundingClientRect();
+    const axis = rows().firstElementChild!.children[1]!;
+    const visible = [...axis.children].filter((cell) => {
+      const box = cell.getBoundingClientRect();
+      return box.width > 0 && box.right > view.left + 1 && box.left < view.right - 1;
+    });
+    expect(visible.map((cell) => cell.textContent ?? '')).toEqual([expect.stringContaining('Wed, Jun 2')]);
+  });
+
+  const timeAtNames = () => {
+    const range = visibleRange();
+    const box = lane('Main stage').getBoundingClientRect();
+    const x = stage('Main stage').firstElementChild!.getBoundingClientRect().right + 1;
+    return range.start + ((x - box.left) / box.width) * (range.end - range.start);
+  };
+  const dayHeaders = () => [...rows().firstElementChild!.children[1]!.children].map((cell) => /^(?:Wed|Thu|Fri), Jun \d/.exec(cell.textContent ?? '')?.[0] ?? cell.textContent);
+  const dayOf = (minute: number) => ['Wed, Jun 2', 'Thu, Jun 3', 'Fri, Jun 4'][Math.floor(minute / (UNITS / 3))]!;
+  const xOf = (minute: number) => {
+    const range = visibleRange();
+    const box = lane('Main stage').getBoundingClientRect();
+    return box.left + ((minute - range.start) / (range.end - range.start)) * box.width;
+  };
+
+  it('keeps a late Wednesday in view when One day follows a board that also shows Thursday', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    const width = lane('Main stage').getBoundingClientRect().width;
+    board().scrollLeft = (500 / UNITS) * width;
+    const before = timeAtNames();
+    expect(before).toBeGreaterThan(480);
+    expect(before).toBeLessThan(540);
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const names = stage('Main stage').firstElementChild!.getBoundingClientRect().right;
+    const edge = board().getBoundingClientRect().right;
+    const x = xOf(before);
+    expect(x).toBeGreaterThanOrEqual(names - 1);
+    expect(x).toBeLessThanOrEqual(edge + 1);
+    expect(dayHeaders()).toEqual(['Wed, Jun 2']);
+  });
+
+  it('keeps a Thursday time at the names when One day follows Whole event', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    const width = lane('Main stage').getBoundingClientRect().width;
+    board().scrollLeft = (700 / UNITS) * width;
+    const before = timeAtNames();
+    expect(before).toBeGreaterThan(540);
+    expect(before).toBeLessThan(1080);
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    expect(Math.abs(timeAtNames() - before)).toBeLessThan(1);
+    expect(dayHeaders()).toEqual(['Thu, Jun 3']);
+  });
+
+  it('scrolls a chosen day back to its start', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const scroller = board();
+    scroller.scrollLeft = scroller.scrollWidth;
+    expect(timeAtNames()).toBeGreaterThan(60);
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    await expect.poll(() => Math.abs(timeAtNames() - UNITS / 3)).toBeLessThan(1);
+    expect(screen.getByRole('button', { name: 'Thu, Jun 3' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('keeps the time a day button stopped on when One day follows it', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    const before = timeAtNames();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const names = stage('Main stage').firstElementChild!.getBoundingClientRect().right;
+    const edge = board().getBoundingClientRect().right;
+    const x = xOf(before);
+    expect(x).toBeGreaterThanOrEqual(names - 1);
+    expect(x).toBeLessThanOrEqual(edge + 1);
+    expect(dayHeaders()).toEqual([dayOf(before)]);
+  });
+
   it('keeps the time just past the names column when the zoom changes', async () => {
     setup();
     reveal(400);
-    // The time on the axis at the first point the names column leaves visible.
-    const shown = () => {
-      const box = lane('Main stage').getBoundingClientRect();
-      const x = stage('Main stage').firstElementChild!.getBoundingClientRect().right + 1;
-      return ((x - box.left) / box.width) * UNITS;
-    };
-    const before = shown();
+    const before = timeAtNames();
     expect(before).toBeGreaterThan(300);
     await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
-    expect(Math.abs(shown() - before)).toBeLessThan(2);
+    expect(Math.abs(timeAtNames() - before)).toBeLessThan(2);
   });
 });
 
@@ -306,6 +392,18 @@ describe('the dialog', () => {
     await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
   });
 
+  it('shows Thursday and focuses the talk when a Wednesday talk moves there', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const dialog = await openDialog('Motion with purpose');
+    await userEvent.selectOptions(within(dialog).getByRole('combobox', { name: 'Day' }), '1');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
+    expect(screen.getByRole('button', { name: 'Thu, Jun 3' }).getAttribute('aria-pressed')).toBe('true');
+    expect(onStage('Motion with purpose', 'Main stage')).toBe(true);
+    expect(trigger('Motion with purpose').getAttribute('aria-label')).toContain('Thu, Jun 3, 2:00 PM to 2:40 PM');
+    await expect.poll(() => document.activeElement).toBe(trigger('Motion with purpose'));
+  });
+
   it('moves a talk to the stage it picks and hands focus to the talk in its new place', async () => {
     setup();
     const dialog = await openDialog('Motion with purpose');
@@ -319,6 +417,7 @@ describe('the dialog', () => {
 
   it('puts a blocked place on the start field, clears it on a change, and gives focus back on Escape', async () => {
     setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     // Move another talk first, so focus must go back to the talk the dialog edits, not the last one moved.
     await open('Writing UI copy', 'Move to Hall B');
     await userEvent.keyboard('{Enter}');
