@@ -1,8 +1,9 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { cdp, server, userEvent } from 'vitest/browser';
-import { useState } from 'react';
+import { cdp, page, server, userEvent } from 'vitest/browser';
+import { useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Slider, type SliderRangeValue } from '../index.js';
+import { Slider as ServerSlider } from '../server/slider.js';
 
 afterEach(cleanup);
 
@@ -26,43 +27,90 @@ const start = () => screen.getByRole('slider', { name: 'Minimum' });
 const end = () => screen.getByRole('slider', { name: 'Maximum' });
 const group = () => screen.getByRole('group');
 
-function styleRules(): CSSStyleRule[] {
-  const nested = (list: CSSRuleList): CSSStyleRule[] =>
-    [...list].flatMap((rule) => {
-      if (rule instanceof CSSStyleRule) return [rule];
-      if ('cssRules' in rule && rule.cssRules instanceof CSSRuleList) return nested(rule.cssRules);
-      return [];
-    });
-  return [...document.styleSheets].flatMap((sheet) => {
-    try {
-      return nested(sheet.cssRules);
-    } catch {
-      return [];
-    }
-  });
+type Rgb = readonly [number, number, number];
+
+function Frame({ appearance, dir, children }: { appearance: 'light' | 'dark'; dir?: 'ltr' | 'rtl'; children: ReactNode }) {
+  return (
+    <div data-appearance={appearance} data-density="comfortable" dir={dir} style={{ inlineSize: 320, ['--_todae-focus-ring-width' as string]: '8px' }}>
+      {children}
+    </div>
+  );
 }
 
-function thumbPaint(input: Element): { appearance: string; background: string } {
-  const appearance = getComputedStyle(input).appearance;
-  const pseudo = '::-webkit-slider-thumb';
-  const measured = getComputedStyle(input, pseudo).backgroundColor;
-  if (measured && measured !== 'rgba(0, 0, 0, 0)' && measured !== 'transparent') return { appearance, background: measured };
-  const rule = styleRules().find((candidate) =>
-    candidate.selectorText.split(',').some((part) => {
-      const selector = part.trim();
-      if (!selector.endsWith(pseudo)) return false;
-      const owner = selector.slice(0, -pseudo.length).trim();
-      return owner !== '' && input.matches(owner);
-    }),
-  );
-  const declared = rule?.style.getPropertyValue('background-color').trim() ?? '';
-  const variable = /^var\((--[\w-]+)\)$/.exec(declared);
-  const name = variable?.[1];
-  if (name) {
-    const resolved = getComputedStyle(input).getPropertyValue(name).trim();
-    if (resolved) return { appearance, background: resolved };
-  }
-  return { appearance, background: declared };
+function canvasRgb(color: string): Rgb {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ink = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ink) throw new Error('no canvas');
+  const paint = (start: string) => {
+    ink.fillStyle = start;
+    ink.fillStyle = color;
+    ink.fillRect(0, 0, 1, 1);
+    return ink.getImageData(0, 0, 1, 1).data;
+  };
+  const [r, g, b] = paint('#000');
+  const [r2, g2, b2] = paint('#fff');
+  if (r !== r2 || g !== g2 || b !== b2 || r === undefined || g === undefined || b === undefined) throw new Error(`unreadable color ${color}`);
+  return [r, g, b];
+}
+
+function readColor(host: HTMLElement, color: string): Rgb {
+  const probe = document.createElement('span');
+  probe.style.backgroundColor = color;
+  host.append(probe);
+  const computed = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return canvasRgb(computed);
+}
+
+function expectRgb(actual: Rgb, expected: Rgb, label: string) {
+  const gap = Math.max(Math.abs(actual[0] - expected[0]), Math.abs(actual[1] - expected[1]), Math.abs(actual[2] - expected[2]));
+  expect(gap, `${label} painted ${actual.join(',')} and the token is ${expected.join(',')}`).toBeLessThanOrEqual(8);
+}
+
+async function bitmap(el: HTMLElement) {
+  const bytes = await page.screenshot({ element: el, save: false });
+  const image = new Image();
+  image.src = `data:image/png;base64,${bytes}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('no canvas');
+  context.drawImage(image, 0, 0);
+  const scaleX = image.naturalWidth / el.clientWidth;
+  const scaleY = image.naturalHeight / el.clientHeight;
+  return {
+    at(x: number, y: number): Rgb {
+      const px = Math.min(image.naturalWidth - 1, Math.max(0, Math.round(x * scaleX)));
+      const py = Math.min(image.naturalHeight - 1, Math.max(0, Math.round(y * scaleY)));
+      const data = context.getImageData(px, py, 1, 1).data;
+      const red = data[0];
+      const green = data[1];
+      const blue = data[2];
+      if (red === undefined || green === undefined || blue === undefined) throw new Error('empty pixel');
+      return [red, green, blue];
+    },
+  };
+}
+
+function bound(input: HTMLInputElement, edge: 'min' | 'max'): number {
+  const raw = input[edge];
+  if (raw === '') return edge === 'min' ? 0 : 100;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : edge === 'min' ? 0 : 100;
+}
+
+function along(input: HTMLInputElement, value: number): number {
+  const thumb = input.clientHeight;
+  const min = bound(input, 'min');
+  const max = bound(input, 'max');
+  const span = max - min;
+  const ratio = span === 0 ? 0 : (value - min) / span;
+  const fromStart = thumb / 2 + ratio * (input.clientWidth - thumb);
+  return getComputedStyle(input).direction === 'rtl' ? input.clientWidth - fromStart : fromStart;
 }
 
 function onPage(x: number, y: number) {
@@ -322,29 +370,79 @@ describe('Slider range in the browser', () => {
     expect(document.activeElement).toBe(end());
   });
 
-  it('fills the single track up to the thumb', async () => {
-    render(<Slider.Root aria-label="Volume" defaultValue={40} />);
-    const input = screen.getByRole('slider', { name: 'Volume' });
-    expect(getComputedStyle(input).getPropertyValue('--_value').trim()).toBe('40%');
-    input.focus();
-    await userEvent.keyboard('{ArrowRight}');
-    expect(input).toHaveProperty('value', '41');
-    expect(getComputedStyle(input).getPropertyValue('--_value').trim()).toBe('41%');
+  it('paints the thumb and the track from the fill token', async () => {
+    for (const appearance of ['light', 'dark'] as const) {
+      const view = render(
+        <Frame appearance={appearance}>
+          <Slider.Root aria-label="Volume" defaultValue={40} />
+          <Range initial={[16, 69]} />
+        </Frame>,
+      );
+      const host = view.container.querySelector('[data-appearance]');
+      if (!(host instanceof HTMLElement)) throw new Error('missing theme');
+      const fill = readColor(host, 'var(--todae-slider-fill)');
+      const empty = readColor(host, 'ButtonFace');
+      const volume = screen.getByRole('slider', { name: 'Volume' });
+      if (!(volume instanceof HTMLInputElement)) throw new Error('missing slider');
+      const y = volume.clientHeight / 2;
+      const single = await bitmap(volume);
+      expectRgb(single.at(along(volume, 40), y), fill, `${appearance} thumb`);
+      expectRgb(single.at(along(volume, 20), y), fill, `${appearance} fill`);
+      expectRgb(single.at(along(volume, 70), y), empty, `${appearance} track`);
+      for (const thumb of [start(), end()]) {
+        const shot = await bitmap(thumb);
+        expectRgb(shot.at(thumb.clientWidth / 2, thumb.clientHeight / 2), fill, `${appearance} range thumb`);
+      }
+      const track = await bitmap(group());
+      const groupBox = group().getBoundingClientRect();
+      const startBox = start().getBoundingClientRect();
+      const endBox = end().getBoundingClientRect();
+      const gy = group().clientHeight / 2;
+      expectRgb(track.at((startBox.right + endBox.left) / 2 - groupBox.left, gy), fill, `${appearance} range fill`);
+      expectRgb(track.at(startBox.left - groupBox.left - startBox.width / 2, gy), empty, `${appearance} range track`);
+      view.unmount();
+    }
   });
 
-  it('paints each thumb from the fill token', () => {
-    render(
-      <>
+  it('fills toward the inline start', async () => {
+    const view = render(
+      <Frame appearance="light" dir="rtl">
         <Slider.Root aria-label="Volume" defaultValue={40} />
-        <Range initial={[16, 69]} />
-      </>,
+      </Frame>,
     );
-    const fill = getComputedStyle(start()).getPropertyValue('--todae-slider-fill').trim();
-    for (const input of [screen.getByRole('slider', { name: 'Volume' }), start(), end()]) {
-      const painted = thumbPaint(input);
-      expect(painted.appearance).toBe('none');
-      expect(painted.background).toBe(fill);
-    }
+    const host = view.container.querySelector('[data-appearance]');
+    if (!(host instanceof HTMLElement)) throw new Error('missing theme');
+    const fill = readColor(host, 'var(--todae-slider-fill)');
+    const empty = readColor(host, 'ButtonFace');
+    const volume = screen.getByRole('slider', { name: 'Volume' });
+    if (!(volume instanceof HTMLInputElement)) throw new Error('missing slider');
+    const y = volume.clientHeight / 2;
+    const shot = await bitmap(volume);
+    expectRgb(shot.at(along(volume, 20), y), fill, 'rtl fill');
+    expectRgb(shot.at(along(volume, 70), y), empty, 'rtl track');
+  });
+
+  it('moves the fill with the thumb on the server entry', async () => {
+    const view = render(
+      <Frame appearance="light">
+        <ServerSlider.Root aria-label="Volume" defaultValue={40} step={20} />
+      </Frame>,
+    );
+    const host = view.container.querySelector('[data-appearance]');
+    if (!(host instanceof HTMLElement)) throw new Error('missing theme');
+    const fill = readColor(host, 'var(--todae-slider-fill)');
+    const empty = readColor(host, 'ButtonFace');
+    const input = screen.getByRole('slider', { name: 'Volume' });
+    if (!(input instanceof HTMLInputElement)) throw new Error('missing slider');
+    const y = input.clientHeight / 2;
+    const before = await bitmap(input);
+    expectRgb(before.at(along(input, 50), y), empty, 'before');
+    input.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(input).toHaveProperty('value', '60');
+    const after = await bitmap(input);
+    expectRgb(after.at(along(input, 50), y), fill, 'after');
+    expectRgb(after.at(along(input, 80), y), empty, 'past');
   });
 
   it('draws the focus ring around the track', async () => {
