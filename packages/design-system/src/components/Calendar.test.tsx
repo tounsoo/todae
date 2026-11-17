@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetWarnOnce } from '../internal/warnOnce.js';
 import { Calendar, Fieldset, StringsProvider, type CalendarRootProps } from '../index.js';
 
 afterEach(cleanup);
@@ -602,7 +603,7 @@ describe('Calendar', () => {
         isDateDisabled={(day) => day.toString() === '2026-10-17'}
       >
         <Calendar.Header />
-        <Calendar.Grid renderDay={(day) => flags(day)} />
+        <Calendar.Grid showOutsideDays renderDay={(day) => flags(day)} />
       </Calendar.Root>,
     );
     // October 2026 starts on a Thursday. A Sunday-first week leads with September 27 to 30.
@@ -644,7 +645,7 @@ describe('Calendar', () => {
         onValueChange={() => undefined}
       >
         <Calendar.Header />
-        <Calendar.Grid renderDay={(day) => `${day.date.toString()} ${day.selected ? 'selected' : 'open'}`} />
+        <Calendar.Grid showOutsideDays renderDay={(day) => `${day.date.toString()} ${day.selected ? 'selected' : 'open'}`} />
       </Calendar.Root>,
     );
     expect(screen.getByText('2026-10-12 open')).toBeTruthy();
@@ -687,6 +688,191 @@ describe('Calendar', () => {
     expect(press('ArrowLeft')).toBe('Wednesday, September 30, 2026');
     expect(screen.getByRole('button', { name: 'September 2026' })).toBeTruthy();
     expect(focusedDay().textContent).toContain('note');
+  });
+
+  const fullDate = (iso: string) => date(iso).toLocaleString('en-US', { dateStyle: 'full' });
+
+  it('leaves the day buttons unchanged when renderDay and showOutsideDays are off', () => {
+    render(
+      <>
+        <Calendar.Root aria-label="Base" locale="en-US" firstDayOfWeek={7} value={date('2026-10-13')} onValueChange={() => undefined}>
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Root>
+        <Calendar.Root aria-label="Off" locale="en-US" firstDayOfWeek={7} value={date('2026-10-13')} onValueChange={() => undefined}>
+          <Calendar.Header />
+          <Calendar.Grid showOutsideDays={false} />
+        </Calendar.Root>
+      </>,
+    );
+    const base = within(screen.getByRole('group', { name: 'Base' })).getByRole('grid');
+    const off = within(screen.getByRole('group', { name: 'Off' })).getByRole('grid');
+    expect(off.querySelector('tbody')!.innerHTML).toBe(base.querySelector('tbody')!.innerHTML);
+    expect(base.querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(31);
+    expect(base.querySelector('tbody td')!.childElementCount).toBe(0);
+    expect(base.querySelector('[data-outside]')).toBeNull();
+  });
+
+  it('draws outside days only when showOutsideDays is set, with or without renderDay', () => {
+    const seen: string[] = [];
+    const note = (day: { date: Temporal.PlainDate; outside: boolean }) => {
+      seen.push(`${day.date.toString()} ${day.outside ? 'outside' : 'in'}`);
+      return day.outside ? 'out' : 'in';
+    };
+    const month = (label: string, gridProps: { showOutsideDays?: boolean; renderDay?: typeof note }) => (
+      <Calendar.Root aria-label={label} locale="en-US" firstDayOfWeek={7} value={date('2026-09-15')} onValueChange={() => undefined}>
+        <Calendar.Header />
+        <Calendar.Grid {...gridProps} />
+      </Calendar.Root>
+    );
+
+    const { rerender } = render(month('September', {}));
+    const cells = () => within(screen.getByRole('group', { name: 'September' })).getByRole('grid');
+    expect(cells().querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(30);
+    expect(cells().querySelector('tbody td')!.childElementCount).toBe(0);
+    expect(cells().querySelector('[data-outside]')).toBeNull();
+    expect(screen.queryByRole('button', { name: fullDate('2026-08-30') })).toBeNull();
+    expect(screen.queryByRole('button', { name: fullDate('2026-10-03') })).toBeNull();
+
+    seen.length = 0;
+    rerender(month('September', { renderDay: note }));
+    expect(seen).toHaveLength(30);
+    expect(seen.some((line) => line.endsWith('outside'))).toBe(false);
+    expect(screen.getAllByText('in')).toHaveLength(30);
+    expect(screen.queryByText('out')).toBeNull();
+    expect(cells().querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(30);
+    expect(cells().querySelector('tbody td')!.childElementCount).toBe(0);
+    expect(screen.queryByRole('button', { name: fullDate('2026-10-01') })).toBeNull();
+
+    seen.length = 0;
+    rerender(month('September', { showOutsideDays: true }));
+    expect(seen).toHaveLength(0);
+    expect(cells().querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(35);
+    expect(cells().querySelectorAll('[data-outside]')).toHaveLength(5);
+    const leading = screen.getByRole('button', { name: fullDate('2026-08-30') });
+    const trailing = screen.getByRole('button', { name: fullDate('2026-10-03') });
+    expect(leading.hasAttribute('data-outside')).toBe(true);
+    expect(trailing.hasAttribute('data-outside')).toBe(true);
+    expect(leading.textContent).toBe('30');
+    expect(trailing.textContent).toBe('3');
+    expect(screen.queryByText('out')).toBeNull();
+
+    seen.length = 0;
+    rerender(month('September', { showOutsideDays: true, renderDay: note }));
+    expect(seen).toHaveLength(35);
+    expect(seen).toContain('2026-08-30 outside');
+    expect(seen).toContain('2026-08-31 outside');
+    expect(seen).toContain('2026-10-01 outside');
+    expect(seen).toContain('2026-10-02 outside');
+    expect(seen).toContain('2026-10-03 outside');
+    expect(seen).toContain('2026-09-15 in');
+    expect(screen.getByRole('button', { name: fullDate('2026-08-30') }).textContent).toContain('out');
+    expect(screen.getByRole('button', { name: fullDate('2026-10-01') }).textContent).toContain('out');
+    expect(screen.getByRole('button', { name: fullDate('2026-09-15') }).textContent).toContain('in');
+    expect(screen.getByRole('button', { name: fullDate('2026-09-15') }).hasAttribute('data-outside')).toBe(false);
+  });
+
+  it('presses an outside day only when showOutsideDays is set', () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <Calendar.Root aria-label="Start" locale="en-US" firstDayOfWeek={7} value={date('2026-10-13')} onValueChange={onValueChange}>
+        <Calendar.Header />
+        <Calendar.Grid renderDay={() => 'note'} />
+      </Calendar.Root>,
+    );
+    expect(screen.queryByRole('button', { name: fullDate('2026-09-27') })).toBeNull();
+    rerender(
+      <Calendar.Root aria-label="Start" locale="en-US" firstDayOfWeek={7} value={date('2026-10-13')} onValueChange={onValueChange}>
+        <Calendar.Header />
+        <Calendar.Grid showOutsideDays renderDay={() => 'note'} />
+      </Calendar.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: fullDate('2026-09-27') }));
+    expect(onValueChange).toHaveBeenCalledWith(date('2026-09-27'));
+  });
+
+  it('reads the day content as the description and keeps the date as the name', () => {
+    render(
+      <Calendar.Root aria-label="Start" locale="en-US" value={date('2026-10-13')} onValueChange={() => undefined}>
+        <Calendar.Grid renderDay={(day) => (day.date.toString() === '2026-10-13' ? 'Review' : null)} />
+      </Calendar.Root>,
+    );
+    expect(screen.getByRole('button', { name: 'Tuesday, October 13, 2026', description: 'Review' })).toBeTruthy();
+    const quiet = screen.getByRole('button', { name: 'Wednesday, October 14, 2026' });
+    expect(quiet.getAttribute('aria-describedby')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Wednesday, October 14, 2026', description: 'Review' })).toBeNull();
+  });
+
+  it('tells renderDay which day is today inside the shown month', () => {
+    const today = Temporal.Now.plainDateISO();
+    const other = today.day === today.daysInMonth ? today.subtract({ days: 1 }) : today.add({ days: 1 });
+    render(
+      <Calendar.Root aria-label="Start" locale="en-US" value={today} onValueChange={() => undefined}>
+        <Calendar.Grid renderDay={(day) => `${day.date.toString()} ${day.today ? 'today' : 'other'}`} />
+      </Calendar.Root>,
+    );
+    expect(screen.getByText(`${today.toString()} today`)).toBeTruthy();
+    expect(screen.getByText(`${other.toString()} other`)).toBeTruthy();
+  });
+
+  it('tells renderDay a day is disabled after a range first pick when the range cannot end on it', () => {
+    render(
+      <Calendar.Root
+        aria-label="Stay"
+        locale="en-US"
+        firstDayOfWeek={7}
+        mode="range"
+        defaultMonth={Temporal.PlainYearMonth.from('2026-10')}
+        value={null}
+        onValueChange={() => undefined}
+        isDateDisabled={(day) => day.toString() === '2026-10-15'}
+      >
+        <Calendar.Header />
+        <Calendar.Grid renderDay={(day) => `${day.date.toString()} ${day.disabled ? 'disabled' : 'enabled'}`} />
+      </Calendar.Root>,
+    );
+    fireEvent.click(day('Monday, October 12, 2026'));
+    expect(screen.getByText('2026-10-14 enabled')).toBeTruthy();
+    expect(screen.getByText('2026-10-16 disabled')).toBeTruthy();
+    expect(screen.getByText('2026-10-18 disabled')).toBeTruthy();
+    const past = day('Sunday, October 18, 2026') as HTMLButtonElement;
+    expect(past.disabled).toBe(false);
+    expect(past.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('tells renderDay every day is disabled when Calendar.Root is disabled', () => {
+    render(
+      <Calendar.Root aria-label="Start" locale="en-US" disabled value={date('2026-10-13')} onValueChange={() => undefined}>
+        <Calendar.Grid renderDay={(day) => (day.disabled ? 'off' : 'on')} />
+      </Calendar.Root>,
+    );
+    expect(screen.getAllByText('off').length).toBeGreaterThan(0);
+    expect(screen.queryByText('on')).toBeNull();
+    expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('says in development when renderDay returns a link, a button, or a tabindex', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const show = (node: ReactNode) => {
+      resetWarnOnce();
+      error.mockClear();
+      cleanup();
+      render(
+        <Calendar.Root aria-label="Start" locale="en-US" value={date('2026-10-13')} onValueChange={() => undefined}>
+          <Calendar.Grid renderDay={(day) => (day.date.toString() === '2026-10-13' ? node : null)} />
+        </Calendar.Root>,
+      );
+    };
+    show('Review');
+    const told = () => error.mock.calls.filter(([message]) => String(message).includes('no keyboard path'));
+    expect(told()).toHaveLength(0);
+    show(<a href="/review">Review</a>);
+    expect(told()).toHaveLength(1);
+    show(<button type="button">Review</button>);
+    expect(told()).toHaveLength(1);
+    show(<span tabIndex={0}>Review</span>);
+    expect(told()).toHaveLength(1);
+    vi.restoreAllMocks();
   });
 
   it('throws when a part renders outside Calendar.Root', () => {

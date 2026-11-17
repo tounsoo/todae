@@ -10,7 +10,15 @@ export const meta = {
       type: '(day: CalendarDayState) => React.ReactNode',
       required: false,
       description:
-        "Renders inside each day button, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. Without it, the leading and trailing cells stay empty. With it, those days are filled in and marked outside. The button stays the one Tab stop and keeps the full date as its name. The content is not a link or a button. Ignored while the years show.",
+        "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show.",
+    },
+    {
+      name: 'showOutsideDays',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description:
+        'Draws the leading and trailing days as buttons, in the weekday color, and marks them outside. Off by default, and passing renderDay does not draw those days. Ignored while the years show.',
     },
   ],
 } as const satisfies ComponentMeta;

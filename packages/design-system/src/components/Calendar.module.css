@@ -99,6 +99,11 @@
     background: var(--todae-calendar-day-bg-hover);
   }
 
+  /* An outside day is secondary, like the weekday names. Disabled, selected and range colors come later and win. */
+  .day[data-outside] {
+    color: var(--todae-calendar-weekday-fg);
+  }
+
   .nav:is(:disabled, [aria-disabled='true']),
   .day:is(:disabled, [aria-disabled='true']),
   .year:disabled {

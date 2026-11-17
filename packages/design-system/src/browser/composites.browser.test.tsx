@@ -663,6 +663,29 @@ describe('Calendar in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
   });
+
+  it('draws an outside day in the weekday color in light and dark', () => {
+    render(
+      <>
+        {(['light', 'dark'] as const).map((appearance) => (
+          <div key={appearance} data-appearance={appearance} data-density="comfortable">
+            <Calendar.Root aria-label={appearance} locale="en-US" firstDayOfWeek={7} defaultValue={plainDate('2026-10-13')}>
+              <Calendar.Header />
+              <Calendar.Grid showOutsideDays />
+            </Calendar.Root>
+          </div>
+        ))}
+      </>,
+    );
+    for (const appearance of ['light', 'dark'] as const) {
+      const grid = within(screen.getByRole('group', { name: appearance })).getByRole('grid');
+      const outside = within(grid).getByRole('button', { name: 'Sunday, September 27, 2026' });
+      const inside = within(grid).getByRole('button', { name: 'Thursday, October 1, 2026' });
+      const weekday = within(grid).getAllByRole('columnheader')[0]!;
+      expect(getComputedStyle(outside).color).toBe(getComputedStyle(weekday).color);
+      expect(getComputedStyle(outside).color).not.toBe(getComputedStyle(inside).color);
+    }
+  });
 });
 
 describe('Field.Picker beside a Field.DateInput in a browser', () => {

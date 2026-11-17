@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useId,
   useSyncExternalStore,
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -26,6 +27,7 @@ import { useDomId } from '../internal/domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
+import { warnOnce } from '../internal/warnOnce.js';
 import { useReach } from './calendarReach.js';
 import { spanOf, type DateRange } from './dateRange.js';
 import styles from './Calendar.module.css';
@@ -102,11 +104,17 @@ export type CalendarDayState = {
 
 export type CalendarGridProps = Omit<ComponentPropsWithRef<'table'>, 'children' | 'role'> & {
   /**
-   * Draws inside each day button. Without it, the leading and trailing cells
-   * stay empty. With it, those days are filled in too. The button stays the
-   * one Tab stop and keeps the full date as its name. Ignored while the years
-   * show. The content is not a link or a button. That markup is invalid inside
-   * the day button, and this slot gives it no keyboard path.
+   * Draws the leading and trailing days as buttons, in the weekday color, and
+   * marks them outside. Off by default. Passing `renderDay` does not draw
+   * those days or make them pressable. Ignored while the years show.
+   */
+  showOutsideDays?: boolean;
+  /**
+   * Draws inside each day button the grid draws. The button stays the one Tab
+   * stop and keeps the full date as its name, and the content is read as the
+   * day's description. The content is not a link, a button, or an element with
+   * a tabindex. That markup is invalid inside the day button, and this slot
+   * gives it no keyboard path. Ignored while the years show.
    */
   renderDay?: (day: CalendarDayState) => ReactNode;
 };
@@ -643,8 +651,9 @@ function dateText(date: Temporal.PlainDate, locale: string, style: DateStyle) {
 const startOfWeek = (date: Temporal.PlainDate, firstDay: number) =>
   date.subtract({ days: (date.dayOfWeek - firstDay + 7) % 7 });
 
-// Leading and trailing days stay empty cells until renderDay asks for them, so
-// a grid without it keeps the same buttons it has now.
+// Leading and trailing days stay empty cells until showOutsideDays asks for
+// them. renderDay does not fill them in, so a grid without that prop keeps the
+// same buttons it has now.
 function monthCells(month: Temporal.PlainYearMonth, firstDay: number, outside: boolean): (Temporal.PlainDate | null)[] {
   const first = month.toPlainDate({ day: 1 });
   const lead = (first.dayOfWeek - firstDay + 7) % 7;
@@ -672,12 +681,24 @@ const weekAnchor = () => (week ??= Temporal.PlainDate.from(WEEK_ISO));
  * year. Left and Right swap in a right-to-left page. While Calendar.Header
  * shows the years, it is a page of twelve years in the same pattern instead.
  */
-function Grid({ renderDay, ...props }: CalendarGridProps) {
+function Grid({ renderDay, showOutsideDays = false, ...props }: CalendarGridProps) {
   const cal = useCalendar('Grid');
-  return cal.view === 'years' ? <YearGrid {...props} /> : <DayGrid {...props} renderDay={renderDay} />;
+  return cal.view === 'years' ? (
+    <YearGrid {...props} />
+  ) : (
+    <DayGrid {...props} renderDay={renderDay} showOutsideDays={showOutsideDays} />
+  );
 }
 
-function DayGrid({ className, onKeyDown, onPointerLeave, renderDay, ref: refProp, ...props }: CalendarGridProps) {
+function DayGrid({
+  className,
+  onKeyDown,
+  onPointerLeave,
+  renderDay,
+  showOutsideDays = false,
+  ref: refProp,
+  ...props
+}: CalendarGridProps) {
   const cal = useCalendar('Grid');
   const ref = useRef<HTMLTableElement>(null);
   const composedRef = useComposedRefs(ref, refProp);
@@ -690,7 +711,7 @@ function DayGrid({ className, onKeyDown, onPointerLeave, renderDay, ref: refProp
   });
 
   // With no date to start from yet (a server render), the grid has no weeks.
-  const cells = focused ? monthCells(focused.toPlainYearMonth(), firstDay, renderDay !== undefined) : [];
+  const cells = focused ? monthCells(focused.toPlainYearMonth(), firstDay, showOutsideDays) : [];
   const weeks = Array.from({ length: cells.length / 7 }, (_, i) => cells.slice(i * 7, i * 7 + 7));
   const weekStart = startOfWeek(weekAnchor(), firstDay);
   const weekdays = Array.from({ length: 7 }, (_, i) => weekStart.add({ days: i }));
@@ -783,6 +804,8 @@ function DayGrid({ className, onKeyDown, onPointerLeave, renderDay, ref: refProp
 
 function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: CalendarGridProps['renderDay'] }) {
   const cal = useCalendar('Grid');
+  const contentId = useId();
+  const contentRef = useRef<HTMLSpanElement>(null);
   const { shown, anchor } = cal;
   const inShown = shown !== null && compare(date, shown.start) >= 0 && compare(date, shown.end) <= 0;
   const rangeStart = inShown && date.equals(shown.start);
@@ -803,9 +826,22 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
     selected: anchor ? selected : inShown,
     disabled: cal.disabled || outOfRange || unavailable || unreachable,
   });
-  const content = rendered == null || typeof rendered === 'boolean' ? null : (
-    <span className={styles.dayContent}>{rendered}</span>
-  );
+  const content =
+    rendered == null || typeof rendered === 'boolean' ? null : (
+      <span id={contentId} ref={contentRef} className={styles.dayContent}>
+        {rendered}
+      </span>
+    );
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    const root = contentRef.current;
+    if (!root?.querySelector('a, button, [tabindex]')) return;
+    warnOnce(
+      'calendar-render-day-focusable',
+      'Calendar.Grid renderDay returned a link, a button, or an element with a tabindex. That sits inside the day button, which is invalid, and this slot gives it no keyboard path. Put the interaction on the day press.',
+      'error',
+    );
+  });
   return (
     <td aria-selected={(anchor ? selected : inShown) ? true : undefined}>
       <button
@@ -818,6 +854,7 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
         disabled={cal.disabled || outOfRange}
         aria-disabled={(unavailable && !outOfRange) || unreachable ? true : undefined}
         aria-current={isToday ? 'date' : undefined}
+        aria-describedby={content ? contentId : undefined}
         aria-label={dateText(date, cal.locale, DAY_NAME)}
         data-selected={selected ? '' : undefined}
         data-in-range={range && inShown && !rangeStart && !rangeEnd ? '' : undefined}
