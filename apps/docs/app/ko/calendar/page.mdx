@@ -1,3 +1,4 @@
+import CalendarDayContent from '../../../examples/calendar/CalendarDayContent';
 import CalendarRange from '../../../examples/calendar/CalendarRange';
 import CalendarInline from '../../../examples/calendar/CalendarInline';
 
@@ -28,6 +29,16 @@ import CalendarInline from '../../../examples/calendar/CalendarInline';
 ## Temporal
 
 Todae는 Temporal 폴리필을 포함하지 않습니다. `Calendar.Root`는 렌더링할 때 `Temporal`을 호출하므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고).
+
+## 날짜 안의 내용
+
+`Calendar.Grid`의 `renderDay`는 각 날짜 버튼 안에 내용을 더 그립니다. 그리드는 그 날의 `Temporal.PlainDate`와 `outside`, `today`, `selected`, `disabled`를 넘겨 호출합니다. `outside`는 앞쪽이나 뒤쪽 주에 있어 보이는 달 밖에 있는 날입니다. `disabled`는 그 날을 고를 수 없다는 뜻입니다. 달력이 비활성화되었거나, 날이 `min`과 `max` 밖이거나, `isDateDisabled`가 제외했거나, 범위를 그 날로 끝낼 수 없을 때입니다. 주는 그리드가 그대로 만들고, 첫 열도 `firstDayOfWeek`를 따릅니다.
+
+`renderDay`가 없으면 앞쪽과 뒤쪽의 칸은 빈 채로 있고, 키와 포커스, 선택, 이름, 그리드도 그대로입니다. `renderDay`가 있으면 그 날들도 채워집니다. 화살표 키, Home, End, Page Up, Page Down은 여전히 포커스가 있는 날짜를 옮기고, 보이는 달은 그 날짜를 따릅니다.
+
+날짜 버튼은 유일한 Tab 정지점으로 남습니다. 이름은 전체 날짜 그대로이고, 보이는 달 밖의 날에는 버튼에 `data-outside`가 붙습니다. `renderDay`에는 일정 제목처럼 글자나 장식용 내용을 넣으세요. 날 안의 링크나 버튼은 이 슬롯의 범위 밖입니다. 날짜 버튼 안에 들어가므로 잘못된 마크업이고, 이 슬롯은 그 요소에 키보드 경로를 주지 않습니다. "+N more" 같은 컨트롤은 날짜 버튼 밖에 두세요. 그 날에 동작하는 방법은 날짜 버튼을 누르거나 Enter와 Space를 누르는 것입니다.
+
+<Example of={CalendarDayContent} block />
 
 ## 접근성을 지키는 조합
 

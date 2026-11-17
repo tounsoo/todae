@@ -1,3 +1,4 @@
+import CalendarDayContent from '../../../examples/calendar/CalendarDayContent';
 import CalendarRange from '../../../examples/calendar/CalendarRange';
 import CalendarInline from '../../../examples/calendar/CalendarInline';
 
@@ -28,6 +29,16 @@ For a range in a form, use a [Field.DateRangeInput](/field/date-range-input) wit
 ## Temporal
 
 Todae ships no Temporal polyfill. `Calendar.Root` calls `Temporal` when it renders, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)).
+
+## Day content
+
+`renderDay` on `Calendar.Grid` draws extra content inside each day button. The grid calls it with that day's `Temporal.PlainDate` and with `outside`, `today`, `selected` and `disabled`. `outside` is a day in the leading or trailing week. `disabled` means the day cannot be picked, because the calendar is disabled, the day is outside `min` or `max`, `isDateDisabled` rules it out, or a range cannot end on it. The grid still builds the weeks, and the first column still follows `firstDayOfWeek`.
+
+Without `renderDay`, the leading and trailing cells stay empty, and the keys, focus, selection, names and grid stay as they are. With `renderDay`, those days are filled in too. Arrow keys, Home, End, Page Up and Page Down still move the focused date, and the shown month follows that date.
+
+The day button stays the one Tab stop. Its name stays the full date, and an outside day has `data-outside` on the button. Put text or other presentational content in `renderDay`, such as an event title. A link or a button inside the day is out of scope. It would sit inside the day button, which is invalid, and this slot gives it no keyboard path. A control such as "+N more" belongs outside the day button. The day button's press, Enter and Space remain the way to act on that day.
+
+<Example of={CalendarDayContent} block />
 
 ## Accessible composition
 
