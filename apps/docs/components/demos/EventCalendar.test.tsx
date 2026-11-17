@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { StrictMode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { formatTime } from '@tounsoo/todae';
@@ -883,6 +884,55 @@ describe('the month', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026년 11월 15일 일요일' }));
     fireEvent.click(screen.getByRole('button', { name: 'Week' }));
     expect(screen.getByText('11월 15일 – 2026년 11월 21일')).toBeTruthy();
+  });
+
+  const reachedWeek = 'Dec 13 – Dec 19, 2026';
+
+  it('opens the week of the day Next month reaches', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText(reachedWeek)).toBeTruthy();
+  });
+
+  it('opens the week of the day Arrow Down reaches', () => {
+    openMonth();
+    let current: HTMLElement = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    current.focus();
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.keyDown(current, { key: 'ArrowDown' });
+      current = document.activeElement as HTMLElement;
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText(reachedWeek)).toBeTruthy();
+  });
+
+  it('opens the week and the day Page Down reaches', () => {
+    openMonth();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown' });
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText(reachedWeek)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    expect(screen.getByRole('heading', { name: 'Wed, Dec 16' })).toBeTruthy();
+  });
+
+  it('keeps a far anchor focused and unselected through StrictMode remounts', () => {
+    const anchor = Temporal.PlainDate.from('2027-03-10');
+    render(
+      <StrictMode>
+        <EventCalendarExample locale="en-US" anchor={anchor} />
+      </StrictMode>,
+    );
+    for (let turn = 0; turn < 3; turn += 1) {
+      fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    }
+    const day = screen.getByRole('button', { name: 'Wednesday, March 10, 2027' });
+    expect(day.tabIndex).toBe(0);
+    expect(day.hasAttribute('data-selected')).toBe(false);
+    expect(day.closest('td')?.getAttribute('aria-selected')).toBeNull();
+    expect(screen.getByRole('grid', { name: 'March 2027' })).toBeTruthy();
   });
 
   it('renders the month in Korean', () => {

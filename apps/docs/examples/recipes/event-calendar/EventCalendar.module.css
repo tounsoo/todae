@@ -233,6 +233,13 @@
   white-space: nowrap;
 }
 
+.dot {
+  inline-size: var(--todae-space-2);
+  block-size: var(--todae-space-2);
+  border-radius: var(--todae-radius-full);
+  background: var(--todae-color-accent-default);
+}
+
 .count {
   display: none;
 }
@@ -251,9 +258,11 @@
   }
 
   .count {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--todae-space-1);
     font-size: var(--todae-text-label-font-size);
     line-height: var(--todae-text-leading-tight);
-    text-align: center;
   }
 }

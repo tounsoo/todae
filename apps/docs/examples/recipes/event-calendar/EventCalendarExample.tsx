@@ -282,6 +282,16 @@ type CalendarView = 'month' | 'week' | 'day';
 
 const MONTH_TITLES = 2;
 
+function SyncTabStop({ onDay }: { onDay: (day: Temporal.PlainDate) => void }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const iso = ref.current?.closest('table')?.querySelector('[data-todae-calendar-cell][tabindex="0"] [data-date]')?.getAttribute('data-date');
+    if (!iso) return;
+    onDay(Temporal.PlainDate.from(iso));
+  });
+  return <span ref={ref} hidden />;
+}
+
 function utcStamp(day: Temporal.PlainDate): number {
   return Date.UTC(day.year, day.month - 1, day.day);
 }
@@ -425,10 +435,8 @@ export default function EventCalendarExample({
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
   const heading = useId();
-  const monthRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<'day' | null>(null);
   const [pinFocus, setPinFocus] = useState(true);
-  const [monthMove, setMonthMove] = useState(0);
   const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
@@ -450,14 +458,6 @@ export default function EventCalendarExample({
   }, [view]);
 
   useLayoutEffect(() => {
-    if (view !== 'month') return;
-    const iso = monthRef.current?.querySelector('[data-todae-calendar-cell][tabindex="0"] [data-date]')?.getAttribute('data-date');
-    if (!iso) return;
-    const day = Temporal.PlainDate.from(iso);
-    setAnchor((current) => (current.equals(day) ? current : day));
-  }, [view, pinFocus, monthMove]);
-
-  useLayoutEffect(() => {
     if (pendingFocus.current !== 'day' || view !== 'day') return;
     pendingFocus.current = null;
     const id = `${heading}-${anchor.toString()}`;
@@ -476,11 +476,7 @@ export default function EventCalendarExample({
     setView('day');
   };
 
-  const rememberDay = (target: EventTarget | null) => {
-    if (!(target instanceof Element)) return;
-    const iso = target.closest('[data-todae-calendar-cell]')?.querySelector('[data-date]')?.getAttribute('data-date');
-    if (!iso) return;
-    const day = Temporal.PlainDate.from(iso);
+  const keepAnchor = (day: Temporal.PlainDate) => {
     setAnchor((current) => (current.equals(day) ? current : day));
   };
 
@@ -512,14 +508,11 @@ export default function EventCalendarExample({
       </div>
       {view === 'month' ? (
         <Calendar.Root
-          ref={monthRef}
           className={styles.month}
           locale={locale}
           // value starts the tab stop on the anchor day. Clearing it before paint leaves that day focused and not selected.
           value={pinFocus ? anchor : null}
           onValueChange={openDay}
-          onClick={() => setMonthMove((moveCount) => moveCount + 1)}
-          onFocus={(event) => rememberDay(event.target)}
         >
           <Calendar.Header />
           <Calendar.Grid
@@ -530,6 +523,7 @@ export default function EventCalendarExample({
               const extra = list.length - shown.length;
               return (
                 <span className={styles.chips} data-date={day.date.toString()}>
+                  {day.date.day === 1 && !day.outside ? <SyncTabStop onDay={keepAnchor} /> : null}
                   {list.length === 0 ? null : (
                     <>
                       <span className={styles.detail}>
@@ -547,6 +541,7 @@ export default function EventCalendarExample({
                         ) : null}
                       </span>
                       <span className={styles.count} aria-hidden="true">
+                        <span className={styles.dot} />
                         {list.length}
                       </span>
                     </>
