@@ -3,7 +3,6 @@ import {
   moveThumb,
   nearestThumb,
   normalizeRange,
-  fillPercent,
   rangePercents,
   readScale,
   snap,
@@ -152,16 +151,6 @@ describe('valueFromPointer', () => {
     expect(valueFromPointer(40, { left: 0, width: 0 }, 'ltr', scale, 0)).toBe(0);
     expect(valueFromPointer(40, { left: 0, width: 10 }, 'ltr', scale, 8)).toBe(0);
     expect(valueFromPointer(40, { left: 0, width: 16 }, 'rtl', scale, 8)).toBe(0);
-  });
-});
-
-describe('fillPercent', () => {
-  it('places a value on the scale and uses the middle when the value is missing', () => {
-    expect(fillPercent(40, scale)).toBe('40%');
-    expect(fillPercent('0', scale)).toBe('0%');
-    expect(fillPercent(undefined, scale)).toBe('50%');
-    expect(fillPercent(150, scale)).toBe('100%');
-    expect(fillPercent(4, readScale({ min: 10, max: 10 }))).toBe('0%');
   });
 });
 

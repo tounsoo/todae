@@ -1,7 +1,6 @@
-import type { ComponentPropsWithRef, CSSProperties } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { cx } from '../internal/cx.js';
 import styles from './Slider.module.css';
-import { fillPercent, readScale } from './sliderRange.js';
 
 /**
  * A native `input type="range"`. The browser handles arrow keys, Page Up and
@@ -16,21 +15,8 @@ export type SliderRootProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'val
   defaultValue?: number | string;
 };
 
-function Root({ className, style, min, max, value, defaultValue, ...props }: SliderRootProps) {
-  const scale = readScale({ min, max });
-  const fill = { ...style, '--_value': fillPercent(value ?? defaultValue, scale) } as CSSProperties;
-  return (
-    <input
-      {...props}
-      type="range"
-      min={min}
-      max={max}
-      value={value}
-      defaultValue={defaultValue}
-      style={fill}
-      className={cx(styles.root, className)}
-    />
-  );
+function Root({ className, ...props }: SliderRootProps) {
+  return <input {...props} type="range" className={cx(styles.root, className)} />;
 }
 
 export const Slider = { Root } as const;

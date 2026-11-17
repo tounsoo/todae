@@ -124,15 +124,6 @@ export function valueFromPointer(
   return scale.min + ratio * (scale.max - scale.min);
 }
 
-export function fillPercent(value: number | string | undefined, scale: SliderScale): string {
-  const parsed = blank(value) ? null : finiteNumber(value);
-  const span = scale.max - scale.min;
-  const current = parsed ?? scale.min + span / 2;
-  const clamped = Math.min(scale.max, Math.max(scale.min, current));
-  const ratio = span === 0 ? 0 : (clamped - scale.min) / span;
-  return `${ratio * 100}%`;
-}
-
 export function rangePercents(value: readonly [number, number], scale: SliderScale): { start: number; end: number } {
   const span = scale.max - scale.min;
   if (span === 0) return { start: 0, end: 0 };

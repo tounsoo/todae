@@ -8,3 +8,5 @@ date	class	ref	caught_by	note
 2026-11-16	range-thumb-native-drag	#477	review	Each range input was only as wide as its thumb and handled the drag itself, so the gesture mapped across no travel and the value collapsed.
 2026-11-16	range-pointer-inset	#477	review	The pointer mapped across the full group, so a press on the drawn thumb moved the value by half the thumb.
 2026-11-16	slider-thumb-accent-color	#477	review	The thumb was left to accent-color. WebKit does not paint the thumb from that, so Safari kept the native white thumb.
+2026-11-16	slider-fill-server-static	#477	review	The server root wrote --_value once, so the single fill stayed put in Chromium and WebKit while the thumb moved.
+2026-11-16	thumb-paint-rule-text	#477	review	The thumb test read an empty computed style and fell back to the stylesheet rule, and it never looked at the Firefox thumb.
