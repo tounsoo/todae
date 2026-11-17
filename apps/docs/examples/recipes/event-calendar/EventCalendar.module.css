@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--todae-space-3);
+  inline-size: 100%;
   min-inline-size: 0;
 }
 
@@ -159,7 +160,9 @@
 }
 
 .month {
+  inline-size: 100%;
   min-inline-size: 0;
+  container: month / inline-size;
 }
 
 .month :global(table) {
@@ -170,16 +173,27 @@
 .month :global(td) {
   max-inline-size: 0;
   overflow: hidden;
+  vertical-align: top;
 }
 
-.month :global(button) {
+.month :global(td button) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  box-sizing: border-box;
   inline-size: 100%;
   max-inline-size: 100%;
   min-inline-size: 0;
+  padding-block: var(--todae-space-1);
+  padding-inline: var(--todae-space-1);
   overflow: hidden;
+  text-align: center;
 }
 
-.chips {
+.chips,
+.detail {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -189,19 +203,13 @@
   min-inline-size: 0;
 }
 
-.chip,
-.more {
+.chip {
+  box-sizing: border-box;
+  align-self: stretch;
+  inline-size: 100%;
   min-inline-size: 0;
   max-inline-size: 100%;
   overflow: hidden;
-  font-size: var(--todae-text-label-font-size);
-  line-height: var(--todae-text-leading-tight);
-  text-align: start;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.chip {
   border: var(--todae-border-width) solid var(--todae-color-border-default);
   border-inline-start-width: calc(4 * var(--todae-border-width));
   border-inline-start-color: var(--todae-color-accent-default);
@@ -209,4 +217,43 @@
   background: var(--todae-color-bg-surface);
   color: var(--todae-color-fg-default);
   padding-inline: var(--todae-space-1);
+  font-size: var(--todae-text-label-font-size);
+  line-height: var(--todae-text-leading-tight);
+  text-align: start;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.more {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  font-size: var(--todae-text-label-font-size);
+  line-height: var(--todae-text-leading-tight);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.count {
+  display: none;
+}
+
+@container month (max-inline-size: 30rem) {
+  .detail {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .count {
+    display: block;
+    font-size: var(--todae-text-label-font-size);
+    line-height: var(--todae-text-leading-tight);
+    text-align: center;
+  }
 }

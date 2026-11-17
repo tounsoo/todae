@@ -98,9 +98,25 @@ export function findConflicts(event: CalendarEvent, others: readonly CalendarEve
   );
 }
 
-export function weekOf(day: Temporal.PlainDate): Temporal.PlainDate[] {
-  const monday = day.subtract({ days: day.dayOfWeek - 1 });
-  return Array.from({ length: 7 }, (_, index) => monday.add({ days: index }));
+type WeekInfoLocale = Intl.Locale & {
+  getWeekInfo?: () => { firstDay: number };
+  weekInfo?: { firstDay: number };
+};
+
+function weekStartsOn(locale: string): number {
+  try {
+    const info = new Intl.Locale(locale) as WeekInfoLocale;
+    const day = (info.getWeekInfo?.() ?? info.weekInfo)?.firstDay;
+    if (day && day >= 1 && day <= 7) return day;
+  } catch {
+    // A locale Intl cannot read keeps Sunday, as Calendar does.
+  }
+  return 7;
+}
+
+export function weekOf(day: Temporal.PlainDate, locale: string): Temporal.PlainDate[] {
+  const start = day.subtract({ days: (day.dayOfWeek - weekStartsOn(locale) + 7) % 7 });
+  return Array.from({ length: 7 }, (_, index) => start.add({ days: index }));
 }
 
 const MIDNIGHT = Temporal.PlainTime.from('00:00');
@@ -274,10 +290,6 @@ function dayHeading(day: Temporal.PlainDate, locale: string): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(utcStamp(day));
 }
 
-function monthLabel(day: Temporal.PlainDate, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(utcStamp(day));
-}
-
 function rangeLabel(days: readonly Temporal.PlainDate[], locale: string): string {
   const first = days[0];
   const last = days[days.length - 1];
@@ -414,8 +426,10 @@ export default function EventCalendarExample({
   const [anchor, setAnchor] = useState(initialAnchor);
   const heading = useId();
   const monthRef = useRef<HTMLDivElement>(null);
-  const pendingFocus = useRef<'day' | 'month' | null>(null);
-  const days = view === 'week' ? weekOf(anchor) : [anchor];
+  const pendingFocus = useRef<'day' | null>(null);
+  const [pinFocus, setPinFocus] = useState(true);
+  const [monthMove, setMonthMove] = useState(0);
+  const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
   const spans = visibleSpans(axis, events);
@@ -429,26 +443,31 @@ export default function EventCalendarExample({
   const shared = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...shared].sort((a, b) => a - b) : [];
   const step = view === 'week' ? 7 : 1;
-  const move = view === 'month' ? 'month' : view === 'week' ? 'week' : 'day';
+  const move = view === 'week' ? 'week' : 'day';
 
   useLayoutEffect(() => {
-    const which = pendingFocus.current;
-    if (!which) return;
+    setPinFocus(view !== 'month');
+  }, [view]);
+
+  useLayoutEffect(() => {
+    if (view !== 'month') return;
+    const iso = monthRef.current?.querySelector('[data-todae-calendar-cell][tabindex="0"] [data-date]')?.getAttribute('data-date');
+    if (!iso) return;
+    const day = Temporal.PlainDate.from(iso);
+    setAnchor((current) => (current.equals(day) ? current : day));
+  }, [view, pinFocus, monthMove]);
+
+  useLayoutEffect(() => {
+    if (pendingFocus.current !== 'day' || view !== 'day') return;
     pendingFocus.current = null;
-    if (which === 'day' && view === 'day') {
-      const id = `${heading}-${anchor.toString()}`;
-      const list = [...document.querySelectorAll<HTMLElement>('[aria-labelledby]')].find((el) => el.getAttribute('aria-labelledby') === id);
-      const button = list?.querySelector<HTMLElement>('button');
-      if (button) {
-        button.focus();
-        return;
-      }
-      document.getElementById(id)?.focus();
+    const id = `${heading}-${anchor.toString()}`;
+    const list = [...document.querySelectorAll<HTMLElement>('[aria-labelledby]')].find((el) => el.getAttribute('aria-labelledby') === id);
+    const button = list?.querySelector<HTMLElement>('button');
+    if (button) {
+      button.focus();
       return;
     }
-    if (which === 'month' && view === 'month') {
-      monthRef.current?.querySelector<HTMLElement>('[data-todae-calendar-cell][tabindex="0"]')?.focus();
-    }
+    document.getElementById(id)?.focus();
   }, [anchor, heading, view]);
 
   const openDay = (day: Temporal.PlainDate) => {
@@ -457,9 +476,12 @@ export default function EventCalendarExample({
     setView('day');
   };
 
-  const moveMonth = (months: number, focusGrid = false) => {
-    if (focusGrid) pendingFocus.current = 'month';
-    setAnchor((day) => day.add({ months }));
+  const rememberDay = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return;
+    const iso = target.closest('[data-todae-calendar-cell]')?.querySelector('[data-date]')?.getAttribute('data-date');
+    if (!iso) return;
+    const day = Temporal.PlainDate.from(iso);
+    setAnchor((current) => (current.equals(day) ? current : day));
   };
 
   return (
@@ -472,67 +494,63 @@ export default function EventCalendarExample({
             if (value === 'month' || value === 'week' || value === 'day') setView(value);
           }}
         >
+          <ToggleGroup.Item value="month">Month</ToggleGroup.Item>
           <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
           <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
-          <ToggleGroup.Item value="month">Month</ToggleGroup.Item>
         </ToggleGroup.Root>
-        <Button.Root
-          variant="secondary"
-          onClick={() => {
-            if (view === 'month') moveMonth(-1);
-            else setAnchor((day) => day.add({ days: -step }));
-          }}
-        >
-          {`Previous ${move}`}
-        </Button.Root>
-        <Button.Root
-          variant="secondary"
-          onClick={() => {
-            if (view === 'month') moveMonth(1);
-            else setAnchor((day) => day.add({ days: step }));
-          }}
-        >
-          {`Next ${move}`}
-        </Button.Root>
-        <Text.Root className={styles.range}>{view === 'month' ? monthLabel(anchor, locale) : rangeLabel(days, locale)}</Text.Root>
+        {view === 'month' ? null : (
+          <>
+            <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: -step }))}>
+              {`Previous ${move}`}
+            </Button.Root>
+            <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: step }))}>
+              {`Next ${move}`}
+            </Button.Root>
+            <Text.Root className={styles.range}>{rangeLabel(days, locale)}</Text.Root>
+          </>
+        )}
       </div>
       {view === 'month' ? (
         <Calendar.Root
           ref={monthRef}
           className={styles.month}
-          aria-label={monthLabel(anchor, locale)}
           locale={locale}
-          value={anchor}
+          // value starts the tab stop on the anchor day. Clearing it before paint leaves that day focused and not selected.
+          value={pinFocus ? anchor : null}
           onValueChange={openDay}
+          onClick={() => setMonthMove((moveCount) => moveCount + 1)}
+          onFocus={(event) => rememberDay(event.target)}
         >
+          <Calendar.Header />
           <Calendar.Grid
             showOutsideDays
-            aria-label={monthLabel(anchor, locale)}
-            onKeyDown={(event) => {
-              if (event.key !== 'PageUp' && event.key !== 'PageDown') return;
-              event.preventDefault();
-              const sign = event.key === 'PageDown' ? 1 : -1;
-              moveMonth(sign * (event.shiftKey ? 12 : 1), true);
-            }}
             renderDay={(day) => {
               const list = eventsOnDay(day.date, events, timeZone, locale);
-              if (list.length === 0) return null;
               const shown = list.slice(0, MONTH_TITLES);
               const extra = list.length - shown.length;
               return (
-                <span className={styles.chips}>
-                  {shown.map((event, index) => (
-                    <span key={event.id} className={styles.chip}>
-                      {index > 0 ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
-                      {event.title}
-                    </span>
-                  ))}
-                  {extra > 0 ? (
-                    <span className={styles.more}>
-                      <VisuallyHidden.Root>, </VisuallyHidden.Root>
-                      {`+${extra} more`}
-                    </span>
-                  ) : null}
+                <span className={styles.chips} data-date={day.date.toString()}>
+                  {list.length === 0 ? null : (
+                    <>
+                      <span className={styles.detail}>
+                        {shown.map((event, index) => (
+                          <span key={event.id} className={styles.chip}>
+                            {index > 0 ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
+                            {event.title}
+                          </span>
+                        ))}
+                        {extra > 0 ? (
+                          <span className={styles.more}>
+                            <VisuallyHidden.Root>, </VisuallyHidden.Root>
+                            {`+${extra} more`}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className={styles.count} aria-hidden="true">
+                        {list.length}
+                      </span>
+                    </>
+                  )}
                 </span>
               );
             }}
