@@ -1768,6 +1768,10 @@
     }
   },
   "Slider.Root": {
+    "mode": {
+      "en": "One thumb, or \"range\" for two thumbs on one track. A thumb stops when it meets the other.",
+      "ko": "손잡이 하나입니다. \"range\"이면 한 트랙에 손잡이 두 개입니다. 손잡이는 다른 손잡이에 닿으면 멈춥니다."
+    },
     "min": {
       "en": "The lowest value.",
       "ko": "가장 낮은 값."
@@ -1781,16 +1785,40 @@
       "ko": "화살표 키 한 번에 값이 움직이는 양."
     },
     "value": {
-      "en": "The value, with onChange. Use defaultValue to leave it to the input.",
-      "ko": "onChange와 함께 쓰는 값. 입력 요소에 맡기려면 defaultValue를 쓰세요."
+      "en": "The value, with onChange. With mode=\"range\", the start and the end, with onValueChange.",
+      "ko": "onChange와 함께 쓰는 값입니다. mode=\"range\"이면 onValueChange와 함께 쓰는 시작과 끝입니다."
     },
     "defaultValue": {
-      "en": "The starting value, when the input keeps it.",
-      "ko": "입력 요소가 값을 관리할 때의 시작 값."
+      "en": "The starting value, when the slider keeps it. With mode=\"range\", the starting pair.",
+      "ko": "슬라이더가 값을 가질 때의 시작 값입니다. mode=\"range\"이면 처음의 시작과 끝입니다."
+    },
+    "onValueChange": {
+      "en": "With mode=\"range\", called with the next start and end after a gesture.",
+      "ko": "mode=\"range\"일 때, 손잡이를 움직인 다음의 시작과 끝을 받습니다."
+    },
+    "startLabel": {
+      "en": "Required when mode is \"range\". The accessible name of the start thumb.",
+      "ko": "mode가 \"range\"이면 필수입니다. 시작 손잡이의 접근 이름입니다."
+    },
+    "endLabel": {
+      "en": "Required when mode is \"range\". The accessible name of the end thumb.",
+      "ko": "mode가 \"range\"이면 필수입니다. 끝 손잡이의 접근 이름입니다."
+    },
+    "startValueText": {
+      "en": "With mode=\"range\", what a screen reader says for the start thumb instead of the number.",
+      "ko": "mode가 \"range\"일 때, 스크린 리더가 시작 손잡이의 숫자 대신 읽는 말입니다."
+    },
+    "endValueText": {
+      "en": "With mode=\"range\", what a screen reader says for the end thumb instead of the number.",
+      "ko": "mode가 \"range\"일 때, 스크린 리더가 끝 손잡이의 숫자 대신 읽는 말입니다."
+    },
+    "name": {
+      "en": "The field name. With mode=\"range\", the start field name and the end field name. Omit it and neither range input submits.",
+      "ko": "필드 이름입니다. mode=\"range\"이면 시작 필드 이름과 끝 필드 이름입니다. 생략하면 range 입력은 어느 쪽도 제출하지 않습니다."
     },
     "aria-valuetext": {
-      "en": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\".",
-      "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."
+      "en": "On one thumb, what a screen reader says instead of the number, such as \"40%\" or \"Medium\". On a range, use startValueText and endValueText.",
+      "ko": "손잡이 하나에서 스크린 리더가 숫자 대신 읽는 말. \"40%\"나 \"Medium\"처럼. 범위에서는 startValueText와 endValueText를 씁니다."
     }
   },
   "Stack.Root": {

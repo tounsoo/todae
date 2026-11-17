@@ -4,7 +4,8 @@ import styles from './Slider.module.css';
 
 /**
  * A native `input type="range"`. The browser handles arrow keys, Page Up and
- * Down, Home and End, and announces the value; accent-color tints it.
+ * Down, Home and End, and announces the value. The thumb uses the slider fill
+ * token. A disabled slider uses GrayText.
  */
 // React's own types for value and defaultValue also take a string list, which a range input can't hold.
 export type SliderRootProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'value' | 'defaultValue'> & {
