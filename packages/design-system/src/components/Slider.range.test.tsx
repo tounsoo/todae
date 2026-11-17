@@ -93,6 +93,19 @@ describe('Slider.Root range', () => {
     expect(document.querySelector('input[type="hidden"]')).toBeNull();
   });
 
+  it('submits the start and the end under the two names', () => {
+    render(
+      <form>
+        <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" name={['low', 'high']} defaultValue={[20, 80]} />
+      </form>,
+    );
+    const form = document.querySelector('form');
+    if (!(form instanceof HTMLFormElement)) throw new Error('missing form');
+    const data = new FormData(form);
+    expect(data.get('low')).toBe('20');
+    expect(data.get('high')).toBe('80');
+  });
+
   it('takes a disabled invalid fieldset on both thumbs', () => {
     render(
       <Fieldset.Root disabled invalid>

@@ -32,6 +32,42 @@ describe('Slider range in the browser', () => {
     expect(start()).toHaveProperty('value', '21');
   });
 
+  it('sends each thumb to its own Home and End, and pages it without passing the other', async () => {
+    render(<Range />);
+    end().focus();
+    await userEvent.keyboard('{End}');
+    expect(end()).toHaveProperty('value', '100');
+    expect(start()).toHaveProperty('value', '20');
+    await userEvent.keyboard('{Home}');
+    expect(end()).toHaveProperty('value', '20');
+    expect(start()).toHaveProperty('value', '20');
+
+    start().focus();
+    await userEvent.keyboard('{Home}');
+    expect(start()).toHaveProperty('value', '0');
+    expect(end()).toHaveProperty('value', '20');
+    await userEvent.keyboard('{End}');
+    expect(start()).toHaveProperty('value', '20');
+    expect(end()).toHaveProperty('value', '20');
+
+    cleanup();
+    render(<Range />);
+    start().focus();
+    const read = (thumb: HTMLElement) => {
+      if (!(thumb instanceof HTMLInputElement)) throw new Error('not an input');
+      return Number(thumb.value);
+    };
+    const before = read(start());
+    await userEvent.keyboard('{PageUp}');
+    const after = read(start());
+    expect(after).toBeGreaterThan(before);
+    expect(after).toBeLessThanOrEqual(80);
+    expect(end()).toHaveProperty('value', '80');
+    await userEvent.keyboard('{PageDown}');
+    expect(read(start())).toBeLessThan(after);
+    expect(end()).toHaveProperty('value', '80');
+  });
+
   it('moves the nearer thumb from a press on the track', async () => {
     render(<Range />);
     const box = group().getBoundingClientRect();
