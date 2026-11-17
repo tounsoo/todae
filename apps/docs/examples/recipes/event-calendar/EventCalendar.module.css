@@ -169,6 +169,14 @@
 
 .month :global(td) {
   max-inline-size: 0;
+  overflow: hidden;
+}
+
+.month :global(button) {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overflow: hidden;
 }
 
 .chips {
@@ -183,6 +191,8 @@
 
 .chip,
 .more {
+  min-inline-size: 0;
+  max-inline-size: 100%;
   overflow: hidden;
   font-size: var(--todae-text-label-font-size);
   line-height: var(--todae-text-leading-tight);
