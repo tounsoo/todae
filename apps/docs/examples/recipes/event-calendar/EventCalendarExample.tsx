@@ -4,10 +4,6 @@ import { Button, ScrollArea, Text, ToggleGroup, formatTime } from '@tounsoo/toda
 import { useId, useState } from 'react';
 import styles from './EventCalendar.module.css';
 
-// Each day is its own lane down the page. Units are elapsed minutes from that
-// day's opening, so a clock change makes the lane as long as the day really is.
-// A wall time the change skips or repeats follows Temporal's `compatible`.
-
 export type CalendarEvent = {
   id: string;
   title: string;
@@ -17,7 +13,6 @@ export type CalendarEvent = {
   allDay: boolean;
 };
 
-/** One day's visible hours, `length` minutes long in real time. */
 export type DaySegment = {
   day: Temporal.PlainDate;
   opens: Temporal.ZonedDateTime;
@@ -40,10 +35,9 @@ function minutesBetween(from: Temporal.ZonedDateTime, to: Temporal.ZonedDateTime
 }
 
 /**
- * A segment per day, open from `opens` to `closes` in `timeZone`. PlainTime has no
- * 24:00, so a close at or before the open on the clock is that time the next day.
- * The clock decides the wrap. When the resolved close still falls at or before the
- * open, the whole range sat in a skipped hour and the lane is empty.
+ * PlainTime has no 24:00, so a close at or before the open on the clock is that
+ * time the next day. When the resolved close still falls at or before the open,
+ * the whole range sat in a skipped hour and the lane is empty.
  */
 export function daySegments({
   days,
@@ -73,7 +67,6 @@ function holds(length: number, units: number, edge: Edge): boolean {
   return edge === 'start' ? units >= 0 && units < length : units > 0 && units <= length;
 }
 
-/** The lane `at` belongs to, or null when it falls outside every visible day. */
 export function toUnits(axis: DayAxis, at: Temporal.ZonedDateTime, edge: Edge = 'start'): DayPosition | null {
   for (const segment of axis.segments) {
     const units = minutesBetween(segment.opens, at);
@@ -82,13 +75,11 @@ export function toUnits(axis: DayAxis, at: Temporal.ZonedDateTime, edge: Edge = 
   return null;
 }
 
-/** The time `units` minutes into `segment`, or null outside that lane. */
 export function fromUnits(segment: DaySegment, units: number, edge: Edge = 'start'): Temporal.ZonedDateTime | null {
   if (!holds(segment.length, units, edge)) return null;
   return segment.opens.add({ minutes: units });
 }
 
-/** Every `step` minutes from the opening, and the closing even when it falls off the step. A step of 0 or less throws. */
 export function snapGrid(segment: DaySegment, step: number): number[] {
   if (step <= 0) throw new RangeError('step must be greater than 0');
   const points = new Set<number>();
@@ -97,11 +88,6 @@ export function snapGrid(segment: DaySegment, step: number): number[] {
   return [...points].sort((a, b) => a - b);
 }
 
-/**
- * Occurrences whose time overlaps `event`, other than `event` itself. The
- * interval is half-open, so touching at an endpoint is not an overlap.
- * `allDay` and `seriesId` do not change that.
- */
 export function findConflicts(event: CalendarEvent, others: readonly CalendarEvent[]): { id: string }[] {
   return others.flatMap((other) =>
     other.id !== event.id &&
@@ -112,13 +98,11 @@ export function findConflicts(event: CalendarEvent, others: readonly CalendarEve
   );
 }
 
-/** The Monday-to-Sunday week that contains `day`. */
 export function weekOf(day: Temporal.PlainDate): Temporal.PlainDate[] {
   const monday = day.subtract({ days: day.dayOfWeek - 1 });
   return Array.from({ length: 7 }, (_, index) => monday.add({ days: index }));
 }
 
-/** The longest lane, in minutes. Columns share it so one minute has one height. */
 export function laneScale(axis: DayAxis): number {
   return axis.segments.reduce((longest, segment) => Math.max(longest, segment.length), 0);
 }
@@ -130,11 +114,6 @@ export type VisibleSpan = {
   end: number;
 };
 
-/**
- * The part of each event that falls inside a lane. An all-day event is left
- * out. An event that meets two days is one span on each. A lane of length 0
- * contributes nothing.
- */
 export function visibleSpans(axis: DayAxis, events: readonly CalendarEvent[]): VisibleSpan[] {
   const spans: VisibleSpan[] = [];
   for (const segment of axis.segments) {
@@ -154,7 +133,6 @@ export function visibleSpans(axis: DayAxis, events: readonly CalendarEvent[]): V
   return spans;
 }
 
-/** Top and height of a span as fractions of `scale`, the shared lane length. */
 export function spanFrame(span: Pick<VisibleSpan, 'start' | 'end'>, scale: number): { top: number; height: number } {
   if (scale <= 0) throw new RangeError('scale must be greater than 0');
   return { top: span.start / scale, height: (span.end - span.start) / scale };
@@ -162,7 +140,6 @@ export function spanFrame(span: Pick<VisibleSpan, 'start' | 'end'>, scale: numbe
 
 export type HourMark = { units: number; time: Temporal.ZonedDateTime };
 
-/** Each hour from the opening, through the last hour that starts before the close. */
 export function hourMarks(segment: DaySegment): HourMark[] {
   const marks: HourMark[] = [];
   for (let units = 0; units < segment.length; units += 60) {
