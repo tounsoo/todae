@@ -216,7 +216,9 @@ function Range({
   function atPointer(event: PointerEvent<HTMLDivElement>): number {
     const rect = event.currentTarget.getBoundingClientRect();
     const direction = getComputedStyle(event.currentTarget).direction === 'rtl' ? 'rtl' : 'ltr';
-    return valueFromPointer(event.clientX, rect, direction, scale);
+    const thumbWidth = startRef.current?.getBoundingClientRect().width ?? 0;
+    const inset = thumbWidth > 0 ? thumbWidth / 2 : 0;
+    return valueFromPointer(event.clientX, rect, direction, scale, inset);
   }
 
   function onSharedThumb(raw: number, current: SliderRangeValue): boolean {
@@ -267,7 +269,7 @@ function Range({
     if (typeof event.currentTarget.releasePointerCapture === 'function' && event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    if (thumb) focusThumb(thumb);
+    focusThumb(thumb ?? 'start');
   }
 
   function onThumb(thumb: SliderThumb) {

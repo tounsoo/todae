@@ -113,11 +113,14 @@ export function valueFromPointer(
   rect: { left: number; width: number },
   direction: 'ltr' | 'rtl',
   scale: SliderScale,
+  inset: number,
 ): number {
   const { width } = rect;
-  if (!(width > 0) || !Number.isFinite(clientX)) return scale.min;
-  const fromStart = direction === 'rtl' ? rect.left + width - clientX : clientX - rect.left;
-  const ratio = Math.min(1, Math.max(0, fromStart / width));
+  const pad = Number.isFinite(inset) && inset > 0 ? inset : 0;
+  const travel = width - pad * 2;
+  if (!(travel > 0) || !Number.isFinite(clientX)) return scale.min;
+  const fromStart = direction === 'rtl' ? rect.left + width - pad - clientX : clientX - rect.left - pad;
+  const ratio = Math.min(1, Math.max(0, fromStart / travel));
   return scale.min + ratio * (scale.max - scale.min);
 }
 

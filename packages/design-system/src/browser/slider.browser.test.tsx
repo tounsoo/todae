@@ -99,13 +99,12 @@ describe('Slider range in the browser', () => {
 
   it('moves the nearer thumb from a press on the track', async () => {
     render(<Range />);
-    const box = group().getBoundingClientRect();
-    await userEvent.click(group(), { position: { x: box.width * 0.1, y: box.height / 2 } });
+    await userEvent.click(group(), { position: place(pointAt(10)) });
     expect(start()).toHaveProperty('value', '10');
     expect(end()).toHaveProperty('value', '80');
     expect(document.activeElement).toBe(start());
 
-    await userEvent.click(group(), { position: { x: box.width * 0.9, y: box.height / 2 } });
+    await userEvent.click(group(), { position: place(pointAt(90)) });
     expect(end()).toHaveProperty('value', '90');
     expect(start()).toHaveProperty('value', '10');
     expect(document.activeElement).toBe(end());
