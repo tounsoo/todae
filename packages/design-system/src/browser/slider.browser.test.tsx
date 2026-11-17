@@ -26,6 +26,49 @@ const start = () => screen.getByRole('slider', { name: 'Minimum' });
 const end = () => screen.getByRole('slider', { name: 'Maximum' });
 const group = () => screen.getByRole('group');
 
+function styleRules(): CSSStyleRule[] {
+  const nested = (list: CSSRuleList): CSSStyleRule[] =>
+    [...list].flatMap((rule) => {
+      if (rule instanceof CSSStyleRule) return [rule];
+      if ('cssRules' in rule && rule.cssRules instanceof CSSRuleList) return nested(rule.cssRules);
+      return [];
+    });
+  return [...document.styleSheets].flatMap((sheet) => {
+    try {
+      return nested(sheet.cssRules);
+    } catch {
+      return [];
+    }
+  });
+}
+
+function thumbPaint(input: Element): { appearance: string; background: string } {
+  const appearance = getComputedStyle(input).appearance;
+  const pseudos = ['::-webkit-slider-thumb', '::-moz-range-thumb'];
+  for (const pseudo of pseudos) {
+    const measured = getComputedStyle(input, pseudo).backgroundColor;
+    if (measured && measured !== 'rgba(0, 0, 0, 0)' && measured !== 'transparent') return { appearance, background: measured };
+  }
+  for (const pseudo of pseudos) {
+    const rule = styleRules().find((candidate) =>
+      candidate.selectorText.split(',').some((part) => {
+        const selector = part.trim();
+        if (!selector.endsWith(pseudo)) return false;
+        const owner = selector.slice(0, -pseudo.length).trim();
+        return owner !== '' && input.matches(owner);
+      }),
+    );
+    const declared = rule?.style.getPropertyValue('background-color').trim() ?? '';
+    const variable = /^var\((--[\w-]+)\)$/.exec(declared);
+    if (variable) {
+      const resolved = getComputedStyle(input).getPropertyValue(variable[1]).trim();
+      if (resolved) return { appearance, background: resolved };
+    }
+    if (declared) return { appearance, background: declared };
+  }
+  return { appearance, background: '' };
+}
+
 function onPage(x: number, y: number) {
   const frame = window.frameElement!.getBoundingClientRect();
   const scale = frame.width / window.innerWidth;
@@ -281,6 +324,21 @@ describe('Slider range in the browser', () => {
     expect(start()).toHaveProperty('value', '16');
     expect(end()).toHaveProperty('value', '60');
     expect(document.activeElement).toBe(end());
+  });
+
+  it('paints each thumb from the fill token', () => {
+    render(
+      <>
+        <Slider.Root aria-label="Volume" defaultValue={40} />
+        <Range initial={[16, 69]} />
+      </>,
+    );
+    const fill = getComputedStyle(start()).getPropertyValue('--todae-slider-fill').trim();
+    for (const input of [screen.getByRole('slider', { name: 'Volume' }), start(), end()]) {
+      const painted = thumbPaint(input);
+      expect(painted.appearance).toBe('none');
+      expect(painted.background).toBe(fill);
+    }
   });
 
   it('draws the focus ring around the track', async () => {
