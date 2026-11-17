@@ -387,6 +387,7 @@ describe('Slider range in the browser', () => {
       const y = volume.clientHeight / 2;
       const single = await bitmap(volume);
       expectRgb(single.at(along(volume, 40), y), fill, `${appearance} thumb`);
+      expectRgb(single.at(along(volume, 40), 1), fill, `${appearance} thumb edge`);
       expectRgb(single.at(along(volume, 20), y), fill, `${appearance} fill`);
       expectRgb(single.at(along(volume, 70), y), empty, `${appearance} track`);
       for (const thumb of [start(), end()]) {
@@ -451,5 +452,103 @@ describe('Slider range in the browser', () => {
     await userEvent.keyboard('{ArrowRight}');
     expect(getComputedStyle(start()).outlineStyle).toBe('none');
     expect(getComputedStyle(group()).outlineStyle).toBe('solid');
+  });
+
+  it('paints a disabled thumb and fill with GrayText', async () => {
+    for (const appearance of ['light', 'dark'] as const) {
+      const view = render(
+        <Frame appearance={appearance}>
+          <Slider.Root aria-label="Volume" defaultValue={40} disabled />
+          <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" defaultValue={[16, 69]} disabled />
+        </Frame>,
+      );
+      const host = view.container.querySelector('[data-appearance]');
+      if (!(host instanceof HTMLElement)) throw new Error('missing theme');
+      const fill = readColor(host, 'var(--todae-slider-fill)');
+      const gray = readColor(host, 'GrayText');
+      const empty = readColor(host, 'ButtonFace');
+      const volume = screen.getByRole('slider', { name: 'Volume' });
+      if (!(volume instanceof HTMLInputElement)) throw new Error('missing slider');
+      const y = volume.clientHeight / 2;
+      const single = await bitmap(volume);
+      expectRgb(single.at(along(volume, 40), y), gray, `${appearance} disabled thumb`);
+      expectRgb(single.at(along(volume, 20), y), gray, `${appearance} disabled fill`);
+      expectRgb(single.at(along(volume, 70), y), empty, `${appearance} disabled track`);
+      const fillGap = Math.max(Math.abs(fill[0] - gray[0]), Math.abs(fill[1] - gray[1]), Math.abs(fill[2] - gray[2]));
+      expect(fillGap, `${appearance} GrayText is the fill token`).toBeGreaterThan(8);
+      for (const thumb of [start(), end()]) {
+        if (!(thumb instanceof HTMLElement)) throw new Error('missing thumb');
+        const shot = await bitmap(thumb);
+        expectRgb(shot.at(thumb.clientWidth / 2, thumb.clientHeight / 2), gray, `${appearance} disabled range thumb`);
+      }
+      const track = await bitmap(group());
+      const groupBox = group().getBoundingClientRect();
+      const startBox = start().getBoundingClientRect();
+      const endBox = end().getBoundingClientRect();
+      expectRgb(
+        track.at((startBox.right + endBox.left) / 2 - groupBox.left, group().clientHeight / 2),
+        gray,
+        `${appearance} disabled range fill`,
+      );
+      expectRgb(
+        track.at(Math.max(0, startBox.left - groupBox.left - startBox.width / 2), group().clientHeight / 2),
+        empty,
+        `${appearance} disabled range track`,
+      );
+      view.unmount();
+    }
+  });
+
+  it('keeps the single fill inside the input when the thumb clip is removed', async () => {
+    const view = render(
+      <Frame appearance="light">
+        <div data-pad="" style={{ padding: 24, background: 'rgb(0, 255, 0)' }}>
+          <Slider.Root aria-label="Volume" defaultValue={40} />
+        </div>
+      </Frame>,
+    );
+    const pad = view.container.querySelector('[data-pad]');
+    if (!(pad instanceof HTMLElement)) throw new Error('missing pad');
+    const input = screen.getByRole('slider', { name: 'Volume' });
+    if (!(input instanceof HTMLInputElement)) throw new Error('missing slider');
+    const style = document.createElement('style');
+    style.textContent = 'input[type="range"]::-webkit-slider-thumb { clip-path: none !important; }';
+    document.head.append(style);
+    try {
+      const shot = await bitmap(pad);
+      const inputBox = input.getBoundingClientRect();
+      const padBox = pad.getBoundingClientRect();
+      const left = inputBox.left - padBox.left;
+      const top = inputBox.top - padBox.top;
+      const page: Rgb = [0, 255, 0];
+      const fill = readColor(pad, 'var(--todae-slider-fill)');
+      expectRgb(shot.at(left - 8, top + inputBox.height / 2), page, 'left of the input');
+      expectRgb(shot.at(left + 24, top - 8), page, 'above the input');
+      expectRgb(shot.at(left + 24, top + inputBox.height + 8), page, 'below the input');
+      expectRgb(shot.at(left + 16, top + inputBox.height / 2), fill, 'inside the input');
+    } finally {
+      style.remove();
+    }
+  });
+
+  it('draws the focus ring outside the single input', async () => {
+    const view = render(
+      <Frame appearance="light">
+        <div data-pad="" style={{ padding: 24, background: 'rgb(0, 255, 0)' }}>
+          <Slider.Root aria-label="Volume" defaultValue={40} />
+        </div>
+      </Frame>,
+    );
+    const pad = view.container.querySelector('[data-pad]');
+    if (!(pad instanceof HTMLElement)) throw new Error('missing pad');
+    const input = screen.getByRole('slider', { name: 'Volume' });
+    if (!(input instanceof HTMLInputElement)) throw new Error('missing slider');
+    const ring = readColor(pad, 'var(--todae-slider-ring-focus)');
+    input.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    const shot = await bitmap(pad);
+    const inputBox = input.getBoundingClientRect();
+    const padBox = pad.getBoundingClientRect();
+    expectRgb(shot.at(inputBox.left - padBox.left + inputBox.width / 2, inputBox.top - padBox.top - 6), ring, 'focus ring');
   });
 });
