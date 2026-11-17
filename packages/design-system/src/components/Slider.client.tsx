@@ -191,7 +191,7 @@ function Range({
   const scope = useContext(ValidationScopeContext);
   const startRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLInputElement>(null);
-  const drag = useRef<{ thumb: SliderThumb; pointerId: number } | null>(null);
+  const drag = useRef<{ thumb: SliderThumb | null; pointerId: number; origin: number } | null>(null);
   const [thumb, setThumb] = useState('1rem');
   useLayoutEffect(() => {
     const input = startRef.current;
@@ -219,15 +219,30 @@ function Range({
     return valueFromPointer(event.clientX, rect, direction, scale);
   }
 
-  function pointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (disabled || event.button !== 0) return;
-    if (event.target instanceof HTMLInputElement) return;
-    const raw = atPointer(event);
-    const thumb = nearestThumb(normalizeRange(latest(), scale), raw);
-    drag.current = { thumb, pointerId: event.pointerId };
-    if (typeof event.currentTarget.setPointerCapture === 'function') event.currentTarget.setPointerCapture(event.pointerId);
+  function onSharedThumb(raw: number, current: SliderRangeValue): boolean {
+    if (current[0] !== current[1]) return false;
+    const box = groupRef.current?.getBoundingClientRect();
+    const thumbBox = startRef.current?.getBoundingClientRect();
+    if (!box || !thumbBox || !(box.width > 0)) return raw === current[0];
+    const reach = (thumbBox.width / 2 / box.width) * (scale.max - scale.min);
+    return Math.abs(raw - current[0]) <= reach;
+  }
+
+  function focusThumb(thumb: SliderThumb) {
     const input = thumb === 'start' ? startRef.current : endRef.current;
     if (input) focusWithoutScroll(input);
+  }
+
+  function pointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (disabled || event.button !== 0) return;
+    event.preventDefault();
+    const raw = atPointer(event);
+    const current = normalizeRange(latest(), scale);
+    const thumb = onSharedThumb(raw, current) ? null : nearestThumb(current, raw);
+    drag.current = { thumb, pointerId: event.pointerId, origin: raw };
+    if (typeof event.currentTarget.setPointerCapture === 'function') event.currentTarget.setPointerCapture(event.pointerId);
+    if (!thumb) return;
+    focusThumb(thumb);
     commit(thumb, raw, true);
   }
 
@@ -235,18 +250,24 @@ function Range({
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId || disabled) return;
     if (typeof event.currentTarget.hasPointerCapture !== 'function' || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    commit(active.thumb, atPointer(event), true);
+    const raw = atPointer(event);
+    if (active.thumb == null) {
+      if (raw === active.origin) return;
+      active.thumb = raw < active.origin ? 'start' : 'end';
+      focusThumb(active.thumb);
+    }
+    commit(active.thumb, raw, true);
   }
 
   function pointerEnd(event: PointerEvent<HTMLDivElement>) {
     const active = drag.current;
     if (!active || active.pointerId !== event.pointerId) return;
-    const input = active.thumb === 'start' ? startRef.current : endRef.current;
+    const thumb = active.thumb;
     drag.current = null;
     if (typeof event.currentTarget.releasePointerCapture === 'function' && event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    if (input) focusWithoutScroll(input);
+    if (thumb) focusThumb(thumb);
   }
 
   function onThumb(thumb: SliderThumb) {

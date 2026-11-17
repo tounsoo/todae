@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { userEvent } from 'vitest/browser';
-import { act, useState } from 'react';
+import { cdp, server, userEvent } from 'vitest/browser';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Slider, type SliderRangeValue } from '../index.js';
 
@@ -25,6 +25,28 @@ function usedThumb(): number {
 const start = () => screen.getByRole('slider', { name: 'Minimum' });
 const end = () => screen.getByRole('slider', { name: 'Maximum' });
 const group = () => screen.getByRole('group');
+
+function onPage(x: number, y: number) {
+  const frame = window.frameElement!.getBoundingClientRect();
+  const scale = frame.width / window.innerWidth;
+  return { x: frame.left + x * scale, y: frame.top + y * scale };
+}
+
+async function stroke(kind: 'touch' | 'pen', from: { x: number; y: number }, to: { x: number; y: number }) {
+  const session = cdp() as { send(method: string, params?: object): Promise<unknown> };
+  const down = onPage(from.x, from.y);
+  const up = onPage(to.x, to.y);
+  if (kind === 'touch') {
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: down.x, y: down.y, id: 1 }] });
+    await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: up.x, y: up.y, id: 1 }] });
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    return;
+  }
+  await session.send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...down, pointerType: 'pen' });
+  await session.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...down, button: 'left', buttons: 1, clickCount: 1, pointerType: 'pen' });
+  await session.send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...up, button: 'left', buttons: 1, pointerType: 'pen' });
+  await session.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...up, button: 'left', buttons: 0, clickCount: 1, pointerType: 'pen' });
+}
 
 describe('Slider range in the browser', () => {
   it('moves each thumb by an arrow key', async () => {
@@ -173,27 +195,6 @@ describe('Slider range in the browser', () => {
     await userEvent.dragAndDrop(group(), group(), { sourcePosition: place(from), targetPosition: place(to) });
   }
 
-  function pointer(type: string, point: { x: number; y: number }, pointerType: 'touch' | 'pen') {
-    const target = document.elementFromPoint(point.x, point.y);
-    if (!target) throw new Error('no element at the pointer');
-    act(() => {
-      target.dispatchEvent(
-        new PointerEvent(type, {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          pointerId: 1,
-          pointerType,
-          isPrimary: true,
-          button: type === 'pointermove' ? -1 : 0,
-          buttons: type === 'pointerup' ? 0 : 1,
-          clientX: point.x,
-          clientY: point.y,
-        }),
-      );
-    });
-  }
-
   it('stacks the start thumb above the end thumb', () => {
     for (const [low, high] of [
       [16, 35],
@@ -245,25 +246,23 @@ describe('Slider range in the browser', () => {
     expect(end()).toHaveProperty('value', '60');
   });
 
-  it('drags the start thumb from a touch press and leaves it focused', () => {
+  it.runIf(server.browser === 'chromium')('drags the start thumb from a touch press and leaves it focused', async () => {
     render(<Range initial={[16, 35]} />);
-    const from = pointAt(16);
-    const to = valueAt(25);
-    pointer('pointerdown', from, 'touch');
-    pointer('pointermove', to, 'touch');
-    pointer('pointerup', to, 'touch');
+    const kinds: string[] = [];
+    group().addEventListener('pointerdown', (event) => kinds.push(event.pointerType));
+    await stroke('touch', pointAt(16), valueAt(25));
+    expect(kinds).toEqual(['touch']);
     expect(start()).toHaveProperty('value', '25');
     expect(end()).toHaveProperty('value', '35');
     expect(document.activeElement).toBe(start());
   });
 
-  it('drags the end thumb from a pen press and leaves it focused', () => {
+  it.runIf(server.browser === 'chromium')('drags the end thumb from a pen press and leaves it focused', async () => {
     render(<Range initial={[16, 35]} />);
-    const from = pointAt(35);
-    const to = valueAt(60);
-    pointer('pointerdown', from, 'pen');
-    pointer('pointermove', to, 'pen');
-    pointer('pointerup', to, 'pen');
+    const kinds: string[] = [];
+    group().addEventListener('pointerdown', (event) => kinds.push(event.pointerType));
+    await stroke('pen', pointAt(35), valueAt(60));
+    expect(kinds).toEqual(['pen']);
     expect(start()).toHaveProperty('value', '16');
     expect(end()).toHaveProperty('value', '60');
     expect(document.activeElement).toBe(end());
