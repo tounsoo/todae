@@ -1,4 +1,5 @@
 import CalendarDayContent from '../../../examples/calendar/CalendarDayContent';
+import CalendarOutsideDays from '../../../examples/calendar/CalendarOutsideDays';
 import CalendarRange from '../../../examples/calendar/CalendarRange';
 import CalendarInline from '../../../examples/calendar/CalendarInline';
 
@@ -39,6 +40,10 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. `Calendar.Root`는 렌
 날짜 버튼은 유일한 Tab 정지점으로 남습니다. 이름은 전체 날짜 그대로입니다. 날에 내용이 있으면 그 내용은 버튼의 설명으로 읽히므로, 화면 읽기는 날짜를 읽은 다음 내용을 읽습니다. `renderDay`에는 일정 제목이나 "+N more" 개수처럼 글자를 넣으세요. 상호작용하는 내용은 지원하지 않습니다. 날 안의 링크, 버튼, tabindex가 있는 요소는 잘못된 마크업이고, 이 슬롯은 그 요소에 키보드 경로를 주지 않습니다. 개발 중에는 `renderDay`가 그런 요소를 돌려주면 `Calendar.Grid`가 오류를 기록합니다. 동작은 날짜를 누르는 쪽에 둡니다. 날짜 버튼을 누르거나 Enter와 Space를 누르는 것입니다.
 
 <Example of={CalendarDayContent} block />
+
+`showOutsideDays`를 주면 보이는 달 앞뒤 주의 날도 버튼이 됩니다.
+
+<Example of={CalendarOutsideDays} block />
 
 ## 접근성을 지키는 조합
 

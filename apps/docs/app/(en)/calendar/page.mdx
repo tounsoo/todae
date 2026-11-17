@@ -1,4 +1,5 @@
 import CalendarDayContent from '../../../examples/calendar/CalendarDayContent';
+import CalendarOutsideDays from '../../../examples/calendar/CalendarOutsideDays';
 import CalendarRange from '../../../examples/calendar/CalendarRange';
 import CalendarInline from '../../../examples/calendar/CalendarInline';
 
@@ -39,6 +40,10 @@ Todae ships no Temporal polyfill. `Calendar.Root` calls `Temporal` when it rende
 The day button stays the one Tab stop. Its name stays the full date. When the day has content, that content is the button's description, so a screen reader reads the date and then the content. Put text in `renderDay`, such as an event title or a "+N more" count. Interactive content is not supported. A link, a button, or anything with a tabindex inside the day is invalid, and this slot gives it no keyboard path. In development, `Calendar.Grid` logs an error when `renderDay` returns one. A product puts the interaction on the day press itself. The day button's press, Enter and Space are how to act on that day.
 
 <Example of={CalendarDayContent} block />
+
+With `showOutsideDays`, the days in the weeks before and after the shown month are buttons too.
+
+<Example of={CalendarOutsideDays} block />
 
 ## Accessible composition
 

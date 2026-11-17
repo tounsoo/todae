@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resetWarnOnce } from '../internal/warnOnce.js';
@@ -713,6 +713,40 @@ describe('Calendar', () => {
     expect(base.querySelector('[data-outside]')).toBeNull();
   });
 
+  it('spends no day ids, so a useId after a plain calendar matches one with the calendar omitted', () => {
+    function Mark({ name }: { name: string }) {
+      const id = useId();
+      return <span data-testid={name}>{id}</span>;
+    }
+    const numberOf = (name: string) => {
+      const text = screen.getByTestId(name).textContent ?? '';
+      const match = /_r_([0-9a-v]+)_/i.exec(text);
+      if (!match?.[1]) throw new Error(text);
+      return Number.parseInt(match[1], 32);
+    };
+    render(
+      <>
+        <div>
+          <Mark name="base-before" />
+          <Mark name="base-after" />
+        </div>
+        <div>
+          <Mark name="cal-before" />
+          <Calendar.Root aria-label="Start" locale="en-US" firstDayOfWeek={7} value={date('2026-10-13')} onValueChange={() => undefined}>
+            <Calendar.Header />
+            <Calendar.Grid />
+          </Calendar.Root>
+          <Mark name="cal-after" />
+        </div>
+      </>,
+    );
+    const baseGap = numberOf('base-after') - numberOf('base-before');
+    const heading = screen.getByRole('button', { name: 'October 2026' }).id;
+    const headingNumber = Number.parseInt(/_r_([0-9a-v]+)_/i.exec(heading)?.[1] ?? '', 32);
+    expect(headingNumber).toBe(numberOf('cal-before') + baseGap);
+    expect(numberOf('cal-after')).toBe(headingNumber + baseGap);
+  });
+
   it('draws outside days only when showOutsideDays is set, with or without renderDay', () => {
     const seen: string[] = [];
     const note = (day: { date: Temporal.PlainDate; outside: boolean }) => {
@@ -797,7 +831,8 @@ describe('Calendar', () => {
         <Calendar.Grid renderDay={(day) => (day.date.toString() === '2026-10-13' ? 'Review' : null)} />
       </Calendar.Root>,
     );
-    expect(screen.getByRole('button', { name: 'Tuesday, October 13, 2026', description: 'Review' })).toBeTruthy();
+    const named = screen.getByRole('button', { name: 'Tuesday, October 13, 2026', description: 'Review' });
+    expect(named.getAttribute('aria-describedby')).toMatch(/-day-2026-10-13$/);
     const quiet = screen.getByRole('button', { name: 'Wednesday, October 14, 2026' });
     expect(quiet.getAttribute('aria-describedby')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Wednesday, October 14, 2026', description: 'Review' })).toBeNull();
@@ -851,27 +886,56 @@ describe('Calendar', () => {
     expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('says in development when renderDay returns a link, a button, or a tabindex', () => {
+  it('says in development when renderDay returns something focusable, once, and not in production', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const show = (node: ReactNode) => {
-      resetWarnOnce();
+    const told = () => error.mock.calls.filter(([message]) => String(message).includes('no keyboard path'));
+    const show = (node: ReactNode, everyDay = false) => {
       error.mockClear();
       cleanup();
       render(
         <Calendar.Root aria-label="Start" locale="en-US" value={date('2026-10-13')} onValueChange={() => undefined}>
-          <Calendar.Grid renderDay={(day) => (day.date.toString() === '2026-10-13' ? node : null)} />
+          <Calendar.Grid renderDay={(day) => (everyDay || day.date.toString() === '2026-10-13' ? node : null)} />
         </Calendar.Root>,
       );
     };
+    resetWarnOnce();
     show('Review');
-    const told = () => error.mock.calls.filter(([message]) => String(message).includes('no keyboard path'));
     expect(told()).toHaveLength(0);
-    show(<a href="/review">Review</a>);
+    show(<a>Review</a>);
+    expect(told()).toHaveLength(0);
+    show(<a href="/review">Review</a>, true);
     expect(told()).toHaveLength(1);
-    show(<button type="button">Review</button>);
-    expect(told()).toHaveLength(1);
-    show(<span tabIndex={0}>Review</span>);
-    expect(told()).toHaveLength(1);
+    show(<button type="button">Review</button>, true);
+    expect(told()).toHaveLength(0);
+    for (const node of [
+      <button key="button" type="button">
+        Review
+      </button>,
+      <span key="tab" tabIndex={0}>
+        Review
+      </span>,
+      <input key="input" aria-label="Note" />,
+      <select key="select" aria-label="Note">
+        <option>A</option>
+      </select>,
+      <textarea key="area" aria-label="Note" />,
+      <span key="edit" contentEditable>
+        Review
+      </span>,
+    ]) {
+      resetWarnOnce();
+      show(node);
+      expect(told()).toHaveLength(1);
+    }
+    const env = process.env.NODE_ENV;
+    vi.stubEnv('NODE_ENV', 'production');
+    try {
+      resetWarnOnce();
+      show(<a href="/review">Review</a>, true);
+      expect(told()).toHaveLength(0);
+    } finally {
+      vi.stubEnv('NODE_ENV', env ?? 'test');
+    }
     vi.restoreAllMocks();
   });
 

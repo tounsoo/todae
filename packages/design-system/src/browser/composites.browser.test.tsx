@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -684,6 +684,28 @@ describe('Calendar in a browser', () => {
       const weekday = within(grid).getAllByRole('columnheader')[0]!;
       expect(getComputedStyle(outside).color).toBe(getComputedStyle(weekday).color);
       expect(getComputedStyle(outside).color).not.toBe(getComputedStyle(inside).color);
+    }
+  });
+
+  it('focuses the outside day that was pressed', async () => {
+    const month = Temporal.PlainYearMonth.from('2026-10');
+    const roots = [
+      <Calendar.Root key="single" aria-label="Start" locale="en-US" firstDayOfWeek={7} defaultValue={plainDate('2026-10-13')}>
+        <Calendar.Header />
+        <Calendar.Grid showOutsideDays />
+      </Calendar.Root>,
+      <Calendar.Root key="range" mode="range" aria-label="Start" locale="en-US" firstDayOfWeek={7} defaultMonth={month}>
+        <Calendar.Header />
+        <Calendar.Grid showOutsideDays />
+      </Calendar.Root>,
+    ];
+    for (const root of roots) {
+      cleanup();
+      render(<Themed>{root}</Themed>);
+      await userEvent.click(screen.getByRole('button', { name: 'Monday, September 28, 2026' }));
+      const stop = document.querySelector<HTMLButtonElement>('[data-todae-calendar-cell][tabindex="0"]');
+      expect(stop?.getAttribute('aria-label')).toBe('Monday, September 28, 2026');
+      expect(document.activeElement).toBe(stop);
     }
   });
 });

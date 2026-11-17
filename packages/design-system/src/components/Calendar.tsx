@@ -9,7 +9,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useId,
   useSyncExternalStore,
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -23,7 +22,7 @@ import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { useDomId } from '../internal/domId.js';
+import { domSafe, useDomId } from '../internal/domId.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
@@ -792,7 +791,7 @@ function DayGrid({
               date === null ? (
                 <td key={col} />
               ) : (
-                <Day key={col} date={date} renderDay={renderDay} />
+                <Day key={date.toString()} date={date} renderDay={renderDay} />
               ),
             )}
           </tr>
@@ -804,7 +803,7 @@ function DayGrid({
 
 function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: CalendarGridProps['renderDay'] }) {
   const cal = useCalendar('Grid');
-  const contentId = useId();
+  const contentId = `${cal.headingId}-day-${domSafe(date.toString())}`;
   const contentRef = useRef<HTMLSpanElement>(null);
   const { shown, anchor } = cal;
   const inShown = shown !== null && compare(date, shown.start) >= 0 && compare(date, shown.end) <= 0;
@@ -833,9 +832,8 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
       </span>
     );
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
     const root = contentRef.current;
-    if (!root?.querySelector('a, button, [tabindex]')) return;
+    if (!root?.querySelector('a[href], button, input, select, textarea, [tabindex], [contenteditable]')) return;
     warnOnce(
       'calendar-render-day-focusable',
       'Calendar.Grid renderDay returned a link, a button, or an element with a tabindex. That sits inside the day button, which is invalid, and this slot gives it no keyboard path. Put the interaction on the day press.',
@@ -865,8 +863,10 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
         data-todae-calendar-cell=""
         onPointerEnter={anchor ? () => cal.setHovered(date) : undefined}
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
-          // A click also moves the Tab stop, even to a date isDateDisabled rules out.
-          cal.moveFocus(date, false);
+          // A click moves the Tab stop the way a key does, so a month change
+          // focuses the new button. A day that is already focused returns
+          // early, and this click focuses the button itself.
+          cal.moveFocus(date, true);
           cal.select(date);
           event.currentTarget.focus();
         }}
