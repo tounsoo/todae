@@ -253,8 +253,36 @@ describe('placeOverlaps', () => {
       { id: 'point', start: 0, end: 0 },
       { id: 'long', start: 0, end: 60 },
     ])).toEqual([
-      ['point', 0.5, 0.5],
+      ['point', 0, 1],
       ['long', 0, 1],
+    ]);
+  });
+
+  it('keeps a zero-length span out of a column when a longer span starts with it', () => {
+    const boxes = (items: { id: string; start: number; end: number }[]) =>
+      placeOverlaps(items).map(({ left, width, columns }) => [left, width, columns]);
+    expect(boxes([
+      { id: 'long', start: 0, end: 30 },
+      { id: 'point', start: 0, end: 0 },
+    ])).toEqual([
+      [0, 1, 1],
+      [0, 1, 1],
+    ]);
+    expect(boxes([
+      { id: 'a', start: 0, end: 30 },
+      { id: 'point', start: 0, end: 0 },
+      { id: 'b', start: 0, end: 30 },
+    ])).toEqual([
+      [0, 0.5, 2],
+      [0, 1, 1],
+      [0.5, 0.5, 2],
+    ]);
+    expect(boxes([
+      { id: 'long', start: 0, end: 30 },
+      { id: 'point', start: 15, end: 15 },
+    ])).toEqual([
+      [0, 0.5, 2],
+      [0.5, 0.5, 2],
     ]);
   });
 
@@ -575,7 +603,8 @@ describe('the calendar', () => {
     render(<EventCalendarExample locale="en-US" />);
     const head = screen.getByRole('heading', { name: 'Thu, Nov 19' }).parentElement as HTMLElement;
     const body = head.nextElementSibling as HTMLElement;
-    const tracks = head.style.gridTemplateColumns.match(/minmax\(max\(5\.5rem, \d+ \* 4rem\), 1fr\)/g);
+    const frame = head.parentElement as HTMLElement;
+    const tracks = frame.style.getPropertyValue('--tracks').match(/minmax\(max\(5\.5rem, \d+ \* 4rem\), 1fr\)/g);
     expect(tracks).toEqual([
       'minmax(max(5.5rem, 2 * 4rem), 1fr)',
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
@@ -585,7 +614,8 @@ describe('the calendar', () => {
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
     ]);
-    expect(body.style.gridTemplateColumns).toBe(head.style.gridTemplateColumns);
+    expect(head.style.gridTemplateColumns).toBe('');
+    expect(body.style.gridTemplateColumns).toBe('');
   });
 
   it('puts overlapping events side by side and keeps their names in start order', () => {

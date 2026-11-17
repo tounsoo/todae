@@ -149,10 +149,16 @@ function rangesOverlap(a: { start: number; end: number }, b: { start: number; en
   return a.start < b.end && b.start < a.end;
 }
 
-// A longer span wins when two start together. Touching at an endpoint is not an overlap.
+// A span with no length comes before a longer one that starts with it. Then the longer span takes the left column. Touching at an endpoint is not an overlap.
 export function placeOverlaps<T extends { start: number; end: number }>(items: readonly T[]): OverlapPlacement<T>[] {
   const order = items.map((item, index) => ({ item, index }));
-  order.sort((a, b) => a.item.start - b.item.start || b.item.end - a.item.end || a.index - b.index);
+  order.sort(
+    (a, b) =>
+      a.item.start - b.item.start ||
+      (a.item.end === a.item.start ? 0 : 1) - (b.item.end === b.item.start ? 0 : 1) ||
+      b.item.end - a.item.end ||
+      a.index - b.index,
+  );
 
   const placed = new Map<number, { left: number; width: number; columns: number }>();
   let cluster: { index: number; column: number; item: T }[] = [];
@@ -423,15 +429,15 @@ export default function EventCalendarExample({
           className={styles.frame}
           style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
         >
-          <div className={styles.head} style={{ gridTemplateColumns: tracks }}>
-            <div />
+          <div className={styles.head}>
+            <div className={styles.corner} />
             {axis.segments.map((segment) => (
               <Text.Root as="h3" variant="label" id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
                 {dayHeading(segment.day, locale)}
               </Text.Root>
             ))}
           </div>
-          <div className={styles.body} style={{ gridTemplateColumns: tracks }}>
+          <div className={styles.body}>
             <div className={styles.gutter} aria-hidden="true">
               {gutterMarks.map((units) => {
                 const time = axis.segments.map((segment) => fromUnits(segment, units, 'start')).find((value) => value !== null);
