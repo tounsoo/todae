@@ -117,8 +117,9 @@ function readThumbSize(input: HTMLInputElement): string | null {
     }
     const height = Number.parseFloat(measured.height);
     const width = Number.parseFloat(measured.width);
-    if (height > 0 && height < input.clientWidth) return `${height}px`;
-    if (width > 0 && width < input.clientWidth) return `${width}px`;
+    const box = input.clientWidth;
+    if (width > 0 && width < box - 0.5) return `${width}px`;
+    if (height > 0) return `${height}px`;
   }
   return null;
 }

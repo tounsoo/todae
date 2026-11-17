@@ -100,7 +100,7 @@ describe('Slider range in the browser', () => {
     expect(end()).toHaveProperty('value', '80');
   });
 
-  it('gives each thumb only the span it can travel', () => {
+  it('places each thumb on its value', () => {
     render(<Range />);
     const box = group().getBoundingClientRect();
     const thumb = usedThumb();
@@ -108,15 +108,14 @@ describe('Slider range in the browser', () => {
     const travel = box.width - thumb;
     const startBox = start().getBoundingClientRect();
     const endBox = end().getBoundingClientRect();
-    expect(Math.abs(startBox.left - box.left)).toBeLessThan(2);
-    expect(Math.abs(startBox.width - (travel * 0.8 + thumb))).toBeLessThan(2);
-    expect(Math.abs(endBox.left - (box.left + travel * 0.2))).toBeLessThan(2);
-    expect(Math.abs(endBox.right - box.right)).toBeLessThan(2);
+    expect(Math.abs(startBox.width - thumb)).toBeLessThan(2);
+    expect(Math.abs(endBox.width - thumb)).toBeLessThan(2);
+    expect(Math.abs(startBox.left - (box.left + travel * 0.2))).toBeLessThan(2);
+    expect(Math.abs(endBox.left - (box.left + travel * 0.8))).toBeLessThan(2);
     const fill = getComputedStyle(group(), '::after');
     expect(fill.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     const fillWidth = Number.parseFloat(fill.width);
     expect(Math.abs(fillWidth - travel * 0.6)).toBeLessThan(2);
-    expect(getComputedStyle(start()).clipPath).not.toBe('none');
     expect(group().querySelector('span')).toBeNull();
   });
 

@@ -57,20 +57,18 @@
     position: relative;
     margin: 0;
     min-inline-size: 0;
+    inline-size: var(--_thumb);
     background: transparent;
-    pointer-events: none;
     accent-color: var(--todae-slider-fill);
   }
 
   .start {
-    inset-inline-start: 0;
-    inline-size: calc(var(--_end) / 100 * (100% - var(--_thumb)) + var(--_thumb));
-    clip-path: inset(0 0 0 calc(var(--_start) / var(--_end) * (100% - var(--_thumb))));
+    z-index: 2;
+    inset-inline-start: calc(var(--_start) / 100 * (100% - var(--_thumb)));
   }
 
   .end {
-    inset-inline-start: calc(var(--_start) / 100 * (100% - var(--_thumb)));
-    inline-size: calc((100 - var(--_start)) / 100 * (100% - var(--_thumb)) + var(--_thumb));
+    inset-inline-start: calc(var(--_end) / 100 * (100% - var(--_thumb)));
   }
 
   .thumb::-webkit-slider-runnable-track {
