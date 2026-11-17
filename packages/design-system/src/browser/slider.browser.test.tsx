@@ -149,6 +149,31 @@ describe('Slider range in the browser', () => {
     expect(Math.abs(startCenter - (box.left + box.width / 2))).toBeLessThan(2);
   });
 
+  function pointAt(percent: number) {
+    const box = group().getBoundingClientRect();
+    const thumb = usedThumb();
+    const travel = box.width - thumb;
+    return { x: box.left + thumb / 2 + (percent / 100) * travel, y: box.top + box.height / 2 };
+  }
+
+  it('paints the start thumb above both tracks', () => {
+    for (const [low, high] of [
+      [16, 35],
+      [0, 100],
+      [0, 0],
+      [100, 100],
+      [50, 50],
+    ] as const) {
+      cleanup();
+      render(<Range initial={[low, high]} />);
+      const startAt = pointAt(low);
+      expect(document.elementFromPoint(startAt.x, startAt.y), `${low} to ${high}`).toBe(start());
+      if (low === high) continue;
+      const endAt = pointAt(high);
+      expect(document.elementFromPoint(endAt.x, endAt.y), `${low} to ${high}`).toBe(end());
+    }
+  });
+
   it('draws the focus ring around the track', async () => {
     render(<Range />);
     start().focus();
