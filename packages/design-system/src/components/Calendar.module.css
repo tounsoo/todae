@@ -110,6 +110,27 @@
     text-decoration: line-through;
   }
 
+  /*
+   * The day stays the token box until renderDay puts content in it. The cell
+   * then grows with that content, and stays at least the token box. Nothing
+   * reads layout to decide the size.
+   */
+  .day:has(> .dayContent) {
+    inline-size: auto;
+    min-inline-size: var(--todae-calendar-day-size);
+    block-size: auto;
+    min-block-size: var(--todae-calendar-day-size);
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .dayContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-inline-size: 100%;
+  }
+
   .navGlyph {
     display: inline-flex;
     inline-size: var(--todae-calendar-nav-icon-size);

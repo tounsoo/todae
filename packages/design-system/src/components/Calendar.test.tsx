@@ -575,6 +575,120 @@ describe('Calendar', () => {
     expect(dated).not.toContain('aria-current');
   });
 
+  it('renders renderDay for each day of the matrix with that day and its state', () => {
+    const today = Temporal.Now.plainDateISO().toString();
+    const flags = (day: {
+      date: Temporal.PlainDate;
+      outside: boolean;
+      selected: boolean;
+      disabled: boolean;
+      today: boolean;
+    }) =>
+      [
+        day.date.toString(),
+        day.outside ? 'outside' : 'in',
+        day.selected ? 'selected' : 'open',
+        day.disabled ? 'disabled' : 'enabled',
+        day.today ? 'today' : 'other',
+      ].join(' ');
+    render(
+      <Calendar.Root
+        aria-label="Start"
+        locale="en-US"
+        firstDayOfWeek={7}
+        value={date('2026-10-13')}
+        onValueChange={() => undefined}
+        min={date('2026-10-05')}
+        isDateDisabled={(day) => day.toString() === '2026-10-17'}
+      >
+        <Calendar.Header />
+        <Calendar.Grid renderDay={(day) => flags(day)} />
+      </Calendar.Root>,
+    );
+    // October 2026 starts on a Thursday. A Sunday-first week leads with September 27 to 30.
+    const first = date('2026-10-01');
+    const lead = (first.dayOfWeek - 7 + 7) % 7;
+    const days = [
+      ...Array.from({ length: lead }, (_, index) => first.subtract({ days: lead - index })),
+      ...Array.from({ length: first.daysInMonth }, (_, index) => first.add({ days: index })),
+    ];
+    expect(grid().querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(days.length);
+    expect(grid().querySelectorAll('[data-outside]')).toHaveLength(lead);
+    for (const day of days) {
+      const iso = day.toString();
+      const outside = day.month !== 10;
+      const selected = iso === '2026-10-13';
+      const disabled = Temporal.PlainDate.compare(day, date('2026-10-05')) < 0 || iso === '2026-10-17';
+      expect(
+        screen.getByText(
+          `${iso} ${outside ? 'outside' : 'in'} ${selected ? 'selected' : 'open'} ${disabled ? 'disabled' : 'enabled'} ${iso === today ? 'today' : 'other'}`,
+        ),
+      ).toBeTruthy();
+    }
+    const picked = day('Tuesday, October 13, 2026');
+    expect(picked.textContent).toContain('2026-10-13');
+    expect(picked.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026');
+    const ruledOut = day('Saturday, October 17, 2026') as HTMLButtonElement;
+    expect(ruledOut.disabled).toBe(false);
+    expect(ruledOut.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('marks every day of a range for renderDay, and drops day content on the year page', () => {
+    render(
+      <Calendar.Root
+        aria-label="Trip"
+        locale="en-US"
+        firstDayOfWeek={7}
+        mode="range"
+        value={{ start: date('2026-10-13'), end: date('2026-10-15') }}
+        onValueChange={() => undefined}
+      >
+        <Calendar.Header />
+        <Calendar.Grid renderDay={(day) => `${day.date.toString()} ${day.selected ? 'selected' : 'open'}`} />
+      </Calendar.Root>,
+    );
+    expect(screen.getByText('2026-10-12 open')).toBeTruthy();
+    expect(screen.getByText('2026-10-13 selected')).toBeTruthy();
+    expect(screen.getByText('2026-10-14 selected')).toBeTruthy();
+    expect(screen.getByText('2026-10-15 selected')).toBeTruthy();
+    expect(screen.getByText('2026-10-16 open')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    expect(screen.queryByText('2026-10-13 selected')).toBeNull();
+    expect(screen.getByRole('button', { name: '2026' })).toBeTruthy();
+  });
+
+  it('keeps keyboard movement when a day has content', () => {
+    render(
+      <Calendar.Root aria-label="Start" locale="en-US" firstDayOfWeek={7} defaultValue={date('2026-10-13')}>
+        <Calendar.Header />
+        <Calendar.Grid renderDay={() => <span>note</span>} />
+      </Calendar.Root>,
+    );
+    const press = (key: string, shiftKey = false) => {
+      fireEvent.keyDown(focusedDay(), { key, shiftKey });
+      return focusedDay().getAttribute('aria-label');
+    };
+    focusedDay().focus();
+    expect(focusedDay().textContent).toContain('note');
+    expect(press('ArrowRight')).toBe('Wednesday, October 14, 2026');
+    expect(document.activeElement).toBe(focusedDay());
+    expect(press('ArrowLeft')).toBe('Tuesday, October 13, 2026');
+    expect(press('ArrowDown')).toBe('Tuesday, October 20, 2026');
+    expect(press('ArrowUp')).toBe('Tuesday, October 13, 2026');
+    expect(press('Home')).toBe('Sunday, October 11, 2026');
+    expect(press('End')).toBe('Saturday, October 17, 2026');
+    expect(press('PageDown')).toBe('Tuesday, November 17, 2026');
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(press('PageUp')).toBe('Saturday, October 17, 2026');
+    expect(press('PageDown', true)).toBe('Sunday, October 17, 2027');
+    expect(press('PageUp', true)).toBe('Saturday, October 17, 2026');
+    expect(grid().querySelectorAll('[tabindex="0"]')).toHaveLength(1);
+    fireEvent.click(day('Thursday, October 1, 2026'));
+    expect(press('ArrowLeft')).toBe('Wednesday, September 30, 2026');
+    expect(screen.getByRole('button', { name: 'September 2026' })).toBeTruthy();
+    expect(focusedDay().textContent).toContain('note');
+  });
+
   it('throws when a part renders outside Calendar.Root', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<Calendar.Grid />)).toThrow('Calendar.Grid must render inside Calendar.Root');

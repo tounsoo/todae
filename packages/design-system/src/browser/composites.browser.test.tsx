@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -625,6 +625,41 @@ describe('Calendar in a browser', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next month' }));
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' }));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
+  });
+
+  it('keeps one Tab stop and the date name when a day has content, and lets that day grow', async () => {
+    render(
+      <Themed>
+        <Calendar.Root aria-label="Plain" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Root>
+        <Calendar.Root aria-label="Noted" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+          <Calendar.Header />
+          <Calendar.Grid
+            renderDay={(day) =>
+              day.date.toString() === '2026-10-13' ? <span style={{ display: 'block', blockSize: '4rem' }}>Review</span> : null
+            }
+          />
+        </Calendar.Root>
+        <button type="button">after</button>
+      </Themed>,
+    );
+    const plainGrid = screen.getByRole('group', { name: 'Plain' });
+    const notedGrid = screen.getByRole('group', { name: 'Noted' });
+    const plain = within(plainGrid).getByRole('button', { name: 'Tuesday, October 13, 2026' });
+    const noted = within(notedGrid).getByRole('button', { name: 'Tuesday, October 13, 2026' });
+    expect(noted.textContent).toContain('Review');
+    expect(noted.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026');
+    expect(noted.getBoundingClientRect().height).toBeGreaterThan(plain.getBoundingClientRect().height);
+    const quiet = within(notedGrid).getByRole('button', { name: 'Wednesday, October 14, 2026' });
+    expect(quiet.getBoundingClientRect().height).toBeCloseTo(plain.getBoundingClientRect().height, 0);
+    noted.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
+    expect(document.activeElement?.textContent).not.toContain('Review');
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
   });
