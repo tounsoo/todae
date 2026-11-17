@@ -35,18 +35,33 @@
   }
 
   .range::before {
+    z-index: 0;
     inline-size: 100%;
     background: ButtonFace;
   }
 
   .range::after {
+    z-index: 0;
     justify-self: start;
     margin-inline-start: var(--_start);
     inline-size: calc(var(--_end) - var(--_start));
     background: var(--todae-slider-fill);
   }
 
+  .mask {
+    position: absolute;
+    z-index: 2;
+    inset-inline-start: 0;
+    inset-block: 0;
+    margin-block: auto;
+    inline-size: var(--_start);
+    block-size: 0.5em;
+    background: ButtonFace;
+    pointer-events: none;
+  }
+
   .thumb {
+    z-index: 1;
     grid-area: 1 / 1;
     justify-self: start;
     align-self: center;

@@ -71,5 +71,10 @@ describe('Slider range in the browser', () => {
     const fillWidth = Number.parseFloat(fill.width);
     expect(fillWidth).toBeGreaterThan(box.width * 0.5);
     expect(fillWidth).toBeLessThan(box.width * 0.7);
+    const mask = group().querySelector('span');
+    if (!(mask instanceof HTMLElement)) throw new Error('missing mask');
+    const maskBox = mask.getBoundingClientRect();
+    expect(maskBox.width).toBeGreaterThan(box.width * 0.15);
+    expect(maskBox.width).toBeLessThan(box.width * 0.25);
   });
 });

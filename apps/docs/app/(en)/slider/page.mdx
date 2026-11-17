@@ -11,15 +11,15 @@ Server Components can import it from `@tounsoo/todae/slider`. Inside a [Fieldset
 
 ## Range
 
-`mode="range"` places two native range inputs on one track. `startLabel` and `endLabel` name the two thumbs. `value` holds the start and the end. `onValueChange` receives the next pair. `name` is the two field names. Omit `name` and neither input submits.
+`mode="range"` places two native range inputs on one track. `startLabel` and `endLabel` name the two thumbs. `value` holds the start and the end. `onValueChange` receives the next pair. The filled part runs from the start thumb to the end thumb. `name` is the two field names. Omit `name` and neither input submits.
 
 <Example of={SliderRange} block />
 
 ## Accessible composition
 
-**Todae handles:** Only styles. The native `<input type="range">` already has the `slider` role, exposes its value, minimum and maximum, and takes the keys above. Todae tints it with `accent-color` and draws a focus outline from `slider.ring.focus` while it is focus-visible.
+**Todae handles:** Styles. One thumb is a native `<input type="range">` with the `slider` role, its value, minimum and maximum, and the keys above. `mode="range"` also stops a thumb where it meets the other, fills the track between them, and moves the nearer thumb when the empty track is pressed. Todae tints the control with `accent-color` and draws a focus outline from `slider.ring.focus` while it is focus-visible.
 
-**You supply:** A name, from a [Label](/label) with `htmlFor` or from `aria-label`. `aria-valuetext` when the number alone does not mean much, such as `"40%"` or `"Medium"`. The current value as visible text when the exact number matters, and `aria-describedby` for any hint.
+**You supply:** A name. For one thumb, a [Label](/label) with `htmlFor` or `aria-label`. For two, `startLabel` and `endLabel`. `aria-valuetext` when the number alone does not mean much, such as `"40%"` or `"Medium"`. The current value as visible text when the exact number matters, and `aria-describedby` for any hint.
 
 **Watch for:** A `div` slider built by hand needs its role, value attributes and keys added one by one; inside a Field, see [useField](/utilities/use-field). An `outline: none` of yours removes the focus ring.
 

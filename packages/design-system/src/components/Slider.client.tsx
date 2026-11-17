@@ -198,6 +198,7 @@ function Range({
       onPointerCancel={composeHandlers(onPointerCancel, pointerEnd)}
       onLostPointerCapture={composeHandlers(onLostPointerCapture, pointerEnd)}
     >
+      <span className={styles.mask} aria-hidden="true" />
       <input
         ref={startRef}
         className={cx(styles.thumb, styles.start)}

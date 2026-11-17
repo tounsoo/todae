@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Slider.Root',
-  description: 'A native range input tinted from the slider tokens. With mode="range", two thumbs on one track. Takes native input attributes except type.',
+  description: 'A native range input tinted from the slider tokens, or with mode="range" two thumbs on one track. One thumb takes native input attributes except type.',
   props: [
     {
       name: 'mode',
@@ -54,13 +54,13 @@ export const meta = {
       name: 'startLabel',
       type: 'string',
       required: false,
-      description: 'With mode="range", the accessible name of the start thumb.',
+      description: 'Required when mode is "range". The accessible name of the start thumb.',
     },
     {
       name: 'endLabel',
       type: 'string',
       required: false,
-      description: 'With mode="range", the accessible name of the end thumb.',
+      description: 'Required when mode is "range". The accessible name of the end thumb.',
     },
     {
       name: 'name',

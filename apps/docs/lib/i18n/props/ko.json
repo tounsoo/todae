@@ -1797,12 +1797,12 @@
       "ko": "mode=\"range\"일 때, 손잡이를 움직인 다음의 시작과 끝을 받습니다."
     },
     "startLabel": {
-      "en": "With mode=\"range\", the accessible name of the start thumb.",
-      "ko": "mode=\"range\"일 때, 시작 손잡이의 접근 이름입니다."
+      "en": "Required when mode is \"range\". The accessible name of the start thumb.",
+      "ko": "mode가 \"range\"이면 필수입니다. 시작 손잡이의 접근 이름입니다."
     },
     "endLabel": {
-      "en": "With mode=\"range\", the accessible name of the end thumb.",
-      "ko": "mode=\"range\"일 때, 끝 손잡이의 접근 이름입니다."
+      "en": "Required when mode is \"range\". The accessible name of the end thumb.",
+      "ko": "mode가 \"range\"이면 필수입니다. 끝 손잡이의 접근 이름입니다."
     },
     "name": {
       "en": "The field name. With mode=\"range\", the start field name and the end field name. Omit it and neither range input submits.",
