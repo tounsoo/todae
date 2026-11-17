@@ -563,6 +563,7 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
   // The menu button of the talk that last changed place, which takes focus from its old element.
   const landing = useRef<HTMLButtonElement | null>(null);
   const [landed, setLanded] = useState<string | null>(null);
+  const startMinute = useRef<number | null>(null);
 
   // A drag, a menu item and the dialog all move a talk here.
   const move: Move = (id, to, verdict) => {
@@ -573,6 +574,13 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
     setHistory((past) => [...past, { talks, said }]);
     setTalks((list) => list.map((each) => (each.id === id ? { ...each, at, length: to ? to.end - to.start : each.length } : each)));
     announce(`${said}${verdict ? `. ${verdict.reason}` : ''}`);
+    if (to && zoom === 'day' && !overlaps(to.start, to.end, range)) {
+      const index = AXIS.segments.findIndex((segment) => overlaps(to.start, to.end, segment));
+      if (index >= 0) {
+        startMinute.current = to.start;
+        setDay(index);
+      }
+    }
   };
 
   const undo = () => {
@@ -600,37 +608,19 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
     setEditing(id);
   };
 
-  const startMinute = useRef<number | null>(null);
   // In layout pixels, as scrollLeft is, so a scaled page doesn't skew it.
   const minuteWidth = () => {
     const width = board.current?.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0;
     const length = range.end - range.start;
     return length > 0 ? width / length : 0;
   };
-  const dayMostPastNames = () => {
-    const scroller = board.current;
-    const lane = scroller?.querySelector<HTMLElement>('[data-todae-lane]');
-    if (!scroller || !lane) return day;
-    const view = scroller.getBoundingClientRect();
-    const left = lane.parentElement?.firstElementChild?.getBoundingClientRect().right ?? view.left;
-    let best = -1;
-    let found = day;
-    AXIS.segments.forEach((_, index) => {
-      const cell = days.current[index];
-      if (!cell) return;
-      const box = cell.getBoundingClientRect();
-      const overlap = Math.min(box.right, view.right) - Math.max(box.left, left);
-      if (overlap > best) {
-        best = overlap;
-        found = index;
-      }
-    });
-    return found;
-  };
   const zoomTo = (next: keyof typeof ZOOM) => {
     const minute = minuteWidth();
     const at = board.current && minute > 0 ? range.start + board.current.scrollLeft / minute : null;
-    if (next === 'day') setDay(dayMostPastNames());
+    if (next === 'day' && at !== null) {
+      const index = AXIS.segments.findIndex((segment) => at >= segment.start && at < segment.end);
+      if (index >= 0) setDay(index);
+    }
     startMinute.current = at;
     setZoom(next);
   };

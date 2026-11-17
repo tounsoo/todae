@@ -228,6 +228,21 @@ describe('the schedule', () => {
     expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Main stage');
   });
 
+  it('shows the day a queued talk lands on and focuses that talk', async () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'One day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    await choose(screen.getByRole('button', { name: /^Dark mode, done right,/ }), 'Schedule…');
+    const dialog = await screen.findByRole('dialog', { name: 'Schedule Dark mode, done right' });
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
+    });
+    const placed = screen.getByRole('button', { name: /^Dark mode, done right,/ });
+    expect(placed.getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
+    expect(axisHeaders().map((text) => /^(?:Wed|Thu|Fri), Jun \d/.exec(text)?.[0] ?? text)).toEqual(['Wed, Jun 2']);
+    await vi.waitFor(() => expect(document.activeElement).toBe(placed));
+  });
+
   it('schedules a talk from the queue at the first free time and undoes it', async () => {
     setup();
     await choose(screen.getByRole('button', { name: /^Dark mode, done right,/ }), 'First free time on Main stage');

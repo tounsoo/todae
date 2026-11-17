@@ -234,29 +234,71 @@ describe('the sticky stage names', () => {
     expect(visible.map((cell) => cell.textContent ?? '')).toEqual([expect.stringContaining('Wed, Jun 2')]);
   });
 
-  it('shows the in-view day when One day follows Whole event', async () => {
+  const timeAtNames = () => {
+    const range = visibleRange();
+    const box = lane('Main stage').getBoundingClientRect();
+    const x = stage('Main stage').firstElementChild!.getBoundingClientRect().right + 1;
+    return range.start + ((x - box.left) / box.width) * (range.end - range.start);
+  };
+  const dayHeaders = () => [...rows().firstElementChild!.children[1]!.children].map((cell) => /^(?:Wed|Thu|Fri), Jun \d/.exec(cell.textContent ?? '')?.[0] ?? cell.textContent);
+  const dayOf = (minute: number) => ['Wed, Jun 2', 'Thu, Jun 3', 'Fri, Jun 4'][Math.floor(minute / (UNITS / 3))]!;
+  const xOf = (minute: number) => {
+    const range = visibleRange();
+    const box = lane('Main stage').getBoundingClientRect();
+    return box.left + ((minute - range.start) / (range.end - range.start)) * box.width;
+  };
+
+  it('keeps a late Wednesday in view when One day follows a board that also shows Thursday', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    const width = lane('Main stage').getBoundingClientRect().width;
+    board().scrollLeft = (500 / UNITS) * width;
+    const before = timeAtNames();
+    expect(before).toBeGreaterThan(480);
+    expect(before).toBeLessThan(540);
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const names = stage('Main stage').firstElementChild!.getBoundingClientRect().right;
+    const edge = board().getBoundingClientRect().right;
+    const x = xOf(before);
+    expect(x).toBeGreaterThanOrEqual(names - 1);
+    expect(x).toBeLessThanOrEqual(edge + 1);
+    expect(dayHeaders()).toEqual(['Wed, Jun 2']);
+  });
+
+  it('keeps a Thursday time at the names when One day follows Whole event', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    const width = lane('Main stage').getBoundingClientRect().width;
+    board().scrollLeft = (700 / UNITS) * width;
+    const before = timeAtNames();
+    expect(before).toBeGreaterThan(540);
+    expect(before).toBeLessThan(1080);
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    expect(Math.abs(timeAtNames() - before)).toBeLessThan(1);
+    expect(dayHeaders()).toEqual(['Thu, Jun 3']);
+  });
+
+  it('keeps the time a day button stopped on when One day follows it', async () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    const before = timeAtNames();
     await userEvent.click(screen.getByRole('button', { name: 'One day' }));
-    const labels = [...rows().firstElementChild!.children[1]!.children].map((cell) => /^(?:Wed|Thu|Fri), Jun \d/.exec(cell.textContent ?? '')?.[0] ?? cell.textContent);
-    expect(labels).toEqual(['Thu, Jun 3']);
+    const names = stage('Main stage').firstElementChild!.getBoundingClientRect().right;
+    const edge = board().getBoundingClientRect().right;
+    const x = xOf(before);
+    expect(x).toBeGreaterThanOrEqual(names - 1);
+    expect(x).toBeLessThanOrEqual(edge + 1);
+    expect(dayHeaders()).toEqual([dayOf(before)]);
   });
 
   it('keeps the time just past the names column when the zoom changes', async () => {
     setup();
     reveal(400);
-    // The time on the axis at the first point the names column leaves visible.
-    const shown = () => {
-      const range = visibleRange();
-      const box = lane('Main stage').getBoundingClientRect();
-      const x = stage('Main stage').firstElementChild!.getBoundingClientRect().right + 1;
-      return range.start + ((x - box.left) / box.width) * (range.end - range.start);
-    };
-    const before = shown();
+    const before = timeAtNames();
     expect(before).toBeGreaterThan(300);
     await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
-    expect(Math.abs(shown() - before)).toBeLessThan(2);
+    expect(Math.abs(timeAtNames() - before)).toBeLessThan(2);
   });
 });
 
