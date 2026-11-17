@@ -34,7 +34,9 @@ function minutesBetween(from: Temporal.ZonedDateTime, to: Temporal.ZonedDateTime
 
 /**
  * A segment per day, open from `opens` to `closes` in `timeZone`. PlainTime has no
- * 24:00, so a close at or before the open is that time on the next day.
+ * 24:00, so a close at or before the open on the clock is that time the next day.
+ * The clock decides the wrap. When the resolved close still falls at or before the
+ * open, the whole range sat in a skipped hour and the lane is empty.
  */
 export function daySegments({
   days,
@@ -47,11 +49,12 @@ export function daySegments({
   closes: Temporal.PlainTime;
   timeZone: string;
 }): DayAxis {
+  const wraps = Temporal.PlainTime.compare(closes, opens) <= 0;
   return {
     segments: days.map((day) => {
       const open = zoned(day, opens, timeZone);
-      const sameDay = zoned(day, closes, timeZone);
-      const close = Temporal.ZonedDateTime.compare(sameDay, open) > 0 ? sameDay : zoned(day.add({ days: 1 }), closes, timeZone);
+      let close = zoned(wraps ? day.add({ days: 1 }) : day, closes, timeZone);
+      if (Temporal.ZonedDateTime.compare(close, open) <= 0) close = open;
       return { day, opens: open, closes: close, length: minutesBetween(open, close) };
     }),
   };
@@ -78,8 +81,9 @@ export function fromUnits(segment: DaySegment, units: number, edge: Edge = 'star
   return segment.opens.add({ minutes: units });
 }
 
-/** Every `step` minutes from the opening, and the closing even when it falls off the step. */
+/** Every `step` minutes from the opening, and the closing even when it falls off the step. A step of 0 or less throws. */
 export function snapGrid(segment: DaySegment, step: number): number[] {
+  if (step <= 0) throw new RangeError('step must be greater than 0');
   const points = new Set<number>();
   for (let units = 0; units < segment.length; units += step) points.add(units);
   points.add(segment.length);

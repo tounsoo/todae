@@ -61,6 +61,8 @@ describe('day lanes', () => {
     const axis = daySegments({ days: [date('2027-06-02')], opens: time('08:00'), closes: time('18:00'), timeZone: zone });
     expect(snapGrid(lane(axis, '2027-06-02'), 240)).toEqual([0, 240, 480, 600]);
     expect(snapGrid(lane(axis, '2027-06-02'), 1000)).toEqual([0, 600]);
+    expect(() => snapGrid(lane(axis, '2027-06-02'), 0)).toThrow(RangeError);
+    expect(() => snapGrid(lane(axis, '2027-06-02'), -30)).toThrow(RangeError);
   });
 });
 
@@ -89,6 +91,17 @@ describe('clock changes', () => {
     expect(fromUnits(segment, 60)!.toString()).toBe(first.toString());
     expect(fromUnits(segment, 120)!.toString()).toBe(second.toString());
     expect(snapGrid(segment, 90)).toEqual([0, 90, 180, 270, 300]);
+  });
+
+  it.each([
+    ['02:00', '03:00'],
+    ['02:30', '03:00'],
+  ])('keeps %s to %s inside the spring-forward gap as an empty lane', (opens, closes) => {
+    const axis = daySegments({ days: [SPRING], opens: time(opens), closes: time(closes), timeZone: LA });
+    const segment = lane(axis, '2027-03-14');
+    expect(segment.length).toBe(0);
+    expect(Temporal.ZonedDateTime.compare(segment.closes, segment.opens)).toBe(0);
+    expect(toUnits(axis, segment.opens, 'start')).toBeNull();
   });
 
   it('resolves a skipped or repeated wall time the way Temporal compatible does', () => {
