@@ -138,6 +138,63 @@ export function spanFrame(span: Pick<VisibleSpan, 'start' | 'end'>, scale: numbe
   return { top: span.start / scale, height: (span.end - span.start) / scale };
 }
 
+export type OverlapPlacement<T extends { start: number; end: number }> = {
+  item: T;
+  left: number;
+  width: number;
+};
+
+function rangesOverlap(a: { start: number; end: number }, b: { start: number; end: number }): boolean {
+  return a.start < b.end && b.start < a.end;
+}
+
+// Spans that overlap in a chain share one column count. Each takes the first
+// column free at its start, then widens into columns on its right that stay
+// free while it runs. Touching at an endpoint is not an overlap.
+export function placeOverlaps<T extends { start: number; end: number }>(items: readonly T[]): OverlapPlacement<T>[] {
+  const order = items.map((item, index) => ({ item, index }));
+  order.sort((a, b) => a.item.start - b.item.start || a.item.end - b.item.end || a.index - b.index);
+
+  const placed = new Map<number, { left: number; width: number }>();
+  let cluster: { index: number; column: number; item: T }[] = [];
+  let columnEnds: number[] = [];
+
+  const flush = () => {
+    const columns = columnEnds.length;
+    for (const entry of cluster) {
+      let span = 1;
+      for (let column = entry.column + 1; column < columns; column += 1) {
+        const taken = cluster.some((other) => other.column === column && rangesOverlap(entry.item, other.item));
+        if (taken) break;
+        span += 1;
+      }
+      if (columns > 0) placed.set(entry.index, { left: entry.column / columns, width: span / columns });
+    }
+    cluster = [];
+    columnEnds = [];
+  };
+
+  for (const entry of order) {
+    const clusterEnd = columnEnds.reduce((end, value) => Math.max(end, value), Number.NEGATIVE_INFINITY);
+    if (cluster.length > 0 && entry.item.start >= clusterEnd) flush();
+    let column = columnEnds.findIndex((end) => end <= entry.item.start);
+    if (column < 0) {
+      column = columnEnds.length;
+      columnEnds.push(entry.item.end);
+    } else {
+      columnEnds[column] = entry.item.end;
+    }
+    cluster.push({ index: entry.index, column, item: entry.item });
+  }
+  if (cluster.length > 0) flush();
+
+  return items.map((item, index) => {
+    const box = placed.get(index);
+    if (!box) throw new Error('placeOverlaps left a span unpacked');
+    return { item, left: box.left, width: box.width };
+  });
+}
+
 export type HourMark = { units: number; time: Temporal.ZonedDateTime };
 
 export function hourMarks(segment: DaySegment): HourMark[] {
@@ -165,12 +222,17 @@ function timed(id: string, title: string, startDay: string, start: string, endDa
 
 const EVENTS: readonly CalendarEvent[] = [
   timed('review', 'Design review', '2026-11-16', '09:00', '2026-11-16', '10:30'),
+  timed('standup', 'Standup', '2026-11-16', '09:00', '2026-11-16', '09:30'),
   timed('handoff', 'Handoff', '2026-11-16', '17:00', '2026-11-17', '09:30'),
   timed('interview', 'Interview', '2026-11-17', '10:00', '2026-11-17', '11:00'),
   timed('early', 'Early sync', '2026-11-18', '07:00', '2026-11-18', '09:00'),
   timed('workshop', 'Workshop', '2026-11-18', '14:00', '2026-11-18', '16:30'),
+  timed('planning', 'Planning', '2026-11-19', '10:00', '2026-11-19', '12:00'),
   timed('one', '1:1', '2026-11-19', '11:00', '2026-11-19', '11:30'),
+  timed('crit', 'Crit', '2026-11-19', '11:00', '2026-11-19', '12:30'),
   timed('ship', 'Ship review', '2026-11-19', '15:00', '2026-11-19', '18:30'),
+  timed('hiring', 'Hiring loop', '2026-11-19', '15:30', '2026-11-19', '16:30'),
+  timed('sync', 'Staff sync', '2026-11-19', '16:00', '2026-11-19', '17:00'),
   timed('demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00'),
   timed('offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true),
   timed('hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00'),
@@ -236,7 +298,11 @@ function EventColumn({
   headingId: string;
   shared: ReadonlySet<number>;
 }) {
-  const placed = spans.filter((span) => span.day.equals(segment.day)).sort((a, b) => a.start - b.start || a.event.title.localeCompare(b.event.title));
+  const placed = placeOverlaps(
+    spans
+      .filter((span) => span.day.equals(segment.day))
+      .sort((a, b) => a.start - b.start || a.end - b.end || a.event.title.localeCompare(b.event.title, locale)),
+  );
   const marks = scale > 0 ? hourMarks(segment) : [];
   return (
     <div className={styles.column}>
@@ -257,7 +323,7 @@ function EventColumn({
         })}
       </div>
       <ol className={styles.events} aria-labelledby={headingId}>
-        {placed.map((span) => {
+        {placed.map(({ item: span, left, width }) => {
           const start = span.event.start.withTimeZone(timeZone);
           const end = span.event.end.withTimeZone(timeZone);
           const spansDays = !start.toPlainDate().equals(end.toPlainDate());
@@ -271,7 +337,11 @@ function EventColumn({
           const box = spanFrame(span, scale);
           const short = span.end - span.start < 45;
           return (
-            <li key={`${span.event.id}-${segment.day.toString()}`} className={styles.slot} style={{ top: percent(box.top), height: percent(box.height) }}>
+            <li
+              key={`${span.event.id}-${segment.day.toString()}`}
+              className={styles.slot}
+              style={{ top: percent(box.top), height: percent(box.height), insetInlineStart: percent(left), inlineSize: percent(width) }}
+            >
               <Button.Root variant="ghost" className={styles.event} aria-label={name} tooltip={false}>
                 <Text.Root as="span" weight="medium" lines={1}>
                   {span.event.title}

@@ -113,13 +113,17 @@
 
 .slot {
   position: absolute;
-  inset-inline: var(--todae-space-1);
   margin: 0;
+}
+
+.slot:focus-within {
+  z-index: 1;
 }
 
 .event {
   position: absolute;
-  inset: 0;
+  inset-block: 0;
+  inset-inline: var(--todae-space-1);
   box-sizing: border-box;
   align-items: flex-start;
   justify-content: flex-start;

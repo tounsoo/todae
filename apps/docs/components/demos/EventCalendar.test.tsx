@@ -8,6 +8,7 @@ import EventCalendarExample, {
   fromUnits,
   hourMarks,
   laneScale,
+  placeOverlaps,
   snapGrid,
   spanFrame,
   toUnits,
@@ -173,6 +174,119 @@ describe('findConflicts', () => {
   });
 });
 
+function placed(items: { id: string; start: number; end: number }[]) {
+  return placeOverlaps(items).map(({ item, left, width }) => [item.id, left, width]);
+}
+
+describe('placeOverlaps', () => {
+  it('gives spans that do not overlap the full width, and keeps the order it was given', () => {
+    expect(placed([
+      { id: 'later', start: 120, end: 180 },
+      { id: 'early', start: 0, end: 60 },
+    ])).toEqual([
+      ['later', 0, 1],
+      ['early', 0, 1],
+    ]);
+  });
+
+  it('shares one column count across a chain, so the ends sit in the column the middle leaves free', () => {
+    expect(placed([
+      { id: 'a', start: 0, end: 60 },
+      { id: 'b', start: 30, end: 90 },
+      { id: 'c', start: 60, end: 120 },
+    ])).toEqual([
+      ['a', 0, 0.5],
+      ['b', 0.5, 0.5],
+      ['c', 0, 0.5],
+    ]);
+  });
+
+  it('puts spans with the same start and end side by side', () => {
+    expect(placed([
+      { id: 'a', start: 0, end: 60 },
+      { id: 'b', start: 0, end: 60 },
+      { id: 'c', start: 0, end: 60 },
+    ])).toEqual([
+      ['a', 0, 1 / 3],
+      ['b', 1 / 3, 1 / 3],
+      ['c', 2 / 3, 1 / 3],
+    ]);
+  });
+
+  it('puts a span that sits inside another beside it', () => {
+    expect(placed([
+      { id: 'outer', start: 0, end: 120 },
+      { id: 'inner', start: 30, end: 60 },
+    ])).toEqual([
+      ['outer', 0, 0.5],
+      ['inner', 0.5, 0.5],
+    ]);
+  });
+
+  it('does not treat spans that only touch as overlapping', () => {
+    expect(placed([
+      { id: 'before', start: 0, end: 60 },
+      { id: 'after', start: 60, end: 120 },
+    ])).toEqual([
+      ['before', 0, 1],
+      ['after', 0, 1],
+    ]);
+  });
+
+  it('packs a zero-length span with the span that contains its instant, and not with another at the same instant', () => {
+    expect(placed([
+      { id: 'long', start: 0, end: 60 },
+      { id: 'point', start: 30, end: 30 },
+    ])).toEqual([
+      ['long', 0, 0.5],
+      ['point', 0.5, 0.5],
+    ]);
+    expect(placed([
+      { id: 'a', start: 30, end: 30 },
+      { id: 'b', start: 30, end: 30 },
+    ])).toEqual([
+      ['a', 0, 1],
+      ['b', 0, 1],
+    ]);
+    expect(placed([{ id: 'only', start: 15, end: 15 }])).toEqual([['only', 0, 1]]);
+    expect(placed([
+      { id: 'point', start: 0, end: 0 },
+      { id: 'long', start: 0, end: 60 },
+    ])).toEqual([
+      ['point', 0, 1],
+      ['long', 0, 1],
+    ]);
+  });
+
+  it('widens a span into columns on its right that stay free while it runs', () => {
+    expect(placed([
+      { id: 'b', start: 0, end: 20 },
+      { id: 'a', start: 0, end: 30 },
+      { id: 'c', start: 10, end: 100 },
+      { id: 'd', start: 40, end: 100 },
+    ])).toEqual([
+      ['b', 0, 1 / 3],
+      ['a', 1 / 3, 1 / 3],
+      ['c', 2 / 3, 1 / 3],
+      ['d', 0, 2 / 3],
+    ]);
+  });
+
+  it('packs a fall-back lane by elapsed minutes, so the two 1:00 hours share a column only when the instants overlap', () => {
+    const axis = daySegments({ days: [FALL], opens: time('00:00'), closes: time('04:00'), timeZone: LA });
+    const spans = visibleSpans(axis, [
+      event('early', '2027-11-07T01:00:00-07:00[America/Los_Angeles]', '2027-11-07T01:30:00-07:00[America/Los_Angeles]'),
+      event('first', '2027-11-07T01:00:00-08:00[America/Los_Angeles]', '2027-11-07T01:30:00-08:00[America/Los_Angeles]'),
+      event('second', '2027-11-07T01:15:00-08:00[America/Los_Angeles]', '2027-11-07T01:45:00-08:00[America/Los_Angeles]'),
+    ]);
+    expect(placeOverlaps(spans).map(({ item, left, width }) => [item.event.id, item.start, item.end, left, width])).toEqual([
+      ['early', 60, 90, 0, 1],
+      ['first', 120, 150, 0, 0.5],
+      ['second', 135, 165, 0.5, 0.5],
+    ]);
+  });
+});
+
 describe('placing events on the lanes', () => {
   const zone = LA;
   const days = [date('2027-06-02'), date('2027-06-03')];
@@ -248,8 +362,14 @@ describe('the calendar', () => {
     render(<EventCalendarExample locale="en-US" />);
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(7);
     const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    const standup = screen.getByRole('button', { name: `Standup, ${clock('09:00')} to ${clock('09:30')}` });
     expect(review.parentElement?.style.top).toBe('10%');
     expect(review.parentElement?.style.height).toBe('15%');
+    expect(standup.parentElement?.style.insetInlineStart).toBe('0%');
+    expect(standup.parentElement?.style.inlineSize).toBe('50%');
+    expect(review.parentElement?.style.insetInlineStart).toBe('50%');
+    expect(review.parentElement?.style.inlineSize).toBe('50%');
+    expect(standup.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     review.focus();
     expect(document.activeElement).toBe(review);
     const handoff = `Handoff, Mon, Nov 16, ${clock('17:00')} to Tue, Nov 17, ${clock('09:30')}`;
@@ -363,5 +483,105 @@ describe('the calendar', () => {
     const nine = [...(gutter?.querySelectorAll('span') ?? [])].find((node) => node.textContent === clock('09:00'));
     expect(nine).toBeTruthy();
     expect(event.parentElement?.style.top).toBe((nine as HTMLElement).style.top);
+  });
+
+  it('puts overlapping events side by side and keeps their names in start order', () => {
+    const zone = 'America/Los_Angeles';
+    const zoned = (clockText: string) => Temporal.PlainDateTime.from(`2026-11-19T${clockText}`).toZonedDateTime(zone);
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={zone}
+        anchor={date('2026-11-19')}
+        events={[
+          { id: 'alpha', title: 'Alpha', start: zoned('10:00'), end: zoned('11:00'), allDay: false },
+          {
+            id: 'tokyo',
+            title: 'Tokyo',
+            start: Temporal.ZonedDateTime.from('2026-11-20T03:30:00+09:00[Asia/Tokyo]'),
+            end: Temporal.ZonedDateTime.from('2026-11-20T04:30:00+09:00[Asia/Tokyo]'),
+            allDay: false,
+          },
+          { id: 'demo', title: 'Demo', start: zoned('13:00'), end: zoned('14:00'), allDay: false },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+
+    const alpha = screen.getByRole('button', { name: `Alpha, ${clock('10:00')} to ${clock('11:00')}` });
+    const tokyo = screen.getByRole('button', { name: `Tokyo, ${clock('10:30')} to ${clock('11:30')}` });
+    const demo = screen.getByRole('button', { name: `Demo, ${clock('13:00')} to ${clock('14:00')}` });
+    const list = screen.getByRole('list', { name: 'Thu, Nov 19' });
+    expect(list.contains(alpha)).toBe(true);
+    expect(list.contains(tokyo)).toBe(true);
+    expect(list.contains(demo)).toBe(true);
+    expect(alpha.compareDocumentPosition(tokyo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(tokyo.compareDocumentPosition(demo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(alpha.parentElement?.style.insetInlineStart).toBe('0%');
+    expect(alpha.parentElement?.style.inlineSize).toBe('50%');
+    expect(tokyo.parentElement?.style.insetInlineStart).toBe('50%');
+    expect(tokyo.parentElement?.style.inlineSize).toBe('50%');
+    expect(demo.parentElement?.style.insetInlineStart).toBe('0%');
+    expect(demo.parentElement?.style.inlineSize).toBe('100%');
+    alpha.focus();
+    expect(document.activeElement).toBe(alpha);
+    tokyo.focus();
+    expect(document.activeElement).toBe(tokyo);
+    demo.focus();
+    expect(document.activeElement).toBe(demo);
+  });
+
+  it('places the repeated hour side by side and leaves the earlier 1:00 at its own row', () => {
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={LA}
+        opens={time('00:00')}
+        closes={time('04:00')}
+        anchor={FALL}
+        events={[
+          {
+            id: 'early',
+            title: 'Early',
+            start: at('2027-11-07T01:00:00-07:00[America/Los_Angeles]'),
+            end: at('2027-11-07T01:30:00-07:00[America/Los_Angeles]'),
+            allDay: false,
+          },
+          {
+            id: 'first',
+            title: 'First',
+            start: at('2027-11-07T01:00:00-08:00[America/Los_Angeles]'),
+            end: at('2027-11-07T01:30:00-08:00[America/Los_Angeles]'),
+            allDay: false,
+          },
+          {
+            id: 'second',
+            title: 'Second',
+            start: at('2027-11-07T01:15:00-08:00[America/Los_Angeles]'),
+            end: at('2027-11-07T01:45:00-08:00[America/Los_Angeles]'),
+            allDay: false,
+          },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+
+    const early = screen.getByRole('button', { name: `Early, ${clock('01:00')} to ${clock('01:30')}` });
+    const first = screen.getByRole('button', { name: `First, ${clock('01:00')} to ${clock('01:30')}` });
+    const second = screen.getByRole('button', { name: `Second, ${clock('01:15')} to ${clock('01:45')}` });
+    expect(early.parentElement?.style.top).toBe('20%');
+    expect(early.parentElement?.style.inlineSize).toBe('100%');
+    expect(first.parentElement?.style.top).toBe('40%');
+    expect(first.parentElement?.style.insetInlineStart).toBe('0%');
+    expect(first.parentElement?.style.inlineSize).toBe('50%');
+    expect(second.parentElement?.style.top).toBe('45%');
+    expect(second.parentElement?.style.insetInlineStart).toBe('50%');
+    expect(second.parentElement?.style.inlineSize).toBe('50%');
+    expect(early.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    early.focus();
+    expect(document.activeElement).toBe(early);
+    second.focus();
+    expect(document.activeElement).toBe(second);
   });
 });
