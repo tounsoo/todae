@@ -12,3 +12,4 @@ date	class	ref	caught_by	note
 2026-11-16	thumb-paint-rule-text	#477	review	The thumb test read an empty computed style and fell back to the stylesheet rule, and it never looked at the Firefox thumb.
 2026-11-16	slider-fill-floor-unsupported	#477	review	The single fill used clip-path shape() and overflow-inline, which Chrome 128 through 134 do not have, so the thumb shadow painted a block over the page.
 2026-11-16	slider-disabled-unstyled	#477	review	appearance none replaced the native thumb and the disabled state kept the fill color, so a disabled slider looked enabled.
+2026-11-17	day-lane-skipped-hour	#479	review	A close inside a skipped hour was compared after Temporal resolved it, so 02:00 to 03:00 on the spring-forward day wrapped to the next day.
