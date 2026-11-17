@@ -70,6 +70,8 @@ export type SliderRangeProps = Omit<
   endValueText?: string;
   /** A range uses `startValueText` and `endValueText`. */
   'aria-valuetext'?: never;
+  /** The id of the form these thumbs submit with, when the range sits outside that form. */
+  form?: string;
 };
 
 /** `Slider.Root`: one thumb, or two when `mode` is `"range"`. */
@@ -106,7 +108,6 @@ function Single({
 }
 
 function readThumbSize(input: HTMLInputElement): string | null {
-  if (input.ownerDocument.defaultView?.navigator.userAgent.includes('jsdom')) return null;
   for (const pseudo of ['::-webkit-slider-thumb', '::-moz-range-thumb']) {
     let measured: CSSStyleDeclaration;
     try {
@@ -129,6 +130,7 @@ function Range({
   max,
   step,
   name,
+  form: formId,
   value,
   defaultValue,
   onValueChange,
@@ -272,6 +274,7 @@ function Range({
         step={scale.step}
         value={shown[0]}
         name={name?.[0]}
+        form={formId}
         disabled={disabled}
         aria-label={startLabel}
         aria-valuetext={startValueText}
@@ -288,6 +291,7 @@ function Range({
         step={scale.step}
         value={shown[1]}
         name={name?.[1]}
+        form={formId}
         disabled={disabled}
         aria-label={endLabel}
         aria-valuetext={endValueText}
@@ -299,8 +303,6 @@ function Range({
   );
 }
 
-function Root(props: SliderSingleProps): ReactElement;
-function Root(props: SliderRangeProps): ReactElement;
 function Root(props: SliderProps): ReactElement {
   if (props.mode === 'range') return <Range {...props} />;
   return <Single {...props} />;

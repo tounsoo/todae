@@ -128,9 +128,9 @@ describe('Slider.Root range', () => {
   it('accepts a single slider from the root component props', () => {
     const single: ComponentProps<typeof Slider.Root> = { defaultValue: 5, onChange() {} };
     expect(single.defaultValue).toBe(5);
-    // @ts-expect-error a single slider reports through onChange
+    // @ts-expect-error a single slider reports through onChange -- why: pins the single arm of the public union; expires: 2027-02-14; approved: #477
     void (<Slider.Root onValueChange={() => undefined} />);
-    // @ts-expect-error a range reports through onValueChange
+    // @ts-expect-error a range reports through onValueChange -- why: pins the range arm of the public union; expires: 2027-02-14; approved: #477
     void (<Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" onChange={() => undefined} />);
   });
 

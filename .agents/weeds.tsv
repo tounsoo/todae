@@ -3,3 +3,4 @@ date	class	ref	caught_by	note
 2026-11-06	ci-apt-install	#381	prod	Firefox stayed on the runner apt install, and that install later timed out.
 2026-11-11	option-list-label-render	#439	prod	Putting the label on each option registration rendered the list again when labels changed.
 2026-11-12	lane-drag-scroll-padding	#463	review	The auto-scroll edge sat under the sticky stage names, so a drop near the start of the day missed.
+2026-11-16	test-environment-check	#477	review	readThumbSize returned early when the user agent said jsdom, so the shipped package behaved differently under test.
