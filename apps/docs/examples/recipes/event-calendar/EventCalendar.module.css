@@ -24,13 +24,13 @@
 
 .frame {
   --hour: 2.5rem;
-  inline-size: max(100%, calc(3.5rem + var(--days) * 5.5rem));
+  inline-size: max(100%, calc(4.5rem + var(--days) * 5.5rem));
 }
 
 .head,
 .body {
   display: grid;
-  grid-template-columns: 3.5rem repeat(var(--days), minmax(5.5rem, 1fr));
+  grid-template-columns: 4.5rem repeat(var(--days), minmax(5.5rem, 1fr));
 }
 
 .head {
@@ -63,6 +63,7 @@
   inset-inline-end: var(--todae-space-1);
   margin: 0;
   line-height: var(--todae-text-leading-tight);
+  white-space: nowrap;
   transform: translateY(-50%);
 }
 
@@ -73,13 +74,33 @@
 .column {
   position: relative;
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-subtle);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    var(--todae-color-border-subtle) 0,
-    var(--todae-color-border-subtle) var(--todae-border-width),
-    transparent var(--todae-border-width),
-    transparent var(--hour)
-  );
+}
+
+.hours {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.line {
+  position: absolute;
+  inset-inline: 0;
+  block-size: var(--todae-border-width);
+  background: var(--todae-color-border-subtle);
+}
+
+.columnMark {
+  position: absolute;
+  inset-inline-start: var(--todae-space-1);
+  z-index: 1;
+  margin: 0;
+  line-height: var(--todae-text-leading-tight);
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.columnMark[data-first] {
+  transform: none;
 }
 
 .events {
@@ -113,6 +134,7 @@
   border-radius: var(--todae-radius-sm);
   background: var(--todae-color-bg-surface);
   color: var(--todae-color-fg-default);
+  z-index: 1;
   text-align: start;
   white-space: normal;
 }

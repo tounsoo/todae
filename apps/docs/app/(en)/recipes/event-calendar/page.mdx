@@ -14,13 +14,13 @@ The example is the week of 16 November 2026 in `America/Los_Angeles`, open from 
 
 `daySegments()` builds one lane per visible day, open from `opens` to `closes` in `timeZone`. Units are elapsed minutes from that day's opening, so a day the clock changes is as long as it really is, and the night stays off the lane. `toUnits()` and `fromUnits()` turn a `Temporal.ZonedDateTime` into a point on that lane and back. A start at a shared midnight belongs to the later day, and an end belongs to the earlier day.
 
-`weekOf()` returns the Monday-to-Sunday week that contains a day. The week view passes those seven days to `daySegments()`, and the day view passes the one day on screen. The hour gutter and every column share the longest lane's length, so a minute is the same height in each column. `hourMarks()` lists each hour from the opening through the last hour that starts before the close.
+`weekOf()` returns the Monday-to-Sunday week that contains a day. The week view passes those seven days to `daySegments()`, and the day view passes the one day on screen. Every column is as tall as the longest lane, so a minute is the same height in each column. `hourMarks()` lists each hour from that lane's opening through the last hour that starts before the close. Each column draws those lines itself. The gutter names an hour only when every column has that same wall time at that offset. A column that differs names the hour inside the column.
 
 ## The event block
 
 `visibleSpans()` keeps the part of each event that falls inside a lane and drops the rest. An event that starts before the opening is drawn from the opening, and one that runs past the close stops at the close. An event that meets two days becomes one block on each day. An all-day event is left out, and so is an event that only touches a lane at an endpoint. `spanFrame()` turns a span into a top and a height as fractions of the shared length, so nothing is measured.
 
-The block is a [Button](/button). Its name is the title, then the start and end it actually shows, written with `formatTime`. The title and those times are also the text in the button.
+The block is a [Button](/button). Its name is the title, then the event's own start and end, written with `formatTime`. When the start or the end falls on another day, the name includes that day in the same form as the column heading. A block the visible hours clip says "started earlier" or "continues", and the text shows "…" on that side. A block shorter than 45 minutes shows the title only. The button does nothing yet. A details popover comes later.
 
 `findConflicts()` lists other occurrences that overlap an event in time. Touching at an endpoint is not an overlap. The grid does not read it, so overlapping blocks share a column.
 
@@ -32,7 +32,7 @@ This recipe does not drag. [`useLaneDrag`](/utilities/use-lane-drag) can run on 
 
 **Todae handles:** [ToggleGroup](/toggle-group) switches Week and Day and keeps one selected. [Button](/button) moves to the previous or next week or day. [ScrollArea](/scroll-area) scrolls the board and keeps a focused block's ring in view. [Text](/text) clamps the title and the time. The event button takes its focus ring from Button.
 
-**You supply:** A title for each event. A time zone and the visible hours. Day headings that name each column and the list of events in it. An accessible name on each event that starts with the title and includes the times the block shows.
+**You supply:** A title for each event. A time zone and the visible hours. Day headings that name each column and the list of events in it. An accessible name on each event that starts with the title and includes the event's real start and end, not only the hours on screen.
 
 **Watch for:** An event named only by its color. Times written in the browser's zone when the calendar's zone is the one that matters. A week of columns with nowhere to scroll on a narrow screen. An all-day event drawn on the time grid. Two overlapping events that hide each other's text, which this recipe still does, because they share a column.
 

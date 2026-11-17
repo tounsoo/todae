@@ -733,10 +733,10 @@
   "recipes/event-calendar": {
     "(top)": "68530c9a3a97",
     "# Event calendar": "f86ce737c741",
-    "## The time lanes": "abb299debb01",
-    "## The event block": "9a04348c04cb",
+    "## The time lanes": "7b7d3424117e",
+    "## The event block": "4fe4d1a9e517",
     "## Dragging": "d759e06aa32d",
-    "## Accessible composition": "dd4ec589a6da",
+    "## Accessible composition": "7faada61337c",
     "## When to use": "5bc7e717bb91",
     "(section order)": "ead645efe0fc"
   },

@@ -252,12 +252,16 @@ describe('the calendar', () => {
     expect(review.parentElement?.style.height).toBe('15%');
     review.focus();
     expect(document.activeElement).toBe(review);
-    expect(screen.getByRole('button', { name: `Handoff, ${clock('17:00')} to ${clock('18:00')}` })).toBeTruthy();
-    expect(screen.getByRole('button', { name: `Handoff, ${clock('08:00')} to ${clock('09:30')}` })).toBeTruthy();
-    const early = screen.getByRole('button', { name: `Early sync, ${clock('08:00')} to ${clock('09:00')}` });
+    const handoff = `Handoff, Mon, Nov 16, ${clock('17:00')} to Tue, Nov 17, ${clock('09:30')}`;
+    expect(screen.getByRole('button', { name: `${handoff}, continues` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `${handoff}, started earlier` })).toBeTruthy();
+    const early = screen.getByRole('button', { name: `Early sync, ${clock('07:00')} to ${clock('09:00')}, started earlier` });
     expect(early.parentElement?.style.top).toBe('0%');
     expect(early.parentElement?.style.height).toBe('10%');
-    expect(screen.getByRole('button', { name: `Ship review, ${clock('15:00')} to ${clock('18:00')}` })).toBeTruthy();
+    expect(early.textContent).toContain('…');
+    expect(screen.getByRole('button', { name: `Ship review, ${clock('15:00')} to ${clock('18:30')}, continues` })).toBeTruthy();
+    const one = screen.getByRole('button', { name: `1:1, ${clock('11:00')} to ${clock('11:30')}` });
+    expect(one.textContent).toBe('1:1');
     expect(screen.queryByRole('button', { name: /Offsite/ })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Day' }));
@@ -268,12 +272,58 @@ describe('the calendar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
     expect(screen.getByRole('button', { name: /Interview/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Design review/ })).toBeNull();
-    expect(screen.getByRole('button', { name: `Handoff, ${clock('08:00')} to ${clock('09:30')}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Handoff, Mon, Nov 16, ${clock('17:00')} to Tue, Nov 17, ${clock('09:30')}, started earlier` })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Week' }));
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(7);
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(screen.queryByRole('button', { name: /Design review/ })).toBeNull();
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(7);
+  });
+
+  it('keeps a fall-back week’s hours on the day they belong to', () => {
+    const zone = 'America/Los_Angeles';
+    const monday = Temporal.PlainDate.from('2026-10-26');
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={zone}
+        opens={Temporal.PlainTime.from('00:00')}
+        closes={Temporal.PlainTime.from('06:00')}
+        anchor={monday}
+        events={[
+          {
+            id: 'three',
+            title: 'Night check',
+            start: Temporal.PlainDateTime.from('2026-10-26T03:00').toZonedDateTime(zone),
+            end: Temporal.PlainDateTime.from('2026-10-26T03:30').toZonedDateTime(zone),
+            allDay: false,
+          },
+        ]}
+      />,
+    );
+
+    const mondayColumn = screen.getByRole('list', { name: 'Mon, Oct 26' }).parentElement;
+    const three = [...(mondayColumn?.querySelectorAll('span') ?? [])].find((node) => node.textContent === '3:00 AM');
+    const event = screen.getByRole('button', { name: /Night check/ });
+    expect(three).toBeTruthy();
+    expect(event.parentElement?.style.top).toBe((three as HTMLElement).style.top);
+
+    const board = event.closest('[aria-label="Calendar"]');
+    const oneAm = [...(board?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
+    expect(oneAm).toHaveLength(2);
+    const sundayColumn = screen.getByRole('list', { name: 'Sun, Nov 1' }).parentElement;
+    const sundayOne = [...(sundayColumn?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
+    expect(sundayOne).toHaveLength(1);
+
+    const gutter = mondayColumn?.parentElement?.firstElementChild;
+    const gutterLabels = [...(gutter?.querySelectorAll('span') ?? [])];
+    for (const label of gutterLabels) {
+      const columns = [...(gutter?.parentElement?.children ?? [])].slice(1);
+      for (const column of columns) {
+        const sameRow = [...column.querySelectorAll('span')].filter((node) => (node as HTMLElement).style.top === (label as HTMLElement).style.top && node.textContent?.trim());
+        expect(sameRow.every((node) => node.textContent === label.textContent)).toBe(true);
+      }
+    }
   });
 });

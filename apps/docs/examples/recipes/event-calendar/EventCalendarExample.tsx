@@ -193,9 +193,26 @@ function rangeLabel(days: readonly Temporal.PlainDate[], locale: string): string
   if (first.equals(last)) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(utcStamp(first));
   }
-  const start = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(utcStamp(first));
-  const end = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(utcStamp(last));
-  return `${start} to ${end}`;
+  const range = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).formatRange(utcStamp(first), utcStamp(last));
+  // Node and the browser put different spaces around the range dash.
+  return range.replaceAll(/\s+/g, ' ');
+}
+
+function sharedOffsets(segments: readonly DaySegment[]): Set<number> {
+  const units = new Set<number>();
+  for (const segment of segments) for (const mark of hourMarks(segment)) units.add(mark.units);
+  const shared = new Set<number>();
+  for (const at of units) {
+    const times = segments.map((segment) => fromUnits(segment, at, 'start')?.toPlainTime() ?? null);
+    const first = times[0];
+    if (first && times.every((time) => time !== null && Temporal.PlainTime.compare(time, first) === 0)) shared.add(at);
+  }
+  return shared;
+}
+
+function clockLabel(at: Temporal.ZonedDateTime, locale: string, withDay: boolean): string {
+  const time = formatTime(at.toPlainTime(), { locale });
+  return withDay ? `${dayHeading(at.toPlainDate(), locale)}, ${time}` : time;
 }
 
 function percent(fraction: number): string {
@@ -208,33 +225,58 @@ function EventColumn({
   scale,
   locale,
   headingId,
+  shared,
 }: {
   segment: DaySegment;
   spans: readonly VisibleSpan[];
   scale: number;
   locale: string;
   headingId: string;
+  shared: ReadonlySet<number>;
 }) {
   const placed = spans.filter((span) => span.day.equals(segment.day)).sort((a, b) => a.start - b.start || a.event.title.localeCompare(b.event.title));
+  const marks = scale > 0 ? hourMarks(segment) : [];
   return (
     <div className={styles.column}>
+      <div className={styles.hours} aria-hidden="true">
+        {marks.map((mark) => {
+          const top = percent(mark.units / scale);
+          const agreed = shared.has(mark.units);
+          return (
+            <div key={mark.units}>
+              <div className={styles.line} style={{ top }} />
+              {agreed ? null : (
+                <Text.Root as="span" variant="label" tone="muted" className={styles.columnMark} data-first={mark.units === 0 ? '' : undefined} style={{ top }}>
+                  {formatTime(mark.time.toPlainTime(), { locale })}
+                </Text.Root>
+              )}
+            </div>
+          );
+        })}
+      </div>
       <ol className={styles.events} aria-labelledby={headingId}>
         {placed.map((span) => {
-          const starts = fromUnits(segment, span.start, 'start');
-          const ends = fromUnits(segment, span.end, 'end');
-          if (!starts || !ends) return null;
-          const startLabel = formatTime(starts.toPlainTime(), { locale });
-          const endLabel = formatTime(ends.toPlainTime(), { locale });
+          const spansDays = !span.event.start.toPlainDate().equals(span.event.end.toPlainDate());
+          const startLabel = clockLabel(span.event.start, locale, spansDays);
+          const endLabel = clockLabel(span.event.end, locale, spansDays);
+          const startedEarlier = Temporal.ZonedDateTime.compare(span.event.start, segment.opens) < 0;
+          const continues = Temporal.ZonedDateTime.compare(span.event.end, segment.closes) > 0;
+          const cue = [startedEarlier ? 'started earlier' : null, continues ? 'continues' : null].filter(Boolean).join(', ');
+          const name = [`${span.event.title}, ${startLabel} to ${endLabel}`, cue].filter(Boolean).join(', ');
+          const timeText = `${startedEarlier ? '…' : ''}${startLabel} to ${endLabel}${continues ? '…' : ''}`;
           const box = spanFrame(span, scale);
+          const short = span.end - span.start < 45;
           return (
             <li key={`${span.event.id}-${segment.day.toString()}`} className={styles.slot} style={{ top: percent(box.top), height: percent(box.height) }}>
-              <Button.Root variant="ghost" className={styles.event} aria-label={`${span.event.title}, ${startLabel} to ${endLabel}`} tooltip={false}>
+              <Button.Root variant="ghost" className={styles.event} aria-label={name} tooltip={false}>
                 <Text.Root as="span" weight="medium" lines={1}>
                   {span.event.title}
                 </Text.Root>
-                <Text.Root as="span" variant="label" tone="muted" lines={1}>
-                  {startLabel} to {endLabel}
-                </Text.Root>
+                {short ? null : (
+                  <Text.Root as="span" variant="label" tone="muted" lines={1}>
+                    {timeText}
+                  </Text.Root>
+                )}
               </Button.Root>
             </li>
           );
@@ -244,16 +286,30 @@ function EventColumn({
   );
 }
 
-export default function EventCalendarExample({ locale = 'en-US' }: { locale?: string }) {
+export default function EventCalendarExample({
+  locale = 'en-US',
+  timeZone = ZONE,
+  opens = OPENS,
+  closes = CLOSES,
+  anchor: initialAnchor = ANCHOR,
+  events = EVENTS,
+}: {
+  locale?: string;
+  timeZone?: string;
+  opens?: Temporal.PlainTime;
+  closes?: Temporal.PlainTime;
+  anchor?: Temporal.PlainDate;
+  events?: readonly CalendarEvent[];
+}) {
   const [view, setView] = useState<CalendarView>('week');
-  const [anchor, setAnchor] = useState(ANCHOR);
+  const [anchor, setAnchor] = useState(initialAnchor);
   const heading = useId();
   const days = view === 'week' ? weekOf(anchor) : [anchor];
-  const axis = daySegments({ days, opens: OPENS, closes: CLOSES, timeZone: ZONE });
+  const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
-  const spans = visibleSpans(axis, EVENTS);
-  const gutter = axis.segments.find((segment) => segment.length === scale);
-  const marks = gutter && scale > 0 ? hourMarks(gutter) : [];
+  const spans = visibleSpans(axis, events);
+  const shared = sharedOffsets(axis.segments);
+  const gutterMarks = scale > 0 ? [...shared].sort((a, b) => a - b) : [];
   const step = view === 'week' ? 7 : 1;
 
   return (
@@ -292,22 +348,34 @@ export default function EventCalendarExample({ locale = 'en-US' }: { locale?: st
           </div>
           <div className={styles.body}>
             <div className={styles.gutter} aria-hidden="true">
-              {marks.map((mark, index) => (
-                <Text.Root
-                  as="span"
-                  key={mark.units}
-                  variant="label"
-                  tone="muted"
-                  className={styles.mark}
-                  data-first={index === 0 ? '' : undefined}
-                  style={{ top: percent(mark.units / scale) }}
-                >
-                  {formatTime(mark.time.toPlainTime(), { locale })}
-                </Text.Root>
-              ))}
+              {gutterMarks.map((units) => {
+                const time = axis.segments.map((segment) => fromUnits(segment, units, 'start')).find((value) => value !== null);
+                if (!time) return null;
+                return (
+                  <Text.Root
+                    as="span"
+                    key={units}
+                    variant="label"
+                    tone="muted"
+                    className={styles.mark}
+                    data-first={units === 0 ? '' : undefined}
+                    style={{ top: percent(units / scale) }}
+                  >
+                    {formatTime(time.toPlainTime(), { locale })}
+                  </Text.Root>
+                );
+              })}
             </div>
             {axis.segments.map((segment) => (
-              <EventColumn key={segment.day.toString()} segment={segment} spans={spans} scale={scale} locale={locale} headingId={`${heading}-${segment.day.toString()}`} />
+              <EventColumn
+                key={segment.day.toString()}
+                segment={segment}
+                spans={spans}
+                scale={scale}
+                locale={locale}
+                headingId={`${heading}-${segment.day.toString()}`}
+                shared={shared}
+              />
             ))}
           </div>
         </div>
