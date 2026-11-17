@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetWarnOnce } from '../internal/warnOnce.js';
+import { reset } from '../test/form.js';
 import { Fieldset } from './Fieldset.js';
 import { Slider, type SliderRangeValue } from './Slider.client.js';
 
@@ -104,6 +106,60 @@ describe('Slider.Root range', () => {
     const data = new FormData(form);
     expect(data.get('low')).toBe('20');
     expect(data.get('high')).toBe('80');
+  });
+
+  it('restores an uncontrolled range when its form resets, and leaves a controlled one', async () => {
+    const { rerender } = render(
+      <form>
+        <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" defaultValue={[20, 80]} />
+      </form>,
+    );
+    fireEvent.change(screen.getByRole('slider', { name: 'Maximum' }), { target: { value: '90' } });
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '90');
+    const form = document.querySelector('form');
+    if (!(form instanceof HTMLFormElement)) throw new Error('missing form');
+    await reset(form);
+    expect(screen.getByRole('slider', { name: 'Minimum' })).toHaveProperty('value', '20');
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '80');
+
+    function Held() {
+      const [value, setValue] = useState<SliderRangeValue>([20, 80]);
+      return (
+        <form>
+          <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" value={value} onValueChange={setValue} />
+        </form>
+      );
+    }
+    rerender(<Held />);
+    fireEvent.change(screen.getByRole('slider', { name: 'Maximum' }), { target: { value: '90' } });
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '90');
+    const held = document.querySelector('form');
+    if (!(held instanceof HTMLFormElement)) throw new Error('missing form');
+    await reset(held);
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '90');
+  });
+
+  it('warns when the default range is crossed and says each thumb in its own words', () => {
+    resetWarnOnce();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(
+      <Slider.Root
+        mode="range"
+        startLabel="Minimum"
+        endLabel="Maximum"
+        defaultValue={[80, 20]}
+        startValueText="Low"
+        endValueText="High"
+      />,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('start is greater'));
+    const start = screen.getByRole('slider', { name: 'Minimum' });
+    const end = screen.getByRole('slider', { name: 'Maximum' });
+    expect(end).toHaveProperty('value', '80');
+    expect(start.getAttribute('aria-valuetext')).toBe('Low');
+    expect(end.getAttribute('aria-valuetext')).toBe('High');
+    expect(screen.getByRole('group').getAttribute('aria-valuetext')).toBeNull();
+    warn.mockRestore();
   });
 
   it('takes a disabled invalid fieldset on both thumbs', () => {

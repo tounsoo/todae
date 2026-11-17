@@ -69,10 +69,22 @@ export const meta = {
       description: 'The field name. With mode="range", the start field name and the end field name. Omit it and neither range input submits.',
     },
     {
+      name: 'startValueText',
+      type: 'string',
+      required: false,
+      description: 'With mode="range", what a screen reader says for the start thumb instead of the number.',
+    },
+    {
+      name: 'endValueText',
+      type: 'string',
+      required: false,
+      description: 'With mode="range", what a screen reader says for the end thumb instead of the number.',
+    },
+    {
       name: 'aria-valuetext',
       type: 'string',
       required: false,
-      description: 'What a screen reader says instead of the number, such as "40%" or "Medium".',
+      description: 'On one thumb, what a screen reader says instead of the number, such as "40%" or "Medium". On a range, use startValueText and endValueText.',
     },
   ],
 } as const satisfies ComponentMeta;

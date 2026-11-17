@@ -1,7 +1,8 @@
-import { useRef, type ChangeEvent, type ComponentPropsWithRef, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
+import { useLayoutEffect, useRef, useState, type ChangeEvent, type ComponentPropsWithRef, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { cx } from '../internal/cx.js';
-import { composeHandlers } from '../internal/props.js';
+import { useFormReset } from '../internal/formReset.js';
+import { composeHandlers, useComposedRefs } from '../internal/props.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
 import { warnOnce } from '../internal/warnOnce.js';
 import { mergeDescribedBy } from './Field.context.js';
@@ -35,7 +36,10 @@ export type SliderSingleProps = SliderRootProps & {
 };
 
 /** Two thumbs on one track. Each thumb stops when it meets the other. */
-export type SliderRangeProps = Omit<ComponentPropsWithRef<'div'>, 'defaultValue' | 'onChange' | 'children' | 'role'> & {
+export type SliderRangeProps = Omit<
+  ComponentPropsWithRef<'div'>,
+  'defaultValue' | 'onChange' | 'children' | 'role' | 'aria-valuetext'
+> & {
   /** Two thumbs. */
   mode: 'range';
   /** The lowest value. */
@@ -60,6 +64,10 @@ export type SliderRangeProps = Omit<ComponentPropsWithRef<'div'>, 'defaultValue'
   startLabel: string;
   /** Names the end thumb. */
   endLabel: string;
+  /** What a screen reader says for the start thumb instead of the number. */
+  startValueText?: string;
+  /** What a screen reader says for the end thumb instead of the number. */
+  endValueText?: string;
 };
 
 /** `Slider.Root`: one thumb, or two when `mode` is `"range"`. */
@@ -95,7 +103,25 @@ function Single({
   );
 }
 
+function readThumbSize(input: HTMLInputElement): string | null {
+  if (input.ownerDocument.defaultView?.navigator.userAgent.includes('jsdom')) return null;
+  for (const pseudo of ['::-webkit-slider-thumb', '::-moz-range-thumb']) {
+    let measured: CSSStyleDeclaration;
+    try {
+      measured = getComputedStyle(input, pseudo);
+    } catch {
+      return null;
+    }
+    const height = Number.parseFloat(measured.height);
+    const width = Number.parseFloat(measured.width);
+    if (height > 0 && height < input.clientWidth) return `${height}px`;
+    if (width > 0 && width < input.clientWidth) return `${width}px`;
+  }
+  return null;
+}
+
 function Range({
+  ref,
   mode: _mode,
   min,
   max,
@@ -107,11 +133,14 @@ function Range({
   onChange: _onChange,
   startLabel,
   endLabel,
+  startValueText,
+  endValueText,
   disabled: disabledProp,
   className,
   style,
   'aria-invalid': ariaInvalid,
   'aria-describedby': describedBy,
+  'aria-valuetext': _valueText,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -128,18 +157,40 @@ function Range({
     onValueChange,
   );
   const shown = normalizeRange(stored, scale);
-  if (value != null && value[0] > value[1]) {
+  const supplied = value ?? defaultValue;
+  if (supplied != null && supplied[0] > supplied[1]) {
     warnOnce(
       'slider-range-crossed',
       'Slider.Root was given a range whose start is greater than its end. It is shown with the end moved to the start, and onValueChange waits for a gesture.',
     );
   }
-  const described = mergeDescribedBy(describedBy, errorId);
-  const invalidState = ariaInvalid ?? (invalid || undefined);
-  const percents = rangePercents(shown, scale);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const refs = useComposedRefs(groupRef, ref);
+  const initial = useRef<SliderRangeValue | null>(null);
+  if (initial.current == null) initial.current = normalizeRange((defaultValue as SliderRangeValue | undefined) ?? [scale.min, scale.max], scale);
+  const origin = initial.current;
+  useFormReset(
+    groupRef,
+    (atReset) => {
+      if (value !== undefined) return;
+      if (!Object.is(latest(), atReset)) return;
+      setStored(origin);
+    },
+    () => latest(),
+  );
   const startRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{ thumb: SliderThumb; pointerId: number } | null>(null);
+  const [thumb, setThumb] = useState('1rem');
+  useLayoutEffect(() => {
+    const input = startRef.current;
+    if (!input) return;
+    const next = readThumbSize(input);
+    if (next) setThumb((current) => (current === next ? current : next));
+  }, []);
+  const described = mergeDescribedBy(describedBy, errorId);
+  const invalidState = ariaInvalid ?? (invalid || undefined);
+  const percents = rangePercents(shown, scale);
 
   function commit(thumb: SliderThumb, raw: number) {
     const current = normalizeRange(latest(), scale);
@@ -188,9 +239,10 @@ function Range({
   return (
     <div
       {...props}
+      ref={refs}
       className={cx(styles.range, className)}
       role="group"
-      style={{ ...style, '--_start': `${percents.start}%`, '--_end': `${percents.end}%` } as CSSProperties}
+      style={{ ...style, '--_start': percents.start, '--_end': percents.end, '--_thumb': thumb } as CSSProperties}
       onPointerDown={composeHandlers(onPointerDown, pointerDown)}
       onPointerMove={composeHandlers(onPointerMove, pointerMove)}
       onPointerUp={composeHandlers(onPointerUp, pointerEnd)}
@@ -209,6 +261,7 @@ function Range({
         name={name?.[0]}
         disabled={disabled}
         aria-label={startLabel}
+        aria-valuetext={startValueText}
         aria-invalid={invalidState}
         aria-describedby={described}
         onChange={onThumb('start')}
@@ -224,6 +277,7 @@ function Range({
         name={name?.[1]}
         disabled={disabled}
         aria-label={endLabel}
+        aria-valuetext={endValueText}
         aria-invalid={invalidState}
         aria-describedby={described}
         onChange={onThumb('end')}

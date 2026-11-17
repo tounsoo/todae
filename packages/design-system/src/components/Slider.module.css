@@ -15,8 +15,9 @@
   }
 
   .range {
-    --_start: 0%;
-    --_end: 100%;
+    --_start: 0;
+    --_end: 100;
+    --_thumb: 1rem;
     display: grid;
     position: relative;
     inline-size: 100%;
@@ -43,8 +44,8 @@
   .range::after {
     z-index: 0;
     justify-self: start;
-    margin-inline-start: var(--_start);
-    inline-size: calc(var(--_end) - var(--_start));
+    margin-inline-start: calc(var(--_thumb) / 2 + var(--_start) / 100 * (100% - var(--_thumb)));
+    inline-size: calc((var(--_end) - var(--_start)) / 100 * (100% - var(--_thumb)));
     background: var(--todae-slider-fill);
   }
 
@@ -54,7 +55,7 @@
     inset-inline-start: 0;
     inset-block: 0;
     margin-block: auto;
-    inline-size: var(--_start);
+    inline-size: calc(var(--_thumb) / 2 + var(--_start) / 100 * (100% - var(--_thumb)));
     block-size: 0.5em;
     background: ButtonFace;
     pointer-events: none;
@@ -75,12 +76,12 @@
 
   .start {
     inset-inline-start: 0;
-    inline-size: var(--_end);
+    inline-size: calc(var(--_end) / 100 * (100% - var(--_thumb)) + var(--_thumb));
   }
 
   .end {
-    inset-inline-start: var(--_start);
-    inline-size: calc(100% - var(--_start));
+    inset-inline-start: calc(var(--_start) / 100 * (100% - var(--_thumb)));
+    inline-size: calc((100 - var(--_start)) / 100 * (100% - var(--_thumb)) + var(--_thumb));
   }
 
   .thumb::-webkit-slider-runnable-track {
@@ -103,7 +104,11 @@
     pointer-events: auto;
   }
 
-  .thumb:focus-visible {
+  .thumb:focus {
+    outline: none;
+  }
+
+  .range:has(:focus-visible) {
     outline: var(--todae-focus-ring-width) solid var(--todae-slider-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
   }
