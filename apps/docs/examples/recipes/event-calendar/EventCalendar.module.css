@@ -24,21 +24,28 @@
 
 .frame {
   --hour: 2.5rem;
-  inline-size: max(100%, calc(4.5rem + var(--days) * 5.5rem));
+  inline-size: max(100%, var(--min-inline, calc(4.5rem + var(--days) * 5.5rem)));
 }
 
 .head,
 .body {
   display: grid;
-  grid-template-columns: 4.5rem repeat(var(--days), minmax(5.5rem, 1fr));
+  grid-template-columns: var(--tracks, 4.5rem repeat(var(--days), minmax(5.5rem, 1fr)));
 }
 
 .head {
   position: sticky;
   inset-block-start: 0;
-  z-index: 1;
+  z-index: 2;
   background: var(--todae-color-bg-canvas);
   border-block-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
+}
+
+.corner {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background: var(--todae-color-bg-canvas);
 }
 
 .day {
@@ -55,7 +62,11 @@
 }
 
 .gutter {
-  position: relative;
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  background: var(--todae-color-bg-canvas);
+  border-inline-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
 }
 
 .mark {
@@ -113,13 +124,17 @@
 
 .slot {
   position: absolute;
-  inset-inline: var(--todae-space-1);
   margin: 0;
+}
+
+.slot:focus-within {
+  z-index: 1;
 }
 
 .event {
   position: absolute;
-  inset: 0;
+  inset-block: 0;
+  inset-inline: var(--todae-space-1);
   box-sizing: border-box;
   align-items: flex-start;
   justify-content: flex-start;

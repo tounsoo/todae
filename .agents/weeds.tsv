@@ -17,3 +17,4 @@ date	class	ref	caught_by	note
 2026-11-17	clipped-event-name	#480	review	A block named the clipped window, so Early sync read as 8:00 to 9:00 and one handoff read as two events.
 2026-11-17	range-label-icu-space	#480	review	formatRange's spaces differ between Node and Chrome, so the Korean week range failed hydration.
 2026-11-17	event-name-own-zone	#480	review	A block read the event's own zone, so a Tokyo 02:00 was named 2:00 AM on the Los Angeles calendar.
+2026-11-17	zero-length-endpoint-overlap	#481	review	The docs said a zero-length span overlaps a span that contains its instant, but the half-open test leaves a span that only starts or ends there at full width.

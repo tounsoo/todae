@@ -1,12 +1,12 @@
 import EventCalendarExample from '../../../../examples/recipes/event-calendar/EventCalendarExample';
 
-export const description = 'A recipe for an event calendar: a week or a day of time lanes, with each event placed from its start and end. Overlapping events share a column.';
+export const description = 'A recipe for an event calendar: a week or a day of time lanes, with each event placed from its start and end. Overlapping events sit side by side.';
 
 # Event calendar
 
 A recipe, not a package namespace. An event calendar shows timed events on a week of day columns, or on one day, in one time zone. Each day is a lane of its visible hours, and an event is a block on the lane its start and end fall in. There is no `EventCalendar.*` export.
 
-The example is the week of 16 November 2026 in `America/Los_Angeles`, open from 8:00 to 18:00. Switch to Day to see one column, and use Previous and Next to move. Overlapping events share a column.
+The example is the week of 16 November 2026 in `America/Los_Angeles`, open from 8:00 to 18:00. Switch to Day to see one column, and use Previous and Next to move. Thursday is a busy day: overlapping events sit side by side.
 
 <Example of={EventCalendarExample} />
 
@@ -20,9 +20,11 @@ The example is the week of 16 November 2026 in `America/Los_Angeles`, open from 
 
 `visibleSpans()` keeps the part of each event that falls inside a lane and drops the rest. An event that starts before the opening is drawn from the opening, and one that runs past the close stops at the close. An event that meets two days becomes one block on each day. An all-day event is left out, and so is an event that only touches a lane at an endpoint. `spanFrame()` turns a span into a top and a height as fractions of the shared length, so nothing is measured.
 
+`placeOverlaps()` packs one lane's spans into columns. Spans that overlap in time, including a chain where each one overlaps the next, share that cluster's column count. Each span takes the first column that is free when it starts. When two start together, the longer one takes the column on the left. A span may widen into columns on its right that nothing else uses while it runs. The left edge and the width are fractions of the lane, so nothing is measured. Spans that only touch at an endpoint each keep the full width, one after the other. A span with no length overlaps a span only when its instant is strictly inside that span, and two spans with no length at the same instant do not overlap. The grid does not draw a span with no length, because `visibleSpans()` drops it. Each day column is at least 5.5rem wide, and another 4rem for every column in that day's busiest cluster, so a busy week scrolls sideways.
+
 The block is a [Button](/button). Its name is the title, then the event's own start and end, written with `formatTime`. When the start or the end falls on another day, the name includes that day in the same form as the column heading. A block the visible hours clip says "started earlier" or "continues", and the text shows "…" on that side. A block shorter than 45 minutes shows the title only. The button does nothing yet. A details popover comes later.
 
-`findConflicts()` lists other occurrences that overlap an event in time. Touching at an endpoint is not an overlap. The grid does not read it, so overlapping blocks share a column.
+`findConflicts()` lists other occurrences that overlap an event in time. Touching at an endpoint is not an overlap. `placeOverlaps()` uses that same test on the lane's minutes.
 
 ## Dragging
 
@@ -34,7 +36,7 @@ This recipe does not drag. [`useLaneDrag`](/utilities/use-lane-drag) can run on 
 
 **You supply:** A title for each event. A time zone and the visible hours. Day headings that name each column and the list of events in it. An accessible name on each event that starts with the title and includes the event's real start and end, not only the hours on screen.
 
-**Watch for:** An event named only by its color. Times written in the browser's zone when the calendar's zone is the one that matters. A week of columns with nowhere to scroll on a narrow screen. An all-day event drawn on the time grid. Two overlapping events that hide each other's text, which this recipe still does, because they share a column.
+**Watch for:** An event named only by its color. Times written in the browser's zone when the calendar's zone is the one that matters. A week of columns with nowhere to scroll on a narrow screen. An all-day event drawn on the time grid. A day column fixed so narrow that side-by-side blocks are squeezed to a letter.
 
 ## When to use
 

@@ -138,6 +138,68 @@ export function spanFrame(span: Pick<VisibleSpan, 'start' | 'end'>, scale: numbe
   return { top: span.start / scale, height: (span.end - span.start) / scale };
 }
 
+export type OverlapPlacement<T extends { start: number; end: number }> = {
+  item: T;
+  left: number;
+  width: number;
+  columns: number;
+};
+
+function rangesOverlap(a: { start: number; end: number }, b: { start: number; end: number }): boolean {
+  return a.start < b.end && b.start < a.end;
+}
+
+// A span with no length comes before a longer one that starts with it. Then the longer span takes the left column. Touching at an endpoint is not an overlap.
+export function placeOverlaps<T extends { start: number; end: number }>(items: readonly T[]): OverlapPlacement<T>[] {
+  const order = items.map((item, index) => ({ item, index }));
+  order.sort(
+    (a, b) =>
+      a.item.start - b.item.start ||
+      (a.item.end === a.item.start ? 0 : 1) - (b.item.end === b.item.start ? 0 : 1) ||
+      b.item.end - a.item.end ||
+      a.index - b.index,
+  );
+
+  const placed = new Map<number, { left: number; width: number; columns: number }>();
+  let cluster: { index: number; column: number; item: T }[] = [];
+  let columnEnds: number[] = [];
+
+  const flush = () => {
+    const columns = columnEnds.length;
+    for (const entry of cluster) {
+      let span = 1;
+      for (let column = entry.column + 1; column < columns; column += 1) {
+        const taken = cluster.some((other) => other.column === column && rangesOverlap(entry.item, other.item));
+        if (taken) break;
+        span += 1;
+      }
+      placed.set(entry.index, { left: entry.column / columns, width: span / columns, columns });
+    }
+    cluster = [];
+    columnEnds = [];
+  };
+
+  for (const entry of order) {
+    const clusterEnd = columnEnds.reduce((end, value) => Math.max(end, value), Number.NEGATIVE_INFINITY);
+    if (cluster.length > 0 && entry.item.start >= clusterEnd) flush();
+    let column = columnEnds.findIndex((end) => end <= entry.item.start);
+    if (column < 0) {
+      column = columnEnds.length;
+      columnEnds.push(entry.item.end);
+    } else {
+      columnEnds[column] = entry.item.end;
+    }
+    cluster.push({ index: entry.index, column, item: entry.item });
+  }
+  if (cluster.length > 0) flush();
+
+  return items.map((item, index) => {
+    const box = placed.get(index);
+    if (!box) throw new Error('placeOverlaps left a span unpacked');
+    return { item, left: box.left, width: box.width, columns: box.columns };
+  });
+}
+
 export type HourMark = { units: number; time: Temporal.ZonedDateTime };
 
 export function hourMarks(segment: DaySegment): HourMark[] {
@@ -165,12 +227,17 @@ function timed(id: string, title: string, startDay: string, start: string, endDa
 
 const EVENTS: readonly CalendarEvent[] = [
   timed('review', 'Design review', '2026-11-16', '09:00', '2026-11-16', '10:30'),
+  timed('standup', 'Standup', '2026-11-16', '09:00', '2026-11-16', '09:30'),
   timed('handoff', 'Handoff', '2026-11-16', '17:00', '2026-11-17', '09:30'),
   timed('interview', 'Interview', '2026-11-17', '10:00', '2026-11-17', '11:00'),
   timed('early', 'Early sync', '2026-11-18', '07:00', '2026-11-18', '09:00'),
   timed('workshop', 'Workshop', '2026-11-18', '14:00', '2026-11-18', '16:30'),
+  timed('planning', 'Planning', '2026-11-19', '10:00', '2026-11-19', '12:00'),
   timed('one', '1:1', '2026-11-19', '11:00', '2026-11-19', '11:30'),
+  timed('crit', 'Crit', '2026-11-19', '11:00', '2026-11-19', '12:30'),
   timed('ship', 'Ship review', '2026-11-19', '15:00', '2026-11-19', '18:30'),
+  timed('hiring', 'Hiring loop', '2026-11-19', '15:30', '2026-11-19', '16:30'),
+  timed('sync', 'Staff sync', '2026-11-19', '16:00', '2026-11-19', '17:00'),
   timed('demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00'),
   timed('offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true),
   timed('hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00'),
@@ -219,9 +286,19 @@ function percent(fraction: number): string {
   return `${Math.round(fraction * 1e6) / 1e4}%`;
 }
 
+function daySpans(spans: readonly VisibleSpan[], day: Temporal.PlainDate, locale: string): VisibleSpan[] {
+  return spans
+    .filter((span) => span.day.equals(day))
+    .sort((a, b) => a.start - b.start || b.end - a.end || a.event.title.localeCompare(b.event.title, locale));
+}
+
+function dayTrack(columns: number): string {
+  return `minmax(max(5.5rem, ${columns} * 4rem), 1fr)`;
+}
+
 function EventColumn({
   segment,
-  spans,
+  placed,
   scale,
   locale,
   timeZone,
@@ -229,14 +306,13 @@ function EventColumn({
   shared,
 }: {
   segment: DaySegment;
-  spans: readonly VisibleSpan[];
+  placed: ReturnType<typeof placeOverlaps<VisibleSpan>>;
   scale: number;
   locale: string;
   timeZone: string;
   headingId: string;
   shared: ReadonlySet<number>;
 }) {
-  const placed = spans.filter((span) => span.day.equals(segment.day)).sort((a, b) => a.start - b.start || a.event.title.localeCompare(b.event.title));
   const marks = scale > 0 ? hourMarks(segment) : [];
   return (
     <div className={styles.column}>
@@ -257,7 +333,7 @@ function EventColumn({
         })}
       </div>
       <ol className={styles.events} aria-labelledby={headingId}>
-        {placed.map((span) => {
+        {placed.map(({ item: span, left, width }) => {
           const start = span.event.start.withTimeZone(timeZone);
           const end = span.event.end.withTimeZone(timeZone);
           const spansDays = !start.toPlainDate().equals(end.toPlainDate());
@@ -271,7 +347,11 @@ function EventColumn({
           const box = spanFrame(span, scale);
           const short = span.end - span.start < 45;
           return (
-            <li key={`${span.event.id}-${segment.day.toString()}`} className={styles.slot} style={{ top: percent(box.top), height: percent(box.height) }}>
+            <li
+              key={`${span.event.id}-${segment.day.toString()}`}
+              className={styles.slot}
+              style={{ top: percent(box.top), height: percent(box.height), insetInlineStart: percent(left), inlineSize: percent(width) }}
+            >
               <Button.Root variant="ghost" className={styles.event} aria-label={name} tooltip={false}>
                 <Text.Root as="span" weight="medium" lines={1}>
                   {span.event.title}
@@ -312,6 +392,13 @@ export default function EventCalendarExample({
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
   const spans = visibleSpans(axis, events);
+  const lanes = axis.segments.map((segment) => {
+    const placed = placeOverlaps(daySpans(spans, segment.day, locale));
+    const columns = placed.reduce((count, place) => Math.max(count, place.columns), 1);
+    return { segment, placed, columns };
+  });
+  const tracks = `4.5rem ${lanes.map((lane) => dayTrack(lane.columns)).join(' ')}`;
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), 4.5)}rem`;
   const shared = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...shared].sort((a, b) => a - b) : [];
   const step = view === 'week' ? 7 : 1;
@@ -340,10 +427,10 @@ export default function EventCalendarExample({
       <ScrollArea.Root axis="both" focusable aria-label="Calendar" className={styles.board}>
         <div
           className={styles.frame}
-          style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale }}
+          style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
         >
           <div className={styles.head}>
-            <div />
+            <div className={styles.corner} />
             {axis.segments.map((segment) => (
               <Text.Root as="h3" variant="label" id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
                 {dayHeading(segment.day, locale)}
@@ -370,11 +457,11 @@ export default function EventCalendarExample({
                 );
               })}
             </div>
-            {axis.segments.map((segment) => (
+            {lanes.map(({ segment, placed }) => (
               <EventColumn
                 key={segment.day.toString()}
                 segment={segment}
-                spans={spans}
+                placed={placed}
                 scale={scale}
                 locale={locale}
                 timeZone={timeZone}
