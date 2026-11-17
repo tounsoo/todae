@@ -3,7 +3,7 @@ import SliderVolume from '../../../examples/slider/SliderVolume';
 
 # Slider
 
-`Slider.Root` is a native `<input type="range">`. The browser handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae sets `accent-color` from the `slider` contract tokens, and the browser uses it to tint the thumb and filled track. How much of the control that color reaches differs by browser.
+`Slider.Root` is a native `<input type="range">`. The browser handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae paints the thumb and the filled track from `slider.fill`.
 
 <Example of={SliderVolume} block />
 
@@ -17,7 +17,7 @@ Server Components can import it from `@tounsoo/todae/slider`. Inside a [Fieldset
 
 ## Accessible composition
 
-**Todae handles:** Styles. One thumb is a native `<input type="range">` with the `slider` role, its value, minimum and maximum, and the keys above. `mode="range"` also stops a thumb where it meets the other, fills the track between them, and moves the nearer thumb when the empty track is pressed. Todae tints the control with `accent-color` and draws a focus outline from `slider.ring.focus` while it is focus-visible.
+**Todae handles:** Styles. One thumb is a native `<input type="range">` with the `slider` role, its value, minimum and maximum, and the keys above. `mode="range"` also stops a thumb where it meets the other, fills the track between them, and moves the nearer thumb when the empty track is pressed. Todae paints the thumb and the filled track from `slider.fill` and draws a focus outline from `slider.ring.focus` while it is focus-visible.
 
 **You supply:** A name. For one thumb, a [Label](/label) with `htmlFor` or `aria-label`. For two, `startLabel` and `endLabel`. `aria-valuetext` on one thumb, or `startValueText` and `endValueText` on a range, when the number alone does not mean much, such as `"40%"` or `"Medium"`. The current value as visible text when the exact number matters, and `aria-describedby` for any hint.
 

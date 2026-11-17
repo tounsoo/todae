@@ -7,3 +7,4 @@ date	class	ref	caught_by	note
 2026-11-16	range-track-covers-thumb	#477	review	The end input's box started at the start thumb and painted later, so its track covered that thumb and the empty track differed on the two sides.
 2026-11-16	range-thumb-native-drag	#477	review	Each range input was only as wide as its thumb and handled the drag itself, so the gesture mapped across no travel and the value collapsed.
 2026-11-16	range-pointer-inset	#477	review	The pointer mapped across the full group, so a press on the drawn thumb moved the value by half the thumb.
+2026-11-16	slider-thumb-accent-color	#477	review	The thumb was left to accent-color. WebKit does not paint the thumb from that, so Safari kept the native white thumb.

@@ -2,7 +2,7 @@ import { useContext, useLayoutEffect, useRef, useState, type ChangeEvent, type C
 import { useControlledState } from '../hooks/useControlledState.js';
 import { cx } from '../internal/cx.js';
 import { useFormReset } from '../internal/formReset.js';
-import { composeHandlers, useComposedRefs } from '../internal/props.js';
+import { alongside, composeHandlers, useComposedRefs } from '../internal/props.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
 import { warnOnce } from '../internal/warnOnce.js';
 import { mergeDescribedBy } from './Field.context.js';
@@ -12,6 +12,7 @@ import { Slider as ServerSlider, type SliderRootProps } from './Slider.js';
 import styles from './Slider.module.css';
 import {
   moveThumb,
+  fillPercent,
   nearestThumb,
   normalizeRange,
   rangePercents,
@@ -85,7 +86,12 @@ function readInput(input: HTMLInputElement): number {
   return Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : Number(input.value);
 }
 
+function paintFill(input: HTMLInputElement) {
+  input.style.setProperty('--_value', fillPercent(input.value, readScale({ min: input.min, max: input.max })));
+}
+
 function Single({
+  ref: forwarded,
   mode: _mode,
   onValueChange: _onValueChange,
   startLabel: _startLabel,
@@ -93,16 +99,31 @@ function Single({
   disabled: disabledProp,
   'aria-invalid': ariaInvalid,
   'aria-describedby': describedBy,
+  onInput,
   ...props
 }: SliderSingleProps) {
   const { disabled, invalid, errorId } = useFieldsetState({ disabled: disabledProp, invalid: ownInvalid(ariaInvalid) });
   useRevalidate();
+  const ref = useRef<HTMLInputElement>(null);
+  const refs = useComposedRefs(ref, forwarded);
+  useLayoutEffect(() => {
+    if (ref.current) paintFill(ref.current);
+  });
+  useFormReset(
+    ref,
+    () => {
+      if (ref.current) paintFill(ref.current);
+    },
+    () => ref.current?.value ?? '',
+  );
   return (
     <ServerSlider.Root
       {...props}
+      ref={refs}
       disabled={disabled}
       aria-invalid={ariaInvalid ?? (invalid || undefined)}
       aria-describedby={mergeDescribedBy(describedBy, errorId)}
+      onInput={alongside(onInput, (event) => paintFill(event.currentTarget))}
     />
   );
 }

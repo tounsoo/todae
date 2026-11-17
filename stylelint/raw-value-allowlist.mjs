@@ -26,7 +26,7 @@ export const allowlist = [
   {
     value: '50%',
     where: 'circle',
-    files: ['ColorPicker.module.css', 'Loader.module.css', 'Menu.module.css', 'Steps.module.css', 'selection.module.css'],
+    files: ['ColorPicker.module.css', 'Loader.module.css', 'Menu.module.css', 'Slider.module.css', 'Steps.module.css', 'selection.module.css'],
   },
   // End stop of ColorPicker's longer-hue gradient. hsl(360) is the same hue as hsl(0).
   { value: '360', where: 'hue', files: ['ColorPicker.module.css'] },

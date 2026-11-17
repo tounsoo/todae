@@ -60,8 +60,9 @@ function thumbPaint(input: Element): { appearance: string; background: string } 
     );
     const declared = rule?.style.getPropertyValue('background-color').trim() ?? '';
     const variable = /^var\((--[\w-]+)\)$/.exec(declared);
-    if (variable) {
-      const resolved = getComputedStyle(input).getPropertyValue(variable[1]).trim();
+    const name = variable?.[1];
+    if (name) {
+      const resolved = getComputedStyle(input).getPropertyValue(name).trim();
       if (resolved) return { appearance, background: resolved };
     }
     if (declared) return { appearance, background: declared };
@@ -324,6 +325,16 @@ describe('Slider range in the browser', () => {
     expect(start()).toHaveProperty('value', '16');
     expect(end()).toHaveProperty('value', '60');
     expect(document.activeElement).toBe(end());
+  });
+
+  it('fills the single track up to the thumb', async () => {
+    render(<Slider.Root aria-label="Volume" defaultValue={40} />);
+    const input = screen.getByRole('slider', { name: 'Volume' });
+    expect(getComputedStyle(input).getPropertyValue('--_value').trim()).toBe('40%');
+    input.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(input).toHaveProperty('value', '41');
+    expect(getComputedStyle(input).getPropertyValue('--_value').trim()).toBe('41%');
   });
 
   it('paints each thumb from the fill token', () => {

@@ -1,8 +1,40 @@
 @layer todae.components.native {
-  /* accent-color tints the thumb and filled track; how far it reaches differs by browser. */
+  /* appearance: none lets the thumb background replace the native thumb. accent-color does not. */
   .root {
+    --_thumb: 1rem;
+    --_value: 50%;
+    appearance: none;
+    box-sizing: border-box;
     inline-size: 100%;
+    block-size: var(--_thumb);
+    margin: 0;
+    background: transparent;
     accent-color: var(--todae-slider-fill);
+  }
+
+  .root::-webkit-slider-runnable-track {
+    box-sizing: border-box;
+    block-size: var(--todae-focus-ring-width);
+    border: 0;
+    background-color: ButtonFace;
+    background-image: linear-gradient(to right, var(--todae-slider-fill) var(--_value), ButtonFace var(--_value));
+  }
+
+  .root:dir(rtl)::-webkit-slider-runnable-track {
+    background-image: linear-gradient(to left, var(--todae-slider-fill) var(--_value), ButtonFace var(--_value));
+  }
+
+  .root::-moz-range-track {
+    box-sizing: border-box;
+    block-size: var(--todae-focus-ring-width);
+    border: 0;
+    background-color: ButtonFace;
+  }
+
+  .root::-moz-range-progress {
+    block-size: var(--todae-focus-ring-width);
+    border: 0;
+    background-color: var(--todae-slider-fill);
   }
 
   .root:focus-visible {
@@ -55,9 +87,12 @@
     justify-self: start;
     align-self: center;
     position: relative;
+    appearance: none;
+    box-sizing: border-box;
     margin: 0;
     min-inline-size: 0;
     inline-size: var(--_thumb);
+    block-size: var(--_thumb);
     background: transparent;
     accent-color: var(--todae-slider-fill);
     pointer-events: none;
@@ -72,16 +107,41 @@
     inset-inline-start: calc(var(--_end) / 100 * (100% - var(--_thumb)));
   }
 
+  .root::-webkit-slider-thumb,
+  .thumb::-webkit-slider-thumb {
+    appearance: none;
+    box-sizing: border-box;
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    border: 0;
+    border-radius: 50%;
+    background-color: var(--todae-slider-fill);
+  }
+
+  .root::-webkit-slider-thumb {
+    margin-block-start: calc((var(--todae-focus-ring-width) - var(--_thumb)) / 2);
+  }
+
   .thumb::-webkit-slider-runnable-track {
     background: transparent;
+    border: 0;
+    block-size: var(--_thumb);
   }
 
-  .thumb::-moz-range-track {
-    background: transparent;
-  }
-
+  .thumb::-moz-range-track,
   .thumb::-moz-range-progress {
     background: transparent;
+    border: 0;
+  }
+
+  .root::-moz-range-thumb,
+  .thumb::-moz-range-thumb {
+    box-sizing: border-box;
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    border: 0;
+    border-radius: 50%;
+    background-color: var(--todae-slider-fill);
   }
 
   .thumb:focus {
@@ -99,8 +159,13 @@
   }
 
   @media (forced-colors: active) {
-    .range::after {
-      background: Highlight;
+    .range::after,
+    .root::-webkit-slider-thumb,
+    .thumb::-webkit-slider-thumb,
+    .root::-moz-range-thumb,
+    .thumb::-moz-range-thumb,
+    .root::-moz-range-progress {
+      background-color: Highlight;
     }
   }
 }
