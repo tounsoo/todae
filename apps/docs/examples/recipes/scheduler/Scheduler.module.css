@@ -1,6 +1,6 @@
 /* The schedule sets --minute, the width of one minute on the board, and
-   --units, the minutes the axis covers, so every lane is as wide as the
-   event. */
+   --units, the minutes in view, so every lane is as wide as the day or
+   the whole event. */
 .schedule {
   --names: 10rem;
   --header: 4.5rem;

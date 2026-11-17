@@ -39,15 +39,27 @@ const pointer = (type: string, target: EventTarget, x: number, y: number) =>
     target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
   });
 
+/** The minutes the board is showing. One day is the selected day. The whole event is the axis. */
+function visibleRange() {
+  const root = document.querySelector<HTMLElement>('[data-zoom]')!;
+  if (root.getAttribute('data-zoom') === 'event') return { start: 0, end: UNITS };
+  const labels = ['Wed, Jun 2', 'Thu, Jun 3', 'Fri, Jun 4'];
+  const index = labels.findIndex((label) => screen.getByRole('button', { name: label }).getAttribute('aria-pressed') === 'true');
+  const start = (index < 0 ? 0 : index) * (UNITS / 3);
+  return { start, end: start + UNITS / 3 };
+}
+
 /** Scrolls the board so the point `units` along the axis sits 200px from where the names column ends. */
 function reveal(units: number) {
-  board().scrollLeft = (units / UNITS) * lane('Main stage').getBoundingClientRect().width - 200;
+  const range = visibleRange();
+  board().scrollLeft = ((units - range.start) / (range.end - range.start)) * lane('Main stage').getBoundingClientRect().width - 200;
 }
 
 /** The point `units` along a stage's lane, in its middle across. */
 function along(name: string, units: number) {
+  const range = visibleRange();
   const box = lane(name).getBoundingClientRect();
-  return { x: box.left + (units / UNITS) * box.width, y: box.top + box.height / 2 };
+  return { x: box.left + ((units - range.start) / (range.end - range.start)) * box.width, y: box.top + box.height / 2 };
 }
 
 /** Presses a talk's grip and moves the pointer so the talk would start at `to`. */
@@ -106,12 +118,8 @@ describe('dragging', () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
-    // The day stops a focus ring's room past the names, so its start is just in view.
-    await expect.poll(() => along('Main stage', 540).x - names.right).toBeLessThan(6);
-    expect(along('Main stage', 540).x - names.right).toBeCloseTo(4, 0);
-    // Put the day's start right at the names' edge. A scroll-padding wider than the names would
+    // Selecting the day puts 9:00 at the names' edge. A scroll-padding wider than the names would
     // count the first place in view a step later, and the drop would land at 9:05.
-    board().scrollLeft += along('Main stage', 540).x - names.right;
     await expect.poll(() => Math.abs(along('Main stage', 540).x - names.right)).toBeLessThan(0.5);
     // The board's scroll-padding marks the names, so a drop over them lands at the first place in view.
     dragTo('Dark mode, done right', { x: names.left + names.width / 2, y: along('Main stage', 540).y }).drop();
@@ -121,6 +129,7 @@ describe('dragging', () => {
 
   it('marks the talk a speaker gives on another stage, refuses the drop and puts the mark back', async () => {
     setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     reveal(895);
     // Kenji Sato is on Panel: shipping 1.0 on Main stage from 15:00 to 16:00 on day 2, 900 to 960,
     // and Hall B is free then, so the speaker is the one thing in the way.
@@ -201,6 +210,7 @@ describe('the sticky stage names', () => {
 
   it('scrolls a day to just past the names column, with room for a focus ring, from its button', async () => {
     setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     // The header row's axis holds a cell for each day.
     const day = rows().firstElementChild!.children[1]!.children[1] as HTMLElement;
     expect(day.textContent).toContain('Thu, Jun 3');
@@ -240,9 +250,10 @@ describe('the sticky stage names', () => {
     reveal(400);
     // The time on the axis at the first point the names column leaves visible.
     const shown = () => {
+      const range = visibleRange();
       const box = lane('Main stage').getBoundingClientRect();
       const x = stage('Main stage').firstElementChild!.getBoundingClientRect().right + 1;
-      return ((x - box.left) / box.width) * UNITS;
+      return range.start + ((x - box.left) / box.width) * (range.end - range.start);
     };
     const before = shown();
     expect(before).toBeGreaterThan(300);
@@ -343,6 +354,7 @@ describe('the dialog', () => {
 
   it('puts a blocked place on the start field, clears it on a change, and gives focus back on Escape', async () => {
     setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     // Move another talk first, so focus must go back to the talk the dialog edits, not the last one moved.
     await open('Writing UI copy', 'Move to Hall B');
     await userEvent.keyboard('{Enter}');

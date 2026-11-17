@@ -153,6 +153,7 @@ describe('the schedule', () => {
 
   it('names each talk with what it shows first, then its speakers, stage and any warning', () => {
     setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     expect(talksOn('Main stage')).toEqual(['Tokens that travel', 'Motion with purpose', 'Auditing a design system', 'Panel: shipping 1.0', 'Writing UI copy']);
     expect(screen.getByRole('button', { name: /^Research ops at scale,/ }).getAttribute('aria-label')).toBe(
       'Research ops at scale, Wed, Jun 2, 11:00 AM to 11:30 AM, Priya Nair, Research, Hall B, warning: Expects 350, Hall B seats 300',
@@ -219,9 +220,12 @@ describe('the schedule', () => {
     await choose(motion(), 'Change time or stage…');
     const dialog = await screen.findByRole('dialog', { name: 'Move Motion with purpose' });
     await act(async () => {
+      fireEvent.change(within(dialog).getByRole('combobox', { name: 'Stage' }), { target: { value: 'main' } });
+    });
+    await act(async () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
     });
-    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Hall B, warning: Expects 400, Hall B seats 300');
+    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Main stage');
   });
 
   it('schedules a talk from the queue at the first free time and undoes it', async () => {

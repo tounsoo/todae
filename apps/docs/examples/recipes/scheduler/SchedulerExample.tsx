@@ -274,18 +274,19 @@ type Shared = {
   landing: RefObject<HTMLButtonElement | null>;
   landed: string | null;
   locale: string;
+  range: Timeline['range'];
 };
 
 /** Where a drag would put a talk in this stage, with what the rules say about it. */
-const Preview = memo(function Preview({ drag, stage, locale }: { drag: UseLaneDragResult['drag']; stage: string; locale: string }) {
+const Preview = memo(function Preview({ drag, stage, locale, range }: { drag: UseLaneDragResult['drag']; stage: string; locale: string; range: Timeline['range'] }) {
   const change = useLaneDragState(drag, (state) => (state?.to?.lane === stage ? state : null));
-  if (change?.to == null) return null;
+  if (change?.to == null || !overlaps(change.to.start, change.to.end, range)) return null;
   const { to, verdict } = change;
   const starts = fromUnits(AXIS, to.start, 'start');
   // A place that runs past closing ends on the next day's axis, so it shows its start alone.
   const ends = segmentAt(AXIS, to.start, 'start') === segmentAt(AXIS, to.end, 'end') ? fromUnits(AXIS, to.end, 'end') : null;
   return (
-    <div className={styles.preview} data-level={verdict?.level} style={{ insetInlineStart: `${(to.start / AXIS.range.end) * 100}%`, inlineSize: `${((to.end - to.start) / AXIS.range.end) * 100}%` }}>
+    <div className={styles.preview} data-level={verdict?.level} style={placeStyle(to.start, to.end, range)}>
       <span className={styles.time}>{starts ? (ends ? `${clock(starts, locale)}–${clock(ends, locale)}` : clock(starts, locale)) : null}</span>
       {verdict ? (
         <span className={styles.reason}>
@@ -374,8 +375,7 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
       data-conflict={verdict?.level}
       data-highlight={highlight}
       style={{
-        insetInlineStart: `${(at.start / AXIS.range.end) * 100}%`,
-        inlineSize: `${((at.end - at.start) / AXIS.range.end) * 100}%`,
+        ...placeStyle(at.start, at.end, shared.range),
         ['--track' as string]: `var(--todae-color-${TRACKS[talk.track]}-border)`,
       }}
     >
@@ -529,15 +529,32 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
-// One day gives a talk of half an hour or more room for its grip and text and snaps to 5 minutes. The
-// whole event is the overview and snaps to 15; an hour there is 9.375rem, so a half-hour talk still
-// shows a word or two of its title in the smaller label size.
+// One day shows the selected day, gives a talk of half an hour or more room for its grip and text, and snaps
+// to 5 minutes. The whole event shows every day and snaps to 15; an hour there is 9.375rem, so a half-hour
+// talk still shows a word or two of its title in the smaller label size.
 const ZOOM = { event: { step: 15, minute: '0.15625rem' }, day: { step: 5, minute: '0.25rem' } } as const;
+
+function shownRange(zoom: keyof typeof ZOOM, day: number): Timeline['range'] {
+  if (zoom === 'event') return AXIS.range;
+  const segment = AXIS.segments[day]!;
+  return { start: segment.start, end: segment.end };
+}
+
+const overlaps = (start: number, end: number, range: Timeline['range']) => start < range.end && end > range.start;
+
+function placeStyle(start: number, end: number, range: Timeline['range']) {
+  const length = range.end - range.start;
+  return {
+    insetInlineStart: `${((start - range.start) / length) * 100}%`,
+    inlineSize: `${((end - start) / length) * 100}%`,
+  };
+}
 
 export default function SchedulerExample({ locale = 'en-US' }: { locale?: string }) {
   const [talks, setTalks] = useState(TALKS);
   const [history, setHistory] = useState<{ talks: Talk[]; said: string }[]>([]);
   const [zoom, setZoom] = useState<keyof typeof ZOOM>('day');
+  const [day, setDay] = useState(0);
   const [speaker, setSpeaker] = useState('');
   // The talk the dialog edits, and the one it shows, which stays while the dialog closes.
   const [editing, setEditing] = useState<string | null>(null);
@@ -569,9 +586,10 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
     announce(`Undid: ${last.said}`);
   };
 
-  const grid = useMemo(() => snapGrid(AXIS, ZOOM[zoom].step), [zoom]);
+  const range = useMemo(() => shownRange(zoom, day), [zoom, day]);
+  const grid = useMemo(() => snapGrid(AXIS, ZOOM[zoom].step).filter((point) => point >= range.start && point <= range.end), [zoom, range.start, range.end]);
   const lanes = useLaneDrag({
-    range: AXIS.range,
+    range,
     grid,
     minSpan: SHORTEST,
     check: (id, to) => verdictFor(talks, id, to),
@@ -585,32 +603,73 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
     setEditing(id);
   };
 
-  // A zoom keeps the time at the board's start in view.
+  // A zoom keeps the time at the board's start in view, and One day keeps the day that time is in.
   const kept = useRef<number | null>(null);
   // In layout pixels, as scrollLeft is, so a scaled page doesn't skew it.
-  const perMinute = () => (board.current?.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0) / AXIS.range.end;
+  const minuteWidth = () => {
+    const width = board.current?.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0;
+    const length = range.end - range.start;
+    return length > 0 ? width / length : 0;
+  };
+  // The day taking the most of the board past the names. A scroll stop sits a ring's width before that day.
+  const dayOnBoard = () => {
+    const scroller = board.current;
+    const lane = scroller?.querySelector<HTMLElement>('[data-todae-lane]');
+    if (!scroller || !lane) return day;
+    const view = scroller.getBoundingClientRect();
+    const left = lane.parentElement?.firstElementChild?.getBoundingClientRect().right ?? view.left;
+    let best = -1;
+    let found = day;
+    AXIS.segments.forEach((_, index) => {
+      const cell = days.current[index];
+      if (!cell) return;
+      const box = cell.getBoundingClientRect();
+      const overlap = Math.min(box.right, view.right) - Math.max(box.left, left);
+      if (overlap > best) {
+        best = overlap;
+        found = index;
+      }
+    });
+    return found;
+  };
   const zoomTo = (next: keyof typeof ZOOM) => {
-    kept.current = board.current && perMinute() > 0 ? board.current.scrollLeft / perMinute() : null;
+    const minute = minuteWidth();
+    const at = board.current && minute > 0 ? range.start + board.current.scrollLeft / minute : null;
+    if (next === 'day') setDay(dayOnBoard());
+    kept.current = at;
     setZoom(next);
+  };
+  const selectDay = (index: number) => {
+    kept.current = AXIS.segments[index]!.start;
+    setDay(index);
   };
   useLayoutEffect(() => {
     if (kept.current === null || !board.current) return;
-    board.current.scrollLeft = kept.current * perMinute();
+    const next = shownRange(zoom, day);
+    const width = board.current.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0;
+    const length = next.end - next.start;
+    const minute = length > 0 ? width / length : 0;
+    board.current.scrollLeft = (kept.current - next.start) * minute;
     kept.current = null;
-  }, [zoom]);
+  }, [zoom, day]);
 
-  const shared: Shared = { talks, lanes, move, edit, landing, landed, locale };
+  const shared: Shared = { talks, lanes, move, edit, landing, landed, locale, range };
   const highlight = (talk: Talk): Highlight => (speaker === '' ? undefined : talk.speakers.includes(speaker) ? 'picked' : 'dimmed');
   const shownTalk = shown && talks.find((talk) => talk.id === shown.id);
   const queue = talks.filter((talk) => talk.at === null);
 
   return (
-    <div className={styles.schedule} data-zoom={zoom} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: AXIS.range.end }}>
+    <div className={styles.schedule} data-zoom={zoom} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: range.end - range.start }}>
       <div className={styles.controls}>
-        <div className={styles.jump} role="group" aria-label="Go to day">
-          {DAYS.map((day, index) => (
-            <Button.Root key={index} variant="secondary" onClick={() => days.current[index]?.scrollIntoView({ inline: 'start', block: 'nearest' })}>
-              {dayLabel(day, locale)}
+        <div className={styles.jump} role="group" aria-label="Day">
+          {DAYS.map((each, index) => (
+            <Button.Root
+              key={index}
+              variant="secondary"
+              aria-pressed={zoom === 'day' ? index === day : undefined}
+              onClick={() => (zoom === 'day' ? selectDay(index) : days.current[index]?.scrollIntoView({ inline: 'start', block: 'nearest' }))}
+            >
+              {dayLabel(each, locale)}
             </Button.Root>
           ))}
         </div>
@@ -644,28 +703,31 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
             <div className={styles.row}>
               <div className={styles.corner} />
               <div className={styles.axis}>
-                {AXIS.segments.map((segment, index) => (
-                  <div
-                    key={index}
-                    ref={(node) => {
-                      days.current[index] = node;
-                    }}
-                    className={styles.day}
-                    style={{ insetInlineStart: `${(segment.start / AXIS.range.end) * 100}%`, inlineSize: `${((segment.end - segment.start) / AXIS.range.end) * 100}%` }}
-                  >
-                    <Text.Root variant="label">{dayLabel(segment.day, locale)}</Text.Root>
-                    <span className={styles.bands}>
-                      {BANDS.filter((band) => band.day === index)
-                        .map((band) => `${band.label} ${formatTime(Temporal.PlainTime.from(band.from), { locale })}–${formatTime(Temporal.PlainTime.from(band.to), { locale })}`)
-                        .join(' · ')}
-                    </span>
-                    <span className={styles.hours} aria-hidden>
-                      {Array.from({ length: (segment.end - segment.start) / 60 }, (_, hour) => (
-                        <span key={hour}>{clock(segment.opens.add({ hours: hour }), locale)}</span>
-                      ))}
-                    </span>
-                  </div>
-                ))}
+                {AXIS.segments.map((segment, index) => {
+                  if (!overlaps(segment.start, segment.end, range)) return null;
+                  return (
+                    <div
+                      key={index}
+                      ref={(node) => {
+                        days.current[index] = node;
+                      }}
+                      className={styles.day}
+                      style={placeStyle(segment.start, segment.end, range)}
+                    >
+                      <Text.Root variant="label">{dayLabel(segment.day, locale)}</Text.Root>
+                      <span className={styles.bands}>
+                        {BANDS.filter((band) => band.day === index)
+                          .map((band) => `${band.label} ${formatTime(Temporal.PlainTime.from(band.from), { locale })}–${formatTime(Temporal.PlainTime.from(band.to), { locale })}`)
+                          .join(' · ')}
+                      </span>
+                      <span className={styles.hours} aria-hidden>
+                        {Array.from({ length: (segment.end - segment.start) / 60 }, (_, hour) => (
+                          <span key={hour}>{clock(segment.opens.add({ hours: hour }), locale)}</span>
+                        ))}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             {STAGES.map((stage) => (
@@ -707,8 +769,14 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
 
 function StageRow({ stage, shared, highlight }: { stage: Stage; shared: Shared; highlight: (talk: Talk) => Highlight }) {
   const nameId = useId();
-  const talks = shared.talks.filter((talk) => talk.at?.stage === stage.id).sort((a, b) => a.at!.starts.epochMilliseconds - b.at!.starts.epochMilliseconds);
-  const closed = CLOSED.filter((window) => window.keys === 'all' || window.keys.includes(`stage:${stage.id}`));
+  const talks = shared.talks
+    .filter((talk) => {
+      if (talk.at?.stage !== stage.id) return false;
+      const at = laneOf(talk.at);
+      return overlaps(at.start, at.end, shared.range);
+    })
+    .sort((a, b) => a.at!.starts.epochMilliseconds - b.at!.starts.epochMilliseconds);
+  const closed = CLOSED.filter((window) => (window.keys === 'all' || window.keys.includes(`stage:${stage.id}`)) && overlaps(window.start, window.end, shared.range));
   return (
     <section className={styles.row} aria-labelledby={nameId}>
       <div className={styles.name}>
@@ -733,7 +801,7 @@ function StageRow({ stage, shared, highlight }: { stage: Stage; shared: Shared; 
             aria-hidden
             className={styles.closed}
             data-band={window.keys === 'all' || undefined}
-            style={{ insetInlineStart: `${(window.start / AXIS.range.end) * 100}%`, inlineSize: `${((window.end - window.start) / AXIS.range.end) * 100}%` }}
+            style={placeStyle(window.start, window.end, shared.range)}
           />
         ))}
         <ol className={styles.talks} aria-labelledby={nameId}>
@@ -741,7 +809,7 @@ function StageRow({ stage, shared, highlight }: { stage: Stage; shared: Shared; 
             <Block key={talk.id} talk={talk} highlight={highlight(talk)} {...shared} />
           ))}
         </ol>
-        <Preview drag={shared.lanes.drag} stage={stage.id} locale={shared.locale} />
+        <Preview drag={shared.lanes.drag} stage={stage.id} locale={shared.locale} range={shared.range} />
       </div>
     </section>
   );
