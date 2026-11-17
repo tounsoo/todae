@@ -105,7 +105,6 @@ export function weekOf(day: Temporal.PlainDate): Temporal.PlainDate[] {
 
 const MIDNIGHT = Temporal.PlainTime.from('00:00');
 
-// A day is [midnight, next midnight). An event that ends on the next midnight stays on the earlier day.
 export function eventsOnDay(day: Temporal.PlainDate, events: readonly CalendarEvent[], timeZone: string, locale: string): CalendarEvent[] {
   const opens = zoned(day, MIDNIGHT, timeZone);
   const closes = zoned(day.add({ days: 1 }), MIDNIGHT, timeZone);
