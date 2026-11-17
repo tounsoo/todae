@@ -44,30 +44,25 @@ function styleRules(): CSSStyleRule[] {
 
 function thumbPaint(input: Element): { appearance: string; background: string } {
   const appearance = getComputedStyle(input).appearance;
-  const pseudos = ['::-webkit-slider-thumb', '::-moz-range-thumb'];
-  for (const pseudo of pseudos) {
-    const measured = getComputedStyle(input, pseudo).backgroundColor;
-    if (measured && measured !== 'rgba(0, 0, 0, 0)' && measured !== 'transparent') return { appearance, background: measured };
+  const pseudo = '::-webkit-slider-thumb';
+  const measured = getComputedStyle(input, pseudo).backgroundColor;
+  if (measured && measured !== 'rgba(0, 0, 0, 0)' && measured !== 'transparent') return { appearance, background: measured };
+  const rule = styleRules().find((candidate) =>
+    candidate.selectorText.split(',').some((part) => {
+      const selector = part.trim();
+      if (!selector.endsWith(pseudo)) return false;
+      const owner = selector.slice(0, -pseudo.length).trim();
+      return owner !== '' && input.matches(owner);
+    }),
+  );
+  const declared = rule?.style.getPropertyValue('background-color').trim() ?? '';
+  const variable = /^var\((--[\w-]+)\)$/.exec(declared);
+  const name = variable?.[1];
+  if (name) {
+    const resolved = getComputedStyle(input).getPropertyValue(name).trim();
+    if (resolved) return { appearance, background: resolved };
   }
-  for (const pseudo of pseudos) {
-    const rule = styleRules().find((candidate) =>
-      candidate.selectorText.split(',').some((part) => {
-        const selector = part.trim();
-        if (!selector.endsWith(pseudo)) return false;
-        const owner = selector.slice(0, -pseudo.length).trim();
-        return owner !== '' && input.matches(owner);
-      }),
-    );
-    const declared = rule?.style.getPropertyValue('background-color').trim() ?? '';
-    const variable = /^var\((--[\w-]+)\)$/.exec(declared);
-    const name = variable?.[1];
-    if (name) {
-      const resolved = getComputedStyle(input).getPropertyValue(name).trim();
-      if (resolved) return { appearance, background: resolved };
-    }
-    if (declared) return { appearance, background: declared };
-  }
-  return { appearance, background: '' };
+  return { appearance, background: declared };
 }
 
 function onPage(x: number, y: number) {
