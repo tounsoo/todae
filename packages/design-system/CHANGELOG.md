@@ -1,5 +1,11 @@
 # @tounsoo/todae
 
+## 0.11.3
+
+### Patch Changes
+
+- Slider.Root can take two thumbs for a range, paints a disabled thumb and fill with GrayText, and draws a single filled track in Chrome 135 and later, Safari, and Firefox. ([#477](https://github.com/tounsoo/todae/pull/477))
+
 ## 0.11.2
 
 ### Patch Changes
