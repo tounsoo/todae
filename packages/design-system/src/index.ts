@@ -297,6 +297,7 @@ export { formatDateRange, parseDateRange, type DateRangeTextOptions } from './co
 export { formatRelativeTime, type RelativeTimeTextOptions } from './components/relativeTimeText.js';
 export {
   Calendar,
+  type CalendarDayState,
   type CalendarFirstDayOfWeek,
   type CalendarGridProps,
   type CalendarHeaderProps,

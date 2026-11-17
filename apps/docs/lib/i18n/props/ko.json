@@ -2853,6 +2853,16 @@
       "ko": "링크 텍스트로, 보통 섹션의 제목입니다."
     }
   },
+  "Calendar.Grid": {
+    "renderDay": {
+      "en": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show.",
+      "ko": "그리드가 그리는 각 날짜 버튼 안에 그립니다. 그 날의 날짜와, 보이는 달 밖인지, 오늘인지, 선택됐는지, 고를 수 없는지를 받아 호출됩니다. 버튼은 유일한 Tab 정지점으로 남고 이름은 전체 날짜 그대로이며, 내용은 그 날의 설명으로 읽힙니다. 내용은 상호작용하지 않습니다. 해가 보이는 동안에는 무시됩니다."
+    },
+    "showOutsideDays": {
+      "en": "Draws the leading and trailing days as buttons, in the weekday color, and marks them outside. Off by default, and passing renderDay does not draw those days. Ignored while the years show.",
+      "ko": "앞쪽과 뒤쪽의 날을 버튼으로 그리고, 요일 색으로 칠하며, 달 밖으로 표시합니다. 기본값은 꺼짐이고, renderDay를 전달해도 그 날은 그려지지 않습니다. 해가 보이는 동안에는 무시됩니다."
+    }
+  },
   "Calendar.Root": {
     "mode": {
       "en": "One date, or with \"range\" a range of dates: the first pick starts it and the second ends it.",
