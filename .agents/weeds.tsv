@@ -20,3 +20,4 @@ date	class	ref	caught_by	note
 2026-11-17	zero-length-endpoint-overlap	#481	review	The docs said a zero-length span overlaps a span that contains its instant, but the half-open test leaves a span that only starts or ends there at full width.
 2026-11-17	month-pager-steals-focus	#484	review	Previous and Next moved focus into the month grid, so a second press had to find the button again.
 2026-11-17	month-chip-overflow	#484	review	A month title grew the day button, so at a narrow width it painted over the next day.
+2026-11-17	month-label-lags-focus	#484	review	Arrowing into the next month left the toolbar label and both aria-labels on the old month.

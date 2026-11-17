@@ -14,7 +14,7 @@ The example is the week of 16 November 2026 in `America/Los_Angeles`, open from 
 
 `daySegments()` builds one lane per visible day, open from `opens` to `closes` in `timeZone`. Units are elapsed minutes from that day's opening, so a day the clock changes is as long as it really is, and the night stays off the lane. `toUnits()` and `fromUnits()` turn a `Temporal.ZonedDateTime` into a point on that lane and back. A start at a shared midnight belongs to the later day, and an end belongs to the earlier day.
 
-`weekOf()` returns the Monday-to-Sunday week that contains a day. The week view passes those seven days to `daySegments()`, and the day view passes the one day on screen. Every column is as tall as the longest lane, so a minute is the same height in each column. `hourMarks()` lists each hour from that lane's opening through the last hour that starts before the close. Each column draws those lines itself. The gutter names an hour only when every column has that same wall time at that offset. A column that differs names the hour inside the column.
+`weekOf()` returns the seven days that contain a day, starting on the locale's first day of the week, the same day Calendar starts on. English and Korean start on Sunday. The week view passes those seven days to `daySegments()`, and the day view passes the one day on screen. Every column is as tall as the longest lane, so a minute is the same height in each column. `hourMarks()` lists each hour from that lane's opening through the last hour that starts before the close. Each column draws those lines itself. The gutter names an hour only when every column has that same wall time at that offset. A column that differs names the hour inside the column.
 
 ## The event block
 
@@ -28,15 +28,15 @@ The block is a [Button](/button). Its name is the title, then the event's own st
 
 ## The month
 
-Month sits beside Week and Day. It shows one month in `timeZone`. `eventsOnDay()` lists the events that overlap a calendar day, from that midnight up to the next midnight. An event that ends on the next midnight stays on the earlier day. An all-day event is included here. The time lanes still leave it out. All-day events come first, then earlier starts, then titles.
+Month sits beside Week and Day. The switch lists Month, then Week, then Day. It shows one month in `timeZone`. `eventsOnDay()` lists the events that overlap a calendar day, from that midnight up to the next midnight. An event that ends on the next midnight stays on the earlier day. An all-day event is included here. The time lanes still leave it out. All-day events come first, then earlier starts, then titles.
 
-[Calendar](/calendar) draws the day buttons through `Calendar.Grid`. `renderDay` draws up to two titles in each day, in the same colors as an event block, and writes `+N more` as text when the day has more. Those titles and that count are the button's description. The button's name stays the full date. Nothing inside the day is a control.
+[Calendar](/calendar) draws the day buttons through `Calendar.Grid`, and `Calendar.Header` names the focused month and moves to the previous or next month. `renderDay` draws up to two titles in each day, in the same colors as an event block, and writes `+N more` as text when the day has more. Those titles and that count are the button's description. The button's name stays the full date. Nothing inside the day is a control. The day number sits at the top of every cell, and each title spans the cell. When the month is narrower than 30rem, a day shows how many events it has instead of the titles, so `+N more` is never cut off. The titles stay in the description.
 
-Press a day, or press Enter or Space while it is focused, and the view switches to that day. Focus moves to the day's first event. When the day has no event on the time lane, focus moves to the day heading. Previous and Next move one month and keep focus on the button. Page Up and Page Down make that same move from the grid, and with Shift they move a year. Focus then stays on that month's selected day.
+Press a day, or press Enter or Space while it is focused, and the view switches to that day. Focus moves to the day's first event. When the day has no event on the time lane, focus moves to the day heading. Arrow keys move a week. Page Up and Page Down move a month, and with Shift they move a year. The header's label and the grid's name follow the focused month. Previous and Next keep focus on the button that was pressed.
 
 An event that covers more than one day shows its title on each of those days. A bar that runs across the days is not part of this view.
 
-`showOutsideDays` draws the days that lead and trail the month, so each week is a full row. Those days are buttons too. A press opens that day, and their events use the same titles and count.
+`showOutsideDays` draws the days that lead and trail the month, so each week is a full row. The days that trail the month stay pressable and show their events. A press opens that day.
 
 ## Dragging
 
@@ -44,7 +44,7 @@ This recipe does not drag. [`useLaneDrag`](/utilities/use-lane-drag) can run on 
 
 ## Accessible composition
 
-**Todae handles:** [ToggleGroup](/toggle-group) switches Week, Day and Month and keeps one selected. [Button](/button) moves to the previous or next week, day or month. [Calendar](/calendar) draws the month, keeps one tab stop, names each day with the full date, and reads that day's titles as the description. [ScrollArea](/scroll-area) scrolls the week and the day and keeps a focused block's ring in view. [Text](/text) clamps the title and the time. The event button takes its focus ring from Button.
+**Todae handles:** [ToggleGroup](/toggle-group) switches Month, Week and Day and keeps one selected. [Button](/button) moves to the previous or next week or day. [Calendar](/calendar) draws the month, names the focused month from `Calendar.Header`, keeps one tab stop, names each day with the full date, and reads that day's titles as the description. [ScrollArea](/scroll-area) scrolls the week and the day and keeps a focused block's ring in view. [Text](/text) clamps the title and the time. The event button takes its focus ring from Button.
 
 **You supply:** A title for each event. A time zone and the visible hours. Day headings that name each column and the list of events in it. An accessible name on each event that starts with the title and includes the event's real start and end, not only the hours on screen.
 

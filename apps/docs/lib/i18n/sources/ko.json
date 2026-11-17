@@ -734,11 +734,11 @@
   "recipes/event-calendar": {
     "(top)": "ea49fce3875e",
     "# Event calendar": "2ebcf97d590c",
-    "## The time lanes": "7b7d3424117e",
+    "## The time lanes": "16126cb44b52",
     "## The event block": "928fa27628e4",
-    "## The month": "7716afb5c6fd",
+    "## The month": "17000d0a4b01",
     "## Dragging": "d759e06aa32d",
-    "## Accessible composition": "c65e1c09d926",
+    "## Accessible composition": "388662d90425",
     "## When to use": "d504fd453481",
     "(section order)": "f277a6d3d4fa"
   },
