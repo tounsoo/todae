@@ -278,6 +278,17 @@ describe('the sticky stage names', () => {
     expect(dayHeaders()).toEqual(['Thu, Jun 3']);
   });
 
+  it('scrolls a chosen day back to its start', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const scroller = board();
+    scroller.scrollLeft = scroller.scrollWidth;
+    expect(timeAtNames()).toBeGreaterThan(60);
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    await expect.poll(() => Math.abs(timeAtNames() - UNITS / 3)).toBeLessThan(1);
+    expect(screen.getByRole('button', { name: 'Thu, Jun 3' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('keeps the time a day button stopped on when One day follows it', async () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
@@ -379,6 +390,18 @@ describe('the dialog', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
     expect(trigger('Dark mode, done right').getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
     await expect.poll(() => document.activeElement).toBe(trigger('Dark mode, done right'));
+  });
+
+  it('shows Thursday and focuses the talk when a Wednesday talk moves there', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const dialog = await openDialog('Motion with purpose');
+    await userEvent.selectOptions(within(dialog).getByRole('combobox', { name: 'Day' }), '1');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
+    expect(screen.getByRole('button', { name: 'Thu, Jun 3' }).getAttribute('aria-pressed')).toBe('true');
+    expect(onStage('Motion with purpose', 'Main stage')).toBe(true);
+    expect(trigger('Motion with purpose').getAttribute('aria-label')).toContain('Thu, Jun 3, 2:00 PM to 2:40 PM');
+    await expect.poll(() => document.activeElement).toBe(trigger('Motion with purpose'));
   });
 
   it('moves a talk to the stage it picks and hands focus to the talk in its new place', async () => {

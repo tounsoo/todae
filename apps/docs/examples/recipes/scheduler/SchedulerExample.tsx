@@ -280,7 +280,7 @@ type Shared = {
 /** Where a drag would put a talk in this stage, with what the rules say about it. */
 const Preview = memo(function Preview({ drag, stage, locale, range }: { drag: UseLaneDragResult['drag']; stage: string; locale: string; range: Timeline['range'] }) {
   const change = useLaneDragState(drag, (state) => (state?.to?.lane === stage ? state : null));
-  if (change?.to == null || !overlaps(change.to.start, change.to.end, range)) return null;
+  if (change?.to == null) return null;
   const { to, verdict } = change;
   const starts = fromUnits(AXIS, to.start, 'start');
   // A place that runs past closing ends on the next day's axis, so it shows its start alone.
@@ -529,6 +529,8 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
+// 0.25rem a minute leaves a half-hour talk room for its grip and its text. 0.15625rem a minute is
+// 9.375rem an hour, so a half-hour talk still shows a word or two of its title.
 const ZOOM = { event: { step: 15, minute: '0.15625rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 function shownRange(zoom: keyof typeof ZOOM, day: number): Timeline['range'] {
@@ -575,7 +577,7 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
     setTalks((list) => list.map((each) => (each.id === id ? { ...each, at, length: to ? to.end - to.start : each.length } : each)));
     announce(`${said}${verdict ? `. ${verdict.reason}` : ''}`);
     if (to && zoom === 'day' && !overlaps(to.start, to.end, range)) {
-      const index = AXIS.segments.findIndex((segment) => overlaps(to.start, to.end, segment));
+      const index = AXIS.segments.findIndex((segment) => to.start >= segment.start && to.start < segment.end);
       if (index >= 0) {
         startMinute.current = to.start;
         setDay(index);
@@ -592,7 +594,7 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
   };
 
   const range = useMemo(() => shownRange(zoom, day), [zoom, day]);
-  const grid = useMemo(() => snapGrid(AXIS, ZOOM[zoom].step).filter((point) => point >= range.start && point <= range.end), [zoom, range.start, range.end]);
+  const grid = useMemo(() => snapGrid(AXIS, ZOOM[zoom].step), [zoom]);
   const lanes = useLaneDrag({
     range,
     grid,
