@@ -791,7 +791,7 @@ function DayGrid({
               date === null ? (
                 <td key={col} />
               ) : (
-                <Day key={date.toString()} date={date} renderDay={renderDay} />
+                <Day key={col} date={date} renderDay={renderDay} />
               ),
             )}
           </tr>
@@ -836,7 +836,7 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
     if (!root?.querySelector('a[href], button, input, select, textarea, [tabindex], [contenteditable]')) return;
     warnOnce(
       'calendar-render-day-focusable',
-      'Calendar.Grid renderDay returned a link, a button, or an element with a tabindex. That sits inside the day button, which is invalid, and this slot gives it no keyboard path. Put the interaction on the day press.',
+      'Calendar.Grid renderDay returned something focusable. That sits inside the day button, which is invalid, and this slot gives it no keyboard path. Put the interaction on the day press.',
       'error',
     );
   });
