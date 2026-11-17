@@ -68,6 +68,8 @@ export type SliderRangeProps = Omit<
   startValueText?: string;
   /** What a screen reader says for the end thumb instead of the number. */
   endValueText?: string;
+  /** A range uses `startValueText` and `endValueText`. */
+  'aria-valuetext'?: never;
 };
 
 /** `Slider.Root`: one thumb, or two when `mode` is `"range"`. */
