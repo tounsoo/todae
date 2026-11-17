@@ -169,12 +169,16 @@ function Range({
   const groupRef = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(groupRef, ref);
   const initial = useRef<SliderRangeValue | null>(null);
-  if (initial.current == null) initial.current = normalizeRange((defaultValue as SliderRangeValue | undefined) ?? [scale.min, scale.max], scale);
+  if (initial.current == null) {
+    initial.current = normalizeRange(
+      (value as SliderRangeValue | undefined) ?? (defaultValue as SliderRangeValue | undefined) ?? [scale.min, scale.max],
+      scale,
+    );
+  }
   const origin = initial.current;
   useFormReset(
     groupRef,
     (atReset) => {
-      if (value !== undefined) return;
       if (!Object.is(latest(), atReset)) return;
       setStored(origin);
     },

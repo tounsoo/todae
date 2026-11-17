@@ -111,7 +111,7 @@ describe('Slider.Root range', () => {
     expect(data.get('high')).toBe('80');
   });
 
-  it('restores an uncontrolled range when its form resets, and leaves a controlled one', async () => {
+  it('restores a range when its form resets, including one whose owner follows onValueChange', async () => {
     const { rerender } = render(
       <form>
         <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" defaultValue={[20, 80]} />
@@ -139,7 +139,8 @@ describe('Slider.Root range', () => {
     const held = document.querySelector('form');
     if (!(held instanceof HTMLFormElement)) throw new Error('missing form');
     await reset(held);
-    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '90');
+    expect(screen.getByRole('slider', { name: 'Minimum' })).toHaveProperty('value', '20');
+    expect(screen.getByRole('slider', { name: 'Maximum' })).toHaveProperty('value', '80');
   });
 
   it('warns when the default range is crossed and says each thumb in its own words', () => {
