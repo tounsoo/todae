@@ -253,9 +253,70 @@ describe('placeOverlaps', () => {
       { id: 'point', start: 0, end: 0 },
       { id: 'long', start: 0, end: 60 },
     ])).toEqual([
-      ['point', 0, 1],
+      ['point', 0.5, 0.5],
       ['long', 0, 1],
     ]);
+  });
+
+  it('widens a span into a column that only touches it, and not through a busy column', () => {
+    expect(placed([
+      { id: 'a', start: 0, end: 30 },
+      { id: 'b', start: 0, end: 30 },
+      { id: 'c', start: 0, end: 90 },
+      { id: 'd', start: 30, end: 60 },
+    ])).toEqual([
+      ['a', 1 / 3, 1 / 3],
+      ['b', 2 / 3, 1 / 3],
+      ['c', 0, 1 / 3],
+      ['d', 1 / 3, 2 / 3],
+    ]);
+    expect(placed([
+      { id: 'x', start: 0, end: 30 },
+      { id: 'y', start: 0, end: 90 },
+      { id: 'z', start: 10, end: 20 },
+      { id: 'w', start: 30, end: 60 },
+    ])).toEqual([
+      ['x', 1 / 3, 1 / 3],
+      ['y', 0, 1 / 3],
+      ['z', 2 / 3, 1 / 3],
+      ['w', 1 / 3, 2 / 3],
+    ]);
+    expect(placed([
+      { id: 'a', start: 0, end: 20 },
+      { id: 'b', start: 10, end: 20 },
+      { id: 'c', start: 10, end: 30 },
+      { id: 'd', start: 20, end: 30 },
+    ])).toEqual([
+      ['a', 0, 1 / 3],
+      ['b', 2 / 3, 1 / 3],
+      ['c', 1 / 3, 1 / 3],
+      ['d', 0, 1 / 3],
+    ]);
+  });
+
+  it('starts a new cluster when a span begins as the previous one ends, and gives that cluster its own column count', () => {
+    const boundary = [
+      { id: 'a', start: 0, end: 60 },
+      { id: 'b', start: 0, end: 60 },
+      { id: 'c', start: 60, end: 120 },
+    ];
+    expect(placed(boundary)).toEqual([
+      ['a', 0, 0.5],
+      ['b', 0.5, 0.5],
+      ['c', 0, 1],
+    ]);
+    expect(placeOverlaps(boundary).map((place) => place.columns)).toEqual([2, 2, 1]);
+    const apart = [
+      { id: 'a', start: 0, end: 60 },
+      { id: 'b', start: 0, end: 60 },
+      { id: 'c', start: 120, end: 180 },
+    ];
+    expect(placed(apart)).toEqual([
+      ['a', 0, 0.5],
+      ['b', 0.5, 0.5],
+      ['c', 0, 1],
+    ]);
+    expect(placeOverlaps(apart).map((place) => place.columns)).toEqual([2, 2, 1]);
   });
 
   it('widens a span into columns on its right that stay free while it runs', () => {
@@ -265,8 +326,8 @@ describe('placeOverlaps', () => {
       { id: 'c', start: 10, end: 100 },
       { id: 'd', start: 40, end: 100 },
     ])).toEqual([
-      ['b', 0, 1 / 3],
-      ['a', 1 / 3, 1 / 3],
+      ['b', 1 / 3, 1 / 3],
+      ['a', 0, 1 / 3],
       ['c', 2 / 3, 1 / 3],
       ['d', 0, 2 / 3],
     ]);
@@ -365,11 +426,11 @@ describe('the calendar', () => {
     const standup = screen.getByRole('button', { name: `Standup, ${clock('09:00')} to ${clock('09:30')}` });
     expect(review.parentElement?.style.top).toBe('10%');
     expect(review.parentElement?.style.height).toBe('15%');
-    expect(standup.parentElement?.style.insetInlineStart).toBe('0%');
+    expect(standup.parentElement?.style.insetInlineStart).toBe('50%');
     expect(standup.parentElement?.style.inlineSize).toBe('50%');
-    expect(review.parentElement?.style.insetInlineStart).toBe('50%');
+    expect(review.parentElement?.style.insetInlineStart).toBe('0%');
     expect(review.parentElement?.style.inlineSize).toBe('50%');
-    expect(standup.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(review.compareDocumentPosition(standup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     review.focus();
     expect(document.activeElement).toBe(review);
     const handoff = `Handoff, Mon, Nov 16, ${clock('17:00')} to Tue, Nov 17, ${clock('09:30')}`;
@@ -496,18 +557,35 @@ describe('the calendar', () => {
     const crit = screen.getByRole('button', { name: `Crit, ${clock('11:00')} to ${clock('12:30')}` });
     expect(planning.parentElement?.style.insetInlineStart).toBe('0%');
     expect(planning.parentElement?.style.inlineSize).toBe('33.3333%');
-    expect(one.parentElement?.style.insetInlineStart).toBe('33.3333%');
-    expect(one.parentElement?.style.inlineSize).toBe('33.3333%');
-    expect(crit.parentElement?.style.insetInlineStart).toBe('66.6667%');
+    expect(crit.parentElement?.style.insetInlineStart).toBe('33.3333%');
     expect(crit.parentElement?.style.inlineSize).toBe('33.3333%');
-    expect(planning.compareDocumentPosition(one) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(one.compareDocumentPosition(crit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(one.parentElement?.style.insetInlineStart).toBe('66.6667%');
+    expect(one.parentElement?.style.inlineSize).toBe('33.3333%');
+    expect(planning.compareDocumentPosition(crit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(crit.compareDocumentPosition(one) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     planning.focus();
     expect(document.activeElement).toBe(planning);
     one.focus();
     expect(document.activeElement).toBe(one);
     crit.focus();
     expect(document.activeElement).toBe(crit);
+  });
+
+  it('gives Thursday a track for three columns and keeps a single event at 5.5rem', () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const head = screen.getByRole('heading', { name: 'Thu, Nov 19' }).parentElement as HTMLElement;
+    const body = head.nextElementSibling as HTMLElement;
+    const tracks = head.style.gridTemplateColumns.match(/minmax\(max\(5\.5rem, \d+ \* 4rem\), 1fr\)/g);
+    expect(tracks).toEqual([
+      'minmax(max(5.5rem, 2 * 4rem), 1fr)',
+      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
+      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
+      'minmax(max(5.5rem, 3 * 4rem), 1fr)',
+      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
+      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
+      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
+    ]);
+    expect(body.style.gridTemplateColumns).toBe(head.style.gridTemplateColumns);
   });
 
   it('puts overlapping events side by side and keeps their names in start order', () => {

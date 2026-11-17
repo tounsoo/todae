@@ -24,13 +24,13 @@
 
 .frame {
   --hour: 2.5rem;
-  inline-size: max(100%, calc(4.5rem + var(--days) * 5.5rem));
+  inline-size: max(100%, var(--min-inline, calc(4.5rem + var(--days) * 5.5rem)));
 }
 
 .head,
 .body {
   display: grid;
-  grid-template-columns: 4.5rem repeat(var(--days), minmax(5.5rem, 1fr));
+  grid-template-columns: var(--tracks, 4.5rem repeat(var(--days), minmax(5.5rem, 1fr)));
 }
 
 .head {

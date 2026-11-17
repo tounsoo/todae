@@ -142,20 +142,19 @@ export type OverlapPlacement<T extends { start: number; end: number }> = {
   item: T;
   left: number;
   width: number;
+  columns: number;
 };
 
 function rangesOverlap(a: { start: number; end: number }, b: { start: number; end: number }): boolean {
   return a.start < b.end && b.start < a.end;
 }
 
-// Spans that overlap in a chain share one column count. Each takes the first
-// column free at its start, then widens into columns on its right that stay
-// free while it runs. Touching at an endpoint is not an overlap.
+// A longer span wins when two start together. Touching at an endpoint is not an overlap.
 export function placeOverlaps<T extends { start: number; end: number }>(items: readonly T[]): OverlapPlacement<T>[] {
   const order = items.map((item, index) => ({ item, index }));
-  order.sort((a, b) => a.item.start - b.item.start || a.item.end - b.item.end || a.index - b.index);
+  order.sort((a, b) => a.item.start - b.item.start || b.item.end - a.item.end || a.index - b.index);
 
-  const placed = new Map<number, { left: number; width: number }>();
+  const placed = new Map<number, { left: number; width: number; columns: number }>();
   let cluster: { index: number; column: number; item: T }[] = [];
   let columnEnds: number[] = [];
 
@@ -168,7 +167,7 @@ export function placeOverlaps<T extends { start: number; end: number }>(items: r
         if (taken) break;
         span += 1;
       }
-      placed.set(entry.index, { left: entry.column / columns, width: span / columns });
+      placed.set(entry.index, { left: entry.column / columns, width: span / columns, columns });
     }
     cluster = [];
     columnEnds = [];
@@ -191,7 +190,7 @@ export function placeOverlaps<T extends { start: number; end: number }>(items: r
   return items.map((item, index) => {
     const box = placed.get(index);
     if (!box) throw new Error('placeOverlaps left a span unpacked');
-    return { item, left: box.left, width: box.width };
+    return { item, left: box.left, width: box.width, columns: box.columns };
   });
 }
 
@@ -281,9 +280,19 @@ function percent(fraction: number): string {
   return `${Math.round(fraction * 1e6) / 1e4}%`;
 }
 
+function daySpans(spans: readonly VisibleSpan[], day: Temporal.PlainDate, locale: string): VisibleSpan[] {
+  return spans
+    .filter((span) => span.day.equals(day))
+    .sort((a, b) => a.start - b.start || b.end - a.end || a.event.title.localeCompare(b.event.title, locale));
+}
+
+function dayTrack(columns: number): string {
+  return `minmax(max(5.5rem, ${columns} * 4rem), 1fr)`;
+}
+
 function EventColumn({
   segment,
-  spans,
+  placed,
   scale,
   locale,
   timeZone,
@@ -291,18 +300,13 @@ function EventColumn({
   shared,
 }: {
   segment: DaySegment;
-  spans: readonly VisibleSpan[];
+  placed: ReturnType<typeof placeOverlaps<VisibleSpan>>;
   scale: number;
   locale: string;
   timeZone: string;
   headingId: string;
   shared: ReadonlySet<number>;
 }) {
-  const placed = placeOverlaps(
-    spans
-      .filter((span) => span.day.equals(segment.day))
-      .sort((a, b) => a.start - b.start || a.end - b.end || a.event.title.localeCompare(b.event.title, locale)),
-  );
   const marks = scale > 0 ? hourMarks(segment) : [];
   return (
     <div className={styles.column}>
@@ -382,6 +386,13 @@ export default function EventCalendarExample({
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
   const spans = visibleSpans(axis, events);
+  const lanes = axis.segments.map((segment) => {
+    const placed = placeOverlaps(daySpans(spans, segment.day, locale));
+    const columns = placed.reduce((count, place) => Math.max(count, place.columns), 1);
+    return { segment, placed, columns };
+  });
+  const tracks = `4.5rem ${lanes.map((lane) => dayTrack(lane.columns)).join(' ')}`;
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), 4.5)}rem`;
   const shared = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...shared].sort((a, b) => a - b) : [];
   const step = view === 'week' ? 7 : 1;
@@ -410,9 +421,9 @@ export default function EventCalendarExample({
       <ScrollArea.Root axis="both" focusable aria-label="Calendar" className={styles.board}>
         <div
           className={styles.frame}
-          style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale }}
+          style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
         >
-          <div className={styles.head}>
+          <div className={styles.head} style={{ gridTemplateColumns: tracks }}>
             <div />
             {axis.segments.map((segment) => (
               <Text.Root as="h3" variant="label" id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
@@ -420,7 +431,7 @@ export default function EventCalendarExample({
               </Text.Root>
             ))}
           </div>
-          <div className={styles.body}>
+          <div className={styles.body} style={{ gridTemplateColumns: tracks }}>
             <div className={styles.gutter} aria-hidden="true">
               {gutterMarks.map((units) => {
                 const time = axis.segments.map((segment) => fromUnits(segment, units, 'start')).find((value) => value !== null);
@@ -440,11 +451,11 @@ export default function EventCalendarExample({
                 );
               })}
             </div>
-            {axis.segments.map((segment) => (
+            {lanes.map(({ segment, placed }) => (
               <EventColumn
                 key={segment.day.toString()}
                 segment={segment}
-                spans={spans}
+                placed={placed}
                 scale={scale}
                 locale={locale}
                 timeZone={timeZone}
