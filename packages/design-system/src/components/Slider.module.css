@@ -13,4 +13,94 @@
   .root:disabled {
     cursor: not-allowed;
   }
+
+  .range {
+    --_start: 0%;
+    --_end: 100%;
+    display: grid;
+    position: relative;
+    inline-size: 100%;
+    touch-action: none;
+    user-select: none;
+    background: transparent;
+  }
+
+  .range::before,
+  .range::after {
+    content: "";
+    grid-area: 1 / 1;
+    align-self: center;
+    block-size: var(--todae-focus-ring-width);
+    pointer-events: none;
+  }
+
+  .range::before {
+    inline-size: 100%;
+    background: ButtonFace;
+  }
+
+  .range::after {
+    justify-self: start;
+    margin-inline-start: var(--_start);
+    inline-size: calc(var(--_end) - var(--_start));
+    background: var(--todae-slider-fill);
+  }
+
+  .thumb {
+    grid-area: 1 / 1;
+    justify-self: start;
+    align-self: center;
+    position: relative;
+    margin: 0;
+    min-inline-size: 0;
+    background: transparent;
+    pointer-events: none;
+    accent-color: var(--todae-slider-fill);
+  }
+
+  .start {
+    inset-inline-start: 0;
+    inline-size: var(--_end);
+  }
+
+  .end {
+    inset-inline-start: var(--_start);
+    inline-size: calc(100% - var(--_start));
+  }
+
+  .thumb::-webkit-slider-runnable-track {
+    background: transparent;
+  }
+
+  .thumb::-moz-range-track {
+    background: transparent;
+  }
+
+  .thumb::-moz-range-progress {
+    background: transparent;
+  }
+
+  .thumb::-webkit-slider-thumb {
+    pointer-events: auto;
+  }
+
+  .thumb::-moz-range-thumb {
+    pointer-events: auto;
+  }
+
+  .thumb:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-slider-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .thumb:disabled,
+  .range:has(:disabled) {
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    .range::after {
+      background: Highlight;
+    }
+  }
 }

@@ -1,0 +1,109 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Fieldset } from './Fieldset.js';
+import { Slider, type SliderRangeValue } from './Slider.client.js';
+
+afterEach(cleanup);
+
+function Pair({
+  initial = [20, 80] as SliderRangeValue,
+  onValueChange,
+}: {
+  initial?: SliderRangeValue;
+  onValueChange?: (value: SliderRangeValue) => void;
+}) {
+  const [value, setValue] = useState(initial);
+  return (
+    <Slider.Root
+      mode="range"
+      startLabel="Minimum"
+      endLabel="Maximum"
+      value={value}
+      onValueChange={(next) => {
+        onValueChange?.(next);
+        setValue(next);
+      }}
+    />
+  );
+}
+
+describe('Slider.Root range', () => {
+  it('keeps a single root as one range input', () => {
+    const { rerender } = render(<Slider.Root aria-label="Volume" />);
+    const only = screen.getByRole('slider', { name: 'Volume' });
+    expect(only.tagName).toBe('INPUT');
+    expect(only).toHaveProperty('type', 'range');
+    expect(screen.queryByRole('group')).toBeNull();
+    expect(only.hasAttribute('mode')).toBe(false);
+
+    rerender(<Slider.Root mode="single" aria-label="Volume" />);
+    expect(screen.getAllByRole('slider')).toHaveLength(1);
+    expect(screen.getByRole('slider')).toHaveProperty('type', 'range');
+    expect(screen.queryByRole('group')).toBeNull();
+  });
+
+  it('renders two thumbs, reports a pair, and stops a thumb on the other one', () => {
+    const seen: SliderRangeValue[] = [];
+    render(<Pair onValueChange={(next) => seen.push(next)} />);
+    const start = screen.getByRole('slider', { name: 'Minimum' });
+    const end = screen.getByRole('slider', { name: 'Maximum' });
+    expect(start).toHaveProperty('min', '0');
+    expect(start).toHaveProperty('max', '80');
+    expect(start).toHaveProperty('value', '20');
+    expect(end).toHaveProperty('min', '20');
+    expect(end).toHaveProperty('max', '100');
+    expect(end).toHaveProperty('value', '80');
+    expect(start.hasAttribute('name')).toBe(false);
+    expect(end.hasAttribute('name')).toBe(false);
+    expect(document.querySelector('input[type="hidden"]')).toBeNull();
+
+    fireEvent.change(end, { target: { value: '90' } });
+    expect(seen).toEqual([[20, 90]]);
+    expect(end).toHaveProperty('value', '90');
+    expect(start).toHaveProperty('value', '20');
+
+    fireEvent.change(start, { target: { value: '95' } });
+    expect(seen.at(-1)).toEqual([90, 90]);
+    expect(start).toHaveProperty('value', '90');
+    expect(end).toHaveProperty('value', '90');
+  });
+
+  it('names the two fields and shows a crossed value repaired, without reporting it', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Slider.Root
+        mode="range"
+        startLabel="Minimum"
+        endLabel="Maximum"
+        name={['low', 'high']}
+        value={[80, 20]}
+        onValueChange={onValueChange}
+      />,
+    );
+    const start = screen.getByRole('slider', { name: 'Minimum' });
+    const end = screen.getByRole('slider', { name: 'Maximum' });
+    expect(start).toHaveProperty('name', 'low');
+    expect(end).toHaveProperty('name', 'high');
+    expect(start).toHaveProperty('value', '80');
+    expect(end).toHaveProperty('value', '80');
+    expect(start).toHaveProperty('max', '80');
+    expect(end).toHaveProperty('min', '80');
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(document.querySelector('input[type="hidden"]')).toBeNull();
+  });
+
+  it('takes a disabled invalid fieldset on both thumbs', () => {
+    render(
+      <Fieldset.Root disabled invalid>
+        <Fieldset.Legend>Price</Fieldset.Legend>
+        <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" aria-describedby="hint" />
+      </Fieldset.Root>,
+    );
+    for (const thumb of [screen.getByRole('slider', { name: 'Minimum' }), screen.getByRole('slider', { name: 'Maximum' })]) {
+      expect(thumb).toHaveProperty('disabled', true);
+      expect(thumb.getAttribute('aria-invalid')).toBe('true');
+      expect(thumb.getAttribute('aria-describedby')).toBe('hint');
+    }
+  });
+});
