@@ -1,10 +1,7 @@
-/* The schedule sets --minute, the width of one minute on the board, and
-   --units, the minutes in view, so every lane is as wide as the day or
-   the whole event. */
 .schedule {
   --names: 10rem;
   --header: 4.5rem;
-  --axis: calc(var(--units) * var(--minute));
+  --axis: calc(var(--minutes) * var(--minute));
   container-type: inline-size;
   display: flex;
   flex-direction: column;

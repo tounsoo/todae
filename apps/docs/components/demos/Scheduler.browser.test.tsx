@@ -39,7 +39,6 @@ const pointer = (type: string, target: EventTarget, x: number, y: number) =>
     target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
   });
 
-/** The minutes the board is showing. One day is the selected day. The whole event is the axis. */
 function visibleRange() {
   const root = document.querySelector<HTMLElement>('[data-zoom]')!;
   if (root.getAttribute('data-zoom') === 'event') return { start: 0, end: UNITS };
@@ -118,8 +117,7 @@ describe('dragging', () => {
     setup();
     await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
     const names = stage('Main stage').firstElementChild!.getBoundingClientRect();
-    // Selecting the day puts 9:00 at the names' edge. A scroll-padding wider than the names would
-    // count the first place in view a step later, and the drop would land at 9:05.
+    // A scroll-padding wider than the names would count the first place in view a step later, and the drop would land at 9:05.
     await expect.poll(() => Math.abs(along('Main stage', 540).x - names.right)).toBeLessThan(0.5);
     // The board's scroll-padding marks the names, so a drop over them lands at the first place in view.
     dragTo('Dark mode, done right', { x: names.left + names.width / 2, y: along('Main stage', 540).y }).drop();

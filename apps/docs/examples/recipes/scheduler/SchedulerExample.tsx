@@ -529,9 +529,6 @@ function PlaceForm({ talk, talks, locale, onSave }: { talk: Talk; talks: readonl
 
 // ─── The schedule ──────────────────────────────────────────────────────────
 
-// One day shows the selected day, gives a talk of half an hour or more room for its grip and text, and snaps
-// to 5 minutes. The whole event shows every day and snaps to 15; an hour there is 9.375rem, so a half-hour
-// talk still shows a word or two of its title in the smaller label size.
 const ZOOM = { event: { step: 15, minute: '0.15625rem' }, day: { step: 5, minute: '0.25rem' } } as const;
 
 function shownRange(zoom: keyof typeof ZOOM, day: number): Timeline['range'] {
@@ -603,16 +600,14 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
     setEditing(id);
   };
 
-  // A zoom keeps the time at the board's start in view, and One day keeps the day that time is in.
-  const kept = useRef<number | null>(null);
+  const startMinute = useRef<number | null>(null);
   // In layout pixels, as scrollLeft is, so a scaled page doesn't skew it.
   const minuteWidth = () => {
     const width = board.current?.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0;
     const length = range.end - range.start;
     return length > 0 ? width / length : 0;
   };
-  // The day taking the most of the board past the names. A scroll stop sits a ring's width before that day.
-  const dayOnBoard = () => {
+  const dayMostPastNames = () => {
     const scroller = board.current;
     const lane = scroller?.querySelector<HTMLElement>('[data-todae-lane]');
     if (!scroller || !lane) return day;
@@ -635,22 +630,22 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
   const zoomTo = (next: keyof typeof ZOOM) => {
     const minute = minuteWidth();
     const at = board.current && minute > 0 ? range.start + board.current.scrollLeft / minute : null;
-    if (next === 'day') setDay(dayOnBoard());
-    kept.current = at;
+    if (next === 'day') setDay(dayMostPastNames());
+    startMinute.current = at;
     setZoom(next);
   };
   const selectDay = (index: number) => {
-    kept.current = AXIS.segments[index]!.start;
+    startMinute.current = AXIS.segments[index]!.start;
     setDay(index);
   };
   useLayoutEffect(() => {
-    if (kept.current === null || !board.current) return;
+    if (startMinute.current === null || !board.current) return;
     const next = shownRange(zoom, day);
     const width = board.current.querySelector<HTMLElement>('[data-todae-lane]')?.offsetWidth ?? 0;
     const length = next.end - next.start;
     const minute = length > 0 ? width / length : 0;
-    board.current.scrollLeft = (kept.current - next.start) * minute;
-    kept.current = null;
+    board.current.scrollLeft = (startMinute.current - next.start) * minute;
+    startMinute.current = null;
   }, [zoom, day]);
 
   const shared: Shared = { talks, lanes, move, edit, landing, landed, locale, range };
@@ -659,7 +654,7 @@ export default function SchedulerExample({ locale = 'en-US' }: { locale?: string
   const queue = talks.filter((talk) => talk.at === null);
 
   return (
-    <div className={styles.schedule} data-zoom={zoom} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--units' as string]: range.end - range.start }}>
+    <div className={styles.schedule} data-zoom={zoom} style={{ ['--minute' as string]: ZOOM[zoom].minute, ['--minutes' as string]: range.end - range.start }}>
       <div className={styles.controls}>
         <div className={styles.jump} role="group" aria-label="Day">
           {DAYS.map((each, index) => (
