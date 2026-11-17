@@ -485,6 +485,31 @@ describe('the calendar', () => {
     expect(event.parentElement?.style.top).toBe((nine as HTMLElement).style.top);
   });
 
+  it('shows Thursday’s overlapping events side by side, in start order', () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+    const planning = screen.getByRole('button', { name: `Planning, ${clock('10:00')} to ${clock('12:00')}` });
+    const one = screen.getByRole('button', { name: `1:1, ${clock('11:00')} to ${clock('11:30')}` });
+    const crit = screen.getByRole('button', { name: `Crit, ${clock('11:00')} to ${clock('12:30')}` });
+    expect(planning.parentElement?.style.insetInlineStart).toBe('0%');
+    expect(planning.parentElement?.style.inlineSize).toBe('33.3333%');
+    expect(one.parentElement?.style.insetInlineStart).toBe('33.3333%');
+    expect(one.parentElement?.style.inlineSize).toBe('33.3333%');
+    expect(crit.parentElement?.style.insetInlineStart).toBe('66.6667%');
+    expect(crit.parentElement?.style.inlineSize).toBe('33.3333%');
+    expect(planning.compareDocumentPosition(one) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(one.compareDocumentPosition(crit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    planning.focus();
+    expect(document.activeElement).toBe(planning);
+    one.focus();
+    expect(document.activeElement).toBe(one);
+    crit.focus();
+    expect(document.activeElement).toBe(crit);
+  });
+
   it('puts overlapping events side by side and keeps their names in start order', () => {
     const zone = 'America/Los_Angeles';
     const zoned = (clockText: string) => Temporal.PlainDateTime.from(`2026-11-19T${clockText}`).toZonedDateTime(zone);

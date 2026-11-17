@@ -168,7 +168,7 @@ export function placeOverlaps<T extends { start: number; end: number }>(items: r
         if (taken) break;
         span += 1;
       }
-      if (columns > 0) placed.set(entry.index, { left: entry.column / columns, width: span / columns });
+      placed.set(entry.index, { left: entry.column / columns, width: span / columns });
     }
     cluster = [];
     columnEnds = [];
