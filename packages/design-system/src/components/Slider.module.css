@@ -7,7 +7,7 @@
     inline-size: 100%;
     block-size: var(--_thumb);
     margin: 0;
-    overflow-inline: clip;
+    overflow: hidden;
     background: transparent;
     accent-color: var(--todae-slider-fill);
   }
@@ -115,33 +115,6 @@
 
   .root::-webkit-slider-thumb {
     margin-block-start: calc((var(--todae-focus-ring-width) - var(--_thumb)) / 2);
-    box-shadow: -100vw 0 0 100vw var(--todae-slider-fill);
-    clip-path: shape(
-      from -100vw calc(50% - var(--todae-focus-ring-width) / 2),
-      line to 0% calc(50% - var(--todae-focus-ring-width) / 2),
-      line to 0% calc(50% + var(--todae-focus-ring-width) / 2),
-      line to -100vw calc(50% + var(--todae-focus-ring-width) / 2),
-      close,
-      move to 50% 0%,
-      arc to 50% 100% of 50% 50% cw large,
-      arc to 50% 0% of 50% 50% cw large,
-      close
-    );
-  }
-
-  .root:dir(rtl)::-webkit-slider-thumb {
-    box-shadow: 100vw 0 0 100vw var(--todae-slider-fill);
-    clip-path: shape(
-      from 100% calc(50% - var(--todae-focus-ring-width) / 2),
-      line to 100vw calc(50% - var(--todae-focus-ring-width) / 2),
-      line to 100vw calc(50% + var(--todae-focus-ring-width) / 2),
-      line to 100% calc(50% + var(--todae-focus-ring-width) / 2),
-      close,
-      move to 50% 0%,
-      arc to 50% 100% of 50% 50% cw large,
-      arc to 50% 0% of 50% 50% cw large,
-      close
-    );
   }
 
   .thumb::-webkit-slider-runnable-track {
@@ -180,22 +153,84 @@
     cursor: not-allowed;
   }
 
+  .root:disabled::-webkit-slider-thumb,
+  .range:has(:disabled) .thumb::-webkit-slider-thumb {
+    background-color: GrayText;
+  }
+
+  .root:disabled::-moz-range-thumb,
+  .root:disabled::-moz-range-progress,
+  .range:has(:disabled) .thumb::-moz-range-thumb {
+    background-color: GrayText;
+  }
+
+  .range:has(:disabled)::after {
+    background-color: GrayText;
+  }
+
+  @supports (clip-path: shape(from 0 0, line to 1px 0)) {
+    .root::-webkit-slider-thumb {
+      box-shadow: -100vw 0 0 100vw var(--todae-slider-fill);
+      clip-path: shape(
+        from -100vw calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 0% calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 0% calc(50% + var(--todae-focus-ring-width) / 2),
+        line to -100vw calc(50% + var(--todae-focus-ring-width) / 2),
+        close,
+        move to 50% 0%,
+        arc to 50% 100% of 50% 50% cw large,
+        arc to 50% 0% of 50% 50% cw large,
+        close
+      );
+    }
+
+    .root:dir(rtl)::-webkit-slider-thumb {
+      box-shadow: 100vw 0 0 100vw var(--todae-slider-fill);
+      clip-path: shape(
+        from 100% calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 100vw calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 100vw calc(50% + var(--todae-focus-ring-width) / 2),
+        line to 100% calc(50% + var(--todae-focus-ring-width) / 2),
+        close,
+        move to 50% 0%,
+        arc to 50% 100% of 50% 50% cw large,
+        arc to 50% 0% of 50% 50% cw large,
+        close
+      );
+    }
+  }
+
   @media (forced-colors: active) {
     .range::after,
     .root::-webkit-slider-thumb,
-    .thumb::-webkit-slider-thumb,
+    .thumb::-webkit-slider-thumb {
+      background-color: Highlight;
+    }
+
     .root::-moz-range-thumb,
     .thumb::-moz-range-thumb,
     .root::-moz-range-progress {
       background-color: Highlight;
     }
 
-    .root::-webkit-slider-thumb {
-      box-shadow: -100vw 0 0 100vw Highlight;
+    @supports (clip-path: shape(from 0 0, line to 1px 0)) {
+      .root::-webkit-slider-thumb {
+        box-shadow: -100vw 0 0 100vw Highlight;
+      }
+
+      .root:dir(rtl)::-webkit-slider-thumb {
+        box-shadow: 100vw 0 0 100vw Highlight;
+      }
+    }
+  }
+
+  @supports (clip-path: shape(from 0 0, line to 1px 0)) {
+    .root:disabled::-webkit-slider-thumb {
+      box-shadow: -100vw 0 0 100vw GrayText;
     }
 
-    .root:dir(rtl)::-webkit-slider-thumb {
-      box-shadow: 100vw 0 0 100vw Highlight;
+    .root:disabled:dir(rtl)::-webkit-slider-thumb {
+      box-shadow: 100vw 0 0 100vw GrayText;
     }
   }
 }

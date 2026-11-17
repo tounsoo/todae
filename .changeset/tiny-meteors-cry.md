@@ -2,4 +2,4 @@
 "@tounsoo/todae": patch
 ---
 
-Slider.Root can take two thumbs for a range, and a single slider draws its own thumb and track in every browser.
+Slider.Root can take two thumbs for a range, paints a disabled thumb and fill with GrayText, and draws a single filled track in Chrome 135 and later, Safari, and Firefox.

@@ -55,6 +55,25 @@ function canvasRgb(color: string): Rgb {
   return [r, g, b];
 }
 
+async function paintedOver(host: HTMLElement, back: string, front: string): Promise<Rgb> {
+  const probe = document.createElement('span');
+  probe.style.backgroundColor = back;
+  probe.style.display = 'inline-block';
+  probe.style.inlineSize = '8px';
+  probe.style.blockSize = '8px';
+  const ink = document.createElement('span');
+  ink.style.backgroundColor = front;
+  ink.style.display = 'block';
+  ink.style.inlineSize = '8px';
+  ink.style.blockSize = '8px';
+  probe.append(ink);
+  host.append(probe);
+  const shot = await bitmap(probe);
+  const rgb = shot.at(4, 4);
+  probe.remove();
+  return rgb;
+}
+
 function readColor(host: HTMLElement, color: string): Rgb {
   const probe = document.createElement('span');
   probe.style.backgroundColor = color;
@@ -465,7 +484,7 @@ describe('Slider range in the browser', () => {
       const host = view.container.querySelector('[data-appearance]');
       if (!(host instanceof HTMLElement)) throw new Error('missing theme');
       const fill = readColor(host, 'var(--todae-slider-fill)');
-      const gray = readColor(host, 'GrayText');
+      const gray = await paintedOver(host, 'ButtonFace', 'GrayText');
       const empty = readColor(host, 'ButtonFace');
       const volume = screen.getByRole('slider', { name: 'Volume' });
       if (!(volume instanceof HTMLInputElement)) throw new Error('missing slider');
@@ -476,10 +495,13 @@ describe('Slider range in the browser', () => {
       expectRgb(single.at(along(volume, 70), y), empty, `${appearance} disabled track`);
       const fillGap = Math.max(Math.abs(fill[0] - gray[0]), Math.abs(fill[1] - gray[1]), Math.abs(fill[2] - gray[2]));
       expect(fillGap, `${appearance} GrayText is the fill token`).toBeGreaterThan(8);
-      for (const thumb of [start(), end()]) {
+      for (const [thumb, across] of [
+        [start(), 0.25],
+        [end(), 0.75],
+      ] as const) {
         if (!(thumb instanceof HTMLElement)) throw new Error('missing thumb');
         const shot = await bitmap(thumb);
-        expectRgb(shot.at(thumb.clientWidth / 2, thumb.clientHeight / 2), gray, `${appearance} disabled range thumb`);
+        expectRgb(shot.at(thumb.clientWidth * across, thumb.clientHeight / 2), gray, `${appearance} disabled range thumb`);
       }
       const track = await bitmap(group());
       const groupBox = group().getBoundingClientRect();
