@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resetWarnOnce } from '../internal/warnOnce.js';
 import { mount, reset, settle } from '../test/form.js';
@@ -109,6 +109,29 @@ describe('Slider.Root range', () => {
     const data = new FormData(form);
     expect(data.get('low')).toBe('20');
     expect(data.get('high')).toBe('80');
+  });
+
+  it('submits both names to a form the range sits outside of', () => {
+    render(
+      <>
+        <form id="price" />
+        <Slider.Root mode="range" form="price" startLabel="Minimum" endLabel="Maximum" name={['low', 'high']} defaultValue={[20, 80]} />
+      </>,
+    );
+    const form = document.getElementById('price');
+    if (!(form instanceof HTMLFormElement)) throw new Error('missing form');
+    const data = new FormData(form);
+    expect(data.get('low')).toBe('20');
+    expect(data.get('high')).toBe('80');
+  });
+
+  it('accepts a single slider from the root component props', () => {
+    const single: ComponentProps<typeof Slider.Root> = { defaultValue: 5, onChange() {} };
+    expect(single.defaultValue).toBe(5);
+    // @ts-expect-error a single slider reports through onChange
+    void (<Slider.Root onValueChange={() => undefined} />);
+    // @ts-expect-error a range reports through onValueChange
+    void (<Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" onChange={() => undefined} />);
   });
 
   it('restores a range when its form resets, including one whose owner follows onValueChange', async () => {
