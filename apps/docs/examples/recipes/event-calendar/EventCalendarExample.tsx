@@ -193,9 +193,9 @@ function rangeLabel(days: readonly Temporal.PlainDate[], locale: string): string
   if (first.equals(last)) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(utcStamp(first));
   }
-  const range = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).formatRange(utcStamp(first), utcStamp(last));
-  // Node and the browser put different spaces around the range dash.
-  return range.replaceAll(/\s+/g, ' ');
+  const start = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(utcStamp(first));
+  const end = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(utcStamp(last));
+  return `${start} – ${end}`;
 }
 
 function sharedOffsets(segments: readonly DaySegment[]): Set<number> {
@@ -224,6 +224,7 @@ function EventColumn({
   spans,
   scale,
   locale,
+  timeZone,
   headingId,
   shared,
 }: {
@@ -231,6 +232,7 @@ function EventColumn({
   spans: readonly VisibleSpan[];
   scale: number;
   locale: string;
+  timeZone: string;
   headingId: string;
   shared: ReadonlySet<number>;
 }) {
@@ -256,11 +258,13 @@ function EventColumn({
       </div>
       <ol className={styles.events} aria-labelledby={headingId}>
         {placed.map((span) => {
-          const spansDays = !span.event.start.toPlainDate().equals(span.event.end.toPlainDate());
-          const startLabel = clockLabel(span.event.start, locale, spansDays);
-          const endLabel = clockLabel(span.event.end, locale, spansDays);
-          const startedEarlier = Temporal.ZonedDateTime.compare(span.event.start, segment.opens) < 0;
-          const continues = Temporal.ZonedDateTime.compare(span.event.end, segment.closes) > 0;
+          const start = span.event.start.withTimeZone(timeZone);
+          const end = span.event.end.withTimeZone(timeZone);
+          const spansDays = !start.toPlainDate().equals(end.toPlainDate());
+          const startLabel = clockLabel(start, locale, spansDays);
+          const endLabel = clockLabel(end, locale, spansDays);
+          const startedEarlier = Temporal.ZonedDateTime.compare(start, segment.opens) < 0;
+          const continues = Temporal.ZonedDateTime.compare(end, segment.closes) > 0;
           const cue = [startedEarlier ? 'started earlier' : null, continues ? 'continues' : null].filter(Boolean).join(', ');
           const name = [`${span.event.title}, ${startLabel} to ${endLabel}`, cue].filter(Boolean).join(', ');
           const timeText = `${startedEarlier ? '…' : ''}${startLabel} to ${endLabel}${continues ? '…' : ''}`;
@@ -373,6 +377,7 @@ export default function EventCalendarExample({
                 spans={spans}
                 scale={scale}
                 locale={locale}
+                timeZone={timeZone}
                 headingId={`${heading}-${segment.day.toString()}`}
                 shared={shared}
               />

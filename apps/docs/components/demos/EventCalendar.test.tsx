@@ -316,6 +316,12 @@ describe('the calendar', () => {
     const sundayOne = [...(sundayColumn?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
     expect(sundayOne).toHaveLength(1);
 
+    const lines = (column: Element | null) =>
+      [...(column?.querySelectorAll<HTMLElement>('[style*="top"]') ?? [])].filter((node) => (node.textContent ?? '').trim() === '');
+    expect(lines(mondayColumn)).toHaveLength(6);
+    expect(lines(sundayColumn)).toHaveLength(7);
+    expect(lines(mondayColumn).some((line) => line.style.top === event.parentElement?.style.top)).toBe(true);
+
     const gutter = mondayColumn?.parentElement?.firstElementChild;
     const gutterLabels = [...(gutter?.querySelectorAll('span') ?? [])];
     for (const label of gutterLabels) {
@@ -325,5 +331,37 @@ describe('the calendar', () => {
         expect(sameRow.every((node) => node.textContent === label.textContent)).toBe(true);
       }
     }
+  });
+
+  it('names a week in the page locale with one dash', () => {
+    render(<EventCalendarExample locale="en-US" />);
+    expect(screen.getByText('Nov 16 – Nov 22, 2026')).toBeTruthy();
+    cleanup();
+    render(<EventCalendarExample locale="ko-KR" />);
+    expect(screen.getByText('11월 16일 – 2026년 11월 22일')).toBeTruthy();
+  });
+
+  it('names an event in the calendar zone and places it on that day', () => {
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        events={[
+          {
+            id: 'tokyo',
+            title: 'Tokyo',
+            start: Temporal.ZonedDateTime.from('2026-11-17T02:00:00+09:00[Asia/Tokyo]'),
+            end: Temporal.ZonedDateTime.from('2026-11-17T03:00:00+09:00[Asia/Tokyo]'),
+            allDay: false,
+          },
+        ]}
+      />,
+    );
+    const event = screen.getByRole('button', { name: `Tokyo, ${clock('09:00')} to ${clock('10:00')}` });
+    const monday = screen.getByRole('list', { name: 'Mon, Nov 16' });
+    expect(monday.contains(event)).toBe(true);
+    const gutter = monday.parentElement?.parentElement?.firstElementChild;
+    const nine = [...(gutter?.querySelectorAll('span') ?? [])].find((node) => node.textContent === clock('09:00'));
+    expect(nine).toBeTruthy();
+    expect(event.parentElement?.style.top).toBe((nine as HTMLElement).style.top);
   });
 });
