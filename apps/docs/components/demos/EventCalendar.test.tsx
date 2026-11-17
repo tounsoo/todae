@@ -718,3 +718,88 @@ describe('the calendar', () => {
     expect(document.activeElement).toBe(second);
   });
 });
+
+function describedBy(name: string): string | null {
+  const button = screen.getByRole('button', { name });
+  const id = button.getAttribute('aria-describedby');
+  if (!id) return null;
+  return document.getElementById(id)?.textContent ?? null;
+}
+
+describe('the month', () => {
+  afterEach(cleanup);
+
+  function openMonth(locale = 'en-US') {
+    render(<EventCalendarExample locale={locale} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+  }
+
+  it('describes each day with two titles and the count of the rest, and draws the trailing days', () => {
+    openMonth();
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Monday, November 16, 2026' }).getAttribute('aria-label')).toBe('Monday, November 16, 2026');
+    expect(describedBy('Monday, November 16, 2026')).toBe('Offsite, Design review, +2 more');
+    expect(describedBy('Tuesday, November 17, 2026')).toBe('Handoff, Interview');
+    expect(describedBy('Wednesday, November 18, 2026')).toBe('Early sync, Workshop');
+    expect(describedBy('Thursday, November 19, 2026')).toBe('Planning, 1:1, +4 more');
+    expect(describedBy('Friday, November 20, 2026')).toBe('Demo');
+    expect(describedBy('Saturday, November 21, 2026')).toBe('Office hours');
+    expect(describedBy('Sunday, November 15, 2026')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Tuesday, December 1, 2026' })).toBeTruthy();
+  });
+
+  it('puts a multi-day event on each day it covers, and keeps an event that ends at midnight on the earlier day', () => {
+    const zone = 'America/Los_Angeles';
+    const events = [
+      event('span', '2026-11-16T17:00:00-08:00[America/Los_Angeles]', '2026-11-18T09:00:00-08:00[America/Los_Angeles]', { title: 'Span' }),
+      event('edge', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', { title: 'Edge', allDay: true }),
+    ];
+    render(<EventCalendarExample locale="en-US" timeZone={zone} events={events} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Monday, November 16, 2026')).toBe('Edge, Span');
+    expect(describedBy('Tuesday, November 17, 2026')).toBe('Span');
+    expect(describedBy('Wednesday, November 18, 2026')).toBe('Span');
+    expect(describedBy('Thursday, November 19, 2026')).toBeNull();
+  });
+
+  it('opens the pressed day and focuses its first event', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Thursday, November 19, 2026' }));
+    expect(screen.getByRole('heading', { name: 'Thu, Nov 19' })).toBeTruthy();
+    expect(screen.queryByRole('grid')).toBeNull();
+    const planning = screen.getByRole('button', { name: `Planning, ${clock('10:00')} to ${clock('12:00')}` });
+    expect(document.activeElement).toBe(planning);
+  });
+
+  it('focuses the day heading when the pressed day has no event', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Sunday, November 15, 2026' }));
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Sun, Nov 15' }));
+    expect(screen.queryByRole('button', { name: /Design review|Planning|Offsite/ })).toBeNull();
+  });
+
+  it('moves the month from the toolbar and leaves focus on that button', () => {
+    openMonth();
+    const next = screen.getByRole('button', { name: 'Next month' });
+    next.focus();
+    fireEvent.click(next);
+    expect(screen.getByText('December 2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Wednesday, December 16, 2026' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Monday, November 16, 2026' })).toBeNull();
+    expect(document.activeElement).toBe(next);
+  });
+
+  it('moves a month from Page Down and focuses that month selected day', () => {
+    openMonth();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown' });
+    expect(screen.getByText('December 2026')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Wednesday, December 16, 2026' }));
+  });
+
+  it('renders the month in Korean', () => {
+    openMonth('ko');
+    expect(screen.getByText('2026년 11월')).toBeTruthy();
+    expect(describedBy('2026년 11월 16일 월요일')).toBe('Offsite, Design review, +2 more');
+    expect(screen.getByRole('button', { name: '2026년 12월 1일 화요일' })).toBeTruthy();
+  });
+});
