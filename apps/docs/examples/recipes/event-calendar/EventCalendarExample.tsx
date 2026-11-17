@@ -1,7 +1,7 @@
 'use client';
 
-import { Button, ScrollArea, Text, ToggleGroup, formatTime } from '@tounsoo/todae';
-import { useId, useState } from 'react';
+import { Button, Calendar, ScrollArea, Text, ToggleGroup, VisuallyHidden, formatTime } from '@tounsoo/todae';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import styles from './EventCalendar.module.css';
 
 export type CalendarEvent = {
@@ -101,6 +101,26 @@ export function findConflicts(event: CalendarEvent, others: readonly CalendarEve
 export function weekOf(day: Temporal.PlainDate): Temporal.PlainDate[] {
   const monday = day.subtract({ days: day.dayOfWeek - 1 });
   return Array.from({ length: 7 }, (_, index) => monday.add({ days: index }));
+}
+
+const MIDNIGHT = Temporal.PlainTime.from('00:00');
+
+// A day is [midnight, next midnight). An event that ends on the next midnight stays on the earlier day.
+export function eventsOnDay(day: Temporal.PlainDate, events: readonly CalendarEvent[], timeZone: string, locale: string): CalendarEvent[] {
+  const opens = zoned(day, MIDNIGHT, timeZone);
+  const closes = zoned(day.add({ days: 1 }), MIDNIGHT, timeZone);
+  return events
+    .filter((event) => {
+      const start = event.start.withTimeZone(timeZone);
+      const end = event.end.withTimeZone(timeZone);
+      return Temporal.ZonedDateTime.compare(start, closes) < 0 && Temporal.ZonedDateTime.compare(end, opens) > 0;
+    })
+    .sort((a, b) => {
+      if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+      const byStart = Temporal.ZonedDateTime.compare(a.start.withTimeZone(timeZone), b.start.withTimeZone(timeZone));
+      if (byStart !== 0) return byStart;
+      return a.title.localeCompare(b.title, locale);
+    });
 }
 
 export function laneScale(axis: DayAxis): number {
@@ -243,7 +263,9 @@ const EVENTS: readonly CalendarEvent[] = [
   timed('hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00'),
 ];
 
-type CalendarView = 'week' | 'day';
+type CalendarView = 'month' | 'week' | 'day';
+
+const MONTH_TITLES = 2;
 
 function utcStamp(day: Temporal.PlainDate): number {
   return Date.UTC(day.year, day.month - 1, day.day);
@@ -251,6 +273,10 @@ function utcStamp(day: Temporal.PlainDate): number {
 
 function dayHeading(day: Temporal.PlainDate, locale: string): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(utcStamp(day));
+}
+
+function monthLabel(day: Temporal.PlainDate, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(utcStamp(day));
 }
 
 function rangeLabel(days: readonly Temporal.PlainDate[], locale: string): string {
@@ -388,6 +414,8 @@ export default function EventCalendarExample({
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
   const heading = useId();
+  const monthRef = useRef<HTMLDivElement>(null);
+  const pendingFocus = useRef<'day' | 'month' | null>(null);
   const days = view === 'week' ? weekOf(anchor) : [anchor];
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
@@ -402,6 +430,38 @@ export default function EventCalendarExample({
   const shared = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...shared].sort((a, b) => a - b) : [];
   const step = view === 'week' ? 7 : 1;
+  const move = view === 'month' ? 'month' : view === 'week' ? 'week' : 'day';
+
+  useLayoutEffect(() => {
+    const which = pendingFocus.current;
+    if (!which) return;
+    pendingFocus.current = null;
+    if (which === 'day' && view === 'day') {
+      const id = `${heading}-${anchor.toString()}`;
+      const list = [...document.querySelectorAll<HTMLElement>('[aria-labelledby]')].find((el) => el.getAttribute('aria-labelledby') === id);
+      const button = list?.querySelector<HTMLElement>('button');
+      if (button) {
+        button.focus();
+        return;
+      }
+      document.getElementById(id)?.focus();
+      return;
+    }
+    if (which === 'month' && view === 'month') {
+      monthRef.current?.querySelector<HTMLElement>('[data-todae-calendar-cell][tabindex="0"]')?.focus();
+    }
+  }, [anchor, heading, view]);
+
+  const openDay = (day: Temporal.PlainDate) => {
+    pendingFocus.current = 'day';
+    setAnchor(day);
+    setView('day');
+  };
+
+  const moveMonth = (months: number, focusGrid = false) => {
+    if (focusGrid) pendingFocus.current = 'month';
+    setAnchor((day) => day.add({ months }));
+  };
 
   return (
     <div className={styles.calendar}>
@@ -410,68 +470,125 @@ export default function EventCalendarExample({
           aria-label="Calendar view"
           value={view}
           onValueChange={(value) => {
-            if (value === 'week' || value === 'day') setView(value);
+            if (value === 'month' || value === 'week' || value === 'day') setView(value);
           }}
         >
           <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
           <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
+          <ToggleGroup.Item value="month">Month</ToggleGroup.Item>
         </ToggleGroup.Root>
-        <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: -step }))}>
-          {view === 'week' ? 'Previous week' : 'Previous day'}
-        </Button.Root>
-        <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: step }))}>
-          {view === 'week' ? 'Next week' : 'Next day'}
-        </Button.Root>
-        <Text.Root className={styles.range}>{rangeLabel(days, locale)}</Text.Root>
-      </div>
-      <ScrollArea.Root axis="both" focusable aria-label="Calendar" className={styles.board}>
-        <div
-          className={styles.frame}
-          style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
+        <Button.Root
+          variant="secondary"
+          onClick={() => {
+            if (view === 'month') moveMonth(-1);
+            else setAnchor((day) => day.add({ days: -step }));
+          }}
         >
-          <div className={styles.head}>
-            <div className={styles.corner} />
-            {axis.segments.map((segment) => (
-              <Text.Root as="h3" variant="label" id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
-                {dayHeading(segment.day, locale)}
-              </Text.Root>
-            ))}
-          </div>
-          <div className={styles.body}>
-            <div className={styles.gutter} aria-hidden="true">
-              {gutterMarks.map((units) => {
-                const time = axis.segments.map((segment) => fromUnits(segment, units, 'start')).find((value) => value !== null);
-                if (!time) return null;
-                return (
-                  <Text.Root
-                    as="span"
-                    key={units}
-                    variant="label"
-                    tone="muted"
-                    className={styles.mark}
-                    data-first={units === 0 ? '' : undefined}
-                    style={{ top: percent(units / scale) }}
-                  >
-                    {formatTime(time.toPlainTime(), { locale })}
-                  </Text.Root>
-                );
-              })}
+          {`Previous ${move}`}
+        </Button.Root>
+        <Button.Root
+          variant="secondary"
+          onClick={() => {
+            if (view === 'month') moveMonth(1);
+            else setAnchor((day) => day.add({ days: step }));
+          }}
+        >
+          {`Next ${move}`}
+        </Button.Root>
+        <Text.Root className={styles.range}>{view === 'month' ? monthLabel(anchor, locale) : rangeLabel(days, locale)}</Text.Root>
+      </div>
+      {view === 'month' ? (
+        <Calendar.Root
+          ref={monthRef}
+          className={styles.month}
+          aria-label={monthLabel(anchor, locale)}
+          locale={locale}
+          value={anchor}
+          onValueChange={openDay}
+        >
+          <Calendar.Grid
+            showOutsideDays
+            aria-label={monthLabel(anchor, locale)}
+            onKeyDown={(event) => {
+              if (event.key !== 'PageUp' && event.key !== 'PageDown') return;
+              event.preventDefault();
+              const sign = event.key === 'PageDown' ? 1 : -1;
+              moveMonth(sign * (event.shiftKey ? 12 : 1), true);
+            }}
+            renderDay={(day) => {
+              const list = eventsOnDay(day.date, events, timeZone, locale);
+              if (list.length === 0) return null;
+              const shown = list.slice(0, MONTH_TITLES);
+              const extra = list.length - shown.length;
+              return (
+                <span className={styles.chips}>
+                  {shown.map((event, index) => (
+                    <span key={event.id} className={styles.chip}>
+                      {index > 0 ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
+                      {event.title}
+                    </span>
+                  ))}
+                  {extra > 0 ? (
+                    <span className={styles.more}>
+                      <VisuallyHidden.Root>, </VisuallyHidden.Root>
+                      {`+${extra} more`}
+                    </span>
+                  ) : null}
+                </span>
+              );
+            }}
+          />
+        </Calendar.Root>
+      ) : (
+        <ScrollArea.Root axis="both" focusable aria-label="Calendar" className={styles.board}>
+          <div
+            className={styles.frame}
+            style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
+          >
+            <div className={styles.head}>
+              <div className={styles.corner} />
+              {axis.segments.map((segment) => (
+                <Text.Root as="h3" variant="label" tabIndex={-1} id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
+                  {dayHeading(segment.day, locale)}
+                </Text.Root>
+              ))}
             </div>
-            {lanes.map(({ segment, placed }) => (
-              <EventColumn
-                key={segment.day.toString()}
-                segment={segment}
-                placed={placed}
-                scale={scale}
-                locale={locale}
-                timeZone={timeZone}
-                headingId={`${heading}-${segment.day.toString()}`}
-                shared={shared}
-              />
-            ))}
+            <div className={styles.body}>
+              <div className={styles.gutter} aria-hidden="true">
+                {gutterMarks.map((units) => {
+                  const time = axis.segments.map((segment) => fromUnits(segment, units, 'start')).find((value) => value !== null);
+                  if (!time) return null;
+                  return (
+                    <Text.Root
+                      as="span"
+                      key={units}
+                      variant="label"
+                      tone="muted"
+                      className={styles.mark}
+                      data-first={units === 0 ? '' : undefined}
+                      style={{ top: percent(units / scale) }}
+                    >
+                      {formatTime(time.toPlainTime(), { locale })}
+                    </Text.Root>
+                  );
+                })}
+              </div>
+              {lanes.map(({ segment, placed }) => (
+                <EventColumn
+                  key={segment.day.toString()}
+                  segment={segment}
+                  placed={placed}
+                  scale={scale}
+                  locale={locale}
+                  timeZone={timeZone}
+                  headingId={`${heading}-${segment.day.toString()}`}
+                  shared={shared}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </ScrollArea.Root>
+        </ScrollArea.Root>
+      )}
     </div>
   );
 }

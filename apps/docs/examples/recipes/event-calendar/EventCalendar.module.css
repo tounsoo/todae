@@ -157,3 +157,46 @@
 .event:focus-visible {
   z-index: 1;
 }
+
+.month {
+  min-inline-size: 0;
+}
+
+.month :global(table) {
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+.month :global(td) {
+  max-inline-size: 0;
+}
+
+.chips {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  gap: var(--todae-space-1);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.chip,
+.more {
+  overflow: hidden;
+  font-size: var(--todae-text-label-font-size);
+  line-height: var(--todae-text-leading-tight);
+  text-align: start;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chip {
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  border-inline-start-width: calc(4 * var(--todae-border-width));
+  border-inline-start-color: var(--todae-color-accent-default);
+  border-radius: var(--todae-radius-sm);
+  background: var(--todae-color-bg-surface);
+  color: var(--todae-color-fg-default);
+  padding-inline: var(--todae-space-1);
+}
