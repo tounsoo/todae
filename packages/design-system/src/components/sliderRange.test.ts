@@ -127,18 +127,30 @@ describe('valueFromPointer', () => {
   const rect = { left: 10, width: 100 };
 
   it('maps the inline-start edge to min and the inline-end edge to max', () => {
-    expect(valueFromPointer(10, rect, 'ltr', scale)).toBe(0);
-    expect(valueFromPointer(110, rect, 'ltr', scale)).toBe(100);
-    expect(valueFromPointer(35, rect, 'ltr', scale)).toBe(25);
-    expect(valueFromPointer(110, rect, 'rtl', scale)).toBe(0);
-    expect(valueFromPointer(10, rect, 'rtl', scale)).toBe(100);
-    expect(valueFromPointer(85, rect, 'rtl', scale)).toBe(25);
+    expect(valueFromPointer(10, rect, 'ltr', scale, 0)).toBe(0);
+    expect(valueFromPointer(110, rect, 'ltr', scale, 0)).toBe(100);
+    expect(valueFromPointer(35, rect, 'ltr', scale, 0)).toBe(25);
+    expect(valueFromPointer(110, rect, 'rtl', scale, 0)).toBe(0);
+    expect(valueFromPointer(10, rect, 'rtl', scale, 0)).toBe(100);
+    expect(valueFromPointer(85, rect, 'rtl', scale, 0)).toBe(25);
   });
 
-  it('clamps a pointer outside the track and a zero width to min', () => {
-    expect(valueFromPointer(0, rect, 'ltr', scale)).toBe(0);
-    expect(valueFromPointer(200, rect, 'ltr', scale)).toBe(100);
-    expect(valueFromPointer(40, { left: 0, width: 0 }, 'ltr', scale)).toBe(0);
+  it('maps across the thumb inset and clamps a pointer outside that span', () => {
+    const inset = 8;
+    expect(valueFromPointer(18, rect, 'ltr', scale, inset)).toBe(0);
+    expect(valueFromPointer(102, rect, 'ltr', scale, inset)).toBe(100);
+    expect(valueFromPointer(39, rect, 'ltr', scale, inset)).toBe(25);
+    expect(valueFromPointer(102, rect, 'rtl', scale, inset)).toBe(0);
+    expect(valueFromPointer(18, rect, 'rtl', scale, inset)).toBe(100);
+    expect(valueFromPointer(81, rect, 'rtl', scale, inset)).toBe(25);
+    expect(valueFromPointer(0, rect, 'ltr', scale, inset)).toBe(0);
+    expect(valueFromPointer(200, rect, 'ltr', scale, inset)).toBe(100);
+  });
+
+  it('returns min for a zero width and for a width the inset does not fit', () => {
+    expect(valueFromPointer(40, { left: 0, width: 0 }, 'ltr', scale, 0)).toBe(0);
+    expect(valueFromPointer(40, { left: 0, width: 10 }, 'ltr', scale, 8)).toBe(0);
+    expect(valueFromPointer(40, { left: 0, width: 16 }, 'rtl', scale, 8)).toBe(0);
   });
 });
 

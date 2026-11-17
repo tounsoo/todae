@@ -179,13 +179,6 @@ describe('Slider range in the browser', () => {
     return { x: rtl ? box.right - along : box.left + along, y: box.top + box.height / 2 };
   }
 
-  function valueAt(value: number) {
-    const box = group().getBoundingClientRect();
-    const ratio = value / 100;
-    const rtl = getComputedStyle(group()).direction === 'rtl';
-    return { x: rtl ? box.right - ratio * box.width : box.left + ratio * box.width, y: box.top + box.height / 2 };
-  }
-
   function place(point: { x: number; y: number }) {
     const box = group().getBoundingClientRect();
     return { x: point.x - box.left, y: point.y - box.top };
@@ -211,37 +204,60 @@ describe('Slider range in the browser', () => {
     }
   });
 
+  it('leaves the value unchanged when a thumb is pressed and released', async () => {
+    for (const [low, high, thumb] of [
+      [0, 40, 'start'],
+      [16, 35, 'start'],
+      [40, 100, 'end'],
+    ] as const) {
+      cleanup();
+      render(<Range initial={[low, high]} />);
+      const at = place(pointAt(thumb === 'start' ? low : high));
+      await userEvent.click(group(), { position: at });
+      expect(start(), `${low} to ${high}`).toHaveProperty('value', String(low));
+      expect(end(), `${low} to ${high}`).toHaveProperty('value', String(high));
+    }
+  });
+
+  it('focuses the start thumb when a shared thumb is tapped', async () => {
+    render(<Range initial={[50, 50]} />);
+    await userEvent.click(group(), { position: place(pointAt(50)) });
+    expect(start()).toHaveProperty('value', '50');
+    expect(end()).toHaveProperty('value', '50');
+    expect(document.activeElement).toBe(start());
+  });
+
   it('drags the start thumb from 16 to 25', async () => {
     render(<Range initial={[16, 35]} />);
-    await drag(pointAt(16), valueAt(25));
+    await drag(pointAt(16), pointAt(25));
     expect(start()).toHaveProperty('value', '25');
     expect(end()).toHaveProperty('value', '35');
   });
 
   it('drags the end thumb from 35 to 60', async () => {
     render(<Range initial={[16, 35]} />);
-    await drag(pointAt(35), valueAt(60));
+    await drag(pointAt(35), pointAt(60));
     expect(start()).toHaveProperty('value', '16');
     expect(end()).toHaveProperty('value', '60');
   });
 
   it('drags the start thumb when a shared thumb moves toward the minimum', async () => {
     render(<Range initial={[50, 50]} />);
-    await drag(pointAt(50), valueAt(30));
+    await drag(pointAt(50), pointAt(30));
     expect(start()).toHaveProperty('value', '30');
     expect(end()).toHaveProperty('value', '50');
   });
 
   it('drags the end thumb when a shared thumb moves toward the maximum', async () => {
     render(<Range initial={[50, 50]} />);
-    await drag(pointAt(50), valueAt(70));
+    await drag(pointAt(50), pointAt(70));
     expect(start()).toHaveProperty('value', '50');
     expect(end()).toHaveProperty('value', '70');
   });
 
   it('drags a thumb in right to left', async () => {
     render(<Range initial={[16, 35]} dir="rtl" />);
-    await drag(pointAt(35), valueAt(60));
+    await drag(pointAt(35), pointAt(60));
     expect(start()).toHaveProperty('value', '16');
     expect(end()).toHaveProperty('value', '60');
   });
@@ -250,7 +266,7 @@ describe('Slider range in the browser', () => {
     render(<Range initial={[16, 35]} />);
     const kinds: string[] = [];
     group().addEventListener('pointerdown', (event) => kinds.push(event.pointerType));
-    await stroke('touch', pointAt(16), valueAt(25));
+    await stroke('touch', pointAt(16), pointAt(25));
     expect(kinds).toEqual(['touch']);
     expect(start()).toHaveProperty('value', '25');
     expect(end()).toHaveProperty('value', '35');
@@ -261,7 +277,7 @@ describe('Slider range in the browser', () => {
     render(<Range initial={[16, 35]} />);
     const kinds: string[] = [];
     group().addEventListener('pointerdown', (event) => kinds.push(event.pointerType));
-    await stroke('pen', pointAt(35), valueAt(60));
+    await stroke('pen', pointAt(35), pointAt(60));
     expect(kinds).toEqual(['pen']);
     expect(start()).toHaveProperty('value', '16');
     expect(end()).toHaveProperty('value', '60');
