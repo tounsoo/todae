@@ -211,6 +211,30 @@ describe('the sticky stage names', () => {
     expect(day.getBoundingClientRect().left - names.right).toBeCloseTo(4, 0);
   });
 
+  it('shows no second day at the far end of the board at 1280px, One day', async () => {
+    await page.viewport(1280, 800);
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const scroller = board();
+    scroller.scrollLeft = scroller.scrollWidth;
+    const view = scroller.getBoundingClientRect();
+    const axis = rows().firstElementChild!.children[1]!;
+    const visible = [...axis.children].filter((cell) => {
+      const box = cell.getBoundingClientRect();
+      return box.width > 0 && box.right > view.left + 1 && box.left < view.right - 1;
+    });
+    expect(visible.map((cell) => cell.textContent ?? '')).toEqual([expect.stringContaining('Wed, Jun 2')]);
+  });
+
+  it('shows the in-view day when One day follows Whole event', async () => {
+    setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    await userEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const labels = [...rows().firstElementChild!.children[1]!.children].map((cell) => /^(?:Wed|Thu|Fri), Jun \d/.exec(cell.textContent ?? '')?.[0] ?? cell.textContent);
+    expect(labels).toEqual(['Thu, Jun 3']);
+  });
+
   it('keeps the time just past the names column when the zoom changes', async () => {
     setup();
     reveal(400);

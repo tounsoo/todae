@@ -186,6 +186,44 @@ describe('the schedule', () => {
     expect(within(menu).getByRole('menuitem', { name: 'Move to Workshop room' }).getAttribute('aria-disabled')).toBe('true');
   });
 
+  const axisHeaders = () => [...(screen.getByRole('region', { name: 'Main stage' }).parentElement!.firstElementChild!.children[1]!.children)].map((cell) => cell.textContent ?? '');
+  const placedLabels = () => screen.getAllByRole('button').map((button) => button.getAttribute('aria-label') ?? '').filter((label) => /Jun \d/.test(label));
+
+  it('shows one day at a time, then every day again for the whole event', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'One day' }));
+    expect(axisHeaders().map((text) => /^(?:Wed|Thu|Fri), Jun \d/.exec(text)?.[0] ?? text)).toEqual(['Wed, Jun 2']);
+    expect(placedLabels().filter((label) => /Jun 3|Jun 4/.test(label))).toEqual([]);
+    expect(screen.getByRole('button', { name: 'Wed, Jun 2', pressed: true })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Thu, Jun 3' }));
+    expect(axisHeaders().map((text) => /^(?:Wed|Thu|Fri), Jun \d/.exec(text)?.[0] ?? text)).toEqual(['Thu, Jun 3']);
+    expect(placedLabels().length).toBeGreaterThan(0);
+    expect(placedLabels().filter((label) => !label.includes('Thu, Jun 3'))).toEqual([]);
+    expect(screen.getByRole('button', { name: 'Thu, Jun 3', pressed: true })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Whole event' }));
+    expect(axisHeaders().map((text) => /^(?:Wed|Thu|Fri), Jun \d/.exec(text)?.[0] ?? text)).toEqual(['Wed, Jun 2', 'Thu, Jun 3', 'Fri, Jun 4']);
+    expect(screen.getByRole('button', { name: 'Wed, Jun 2' }).hasAttribute('aria-pressed')).toBe(false);
+  });
+
+  it('keeps a talk on the same day and time when One day moves it from the menu or the dialog', async () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'One day' }));
+    const motion = () => screen.getByRole('button', { name: /^Motion with purpose,/ });
+    expect(motion().getAttribute('aria-label')).toContain('Wed, Jun 2, 2:00 PM to 2:40 PM');
+
+    await choose(motion(), 'Move to Hall B');
+    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Hall B, warning: Expects 400, Hall B seats 300');
+
+    await choose(motion(), 'Change time or stage…');
+    const dialog = await screen.findByRole('dialog', { name: 'Move Motion with purpose' });
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
+    });
+    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Hall B, warning: Expects 400, Hall B seats 300');
+  });
+
   it('schedules a talk from the queue at the first free time and undoes it', async () => {
     setup();
     await choose(screen.getByRole('button', { name: /^Dark mode, done right,/ }), 'First free time on Main stage');
