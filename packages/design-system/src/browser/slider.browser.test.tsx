@@ -1,15 +1,15 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { useState } from 'react';
+import { act, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Slider, type SliderRangeValue } from '../index.js';
 
 afterEach(cleanup);
 
-function Range({ initial = [20, 80] as SliderRangeValue }: { initial?: SliderRangeValue }) {
+function Range({ initial = [20, 80] as SliderRangeValue, dir }: { initial?: SliderRangeValue; dir?: 'ltr' | 'rtl' }) {
   const [value, setValue] = useState(initial);
   return (
-    <div style={{ inlineSize: 400 }}>
+    <div dir={dir} style={{ inlineSize: 400 }}>
       <Slider.Root mode="range" startLabel="Minimum" endLabel="Maximum" value={value} onValueChange={setValue} />
     </div>
   );
@@ -152,10 +152,49 @@ describe('Slider range in the browser', () => {
     const box = group().getBoundingClientRect();
     const thumb = usedThumb();
     const travel = box.width - thumb;
-    return { x: box.left + thumb / 2 + (percent / 100) * travel, y: box.top + box.height / 2 };
+    const along = thumb / 2 + (percent / 100) * travel;
+    const rtl = getComputedStyle(group()).direction === 'rtl';
+    return { x: rtl ? box.right - along : box.left + along, y: box.top + box.height / 2 };
   }
 
-  it('paints the start thumb above both tracks', () => {
+  function valueAt(value: number) {
+    const box = group().getBoundingClientRect();
+    const ratio = value / 100;
+    const rtl = getComputedStyle(group()).direction === 'rtl';
+    return { x: rtl ? box.right - ratio * box.width : box.left + ratio * box.width, y: box.top + box.height / 2 };
+  }
+
+  function place(point: { x: number; y: number }) {
+    const box = group().getBoundingClientRect();
+    return { x: point.x - box.left, y: point.y - box.top };
+  }
+
+  async function drag(from: { x: number; y: number }, to: { x: number; y: number }) {
+    await userEvent.dragAndDrop(group(), group(), { sourcePosition: place(from), targetPosition: place(to) });
+  }
+
+  function pointer(type: string, point: { x: number; y: number }, pointerType: 'touch' | 'pen') {
+    const target = document.elementFromPoint(point.x, point.y);
+    if (!target) throw new Error('no element at the pointer');
+    act(() => {
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          pointerId: 1,
+          pointerType,
+          isPrimary: true,
+          button: type === 'pointermove' ? -1 : 0,
+          buttons: type === 'pointerup' ? 0 : 1,
+          clientX: point.x,
+          clientY: point.y,
+        }),
+      );
+    });
+  }
+
+  it('stacks the start thumb above the end thumb', () => {
     for (const [low, high] of [
       [16, 35],
       [0, 100],
@@ -165,12 +204,69 @@ describe('Slider range in the browser', () => {
     ] as const) {
       cleanup();
       render(<Range initial={[low, high]} />);
-      const startAt = pointAt(low);
-      expect(document.elementFromPoint(startAt.x, startAt.y), `${low} to ${high}`).toBe(start());
-      if (low === high) continue;
-      const endAt = pointAt(high);
-      expect(document.elementFromPoint(endAt.x, endAt.y), `${low} to ${high}`).toBe(end());
+      const startIndex = Number(getComputedStyle(start()).zIndex);
+      const endIndex = Number(getComputedStyle(end()).zIndex);
+      expect(startIndex, `${low} to ${high}`).toBeGreaterThan(endIndex);
     }
+  });
+
+  it('drags the start thumb from 16 to 25', async () => {
+    render(<Range initial={[16, 35]} />);
+    await drag(pointAt(16), valueAt(25));
+    expect(start()).toHaveProperty('value', '25');
+    expect(end()).toHaveProperty('value', '35');
+  });
+
+  it('drags the end thumb from 35 to 60', async () => {
+    render(<Range initial={[16, 35]} />);
+    await drag(pointAt(35), valueAt(60));
+    expect(start()).toHaveProperty('value', '16');
+    expect(end()).toHaveProperty('value', '60');
+  });
+
+  it('drags the start thumb when a shared thumb moves toward the minimum', async () => {
+    render(<Range initial={[50, 50]} />);
+    await drag(pointAt(50), valueAt(30));
+    expect(start()).toHaveProperty('value', '30');
+    expect(end()).toHaveProperty('value', '50');
+  });
+
+  it('drags the end thumb when a shared thumb moves toward the maximum', async () => {
+    render(<Range initial={[50, 50]} />);
+    await drag(pointAt(50), valueAt(70));
+    expect(start()).toHaveProperty('value', '50');
+    expect(end()).toHaveProperty('value', '70');
+  });
+
+  it('drags a thumb in right to left', async () => {
+    render(<Range initial={[16, 35]} dir="rtl" />);
+    await drag(pointAt(35), valueAt(60));
+    expect(start()).toHaveProperty('value', '16');
+    expect(end()).toHaveProperty('value', '60');
+  });
+
+  it('drags the start thumb from a touch press and leaves it focused', () => {
+    render(<Range initial={[16, 35]} />);
+    const from = pointAt(16);
+    const to = valueAt(25);
+    pointer('pointerdown', from, 'touch');
+    pointer('pointermove', to, 'touch');
+    pointer('pointerup', to, 'touch');
+    expect(start()).toHaveProperty('value', '25');
+    expect(end()).toHaveProperty('value', '35');
+    expect(document.activeElement).toBe(start());
+  });
+
+  it('drags the end thumb from a pen press and leaves it focused', () => {
+    render(<Range initial={[16, 35]} />);
+    const from = pointAt(35);
+    const to = valueAt(60);
+    pointer('pointerdown', from, 'pen');
+    pointer('pointermove', to, 'pen');
+    pointer('pointerup', to, 'pen');
+    expect(start()).toHaveProperty('value', '16');
+    expect(end()).toHaveProperty('value', '60');
+    expect(document.activeElement).toBe(end());
   });
 
   it('draws the focus ring around the track', async () => {
