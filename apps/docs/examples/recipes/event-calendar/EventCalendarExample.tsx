@@ -288,7 +288,7 @@ export type EventDraft = {
   allDay: boolean;
 };
 
-export type DraftIssue = { field: 'title' | 'date' | 'start' | 'end'; message: string };
+export type DraftIssue = { field: 'title' | 'date' | 'start' | 'end' | 'endDate'; message: string };
 
 /** Keeps the draft's length when the date or the start moves, and leaves every other field as it was set. */
 export function shiftDraft<K extends keyof EventDraft>(draft: EventDraft, key: K, value: EventDraft[K], timeZone: string): EventDraft {
@@ -311,8 +311,10 @@ export function eventFromDraft(draft: EventDraft, timeZone: string): { ok: true;
   if (!title) return { ok: false, issue: { field: 'title', message: 'Add a title.' } };
   if (!draft.date) return { ok: false, issue: { field: 'date', message: 'Choose a date.' } };
   if (draft.allDay) {
-    const start = draft.date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from('00:00') });
-    const end = draft.date.add({ days: 1 }).toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from('00:00') });
+    if (!draft.endDate) return { ok: false, issue: { field: 'endDate', message: 'Choose an end.' } };
+    if (Temporal.PlainDate.compare(draft.endDate, draft.date) < 0) return { ok: false, issue: { field: 'endDate', message: 'End must be after the start.' } };
+    const start = draft.date.toZonedDateTime({ timeZone, plainTime: MIDNIGHT });
+    const end = draft.endDate.add({ days: 1 }).toZonedDateTime({ timeZone, plainTime: MIDNIGHT });
     return { ok: true, value: { title, start, end, allDay: true } };
   }
   if (!draft.start) return { ok: false, issue: { field: 'start', message: 'Choose a start.' } };
@@ -361,22 +363,28 @@ export function eventsOnDay(day: Temporal.PlainDate, events: readonly CalendarEv
   const closes = zoned(day.add({ days: 1 }), MIDNIGHT, timeZone);
   return events
     .filter((event) => {
+      if (event.allDay) {
+        const covered = coveredDays(event, timeZone);
+        return covered !== null && Temporal.PlainDate.compare(day, covered.first) >= 0 && Temporal.PlainDate.compare(day, covered.last) <= 0;
+      }
       const start = event.start.withTimeZone(timeZone);
       const end = event.end.withTimeZone(timeZone);
       return Temporal.ZonedDateTime.compare(start, closes) < 0 && Temporal.ZonedDateTime.compare(end, opens) > 0;
     })
     .sort((a, b) => {
       if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
-      const byStart = Temporal.ZonedDateTime.compare(a.start.withTimeZone(timeZone), b.start.withTimeZone(timeZone));
+      const key = (event: CalendarEvent) =>
+        event.allDay ? (coveredDays(event, timeZone)?.first ?? event.start.toPlainDate()).toZonedDateTime({ timeZone, plainTime: MIDNIGHT }) : event.start.withTimeZone(timeZone);
+      const byStart = Temporal.ZonedDateTime.compare(key(a), key(b));
       if (byStart !== 0) return byStart;
       return a.title.localeCompare(b.title, locale);
     });
 }
 
-/** The calendar days an event occupies. An end at midnight stays on the earlier day. */
+/** The calendar days an event occupies. An end at midnight stays on the earlier day. An all-day event uses the dates in its own zone. */
 function coveredDays(event: CalendarEvent, timeZone: string): { first: Temporal.PlainDate; last: Temporal.PlainDate } | null {
-  const start = event.start.withTimeZone(timeZone);
-  const end = event.end.withTimeZone(timeZone);
+  const start = event.allDay ? event.start : event.start.withTimeZone(timeZone);
+  const end = event.allDay ? event.end : event.end.withTimeZone(timeZone);
   if (Temporal.ZonedDateTime.compare(end, start) <= 0) return null;
   const first = start.toPlainDate();
   const last = end.toPlainTime().equals(MIDNIGHT) ? end.toPlainDate().subtract({ days: 1 }) : end.toPlainDate();
@@ -428,7 +436,7 @@ export function packWeekBars(events: readonly CalendarEvent[], days: readonly Te
         continuesFrom: Temporal.PlainDate.compare(covered.first, weekStart) < 0,
         continuesTo: Temporal.PlainDate.compare(covered.last, weekEnd) > 0,
         index,
-        start: event.start.withTimeZone(timeZone),
+        start: event.allDay ? covered.first.toZonedDateTime({ timeZone, plainTime: MIDNIGHT }) : event.start.withTimeZone(timeZone),
       },
     ];
   });
@@ -436,7 +444,7 @@ export function packWeekBars(events: readonly CalendarEvent[], days: readonly Te
   segments.sort((a, b) => Temporal.ZonedDateTime.compare(a.start, b.start) || b.span - a.span || a.index - b.index);
 
   const rowEnds: number[] = [];
-  return segments.map((segment) => {
+  const placed = segments.map((segment) => {
     const end = segment.column + segment.span;
     let row = rowEnds.findIndex((used) => used <= segment.column);
     if (row < 0) {
@@ -445,15 +453,10 @@ export function packWeekBars(events: readonly CalendarEvent[], days: readonly Te
     } else {
       rowEnds[row] = end;
     }
-    return {
-      event: segment.event,
-      column: segment.column,
-      span: segment.span,
-      row,
-      continuesFrom: segment.continuesFrom,
-      continuesTo: segment.continuesTo,
-    };
+    return { ...segment, row };
   });
+  placed.sort((a, b) => a.index - b.index);
+  return placed.map(({ event, column, span, row, continuesFrom, continuesTo }) => ({ event, column, span, row, continuesFrom, continuesTo }));
 }
 
 export function laneScale(axis: DayAxis): number {
@@ -696,7 +699,10 @@ function eventRangeLabel(event: CalendarEvent, locale: string, timeZone: string)
 }
 
 function barLabel(event: CalendarEvent, locale: string, timeZone: string): string {
-  return `${event.title}, ${eventRangeLabel(event, locale, timeZone)}`;
+  const range = eventRangeLabel(event, locale, timeZone);
+  if (event.allDay) return `${event.title}, ${range}`;
+  const clock = (value: Temporal.ZonedDateTime) => formatTime(value.toPlainTime(), { locale });
+  return `${event.title}, ${range}, ${clock(event.start.withTimeZone(timeZone))} to ${clock(event.end.withTimeZone(timeZone))}`;
 }
 
 type DrawnBar = WeekBar & { cutStart: boolean; cutEnd: boolean };
@@ -707,9 +713,10 @@ function barsOnBoard(events: readonly CalendarEvent[], week: readonly Temporal.P
     week,
     timeZone,
   );
-  if (!day) return packed.map((bar) => ({ ...bar, cutStart: bar.continuesFrom, cutEnd: bar.continuesTo }));
+  const ordered = [...packed].sort((a, b) => a.row - b.row || a.column - b.column);
+  if (!day) return ordered.map((bar) => ({ ...bar, cutStart: bar.continuesFrom, cutEnd: bar.continuesTo }));
   const index = week.findIndex((item) => item.equals(day));
-  return packed.flatMap((bar) => {
+  return ordered.flatMap((bar) => {
     if (index < bar.column || index >= bar.column + bar.span) return [];
     return [{ ...bar, column: 0, span: 1, cutStart: bar.continuesFrom || index > bar.column, cutEnd: bar.continuesTo || index < bar.column + bar.span - 1 }];
   });
@@ -750,6 +757,16 @@ function eventName(event: CalendarEvent, segment: DaySegment, locale: string, ti
 }
 
 function EventMoves({ event, segment, axis, week, onAdjust, onEdit }: Pick<ColumnShared, 'axis' | 'week' | 'onAdjust' | 'onEdit'> & { event: CalendarEvent; segment: DaySegment }) {
+  if (event.allDay) {
+    return (
+      <>
+        <Menu.Item onSelect={() => onAdjust(event, segment, { kind: 'day', days: -1 })}>Move to previous day</Menu.Item>
+        <Menu.Item onSelect={() => onAdjust(event, segment, { kind: 'day', days: 1 })}>Move to next day</Menu.Item>
+        <Menu.Separator />
+        <Menu.Item onSelect={() => onEdit(event, segment.day)}>Edit…</Menu.Item>
+      </>
+    );
+  }
   const item = (change: SlotChange) => adjustEvent(event, segment, axis, change);
   const go = (change: SlotChange) => {
     const next = item(change);
@@ -942,8 +959,10 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
         {barRows > 0 ? (
           <span className={styles.barRows}>
             {visible.map((bar) => {
-              const cutStart = bar.continuesFrom || index > bar.column;
-              const cutEnd = bar.continuesTo || index < bar.column + bar.span - 1;
+              const first = index === bar.column;
+              const last = index === bar.column + bar.span - 1;
+              const cutStart = bar.continuesFrom && first;
+              const cutEnd = bar.continuesTo && last;
               const comma = spoken > 0;
               spoken += 1;
               return (
@@ -953,6 +972,8 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
                   data-bar={bar.event.id}
                   data-cut-start={cutStart ? '' : undefined}
                   data-cut-end={cutEnd ? '' : undefined}
+                  data-join-start={first ? undefined : ''}
+                  data-join-end={last ? undefined : ''}
                   style={{ gridRow: bar.row + 1 }}
                 >
                   {comma ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
@@ -1016,6 +1037,7 @@ export default function EventCalendarExample({
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
   const [items, setItems] = useState<CalendarEvent[]>(() => events.map((event) => ({ ...event })));
+  const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
@@ -1055,6 +1077,12 @@ export default function EventCalendarExample({
   const commit = (next: CalendarEvent, day: Temporal.PlainDate) => {
     const current = items.find((each) => each.id === next.id) ?? next;
     const settled = finishGesture(current, next, 'drop');
+    if (settled.allDay && !current.allDay) {
+      const start = current.start.withTimeZone(timeZone);
+      const end = current.end.withTimeZone(timeZone);
+      timedBefore.current.set(settled.id, { start: start.toPlainTime(), end: end.toPlainTime(), daySpan: start.toPlainDate().until(end.toPlainDate(), { largestUnit: 'day' }).days });
+    }
+    if (!settled.allDay) timedBefore.current.delete(settled.id);
     const strip = showsInStrip(settled, timeZone, opens, closes);
     const laneHome = strip ? null : shownDay(settled, day);
     setFocusKey(strip ? stripKey(settled.id) : laneHome ? blockKey(settled.id, laneHome) : null);
@@ -1106,6 +1134,11 @@ export default function EventCalendarExample({
   });
 
   const onAdjust = (event: CalendarEvent, segment: DaySegment, change: SlotChange) => {
+    if (event.allDay && change.kind === 'day') {
+      const next = { ...event, start: event.start.add({ days: change.days }), end: event.end.add({ days: change.days }) };
+      commit(next, segment.day.add({ days: change.days }));
+      return;
+    }
     const next = adjustEvent(event, segment, axis, change);
     if (!next) return;
     const day = change.kind === 'day' ? segment.day.add({ days: change.days }) : segment.day;
@@ -1273,6 +1306,8 @@ export default function EventCalendarExample({
           event={editing}
           locale={locale}
           timeZone={timeZone}
+          opens={opens}
+          prior={timedBefore.current.get(editing.id) ?? null}
           restoreFocusRef={landing}
           onCancel={() => {
             returnFocus.current = true;
@@ -1299,6 +1334,8 @@ export function EventEditor({
   event,
   locale,
   timeZone,
+  opens = OPENS,
+  prior = null,
   onSave,
   onCancel,
   restoreFocusRef,
@@ -1306,16 +1343,27 @@ export function EventEditor({
   event: CalendarEvent;
   locale: string;
   timeZone: string;
+  opens?: Temporal.PlainTime;
+  prior?: { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number } | null;
   onSave: (event: CalendarEvent) => void;
   onCancel: () => void;
   restoreFocusRef?: RefObject<HTMLElement | null>;
 }) {
   const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId() };
   const titleRef = useRef<HTMLInputElement>(null);
+  const remembered = useRef<{ start: Temporal.PlainTime | null; end: Temporal.PlainTime | null; endDate?: Temporal.PlainDate | null; daySpan?: number } | null>(prior);
   const [fields, setFields] = useState<EventDraft>(() => {
     const start = event.start.withTimeZone(timeZone);
     const end = event.end.withTimeZone(timeZone);
-    return { title: event.title, date: start.toPlainDate(), endDate: end.toPlainDate(), start: start.toPlainTime(), end: end.toPlainTime(), allDay: event.allDay };
+    const covered = event.allDay ? coveredDays(event, timeZone) : null;
+    return {
+      title: event.title,
+      date: covered?.first ?? start.toPlainDate(),
+      endDate: covered?.last ?? end.toPlainDate(),
+      start: start.toPlainTime(),
+      end: end.toPlainTime(),
+      allDay: event.allDay,
+    };
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const edit =
@@ -1324,6 +1372,25 @@ export function EventEditor({
       setErrors({});
       setFields((current) => shiftDraft(current, key, value, timeZone));
     };
+  const setAllDay = (on: boolean) => {
+    setErrors({});
+    setFields((current) => {
+      if (on) {
+        const blank = current.start?.equals(MIDNIGHT) && current.end?.equals(MIDNIGHT);
+        if (!blank) remembered.current = { start: current.start, end: current.end, endDate: current.endDate };
+        let endDate = current.endDate;
+        if (current.end?.equals(MIDNIGHT) && endDate && current.date && Temporal.PlainDate.compare(endDate, current.date) > 0) endDate = endDate.subtract({ days: 1 });
+        return { ...current, allDay: true, endDate: endDate ?? current.date };
+      }
+      const kept = remembered.current;
+      const usable = kept?.start && kept.end && !(kept.start.equals(MIDNIGHT) && kept.end.equals(MIDNIGHT));
+      if (usable && kept) {
+        const endDate = current.date && typeof kept.daySpan === 'number' ? current.date.add({ days: kept.daySpan }) : (kept.endDate ?? current.date);
+        return { ...current, allDay: false, start: kept.start, end: kept.end, endDate };
+      }
+      return { ...current, allDay: false, start: opens, end: opens.add({ minutes: SLOT_MINUTES }), endDate: current.date };
+    });
+  };
 
   const submit = (submitEvent: SubmitEvent<HTMLFormElement>) => {
     submitEvent.preventDefault();
@@ -1357,33 +1424,33 @@ export function EventEditor({
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
-          <Switch.Root className={styles.allDay} checked={fields.allDay} onCheckedChange={edit('allDay')}>
+          <Switch.Root className={styles.allDay} checked={fields.allDay} onCheckedChange={setAllDay}>
             All day
           </Switch.Root>
           {fields.allDay ? null : (
-            <>
-              <Field.Group>
-                <Label.Root htmlFor={ids.start}>Start</Label.Root>
-                <Field.Root id={ids.start} name="start">
-                  <Field.TimeInput required value={fields.start} onValueChange={edit('start')} locale={locale} />
-                </Field.Root>
-                <ErrorMessage.Root />
-              </Field.Group>
-              <Field.Group>
-                <Label.Root htmlFor={ids.endDate}>End date</Label.Root>
-                <Field.Root id={ids.endDate} name="endDate">
-                  <Field.DateInput required value={fields.endDate} onValueChange={edit('endDate')} locale={locale} />
-                </Field.Root>
-                <ErrorMessage.Root />
-              </Field.Group>
-              <Field.Group>
-                <Label.Root htmlFor={ids.end}>End</Label.Root>
-                <Field.Root id={ids.end} name="end">
-                  <Field.TimeInput required value={fields.end} onValueChange={edit('end')} locale={locale} />
-                </Field.Root>
-                <ErrorMessage.Root />
-              </Field.Group>
-            </>
+            <Field.Group>
+              <Label.Root htmlFor={ids.start}>Start</Label.Root>
+              <Field.Root id={ids.start} name="start">
+                <Field.TimeInput required value={fields.start} onValueChange={edit('start')} locale={locale} />
+              </Field.Root>
+              <ErrorMessage.Root />
+            </Field.Group>
+          )}
+          <Field.Group>
+            <Label.Root htmlFor={ids.endDate}>End date</Label.Root>
+            <Field.Root id={ids.endDate} name="endDate">
+              <Field.DateInput required value={fields.endDate} onValueChange={edit('endDate')} locale={locale} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          {fields.allDay ? null : (
+            <Field.Group>
+              <Label.Root htmlFor={ids.end}>End</Label.Root>
+              <Field.Root id={ids.end} name="end">
+                <Field.TimeInput required value={fields.end} onValueChange={edit('end')} locale={locale} />
+              </Field.Root>
+              <ErrorMessage.Root />
+            </Field.Group>
           )}
         </Dialog.Body>
         <Dialog.Footer>

@@ -350,8 +350,9 @@
 }
 
 .barRows {
+  --_row: calc(var(--todae-text-label-font-size) * var(--todae-text-leading-tight));
   display: grid;
-  grid-template-rows: repeat(var(--bar-rows), auto);
+  grid-template-rows: repeat(var(--bar-rows), var(--_row));
   align-self: stretch;
   inline-size: calc(100% + 2 * var(--todae-space-1));
   margin-inline: calc(-1 * var(--todae-space-1));
@@ -363,6 +364,7 @@
   gap: var(--todae-space-1);
   box-sizing: border-box;
   min-inline-size: 0;
+  block-size: 100%;
   overflow: hidden;
   padding-inline: var(--todae-space-1);
   border-block: var(--todae-border-width) solid var(--todae-color-border-default);
@@ -380,23 +382,25 @@
   text-overflow: ellipsis;
 }
 
-.monthBar:not([data-cut-start]) {
+.monthBar:not([data-cut-start]):not([data-join-start]) {
   border-inline-start: calc(4 * var(--todae-border-width)) solid var(--todae-color-accent-default);
   border-start-start-radius: var(--todae-radius-sm);
   border-end-start-radius: var(--todae-radius-sm);
 }
 
-.monthBar:not([data-cut-end]) {
+.monthBar:not([data-cut-end]):not([data-join-end]) {
   border-inline-end: var(--todae-border-width) solid var(--todae-color-border-default);
   border-start-end-radius: var(--todae-radius-sm);
   border-end-end-radius: var(--todae-radius-sm);
 }
 
-.monthBar[data-cut-start] {
+.monthBar[data-cut-start],
+.monthBar[data-join-start] {
   margin-inline-start: calc(-1 * var(--todae-calendar-day-border-width));
 }
 
-.monthBar[data-cut-end] {
+.monthBar[data-cut-end],
+.monthBar[data-join-end] {
   margin-inline-end: calc(-1 * var(--todae-calendar-day-border-width));
 }
 
@@ -428,7 +432,18 @@
 }
 
 @container month (max-inline-size: 30rem) {
-  .detail {
+  .barRows {
+    --_row: var(--todae-space-1);
+  }
+
+  .monthBar {
+    min-block-size: 0;
+  }
+
+  .barLabel,
+  .cue,
+  .chip,
+  .more {
     position: absolute;
     inline-size: 1px;
     block-size: 1px;

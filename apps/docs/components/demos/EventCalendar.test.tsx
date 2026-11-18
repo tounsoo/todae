@@ -23,6 +23,7 @@ import EventCalendarExample, {
   spanFrame,
   toUnits,
   packWeekBars,
+  eventsOnDay,
   showsInStrip,
   visibleSpans,
   weekOf,
@@ -495,7 +496,7 @@ describe('the calendar', () => {
     expect(one.textContent).toBe('1:1');
     const offsite = screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-16')}` });
     expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(offsite)).toBe(false);
-    expect(screen.getByRole('button', { name: `Launch watch, ${longRange('2026-11-18', '2026-11-19')}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Launch watch, ${longRange('2026-11-18', '2026-11-19')}, ${clock('22:00')} to ${clock('02:00')}` })).toBeTruthy();
     expect(screen.queryByRole('button', { name: `Handoff, ${longRange('2026-11-16', '2026-11-17')}` })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Day' }));
@@ -826,6 +827,13 @@ describe('packWeekBars', () => {
     expect(showsInStrip(handoff, LA, time('08:00'), time('18:00'))).toBe(false);
     expect(packWeekBars([launch], week, LA)[0]).toMatchObject({ column: 3, span: 2, continuesFrom: false, continuesTo: false });
   });
+
+  it('keeps an all-day event on the date in its own zone', () => {
+    const tokyo = span('tokyo', '2026-11-18T00:00:00+09:00[Asia/Tokyo]', '2026-11-19T00:00:00+09:00[Asia/Tokyo]', true);
+    expect(packWeekBars([tokyo], week, LA)[0]).toMatchObject({ column: 3, span: 1, continuesFrom: false, continuesTo: false });
+    expect(eventsOnDay(date('2026-11-18'), [tokyo], LA, 'en-US').map((item) => item.id)).toEqual(['tokyo']);
+    expect(eventsOnDay(date('2026-11-17'), [tokyo], LA, 'en-US')).toEqual([]);
+  });
 });
 
 describe('the month', () => {
@@ -846,11 +854,23 @@ describe('the month', () => {
     expect(describedBy('Thursday, November 19, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Planning, +5 more`);
     expect(describedBy('Friday, November 20, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Demo`);
     expect(describedBy('Saturday, November 21, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Office hours`);
+    const saturday = screen.getByRole('button', { name: 'Saturday, November 21, 2026' });
+    expect(saturday.querySelectorAll('[class*="cue"]')).toHaveLength(1);
+    expect(saturday.querySelector('[data-bar="retreat"]')?.hasAttribute('data-cut-start')).toBe(false);
+    expect(screen.getByRole('button', { name: 'Friday, November 20, 2026' }).querySelectorAll('[class*="cue"]')).toHaveLength(0);
     expect(describedBy('Sunday, November 15, 2026')).toBe('');
     const anchorDay = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
     expect(anchorDay.hasAttribute('data-selected')).toBe(false);
     expect(anchorDay.closest('td')?.getAttribute('aria-selected')).toBeNull();
     expect(screen.getByRole('button', { name: 'Tuesday, December 1, 2026' })).toBeTruthy();
+  });
+
+  it('reads the upper bar first when a lower row is listed earlier', () => {
+    const low = event('low', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', '2026-11-18T00:00:00-08:00[America/Los_Angeles]', { title: 'Low', allDay: true });
+    const high = event('high', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-19T00:00:00-08:00[America/Los_Angeles]', { title: 'High', allDay: true });
+    render(<EventCalendarExample locale="en-US" events={[low, high]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Tuesday, November 17, 2026')).toBe(`High, ${longRange('2026-11-16', '2026-11-18')}, Low, ${longDate('2026-11-17')}`);
   });
 
   it('puts a multi-day event on each day it covers, and keeps an event that ends at midnight on the earlier day', () => {
@@ -1200,15 +1220,24 @@ describe('moving and resizing a timed event', () => {
     expect(saved.value.title).toBe('Design review');
     expect(saved.value.start.toString()).toBe('2026-11-16T09:00:00-08:00[America/Los_Angeles]');
     expect(saved.value.end.toString()).toBe('2026-11-16T11:00:00-08:00[America/Los_Angeles]');
-    const allDay = eventFromDraft(
-      { title: 'Offsite', date: date('2026-11-16'), endDate: null, start: null, end: null, allDay: true },
+    const missingEnd = eventFromDraft({ title: 'Offsite', date: date('2026-11-16'), endDate: null, start: null, end: null, allDay: true }, zone);
+    expect(missingEnd).toEqual({ ok: false, issue: { field: 'endDate', message: 'Choose an end.' } });
+    const backwards = eventFromDraft(
+      { title: 'Retreat', date: date('2026-11-20'), endDate: date('2026-11-19'), start: null, end: null, allDay: true },
       zone,
     );
+    expect(backwards).toEqual({ ok: false, issue: { field: 'endDate', message: 'End must be after the start.' } });
+    const allDay = eventFromDraft({ title: 'Offsite', date: date('2026-11-16'), endDate: date('2026-11-16'), start: null, end: null, allDay: true }, zone);
     expect(allDay.ok).toBe(true);
     if (!allDay.ok) throw new Error('expected an all-day draft');
     expect(allDay.value.allDay).toBe(true);
     expect(allDay.value.start.toString()).toBe('2026-11-16T00:00:00-08:00[America/Los_Angeles]');
     expect(allDay.value.end.toString()).toBe('2026-11-17T00:00:00-08:00[America/Los_Angeles]');
+    const retreat = eventFromDraft({ title: 'Retreat', date: date('2026-11-20'), endDate: date('2026-11-22'), start: null, end: null, allDay: true }, zone);
+    expect(retreat.ok).toBe(true);
+    if (!retreat.ok) throw new Error('expected a retreat draft');
+    expect(retreat.value.start.toString()).toBe('2026-11-20T00:00:00-08:00[America/Los_Angeles]');
+    expect(retreat.value.end.toString()).toBe('2026-11-23T00:00:00-08:00[America/Los_Angeles]');
   });
 });
 
@@ -1333,6 +1362,34 @@ describe('the event menu and dialog', () => {
     expect(screen.getByRole('list', { name: 'Tue, Nov 24' }).contains(saved)).toBe(true);
     expect(screen.queryByRole('heading', { name: 'Mon, Nov 16' })).toBeNull();
     expect(document.activeElement).toBe(saved);
+  });
+
+  it('keeps Retreat on Friday through Sunday when Save changes nothing', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Retreat' });
+    expect((within(dialog).getByRole('textbox', { name: 'End date' }) as HTMLInputElement).value).toContain('22');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByRole('button', { name: `Retreat, ${longRange('2026-11-20', '2026-11-22')}` })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Friday, November 20, 2026')).toContain(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`);
+    expect(describedBy('Sunday, November 22, 2026')).toContain('Retreat');
+    expect(describedBy('Monday, November 23, 2026')).not.toContain('Retreat');
+  });
+
+  it('moves an all-day bar by a day, and turns it into the opening slot', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Offsite, ${longDate('2026-11-16')}`, 'Move to next day');
+    const moved = screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-17')}` });
+    expect(screen.queryByRole('button', { name: `Offsite, ${longDate('2026-11-16')}` })).toBeNull();
+    await choose(moved.getAttribute('aria-label')!, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Offsite' });
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const timed = screen.getByRole('button', { name: `Offsite, ${clock('08:00')} to ${clock('08:15')}` });
+    expect(screen.getByRole('list', { name: 'Tue, Nov 17' }).contains(timed)).toBe(true);
   });
 
   it('focuses the strip bar when Save makes an event all-day, and the day heading when it leaves the lanes and the strip', async () => {
