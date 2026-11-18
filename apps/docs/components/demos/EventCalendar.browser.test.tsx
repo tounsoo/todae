@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -80,6 +80,165 @@ describe('the narrow month', () => {
     expect(getComputedStyle(detail).position).not.toBe('absolute');
     expect(detail.getBoundingClientRect().width).toBeGreaterThan(20);
     await page.viewport(1280, 800);
+  });
+});
+
+const SCALE = 600;
+
+function dayLane(name: string): HTMLElement {
+  const headings = screen.getAllByRole('heading', { level: 3 });
+  const index = headings.findIndex((heading) => heading.textContent === name);
+  const body = headings[0]?.parentElement?.nextElementSibling;
+  const column = body?.children[index + 1];
+  if (!(column instanceof HTMLElement)) throw new Error(`no lane for ${name}`);
+  return column;
+}
+
+function atUnits(name: string, units: number) {
+  const box = dayLane(name).getBoundingClientRect();
+  return { x: box.left + box.width / 2, y: box.top + (units / SCALE) * box.height };
+}
+
+const pointer = (type: string, target: EventTarget, x: number, y: number) => {
+  target.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      pointerId: 1,
+      pointerType: 'mouse',
+      isPrimary: true,
+      button: 0,
+      buttons: type === 'pointerup' ? 0 : 1,
+      clientX: x,
+      clientY: y,
+    }),
+  );
+};
+
+function dragBlock(button: HTMLElement, to: { x: number; y: number }) {
+  const item = button.closest('li');
+  if (!item) throw new Error('event is not in a slot');
+  const itemBox = item.getBoundingClientRect();
+  const box = button.getBoundingClientRect();
+  const x = box.left + box.width / 2;
+  const y = box.top + box.height / 2;
+  const lead = y - itemBox.top;
+  pointer('pointerdown', button, x, y);
+  pointer('pointermove', button, x, y + 8);
+  pointer('pointermove', button, to.x, to.y + lead);
+  return {
+    drop: () => pointer('pointerup', button, to.x, to.y + lead),
+    escape: () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      pointer('pointerup', button, to.x, to.y + lead);
+    },
+  };
+}
+
+describe('moving, resizing, and editing', () => {
+  const reviewName = () => screen.getByRole('button', { name: /^Design review,/ }).getAttribute('aria-label');
+
+  it('drags an event to a later slot on the same day', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    dragBlock(review, atUnits('Mon, Nov 16', 120)).drop();
+    await expect.poll(() => reviewName()).toBe(`Design review, ${clock('10:00')} to ${clock('11:30')}`);
+    expect(screen.getByRole('button', { name: /^Standup,/ }).parentElement?.style.inlineSize).toBe('100%');
+  });
+
+  it('drags an event onto the next day', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    dragBlock(review, atUnits('Tue, Nov 17', 60)).drop();
+    await expect.poll(() => dayLane('Tue, Nov 17').contains(screen.getByRole('button', { name: /^Design review,/ }))).toBe(true);
+    expect(reviewName()).toBe(`Design review, ${clock('09:00')} to ${clock('10:30')}`);
+  });
+
+  it('resizes an event from its end', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    const handle = review.parentElement?.querySelector<HTMLElement>('[data-edge="end"]');
+    if (!handle) throw new Error('missing resize handle');
+    const from = handle.getBoundingClientRect();
+    const to = atUnits('Mon, Nov 16', 180);
+    pointer('pointerdown', handle, from.left + from.width / 2, from.top + from.height / 2);
+    pointer('pointermove', handle, from.left + from.width / 2, from.top + 8);
+    pointer('pointermove', handle, to.x, to.y);
+    pointer('pointerup', handle, to.x, to.y);
+    await expect.poll(() => reviewName()).toBe(`Design review, ${clock('09:00')} to ${clock('11:00')}`);
+  });
+
+  it('restores the event when Escape cancels a drag', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    dragBlock(review, atUnits('Mon, Nov 16', 180)).escape();
+    expect(reviewName()).toBe(`Design review, ${clock('09:00')} to ${clock('10:30')}`);
+    await expect.poll(() => document.querySelector('[data-dragging]')).toBeNull();
+  });
+
+  it('moves an event from the keyboard and returns focus to it', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    review.focus();
+    await userEvent.keyboard('{Enter}');
+    const menu = await screen.findByRole('menu');
+    const items = within(menu).getAllByRole('menuitem');
+    const target = items.findIndex((item) => item.textContent === '15 minutes later');
+    expect(target).toBeGreaterThan(0);
+    await userEvent.keyboard('{ArrowDown}'.repeat(target));
+    await userEvent.keyboard('{Enter}');
+    const moved = screen.getByRole('button', { name: `Design review, ${clock('09:15')} to ${clock('10:45')}` });
+    await expect.poll(() => document.activeElement).toBe(moved);
+    await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toBe(`Design review, ${clock('09:15')} to ${clock('10:45')}`);
+  });
+
+  it('edits the end in the dialog, shows the error, then saves', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    review.focus();
+    await userEvent.keyboard('{Enter}');
+    const menu = await screen.findByRole('menu');
+    const items = within(menu).getAllByRole('menuitem');
+    const target = items.findIndex((item) => item.textContent === 'Edit…');
+    await userEvent.keyboard('{ArrowDown}'.repeat(target));
+    await userEvent.keyboard('{Enter}');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Design review' });
+    const end = within(dialog).getByRole('textbox', { name: 'End' });
+    await userEvent.clear(end);
+    await userEvent.type(end, '8:00 AM');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByText('End must be after the start.')).toBeTruthy();
+    await userEvent.clear(end);
+    await userEvent.type(end, '11:00 AM');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    const saved = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('11:00')}` });
+    await expect.poll(() => document.activeElement).toBe(saved);
   });
 });
 

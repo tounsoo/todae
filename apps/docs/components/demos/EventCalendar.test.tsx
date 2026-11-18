@@ -1,16 +1,24 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatTime } from '@tounsoo/todae';
 import EventCalendarExample, {
+  EventEditor,
+  SLOT_MINUTES,
+  adjustEvent,
+  clampSpan,
   daySegments,
+  eventFromDraft,
+  eventFromLane,
   findConflicts,
+  finishGesture,
   fromUnits,
   hourMarks,
   laneScale,
   placeOverlaps,
   snapGrid,
+  snapToSlot,
   spanFrame,
   toUnits,
   visibleSpans,
@@ -940,5 +948,204 @@ describe('the month', () => {
     expect(screen.getByText('2026년 11월')).toBeTruthy();
     expect(describedBy('2026년 11월 16일 월요일')).toBe('Offsite, Design review, +2 more');
     expect(screen.getByRole('button', { name: '2026년 12월 1일 화요일' })).toBeTruthy();
+  });
+});
+
+const monday = () => lane(daySegments({ days: weekOf(date('2026-11-16'), 'en-US'), opens: time('08:00'), closes: time('18:00'), timeZone: LA }), '2026-11-16');
+
+describe('moving and resizing a timed event', () => {
+  it('snaps to the nearer slot, and to the earlier slot when the two are equally near', () => {
+    expect(snapToSlot(67, SLOT_MINUTES, 600)).toBe(60);
+    expect(snapToSlot(68, SLOT_MINUTES, 600)).toBe(75);
+    expect(snapToSlot(67.5, SLOT_MINUTES, 600)).toBe(60);
+    expect(snapToSlot(610, SLOT_MINUTES, 600)).toBe(600);
+  });
+
+  it('clamps a move into the day and keeps its length', () => {
+    const current = { start: 60, end: 150 };
+    expect(clampSpan(current, { start: -20, end: 70 }, 600, SLOT_MINUTES, 'move')).toEqual({ start: 0, end: 90 });
+    expect(clampSpan(current, { start: 560, end: 650 }, 600, SLOT_MINUTES, 'move')).toEqual({ start: 510, end: 600 });
+  });
+
+  it('clamps a resize to the day and to one slot', () => {
+    expect(clampSpan({ start: 60, end: 150 }, { start: 60, end: 610 }, 600, SLOT_MINUTES, 'end')).toEqual({ start: 60, end: 600 });
+    expect(clampSpan({ start: 60, end: 150 }, { start: 148, end: 150 }, 600, SLOT_MINUTES, 'start')).toEqual({ start: 135, end: 150 });
+    expect(clampSpan({ start: 0, end: 15 }, { start: 0, end: 0 }, 600, SLOT_MINUTES, 'end')).toEqual({ start: 0, end: 15 });
+  });
+
+  it('restores the original event when a drag is cancelled', () => {
+    const original = event('review', '2026-11-16T09:00:00-08:00[America/Los_Angeles]', '2026-11-16T10:30:00-08:00[America/Los_Angeles]');
+    const moved = { ...original, start: original.start.add({ minutes: 30 }), end: original.end.add({ minutes: 30 }) };
+    expect(finishGesture(original, moved, 'escape')).toBe(original);
+    expect(finishGesture(original, null, 'drop')).toBe(original);
+    expect(finishGesture(original, moved, 'drop')).toBe(moved);
+  });
+
+  it('shifts, lengthens, and moves a day by one slot, and refuses a step that leaves the lane', () => {
+    const axis = daySegments({ days: weekOf(date('2026-11-16'), 'en-US'), opens: time('08:00'), closes: time('18:00'), timeZone: LA });
+    const segment = monday();
+    const review = event('review', '2026-11-16T09:00:00-08:00[America/Los_Angeles]', '2026-11-16T10:30:00-08:00[America/Los_Angeles]', { title: 'Design review' });
+    const later = adjustEvent(review, segment, axis, { kind: 'shift', slots: 1 });
+    expect(later?.start.toString()).toBe('2026-11-16T09:15:00-08:00[America/Los_Angeles]');
+    expect(later?.end.toString()).toBe('2026-11-16T10:45:00-08:00[America/Los_Angeles]');
+    const longer = adjustEvent(review, segment, axis, { kind: 'length', slots: 1 });
+    expect(longer?.end.toString()).toBe('2026-11-16T10:45:00-08:00[America/Los_Angeles]');
+    expect(longer?.start.toString()).toBe(review.start.toString());
+    const nextDay = adjustEvent(review, segment, axis, { kind: 'day', days: 1 });
+    expect(nextDay?.start.toPlainDate().toString()).toBe('2026-11-17');
+    expect(nextDay?.start.toPlainTime().toString()).toBe('09:00:00');
+    const early = event('early', '2026-11-18T07:00:00-08:00[America/Los_Angeles]', '2026-11-18T09:00:00-08:00[America/Los_Angeles]');
+    const wednesday = lane(axis, '2026-11-18');
+    expect(adjustEvent(early, wednesday, axis, { kind: 'shift', slots: -1 })).toBeNull();
+    const ship = event('ship', '2026-11-19T15:00:00-08:00[America/Los_Angeles]', '2026-11-19T18:30:00-08:00[America/Los_Angeles]');
+    expect(adjustEvent(ship, lane(axis, '2026-11-19'), axis, { kind: 'length', slots: 1 })).toBeNull();
+    expect(adjustEvent(review, segment, axis, { kind: 'day', days: -8 })).toBeNull();
+  });
+
+  it('moves a clipped event by the snapped delta, so the hidden part comes with it', () => {
+    const axis = daySegments({ days: [date('2026-11-18')], opens: time('08:00'), closes: time('18:00'), timeZone: LA });
+    const segment = lane(axis, '2026-11-18');
+    const early = event('early', '2026-11-18T07:00:00-08:00[America/Los_Angeles]', '2026-11-18T09:00:00-08:00[America/Los_Angeles]', { title: 'Early sync' });
+    const moved = eventFromLane(
+      early,
+      { from: { day: segment.day, start: 0, end: 60 }, to: { day: segment.day, start: 30, end: 90 }, kind: 'move' },
+      axis,
+    );
+    expect(moved?.start.toString()).toBe('2026-11-18T07:30:00-08:00[America/Los_Angeles]');
+    expect(moved?.end.toString()).toBe('2026-11-18T09:30:00-08:00[America/Los_Angeles]');
+  });
+
+  it('rejects an end that is not after the start, and saves a valid draft', () => {
+    const zone = LA;
+    const invalid = eventFromDraft(
+      { title: 'Design review', date: date('2026-11-16'), endDate: date('2026-11-16'), start: time('09:00'), end: time('08:00'), allDay: false },
+      zone,
+    );
+    expect(invalid).toEqual({ ok: false, issue: { field: 'end', message: 'End must be after the start.' } });
+    const saved = eventFromDraft(
+      { title: '  Design review  ', date: date('2026-11-16'), endDate: date('2026-11-16'), start: time('09:00'), end: time('11:00'), allDay: false },
+      zone,
+    );
+    expect(saved.ok).toBe(true);
+    if (!saved.ok) throw new Error('expected a saved draft');
+    expect(saved.value.title).toBe('Design review');
+    expect(saved.value.start.toString()).toBe('2026-11-16T09:00:00-08:00[America/Los_Angeles]');
+    expect(saved.value.end.toString()).toBe('2026-11-16T11:00:00-08:00[America/Los_Angeles]');
+    const allDay = eventFromDraft(
+      { title: 'Offsite', date: date('2026-11-16'), endDate: null, start: null, end: null, allDay: true },
+      zone,
+    );
+    expect(allDay.ok).toBe(true);
+    if (!allDay.ok) throw new Error('expected an all-day draft');
+    expect(allDay.value.allDay).toBe(true);
+    expect(allDay.value.start.toString()).toBe('2026-11-16T00:00:00-08:00[America/Los_Angeles]');
+    expect(allDay.value.end.toString()).toBe('2026-11-17T00:00:00-08:00[America/Los_Angeles]');
+  });
+});
+
+describe('the event menu and dialog', () => {
+  afterEach(cleanup);
+
+  const polite = () => document.querySelector('[data-todae-announcer] > [aria-live="polite"]');
+
+  const openMenu = async () => {
+    let menu: HTMLElement | undefined;
+    await vi.waitFor(() => {
+      menu = screen.getAllByRole('menu', { hidden: true }).find((each) => each.hasAttribute('data-popover-open'));
+      expect(menu).toBeDefined();
+    });
+    return menu!;
+  };
+
+  async function choose(name: string, item: string) {
+    const trigger = screen.getByRole('button', { name });
+    await act(async () => {
+      fireEvent.pointerDown(trigger, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.pointerUp(trigger, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.click(trigger);
+    });
+    const menu = await openMenu();
+    await act(async () => {
+      fireEvent.click(within(menu).getByRole('menuitem', { name: item }));
+    });
+  }
+
+  it('moves an event one slot from the menu, announces the new time, and returns focus', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const name = `Design review, ${clock('09:00')} to ${clock('10:30')}`;
+    await choose(name, '15 minutes later');
+    const moved = screen.getByRole('button', { name: `Design review, ${clock('09:15')} to ${clock('10:45')}` });
+    expect(document.activeElement).toBe(moved);
+    await vi.waitFor(() => expect(polite()?.textContent).toBe(`Design review, ${clock('09:15')} to ${clock('10:45')}`));
+  });
+
+  it('repacks overlapping columns after a move, and shows the event on its new day in the month', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const review = () => screen.getByRole('button', { name: /^Design review,/ });
+    const standup = () => screen.getByRole('button', { name: /^Standup,/ });
+    expect(standup().parentElement?.style.inlineSize).toBe('50%');
+    await choose(review().getAttribute('aria-label')!, '15 minutes later');
+    await choose(review().getAttribute('aria-label')!, '15 minutes later');
+    expect(review().getAttribute('aria-label')).toBe(`Design review, ${clock('09:30')} to ${clock('11:00')}`);
+    expect(standup().parentElement?.style.inlineSize).toBe('100%');
+    expect(review().parentElement?.style.inlineSize).toBe('100%');
+
+    await choose(review().getAttribute('aria-label')!, 'Move to next day');
+    expect(screen.getByRole('list', { name: 'Tue, Nov 17' }).contains(review())).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Monday, November 16, 2026')).toBe('Offsite, Standup, +1 more');
+    expect(describedBy('Tuesday, November 17, 2026')).toBe('Handoff, Design review, +1 more');
+  });
+
+  it('hides day moves on the day view, and disables a step that would leave the lane', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next day' }));
+    const early = screen.getByRole('button', { name: /^Early sync,/ });
+    await act(async () => {
+      fireEvent.pointerDown(early, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.pointerUp(early, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.click(early);
+    });
+    const menu = await openMenu();
+    expect(within(menu).queryByRole('menuitem', { name: 'Move to next day' })).toBeNull();
+    expect(within(menu).getByRole('menuitem', { name: '15 minutes earlier' }).getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('shows a field error when the end is not after the start, then saves a later end', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Design review, ${clock('09:00')} to ${clock('10:30')}`, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Design review' });
+    const end = within(dialog).getByRole('textbox', { name: 'End' }) as HTMLInputElement;
+    fireEvent.change(end, { target: { value: '8:00 AM' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByText('End must be after the start.')).toBeTruthy();
+    fireEvent.change(end, { target: { value: '11:00 AM' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const saved = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('11:00')}` });
+    expect(document.activeElement).toBe(saved);
+  });
+
+  it('cancels the dialog on Escape and keeps the event', async () => {
+    render(
+      <EventEditor
+        event={event('review', '2026-11-16T09:00:00-08:00[America/Los_Angeles]', '2026-11-16T10:30:00-08:00[America/Los_Angeles]', { title: 'Design review' })}
+        locale="en-US"
+        timeZone={LA}
+        onSave={() => {
+          throw new Error('save');
+        }}
+        onCancel={() => {
+          document.body.dataset.cancelled = 'yes';
+        }}
+      />,
+    );
+    const dialog = document.querySelector('dialog');
+    expect(dialog).toBeTruthy();
+    dialog?.dispatchEvent(new Event('cancel', { cancelable: true }));
+    await vi.waitFor(() => expect(document.body.dataset.cancelled).toBe('yes'));
+    delete document.body.dataset.cancelled;
   });
 });
