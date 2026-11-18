@@ -23,3 +23,4 @@ date	class	ref	caught_by	note
 2026-11-17	month-pager-steals-focus	#484	review	Previous and Next moved focus into the month grid, so a second press had to find the button again.
 2026-11-17	month-chip-overflow	#484	review	A month title grew the day button, so at a narrow width it painted over the next day.
 2026-11-17	month-label-lags-focus	#484	review	Arrowing into the next month left the toolbar label and both aria-labels on the old month.
+2026-11-17	dialog-unmount-drops-focus	584e04ba	review	Unmounting the edit dialog while it was still open skipped focus restore, so Save left focus on the body.
