@@ -941,19 +941,21 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
           tooltip={false}
         >
           <span className={styles.eventLine}>
+            {span.event.repeats ? (
+              <span className={styles.repeats} aria-hidden="true">
+                ↻
+              </span>
+            ) : null}
             <Text.Root as="span" weight="medium" lines={1}>
               {span.event.title}
             </Text.Root>
-            {short && span.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
           </span>
           {short ? null : (
-            <span className={styles.eventLine}>
-              {span.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
-              <Text.Root as="span" variant="label" tone="muted" lines={1}>
-                {timeText}
-              </Text.Root>
-            </span>
+            <Text.Root as="span" variant="label" tone="muted" lines={1}>
+              {timeText}
+            </Text.Root>
           )}
+          {span.event.repeats ? <VisuallyHidden.Root>Repeats</VisuallyHidden.Root> : null}
         </Menu.Trigger>
         <Menu.Content>
           <EventMoves event={span.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} onDelete={shared.onDelete} />
