@@ -1435,6 +1435,7 @@ export function EventCalendarExample({
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
   const rootRef = useRef<HTMLDivElement>(null);
+  const [primaryPx, setPrimaryPx] = useState(0);
   const [comparePx, setComparePx] = useState(0);
   const [narrow, setNarrow] = useState(false);
   const [seriesList, setSeriesList] = useState<EventSeries[]>(() => initialSeries(events ?? sampleEvents(timeZone), timeZone, events === undefined));
@@ -1468,10 +1469,11 @@ export function EventCalendarExample({
   const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
   const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
   const gutters = showCompare ? 2 : 1;
+  const primaryTrack = primaryPx > 0 ? `${primaryPx}px` : '4.5rem';
   const compareTrack = comparePx > 0 ? `${comparePx}px` : 'max-content';
-  const tracks = `${showCompare ? `4.5rem ${compareTrack}` : '4.5rem'} ${dayTracks}`;
+  const tracks = `${showCompare ? `${primaryTrack} ${compareTrack}` : primaryTrack} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
-  const gutterMin = showCompare ? 4.5 + (comparePx > 0 ? comparePx / 16 : 0) : 4.5;
+  const gutterMin = (primaryPx > 0 ? primaryPx : 4.5 * 16) / 16 + (showCompare && comparePx > 0 ? comparePx / 16 : 0);
   const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), gutterMin)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
@@ -1698,17 +1700,45 @@ export function EventCalendarExample({
   }, [view]);
 
   useLayoutEffect(() => {
-    if (!showCompare) return;
     const root = rootRef.current;
-    const mark = root?.querySelector<HTMLElement>('[data-compare] > span');
-    if (!root || !mark) return;
-    const nodes = [...root.querySelectorAll<HTMLElement>(`.${styles.markPiece}, .${styles.zoneName}`)];
-    const piece = nodes.reduce((widest, node) => Math.max(widest, node.getBoundingClientRect().width), 0);
-    if (piece < 1) return;
-    const markStyle = getComputedStyle(mark);
-    const pad = Number.parseFloat(markStyle.insetInlineStart) + Number.parseFloat(markStyle.insetInlineEnd);
-    const border = mark.parentElement ? Number.parseFloat(getComputedStyle(mark.parentElement).borderInlineEndWidth) : 0;
-    const next = Math.ceil(piece + pad + border);
+    if (!root) return;
+    const length = (value: string) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const zonePad = (node: HTMLElement) => {
+      const zone = node.closest(`.${styles.zone}`);
+      if (!(zone instanceof HTMLElement)) return 0;
+      const style = getComputedStyle(zone);
+      return length(style.paddingInlineStart) + length(style.paddingInlineEnd);
+    };
+    const widest = (nodes: HTMLElement[], extra: (node: HTMLElement) => number) =>
+      nodes.reduce((max, node) => Math.max(max, node.getBoundingClientRect().width + extra(node)), 0);
+    const head = root.querySelector(`.${styles.head}`);
+    const primaryNames = [...(head?.firstElementChild?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
+    const primaryMarks = [...root.querySelectorAll<HTMLElement>(`.${styles.gutter}:not([data-compare]) > .${styles.mark}`)];
+    const primary = Math.max(
+      widest(primaryNames, zonePad),
+      widest(primaryMarks, (node) => {
+        const style = getComputedStyle(node);
+        const border = node.parentElement ? length(getComputedStyle(node.parentElement).borderInlineEndWidth) : 0;
+        return length(style.insetInlineStart) + length(style.insetInlineEnd) + border;
+      }),
+    );
+    if (primary >= 1) {
+      const next = Math.ceil(primary);
+      setPrimaryPx((current) => (current === next ? current : next));
+    }
+    if (!showCompare) return;
+    const compareMark = root.querySelector<HTMLElement>('[data-compare] > span');
+    const compareNames = [...(head?.firstElementChild?.nextElementSibling?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
+    const pieces = [...root.querySelectorAll<HTMLElement>(`[data-compare] .${styles.markPiece}`)];
+    const markStyle = compareMark ? getComputedStyle(compareMark) : null;
+    const markPad = markStyle ? length(markStyle.insetInlineStart) + length(markStyle.insetInlineEnd) : 0;
+    const markBorder = compareMark?.parentElement ? length(getComputedStyle(compareMark.parentElement).borderInlineEndWidth) : 0;
+    const compare = Math.max(widest(compareNames, zonePad), widest(pieces, () => markPad + markBorder));
+    if (compare < 1) return;
+    const next = Math.ceil(compare);
     setComparePx((current) => (current === next ? current : next));
   }, [showCompare, pieceKey]);
 
@@ -1799,6 +1829,7 @@ export function EventCalendarExample({
               ['--days' as string]: days.length,
               ['--minutes' as string]: scale,
               ['--min-inline' as string]: minInline,
+              ['--primary' as string]: primaryPx > 0 ? `${primaryPx}px` : '4.5rem',
               ['--tracks' as string]: tracks,
               ['--day-tracks' as string]: dayTracks,
             }}

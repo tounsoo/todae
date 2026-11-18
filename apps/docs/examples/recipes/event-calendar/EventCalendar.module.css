@@ -51,7 +51,7 @@
 }
 
 .corner + .corner {
-  inset-inline-start: 4.5rem;
+  inset-inline-start: var(--primary, 4.5rem);
 }
 
 .zone {
@@ -140,7 +140,7 @@
 }
 
 .gutter[data-compare] {
-  inset-inline-start: 4.5rem;
+  inset-inline-start: var(--primary, 4.5rem);
 }
 
 .gutter[data-compare] .mark {

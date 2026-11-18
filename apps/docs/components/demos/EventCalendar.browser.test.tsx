@@ -50,6 +50,22 @@ function inkLines(el: HTMLElement): string[] {
     .filter((line) => line.length > 0);
 }
 
+function zoneNamesFit() {
+  const names = [...document.querySelectorAll<HTMLElement>('[class*="zoneName"]')];
+  expect(names.length).toBeGreaterThan(0);
+  for (const name of names) {
+    const tops = [...name.getClientRects()].map((rect) => rect.top);
+    expect(tops.length).toBeGreaterThan(0);
+    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+    const corner = name.closest('[class*="corner"]');
+    expect(corner).toBeTruthy();
+    const box = name.getBoundingClientRect();
+    const cell = (corner as HTMLElement).getBoundingClientRect();
+    expect(box.left).toBeGreaterThanOrEqual(cell.left - 0.5);
+    expect(box.right).toBeLessThanOrEqual(cell.right + 0.5);
+  }
+}
+
 function spoken(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
   if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true' || node.hasAttribute('hidden')) return '';
@@ -1577,6 +1593,7 @@ describe('creating an event from empty lane space', () => {
       { timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
       { timeZone: 'Asia/Tokyo', compareZone: 'America/New_York', anchor: '2026-03-08' },
       { timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata', anchor: '2026-11-16' },
+      { timeZone: 'Australia/Lord_Howe', compareZone: 'UTC', anchor: '2026-10-04', opens: '00:00', closes: '06:00' },
     ];
     for (const locale of ['en-US', 'ko'] as const) {
       await page.viewport(1280, 900);
@@ -1588,6 +1605,8 @@ describe('creating an event from empty lane space', () => {
               timeZone={week.timeZone}
               compareZone={week.compareZone}
               anchor={Temporal.PlainDate.from(week.anchor)}
+              opens={'opens' in week ? Temporal.PlainTime.from(week.opens) : undefined}
+              closes={'closes' in week ? Temporal.PlainTime.from(week.closes) : undefined}
               events={[]}
             />
           </Providers>,
@@ -1621,6 +1640,7 @@ describe('creating an event from empty lane space', () => {
           const below = ordered[index]!.getBoundingClientRect();
           expect(above.bottom).toBeLessThanOrEqual(below.top + 1);
         }
+        zoneNamesFit();
         for (const zone of document.querySelectorAll<HTMLElement>('[class*="zone"]')) {
           if (![...zone.classList].some((name) => name.includes('_zone_'))) continue;
           const names = (zone.textContent ?? '').split(' / ').map((name) => name.trim()).filter(Boolean);
@@ -1657,6 +1677,22 @@ describe('creating an event from empty lane space', () => {
       await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
       expect(document.body.textContent ?? '').not.toContain(locale === 'ko' ? '둘째 열 GMT-7 시작' : 'Second column PDT begins');
+      cleanup();
+
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="Australia/Lord_Howe"
+            compareZone="UTC"
+            anchor={Temporal.PlainDate.from('2026-10-04')}
+            opens={Temporal.PlainTime.from('00:00')}
+            closes={Temporal.PlainTime.from('06:00')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      zoneNamesFit();
       cleanup();
     }
 
