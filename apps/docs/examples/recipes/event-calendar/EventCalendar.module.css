@@ -277,15 +277,30 @@
 .month :global(table) {
   inline-size: 100%;
   table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.month :global(th[scope='col']) {
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  background: var(--todae-color-bg-canvas);
+  padding-inline: var(--todae-space-1);
+  text-align: start;
 }
 
 .month :global(td) {
   max-inline-size: 0;
-  overflow: visible;
+  block-size: 100%;
+  overflow: hidden;
   vertical-align: top;
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  background: var(--todae-color-bg-canvas);
 }
 
-.month :global(td button) {
+.month :global(td:has(button[data-outside])) {
+  background: var(--todae-color-bg-subtle);
+}
+
+.month :global(td button[type='button']) {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -293,12 +308,29 @@
   justify-content: flex-start;
   box-sizing: border-box;
   inline-size: 100%;
+  block-size: 100%;
   max-inline-size: 100%;
   min-inline-size: 0;
+  min-block-size: calc(var(--todae-calendar-day-size) * 3);
   padding-block: var(--todae-space-1);
   padding-inline: var(--todae-space-1);
-  overflow: visible;
-  text-align: center;
+  text-align: start;
+}
+
+.month :global(td button[type='button'] > span) {
+  align-items: stretch;
+  align-self: stretch;
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+.month :global(td button[type='button'][aria-current='date']) {
+  border-color: var(--todae-color-accent-default);
+}
+
+.month :global(td button[type='button']:focus-visible) {
+  outline: var(--todae-focus-ring-width) solid var(--todae-calendar-day-ring-focus);
+  outline-offset: calc(-1 * var(--todae-focus-ring-offset));
 }
 
 .chips,
