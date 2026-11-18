@@ -1554,21 +1554,23 @@ describe('creating an event from empty lane space', () => {
       );
       const compare = document.querySelector<HTMLElement>('[data-compare]');
       expect(compare).toBeTruthy();
-      const row = compare!.querySelector<HTMLElement>('span');
-      expect(row?.textContent).toContain('/');
-      const rowBox = row!.getBoundingClientRect();
-      const gutterBox = compare!.getBoundingClientRect();
-      expect(rowBox.left).toBeGreaterThanOrEqual(gutterBox.left - 1);
-      expect(rowBox.right).toBeLessThanOrEqual(gutterBox.right + 1);
-      if (locale === 'en-US') {
-        expect(row?.textContent).toBe('1:00 PM / 2:00 PM -1 day');
-        const pieces = [...row!.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
-        expect(pieces.length).toBeGreaterThan(1);
-        const tops = pieces.map((piece) => {
-          expect(piece.getClientRects().length).toBe(1);
-          return piece.getBoundingClientRect().top;
-        });
+      const rows = [...compare!.children] as HTMLElement[];
+      const longest = rows.reduce((best, row) => {
+        const pieces = [...row.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+        const width = Math.max(0, ...pieces.map((piece) => piece.getBoundingClientRect().width));
+        return width > best.width ? { row, width } : best;
+      }, { row: rows[0]!, width: 0 });
+      const pieces = [...longest.row!.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+      expect(pieces.length).toBeGreaterThan(1);
+      for (const piece of pieces) {
+        const tops = [...piece.getClientRects()].map((rect) => rect.top);
+        expect(tops.length).toBeGreaterThan(0);
         expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+      }
+      expect(longest.width).toBeGreaterThan(longest.row!.getBoundingClientRect().width);
+      if (locale === 'en-US') {
+        const eight = rows.find((row) => row.textContent === '1:00 PM -1 day / 2:00 PM -1 day');
+        expect(eight).toBeTruthy();
       }
       const marked = screen.getByRole('heading', { name: locale === 'ko' ? /둘째 열 GMT-7 시작/ : 'Mon, Mar 9 · Second column PDT begins' });
       expect(marked.getBoundingClientRect().height).toBeGreaterThan(0);

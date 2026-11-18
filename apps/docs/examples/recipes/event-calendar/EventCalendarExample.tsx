@@ -283,6 +283,7 @@ export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxi
   const segment = axis.segments.find((each) => each.day.equals(drop.to.day));
   if (!segment) return null;
   const zone = segment.opens.timeZoneId;
+  // `to` is the place useLaneDrag already snapped. Snapping it again would hide a grid change.
   if (drop.kind === 'move') {
     const days = drop.from.day.until(drop.to.day, { largestUnit: 'day' }).days;
     return shiftEvent(event, drop.to.start - drop.from.start, days, zone);
@@ -407,6 +408,7 @@ export function eventsOnDay(day: Temporal.PlainDate, events: readonly CalendarEv
     });
 }
 
+/** The calendar days an event occupies. An end at midnight stays on the earlier day. An all-day event uses the dates in its own zone. */
 function coveredDays(event: CalendarEvent, timeZone: string): { first: Temporal.PlainDate; last: Temporal.PlainDate } | null {
   const start = event.allDay ? event.start : event.start.withTimeZone(timeZone);
   const end = event.allDay ? event.end : event.end.withTimeZone(timeZone);
@@ -544,6 +546,7 @@ function rangesOverlap(a: { start: number; end: number }, b: { start: number; en
   return a.start < b.end && b.start < a.end;
 }
 
+// A span with no length comes before a longer one that starts with it. Then the longer span takes the left column. Touching at an endpoint is not an overlap.
 export function placeOverlaps<T extends { start: number; end: number }>(items: readonly T[]): OverlapPlacement<T>[] {
   const order = items.map((item, index) => ({ item, index }));
   order.sort(
@@ -639,6 +642,7 @@ function zoneNames(faces: readonly ZoneFace[]): string {
   return faces.map((face) => face.name).join(' / ');
 }
 
+/** "PST / PDT (GMT-8 / GMT-7)", or just the offset when the short name already is one. */
 function zonePhrase(faces: readonly ZoneFace[]): string {
   const names = zoneNames(faces);
   if (faces.every((face) => face.name === face.offset)) return names;
@@ -701,6 +705,7 @@ function offsetOrder(segments: readonly DaySegment[], zone: string): Map<string,
   return order;
 }
 
+// The time stays in this column. The day column's hour is the grid zone, so a second time there would have no zone name beside it.
 export function compareMarks(segments: readonly DaySegment[], units: readonly number[], compareZone: string): CompareMark[] {
   const compareRank = offsetOrder(segments, compareZone);
   const gridRank = offsetOrder(segments, segments[0]?.opens.timeZoneId ?? compareZone);
@@ -774,15 +779,14 @@ function changePhrase(starts: readonly ClockStart[], locale: string): string {
 }
 
 function markPieces(times: readonly CompareTime[], locale: string): string[] {
-  const labels = times.map((part) => ({ time: formatTime(part.time.toPlainTime(), { locale }), shift: dayShiftLabel(part.dayShift, locale) }));
-  const shared = labels.every((label) => label.shift === labels[0]?.shift);
-  if (shared) {
-    const last = labels.length - 1;
-    return labels.map((label, index) => (index === last && label.shift ? `${label.time} ${label.shift}` : label.time));
-  }
-  return labels.map((label) => (label.shift ? `${label.time} ${label.shift}` : label.time));
+  return times.map((part) => {
+    const time = formatTime(part.time.toPlainTime(), { locale });
+    const shift = dayShiftLabel(part.dayShift, locale);
+    return shift ? `${time} ${shift}` : time;
+  });
 }
 
+// Pinned so the page shows the same week whenever it opens.
 const OPENS = Temporal.PlainTime.from('08:00');
 const CLOSES = Temporal.PlainTime.from('18:00');
 const ANCHOR = Temporal.PlainDate.from('2026-11-16');
@@ -894,6 +898,7 @@ function stripKey(id: string): string {
   return `strip:${id}`;
 }
 
+/** A strip bar's grid lines. The gutters come first, and the end never passes the last day. */
 function stripColumn(column: number, span: number, days: number, gutters: number): string {
   const start = column + gutters + 1;
   const end = Math.min(start + span, days + gutters + 1);
@@ -1311,9 +1316,9 @@ export function EventCalendarExample({
   const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
   const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
   const gutters = showCompare ? 2 : 1;
-  const tracks = `${showCompare ? '4.5rem 14rem' : '4.5rem'} ${dayTracks}`;
+  const tracks = `${showCompare ? '4.5rem 5.5rem' : '4.5rem'} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
-  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), showCompare ? 18.5 : 4.5)}rem`;
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), showCompare ? 10 : 4.5)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
   const compared = showCompare && compareZone ? compareMarks(axis.segments, gutterMarks, compareZone) : [];
@@ -1542,6 +1547,7 @@ export function EventCalendarExample({
         <Calendar.Root
           className={styles.month}
           locale={locale}
+          // value starts the tab stop on the anchor day. Clearing it before paint leaves that day focused and not selected.
           value={pinFocus ? anchor : null}
           onValueChange={openDay}
         >
@@ -1632,6 +1638,7 @@ export function EventCalendarExample({
                 })}
               </div>
               {showCompare ? (
+                // The hours repeat the primary instants. The description names this zone, so the column stays quiet.
                 <div className={styles.gutter} aria-hidden="true" data-compare="">
                   {compared.map((mark) => (
                     <Text.Root
@@ -1643,10 +1650,13 @@ export function EventCalendarExample({
                       data-first={mark.units === 0 ? '' : undefined}
                       style={{ top: percent(mark.units / scale) }}
                     >
-                      {markPieces(mark.times, locale).map((piece, index) => (
+                      {markPieces(mark.times, locale).map((piece, index, pieces) => (
                         <span key={`${mark.units}-${index}`}>
-                          {index > 0 ? <span className={styles.markSep}> / </span> : null}
-                          <span className={styles.markPiece}>{piece}</span>
+                          <span className={styles.markPiece}>
+                            {piece}
+                            {index < pieces.length - 1 ? <span className={styles.markSep}> /</span> : null}
+                          </span>
+                          {index < pieces.length - 1 ? ' ' : null}
                         </span>
                       ))}
                     </Text.Root>

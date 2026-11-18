@@ -1633,6 +1633,7 @@ describe('the time zone', () => {
     expect(en).toContain('zone name');
     expect(en).toContain('PST / PDT');
     expect(en).toContain('5:00 PM / 6:00 PM');
+    expect(en).toContain('A day shift belongs to the time it follows');
     expect(en).toContain('first visible day that uses the later offset');
     expect(en).toContain('leaves out the time difference');
     expect(en).not.toContain('every offset the visible days use');
@@ -1642,6 +1643,7 @@ describe('the time zone', () => {
     expect(en).toContain('+1 day');
     expect(ko).toContain('PST / PDT');
     expect(ko).toContain('오후 5:00 / 오후 6:00');
+    expect(ko).toContain('날짜 차이는 바로 앞의 시각에 속합니다');
     expect(ko).not.toContain('5:00 PM / 6:00 PM');
     expect(ko).toContain('첫 보이는 날');
     expect(ko).toContain('시차를 적지 않습니다');
@@ -1681,12 +1683,6 @@ function compareLabel(grid: string, compare: string, days: readonly Temporal.Pla
     const space = /\p{Script=Hangul}/u.test(unit) ? '' : ' ';
     return `${count}${space}${unit}`;
   };
-  const shared = parts.every((part) => part.shift === parts[0]?.shift);
-  if (shared) {
-    const clocks = parts.map((part) => part.time).join(' / ');
-    const shift = shiftLabel(parts[0]?.shift ?? 0);
-    return shift ? `${clocks} ${shift}` : clocks;
-  }
   return parts.map((part) => (part.shift === 0 ? part.time : `${part.time} ${shiftLabel(part.shift)}`)).join(' / ');
 }
 
@@ -1698,6 +1694,8 @@ describe('a zone whose offset changes inside the visible week', () => {
     const primary = hourColumns()[0];
     const eight = [...primary!.children].find((node) => node.textContent === '8:00 AM') as HTMLElement;
     expect(compareRow(eight.style.top)).toBe('5:00 PM / 6:00 PM');
+    const two = [...primary!.children].find((node) => node.textContent === '2:00 PM') as HTMLElement;
+    expect(compareRow(two.style.top)).toBe('11:00 PM / 12:00 AM +1 day');
     expect(compareRow(eight.style.top)).toBe(compareLabel(LA, 'Asia/Jerusalem', days, '08:00', 'en-US'));
     expect(screen.getByText('GMT+2 / GMT+3')).toBeTruthy();
     const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26 · Second column GMT+3 begins' });
@@ -1745,6 +1743,8 @@ describe('a zone whose offset changes inside the visible week', () => {
       expect(wall).toBeTruthy();
       expect(row.textContent).toBe(compareLabel('Australia/Sydney', LA, days, wall!, 'en-US'));
     }
+    const eight = ([...primary!.children] as HTMLElement[]).find((node) => node.textContent === '8:00 AM') as HTMLElement;
+    expect(compareRow(eight.style.top)).toBe('1:00 PM -1 day / 2:00 PM -1 day');
     const monday = screen.getByRole('heading', { name: 'Mon, Mar 9 · Second column PDT begins' });
     expect(monday.textContent).toBe('Mon, Mar 9 · Second column PDT begins');
     const head = monday.parentElement!;

@@ -149,6 +149,10 @@
   white-space: nowrap;
 }
 
+.markSep {
+  display: contents;
+}
+
 .mark {
   position: absolute;
   inset-inline-end: var(--todae-space-1);
