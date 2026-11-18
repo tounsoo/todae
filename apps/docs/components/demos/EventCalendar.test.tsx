@@ -1807,4 +1807,21 @@ describe('repeating events', () => {
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete repeating event' })).getByRole('button', { name: 'This event' }));
     await vi.waitFor(() => expect(polite()?.textContent).toBe('Deleted this event. Book club, 11월 22일 (일).'));
   });
+
+  it('deleting a single event names its date', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const trigger = screen.getAllByRole('button', { name: /^Planning, / })[0]!;
+    await act(async () => {
+      fireEvent.pointerDown(trigger, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.pointerUp(trigger, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.click(trigger);
+    });
+    let menu: HTMLElement | undefined;
+    await vi.waitFor(() => {
+      menu = screen.getAllByRole('menu', { hidden: true }).find((each) => each.hasAttribute('data-popover-open'));
+      expect(menu).toBeDefined();
+    });
+    await act(async () => fireEvent.click(within(menu!).getByRole('menuitem', { name: 'Delete' })));
+    await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Deleted Planning, Thu, Nov 19\.$/));
+  });
 });
