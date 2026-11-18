@@ -6,7 +6,7 @@ import { DOCS_ORIGIN } from '../origin';
 import { MAX_CONCURRENT_BUILDS, MAX_ERROR_BYTES, baseContrast, buildTokenFiles, checkFiles, resumeBuild, todaeTokensCli, todaeTokensDir } from './build';
 import { MAX_RESPONSE_CHARS, deliver } from './budget';
 import { GUIDES, GUIDE_TOPICS, getGuide } from './guides';
-import { scaffoldDesignSystem } from './scaffold';
+import { presentScaffold, scaffoldDesignSystem, type ScaffoldDraft } from './scaffold';
 import { catalogTokens, getToken, listTokens } from './tokens';
 
 const ACME = join(process.cwd(), '..', '..', 'packages', 'design-system', 'scripts', '__fixtures__', 'acme');
@@ -279,6 +279,39 @@ describe('scaffold_design_system', () => {
         },
       }),
     ).rejects.toThrow('same tokens');
+  });
+
+  it('shrinks a file of quotes until each page fits and the file rebuilds', () => {
+    const contents = '"'.repeat(50_000);
+    const draft: ScaffoldDraft = {
+      tokensFolder: 'tokens',
+      tokenFiles: { 'quoted.json': contents },
+      otherFiles: [],
+      build: { ok: true },
+      command: 'npx --no todae-tokens build --resolver ./tokens/resolver.json',
+      docsUrl: `${DOCS_ORIGIN}/guides/build-on-todae`,
+      source: 'todae-docs',
+    };
+    let offset = 0;
+    let char = 0;
+    let rebuilt = '';
+    let pages = 0;
+    for (let step = 0; step < 40; step += 1) {
+      const page = presentScaffold(draft, offset, char, { name: 'acme' });
+      expect(JSON.stringify(page).length).toBeLessThanOrEqual(MAX_RESPONSE_CHARS);
+      const record = page as ScaffoldDraft & { file?: { group?: string; contents?: string }; cursor?: { offset?: number; char?: number } };
+      if (record.file?.group === 'tokenFiles' && typeof record.file.contents === 'string') rebuilt += record.file.contents;
+      pages += 1;
+      const cursor = record.cursor;
+      if (!cursor) break;
+      const next = cursor.offset ?? offset;
+      const nextChar = cursor.char ?? 0;
+      expect(next > offset || nextChar > char).toBe(true);
+      offset = next;
+      char = nextChar;
+    }
+    expect(pages).toBeGreaterThan(1);
+    expect(rebuilt).toBe(contents);
   });
 });
 

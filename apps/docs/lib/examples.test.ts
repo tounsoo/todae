@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, matchesGlob, relative } from 'node:path';
+import { basename, join, matchesGlob, relative } from 'node:path';
 import type { Root } from 'mdast';
 import { describe, expect, it } from 'vitest';
 import { exampleOf, withExampleCode } from './exampleCode';
 import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
-import remarkExamples, { defaultImports, exampleFile, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
+import remarkExamples, { defaultImports, exampleBlocks, exampleFile, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
 import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
@@ -93,6 +93,16 @@ describe('docs examples', () => {
       exampleDependencyLoader.call({ resourcePath: EN_PAGE, addDependency: (file: string) => found.push(file) }, line);
       expect(found, line).toEqual([TONES]);
     }
+  });
+
+  it('leaves a sibling module off the page and pairs each stylesheet by its path', () => {
+    const file = join(EXAMPLES, 'fixtures', 'paired', 'EventCalendar.tsx');
+    const blocks = exampleBlocks(file);
+    expect(blocks.map((block) => block.lang)).toEqual(['tsx', 'css', 'css']);
+    expect(blocks.map((block) => basename(block.path))).toEqual(['EventCalendar.tsx', 'EventCalendar.module.css', 'Lane.module.css']);
+    expect(blocks.some((block) => block.value.includes('every week'))).toBe(false);
+    const page = join(process.cwd(), 'lib', 'docs-mcp', 'fixtures', 'pages', 'paired', 'page.mdx');
+    expect(withExampleCode(page, readFileSync(page, 'utf8'))).not.toContain('export const recurrence');
   });
 
   it('shows a stylesheet the example imports from its folder after its code', () => {
