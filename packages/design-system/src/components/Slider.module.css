@@ -1,8 +1,35 @@
 @layer todae.components.native {
-  /* accent-color tints the thumb and filled track; how far it reaches differs by browser. */
+  /* appearance: none lets the thumb background replace the native thumb. accent-color does not. */
   .root {
+    --_thumb: 1rem;
+    appearance: none;
+    box-sizing: border-box;
     inline-size: 100%;
+    block-size: var(--_thumb);
+    margin: 0;
+    overflow: hidden;
+    background: transparent;
     accent-color: var(--todae-slider-fill);
+  }
+
+  .root::-webkit-slider-runnable-track {
+    box-sizing: border-box;
+    block-size: var(--todae-focus-ring-width);
+    border: 0;
+    background-color: ButtonFace;
+  }
+
+  .root::-moz-range-track {
+    box-sizing: border-box;
+    block-size: var(--todae-focus-ring-width);
+    border: 0;
+    background-color: ButtonFace;
+  }
+
+  .root::-moz-range-progress {
+    block-size: var(--todae-focus-ring-width);
+    border: 0;
+    background-color: var(--todae-slider-fill);
   }
 
   .root:focus-visible {
@@ -12,5 +39,198 @@
 
   .root:disabled {
     cursor: not-allowed;
+  }
+
+  .range {
+    --_start: 0;
+    --_end: 100;
+    --_thumb: 1rem;
+    display: grid;
+    position: relative;
+    inline-size: 100%;
+    touch-action: none;
+    user-select: none;
+    background: transparent;
+  }
+
+  .range::before,
+  .range::after {
+    content: "";
+    grid-area: 1 / 1;
+    align-self: center;
+    block-size: var(--todae-focus-ring-width);
+    pointer-events: none;
+  }
+
+  .range::before {
+    z-index: 0;
+    inline-size: 100%;
+    background: ButtonFace;
+  }
+
+  .range::after {
+    z-index: 0;
+    justify-self: start;
+    margin-inline-start: calc(var(--_thumb) / 2 + var(--_start) / 100 * (100% - var(--_thumb)));
+    inline-size: calc((var(--_end) - var(--_start)) / 100 * (100% - var(--_thumb)));
+    background: var(--todae-slider-fill);
+  }
+
+  .thumb {
+    z-index: 1;
+    grid-area: 1 / 1;
+    justify-self: start;
+    align-self: center;
+    position: relative;
+    appearance: none;
+    box-sizing: border-box;
+    margin: 0;
+    min-inline-size: 0;
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    background: transparent;
+    accent-color: var(--todae-slider-fill);
+    pointer-events: none;
+  }
+
+  .start {
+    z-index: 2;
+    inset-inline-start: calc(var(--_start) / 100 * (100% - var(--_thumb)));
+  }
+
+  .end {
+    inset-inline-start: calc(var(--_end) / 100 * (100% - var(--_thumb)));
+  }
+
+  .root::-webkit-slider-thumb,
+  .thumb::-webkit-slider-thumb {
+    appearance: none;
+    box-sizing: border-box;
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    border: 0;
+    border-radius: 50%;
+    background-color: var(--todae-slider-fill);
+  }
+
+  .root::-webkit-slider-thumb {
+    margin-block-start: calc((var(--todae-focus-ring-width) - var(--_thumb)) / 2);
+  }
+
+  .thumb::-webkit-slider-runnable-track {
+    background: transparent;
+    border: 0;
+    block-size: var(--_thumb);
+  }
+
+  .thumb::-moz-range-track,
+  .thumb::-moz-range-progress {
+    background: transparent;
+    border: 0;
+  }
+
+  .root::-moz-range-thumb,
+  .thumb::-moz-range-thumb {
+    box-sizing: border-box;
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    border: 0;
+    border-radius: 50%;
+    background-color: var(--todae-slider-fill);
+  }
+
+  .thumb:focus {
+    outline: none;
+  }
+
+  .range:has(:focus-visible) {
+    outline: var(--todae-focus-ring-width) solid var(--todae-slider-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .thumb:disabled,
+  .range:has(:disabled) {
+    cursor: not-allowed;
+  }
+
+  .root:disabled::-webkit-slider-thumb,
+  .range:has(:disabled) .thumb::-webkit-slider-thumb {
+    background-color: GrayText;
+  }
+
+  .root:disabled::-moz-range-thumb,
+  .root:disabled::-moz-range-progress,
+  .range:has(:disabled) .thumb::-moz-range-thumb {
+    background-color: GrayText;
+  }
+
+  .range:has(:disabled)::after {
+    background-color: GrayText;
+  }
+
+  @supports (clip-path: shape(from 0 0, line to 1px 0)) {
+    .root::-webkit-slider-thumb {
+      box-shadow: -100vw 0 0 100vw var(--todae-slider-fill);
+      clip-path: shape(
+        from -100vw calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 0% calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 0% calc(50% + var(--todae-focus-ring-width) / 2),
+        line to -100vw calc(50% + var(--todae-focus-ring-width) / 2),
+        close,
+        move to 50% 0%,
+        arc to 50% 100% of 50% 50% cw large,
+        arc to 50% 0% of 50% 50% cw large,
+        close
+      );
+    }
+
+    .root:dir(rtl)::-webkit-slider-thumb {
+      box-shadow: 100vw 0 0 100vw var(--todae-slider-fill);
+      clip-path: shape(
+        from 100% calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 100vw calc(50% - var(--todae-focus-ring-width) / 2),
+        line to 100vw calc(50% + var(--todae-focus-ring-width) / 2),
+        line to 100% calc(50% + var(--todae-focus-ring-width) / 2),
+        close,
+        move to 50% 0%,
+        arc to 50% 100% of 50% 50% cw large,
+        arc to 50% 0% of 50% 50% cw large,
+        close
+      );
+    }
+  }
+
+  @media (forced-colors: active) {
+    .range::after,
+    .root::-webkit-slider-thumb,
+    .thumb::-webkit-slider-thumb {
+      background-color: Highlight;
+    }
+
+    .root::-moz-range-thumb,
+    .thumb::-moz-range-thumb,
+    .root::-moz-range-progress {
+      background-color: Highlight;
+    }
+
+    @supports (clip-path: shape(from 0 0, line to 1px 0)) {
+      .root::-webkit-slider-thumb {
+        box-shadow: -100vw 0 0 100vw Highlight;
+      }
+
+      .root:dir(rtl)::-webkit-slider-thumb {
+        box-shadow: 100vw 0 0 100vw Highlight;
+      }
+    }
+  }
+
+  @supports (clip-path: shape(from 0 0, line to 1px 0)) {
+    .root:disabled::-webkit-slider-thumb {
+      box-shadow: -100vw 0 0 100vw GrayText;
+    }
+
+    .root:disabled:dir(rtl)::-webkit-slider-thumb {
+      box-shadow: 100vw 0 0 100vw GrayText;
+    }
   }
 }

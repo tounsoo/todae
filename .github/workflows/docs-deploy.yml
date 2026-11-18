@@ -16,7 +16,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     # A Markdown-only change starts no deploy. ci.yml runs on every change, but .github/scripts/change-class.sh
-    # names these same files markdown, and on those it runs only Changes, Forbidden paths and Checks. It counts
+    # names these same files markdown, and on those it runs only Changes, Forbidden paths, rule-checker and Checks. It counts
     # the pinned pstack copy the same way, so the weekly pstack update builds no preview.
     paths:
       - '**'

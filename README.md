@@ -98,6 +98,7 @@ Each line says what Chrome does and what Safari and Firefox do instead. Motion o
 - **Tabs**: the indicator slides to the new tab. Safari and Firefox move it at once.
 - **Coachmark**: the hole and popup slide to a tour's next target. Safari and Firefox move them at once.
 - **Progress and Meter**: the fill glides to a new value. Firefox jumps.
+- **Slider**: draws the filled part of a single track from the thumb. Chrome before 135 shows the thumb and the ButtonFace track with no fill. Firefox draws that fill with its own progress painting, and Safari draws the thumb fill.
 - **`Field.Textarea` with `autoGrow`**: grows with its text. Firefox before 152 and Safari before 26.2 keep its rows and scroll inside it.
 - **`Field.Select`**: draws its button and list from Todae's tokens, as Safari 27 does too. Firefox and Safari 26 show the browser's own list, with the same value and keys, and keep the browser's arrow instead of the `chevron` glyph.
 - **`Field.Select` in a field**: a press beside the select, such as on an `Icon`, opens its list. Safari only focuses the select.

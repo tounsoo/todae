@@ -823,10 +823,10 @@
     "(top)": "a19d294efb1e",
     "# Scheduler": "515351c560f5",
     "## The time axis": "9a2d242cb763",
-    "## Stages and talks": "36efb6394752",
+    "## Stages and talks": "0c9d817d794f",
     "## The rules": "30c66bc94469",
     "## Moving without dragging": "ef83b5f6f9fc",
-    "## Dragging": "c39fe10c47e7",
+    "## Dragging": "64a3050f4d4e",
     "## Undo and saving": "a3b619f56583",
     "## Accessible composition": "e39b59e6519d",
     "## When to use": "238b83521806",
@@ -891,12 +891,13 @@
     "(section order)": "eed68fedd5a6"
   },
   "slider": {
-    "(top)": "a3098dd57416",
-    "# Slider": "ee284028df4c",
-    "## Accessible composition": "85a57c99624e",
+    "(top)": "17d07e971791",
+    "# Slider": "4d3142914edd",
+    "## Range": "cb73e372f985",
+    "## Accessible composition": "e8c76cc196d1",
     "## When to use": "ad0bb8c22aff",
     "## Props": "a289d00d67fe",
-    "(section order)": "87884b291211"
+    "(section order)": "5d5e0bc55c64"
   },
   "splitter": {
     "(top)": "f07ec67fc423",

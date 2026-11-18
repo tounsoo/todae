@@ -162,7 +162,7 @@ export const STEPS = {
   },
   'agent-docs': {
     id: 'agent-docs',
-    label: 'CLAUDE.md and this skill change with a new docs page, docs section or check',
+    label: 'The agent notes and this skill change with a new docs page, docs section or check',
     cmd: ['node', '.github/scripts/agent-docs.mjs', 'origin/main', 'HEAD'],
   },
   drive: { id: 'drive', label: 'Drive the touched docs routes in English and Korean', drive: true },

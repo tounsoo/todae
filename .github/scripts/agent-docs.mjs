@@ -1,6 +1,7 @@
-// Fails a pull request that adds a docs page, a docs section or a check without changing both CLAUDE.md and
-// the Claude verify skill (its SKILL.md or verify.mjs), unless its body has a line `Agent docs unchanged: <reason>`.
-// Agents learn the repository from those files, so they have to grow with it.
+// Fails a pull request that adds a docs page, a docs section or a check without changing both the agent notes
+// (CLAUDE.md, or AGENTS.md, which CLAUDE.md imports) and the Claude verify skill (its SKILL.md or verify.mjs), unless
+// its body has a line `Agent docs unchanged: <reason>`. Agents learn the repository from those files, so they have to
+// grow with it.
 // Usage: node .github/scripts/agent-docs.mjs [<base> [<head>]], from the repository root. The base defaults to
 // origin/main and the head to HEAD; the diff starts at their merge base, as `git diff <base>...<head>` does.
 // PR_BODY holds the pull request body. When GITHUB_STEP_SUMMARY is set, the result is written there too.
@@ -15,7 +16,7 @@ const PAGES = 'apps/docs/app/(en)';
 const PAGE = /^apps\/docs\/app\/\(en\)\/(?:(.+)\/)?page\.(?:mdx?|[jt]sx?)$/;
 const SITE_GROUPS = 'apps/docs/components/siteGroups.ts';
 const WORKFLOWS = '.github/workflows/';
-const AGENT_DOCS = { claude: ['CLAUDE.md'], verify: ['.claude/skills/verify/SKILL.md', '.claude/skills/verify/verify.mjs'] };
+const AGENT_DOCS = { notes: ['CLAUDE.md', 'AGENTS.md'], verify: ['.claude/skills/verify/SKILL.md', '.claude/skills/verify/verify.mjs'] };
 const ESCAPE = /^Agent docs unchanged:[ \t]*(\S.*?)$/;
 
 const git = (args, stderr = 'inherit') =>
@@ -184,7 +185,7 @@ function review(base, head) {
     added: [...pages, ...minus(after.others, before.others)],
     unreadGroups: after.sidebar.unread,
     sidebarLost: before.sidebar.ids.size > 0 && (!after.sidebar.found || after.sidebar.ids.size === 0),
-    claudeMd: changes(AGENT_DOCS.claude),
+    agentNotes: changes(AGENT_DOCS.notes),
     verifySkill: changes(AGENT_DOCS.verify),
   };
 }
@@ -227,7 +228,7 @@ function main() {
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
     return 1;
   }
-  const { added, unreadGroups, sidebarLost, claudeMd, verifySkill } = result;
+  const { added, unreadGroups, sidebarLost, agentNotes, verifySkill } = result;
   if (unreadGroups > 0) {
     say(
       `agent-docs: ${unreadGroups === 1 ? '1 entry' : `${unreadGroups} entries`} in SITE_GROUPS in ${SITE_GROUPS} ` +
@@ -251,12 +252,15 @@ function main() {
     // An unnamed step whose command has more than one line shows its first line.
     for (const item of added) say(`  - ${item.replace(/\n[\s\S]*`$/, ' …`')}`);
     const reason = escapeReason(process.env.PR_BODY);
-    if (claudeMd && verifySkill) {
-      say('agent-docs: it changes CLAUDE.md and the verify skill too.');
+    if (agentNotes && verifySkill) {
+      say('agent-docs: it changes the agent notes and the verify skill too.');
     } else if (reason) {
       say(`agent-docs: its body says why the agent docs stay as they are: ${reason}`);
     } else {
-      const missing = [!claudeMd && 'CLAUDE.md', !verifySkill && 'the verify skill (.claude/skills/verify/SKILL.md or verify.mjs)'];
+      const missing = [
+        !agentNotes && 'CLAUDE.md or AGENTS.md',
+        !verifySkill && 'the verify skill (.claude/skills/verify/SKILL.md or verify.mjs)',
+      ];
       say(
         `agent-docs: change ${missing.filter(Boolean).join(' and ')} in this pull request too, so agents know what it ` +
           'adds. Where one or both need no change, add a line "Agent docs unchanged: <reason>" ' +

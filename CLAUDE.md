@@ -1,30 +1,11 @@
-# Claude instructions
+@AGENTS.md
 
-Read [`AGENTS.md`](AGENTS.md) for the repository's rules. They apply to every agent, including the rule that `.claude/`, `.agents/` and this file change only with Ben's yes.
+@.claude/pstack-models.md
 
-Duet threads: read [`.claude/thread-start.md`](.claude/thread-start.md) next.
+## Claude only
 
-## Architecture and decisions
-
-Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component, hook, recipe, token or docs page. It records the concepts and decisions new work must follow. When a decision changes, update it in the same pull request.
-
-## Project playbooks
-
-`.agents/playbooks/` holds todae's playbooks. A thread opens each one whose `when` line fits the task, as `.claude/thread-start.md` says. [0006](docs/decisions/0006-claude-threads-install-pstack.md) records this layout.
-
-- `review-before-pr.md` runs the review on the branch before a pull request opens.
-- `waiting-on-ci.md` drives a pull request to green with the GitHub MCP tools.
-- `docs-translation.md` changes an English docs page and its Korean twin together, then stamps the translation.
-- `tokens.md` keeps every design token change behind Ben's approval and runs the token checks.
-- `changesets.md` adds the changeset a shipping change needs.
-
-`.agents/pstack/` holds the pinned pstack-claude copy that threads read, so no thread downloads pstack. `.claude/thread-start.md` and CI's Forbidden paths job run its check, and `.github/workflows/pstack-update.yml` opens a pull request each week when upstream has changed. [0015](docs/decisions/0015-pinned-pstack-copy.md) records this.
-
-`.claude/models.md` is the pstack model sheet. A change to a role's model or effort goes there, with Ben's yes.
-
-## Verify, pull requests and briefs
-
-- `.claude/skills/verify/SKILL.md` proves a change on the commit it was tested at and ends in PASS, FAIL or BLOCKED. Run it on the commit that ends each review round in `review-before-pr.md`, so before a pull request opens and before each push of new work. [0007](docs/decisions/0007-claude-verify-and-pr-template.md) records it.
-- `.github/pull_request_template.md` lays out every pull request body. `node .claude/skills/verify/verify.mjs body` prints the lines that go under its Verification heading.
-- `.claude/task-prompt.md` is the template for a brief that starts a thread or a subagent.
-- A pull request that adds a docs page, a docs section (a group in `SITE_GROUPS`) or a check (a CI job or step, or a command `pnpm check` runs) also changes this file and the verify skill's `SKILL.md` or `verify.mjs`, with what an agent needs to know about it. Where one or both need no change, its body says why on a line `Agent docs unchanged: <reason>`. CI's Agent docs job, and the verify skill's `agent-docs` step, fail otherwise. [0016](docs/decisions/0016-agent-docs-check.md) says what counts.
+- Skills and agents from the pstack-claude plugin have the `pstack:` prefix. This repo vendors the plugin in `.agents/pstack/plugin`, so drop the prefix and read `$pstack/skills/<name>/SKILL.md`. `$pstack` is the folder `sh .agents/pstack/check.sh` prints. A `<plugin>` path means that folder. Duet threads follow `.claude/thread-start.md` for the rest of that setup.
+- `Agent` has no `readonly` parameter. Where a skill spawns a subagent with `readonly: true`, tell it in its prompt not to edit files, commit or push.
+- GitHub work uses the GitHub MCP tools, not `gh` or the `watch-pr` script.
+- Fable runs only where `.claude/pstack-models.md` names it or where Ben approves it in his own message in that run.
+- Duet threads: nothing in `.claude/` loads by itself, and the `@` imports above do not expand. Read `AGENTS.md`, then `.claude/pstack-models.md`, then `.claude/thread-start.md`. pstack comes from the pinned copy in `.agents/pstack/`.

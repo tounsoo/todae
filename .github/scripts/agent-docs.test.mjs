@@ -42,6 +42,7 @@ const siteGroups = (...ids) =>
 
 const base = {
   'CLAUDE.md': '# Claude\n',
+  'AGENTS.md': '# Agents\n',
   '.claude/skills/verify/SKILL.md': '# Verify\n',
   'package.json': JSON.stringify({ scripts: { check: 'pnpm lint && pnpm typecheck' } }),
   '.github/workflows/ci.yml': ci('      - name: Lint\n        run: pnpm lint\n'),
@@ -81,11 +82,11 @@ test('a change that adds nothing new passes', () => {
   assert.match(result.out, /adds no docs page, docs section or check/);
 });
 
-test('a new docs page fails without CLAUDE.md and the verify skill', () => {
+test('a new docs page fails without the agent notes and the verify skill', () => {
   const result = check({ 'apps/docs/app/(en)/recipes/kanban/page.mdx': '# Kanban\n', 'apps/docs/app/ko/recipes/kanban/page.mdx': '# 칸반\n' });
   assert.equal(result.status, 1, result.out);
   assert.match(result.out, /docs page \/recipes\/kanban/);
-  assert.match(result.out, /change CLAUDE\.md and the verify skill/);
+  assert.match(result.out, /change CLAUDE\.md or AGENTS\.md and the verify skill/);
 });
 
 test('a page in a route group counts by its route', () => {
@@ -175,7 +176,17 @@ test('a new part of pnpm check fails', () => {
 test('a new page passes with CLAUDE.md and the verify skill changed', () => {
   const result = check({ 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n', ...agentDocs });
   assert.equal(result.status, 0, result.out);
-  assert.match(result.out, /changes CLAUDE\.md and the verify skill too/);
+  assert.match(result.out, /changes the agent notes and the verify skill too/);
+});
+
+test('AGENTS.md counts as the agent notes, since CLAUDE.md imports it', () => {
+  const result = check({
+    'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n',
+    'AGENTS.md': '# Agents\n\nMore.\n',
+    '.claude/skills/verify/SKILL.md': '# Verify\n\nMore.\n',
+  });
+  assert.equal(result.status, 0, result.out);
+  assert.match(result.out, /changes the agent notes and the verify skill too/);
 });
 
 test('changing only one of the two still fails and names the other', () => {
@@ -184,17 +195,18 @@ test('changing only one of the two still fails and names the other', () => {
   assert.match(onlyClaude.out, /change the verify skill \(\.claude\/skills\/verify\/SKILL\.md or verify\.mjs\)/);
   const onlyVerify = check({ 'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n', '.claude/skills/verify/verify.mjs': 'x\n' });
   assert.equal(onlyVerify.status, 1, onlyVerify.out);
-  assert.match(onlyVerify.out, /change CLAUDE\.md in this pull request/);
+  assert.match(onlyVerify.out, /change CLAUDE\.md or AGENTS\.md in this pull request/);
 });
 
-test('deleting CLAUDE.md, or changing only the verify tests, is not changing the agent docs', () => {
+test('deleting the agent notes, or changing only the verify tests, is not changing the agent docs', () => {
   const result = check({
     'apps/docs/app/(en)/kanban/page.mdx': '# Kanban\n',
     'CLAUDE.md': null,
+    'AGENTS.md': null,
     '.claude/skills/verify/verify.test.mjs': 'x\n',
   });
   assert.equal(result.status, 1, result.out);
-  assert.match(result.out, /change CLAUDE\.md and the verify skill/);
+  assert.match(result.out, /change CLAUDE\.md or AGENTS\.md and the verify skill/);
 });
 
 test('a workflow that is not valid YAML fails with its name', () => {
