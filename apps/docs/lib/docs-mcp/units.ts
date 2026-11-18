@@ -1,4 +1,4 @@
-import { slugOf } from '../remarkPageContents.mjs';
+import { slugOf } from '../headingSlug.mjs';
 
 export const SOURCE = 'todae-docs' as const;
 
