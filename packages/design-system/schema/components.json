@@ -5974,7 +5974,7 @@
           "name": "onCreate",
           "type": "(place: LanePlace) => void",
           "required": false,
-          "description": "Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. The press floors to the grid cell that contains it, and the end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0."
+          "description": "Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. Dragged forward, the press floors to the grid cell that contains it. Dragged back, that cell runs up to the next grid point. The end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0."
         },
         {
           "name": "disabled",

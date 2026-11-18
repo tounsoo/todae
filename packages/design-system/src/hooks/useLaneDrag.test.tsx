@@ -1001,13 +1001,14 @@ it('drags a new span out of empty lane space, snapped, and calls onCreate once w
 it('normalizes a create dragged back toward the start of the range, on either axis', () => {
   const onCreate = vi.fn();
   const { rerender } = render(<Board onCreate={onCreate} />);
+  // The press lands on 70, so the pressed slot runs to the next point, 75.
   drag(screen.getByTestId('lane-a'), 700, 20, [[500, 20], [450, 20]]);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 75 });
   onCreate.mockClear();
   rerender(<Board onCreate={onCreate} axis="block" />);
   // Lane a runs down the first 100px. Upward is toward the start.
   drag(screen.getByTestId('lane-a'), 50, 700, [[50, 500], [50, 450]]);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 75 });
 });
 
 it('keeps a create in the lane where the press went down', () => {
@@ -1038,9 +1039,9 @@ it('grows a create to minSpan on the grid, including a short drag and a click', 
   drag(lane, 450, 20, [[460, 20], [470, 20]]);
   expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 60 });
   onCreate.mockClear();
-  // The same drag pulled backward grows the start down instead.
+  // Pulled backward from 45, the pressed slot runs to 50, then minSpan grows the start to 35.
   drag(lane, 450, 20, [[440, 20], [430, 20]]);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 30, end: 45 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 35, end: 50 });
   onCreate.mockClear();
   press(lane, 450, 20);
   release(450, 20);
@@ -1084,6 +1085,33 @@ it('floors a create to the grid cell that contains the press, so 9:08 and 10:55 
   expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 0, end: 45 });
 });
 
+it('keeps the pressed slot when a create is dragged upward, and nearest-snaps that pointer end', () => {
+  const onCreate = vi.fn();
+  const grid = Array.from({ length: 13 }, (_, index) => index * 15);
+  render(<Board onCreate={onCreate} grid={grid} range={{ start: 0, end: 180 }} />);
+  const lane = screen.getByTestId('lane-a');
+  const x = (minutes: number) => (minutes / 180) * 1000;
+  // 10:55 dragged up to 10:20. The pressed cell runs 10:45–11:00, and 10:20 snaps to 10:15.
+  drag(lane, x(115), 20, [[x(100), 20], [x(80), 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 75, end: 120 });
+  onCreate.mockClear();
+  // 10:23 is closer to 10:30 than to 10:15, so flooring the pointer end would still say 10:15.
+  drag(lane, x(115), 20, [[x(100), 20], [x(83), 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 90, end: 120 });
+  onCreate.mockClear();
+  // A press that lands on 10:45 includes the slot that starts there, up to 11:00.
+  drag(lane, x(105), 20, [[x(100), 20], [x(80), 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 75, end: 120 });
+});
+
+it('still creates a slot when the grid has points before the range', () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} grid={[-20, -10, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]} />);
+  // Two units past the range start. The point before the range is not the start of the slot.
+  drag(screen.getByTestId('lane-a'), 20, 20, [[80, 20], [400, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 10, end: 40 });
+});
+
 it('clamps a create with no grid when the pointer goes past the end of the range', () => {
   const onCreate = vi.fn();
   render(<Board onCreate={onCreate} grid={[]} />);
@@ -1097,9 +1125,9 @@ it('clamps a create to the range, and shifts a minSpan slot back in at the end',
   drag(screen.getByTestId('lane-a'), 900, 20, [[1100, 20], [1500, 20]]);
   expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 90, end: 100 });
   onCreate.mockClear();
-  // The press at 8 floors to the cell at 5. The pointer past the start clamps to 0.
+  // The press at 8 sits in the cell 5 to 10. Dragged back, that cell runs to 10, and the pointer clamps to 0.
   drag(screen.getByTestId('lane-a'), 80, 20, [[40, 20], [-100, 20]]);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 0, end: 5 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 0, end: 10 });
   onCreate.mockClear();
   rerender(<Board onCreate={onCreate} minSpan={12} />);
   press(screen.getByTestId('lane-a'), 960, 20);
@@ -1127,8 +1155,9 @@ it('creates nothing when the range is shorter than minSpan', () => {
 it('reads a create from the right in a right-to-left lane', () => {
   const onCreate = vi.fn();
   render(<Board onCreate={onCreate} dir="rtl" />);
+  // The press is the point at 90, read from the right, so the slot runs to 95.
   drag(screen.getByTestId('lane-a'), 100, 20, [[200, 20], [400, 20]]);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 60, end: 90 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 60, end: 95 });
 });
 
 it('still moves an item when onCreate is set, and a press on the item creates nothing', () => {

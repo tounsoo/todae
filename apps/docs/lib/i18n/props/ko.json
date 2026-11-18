@@ -3565,8 +3565,8 @@
       "ko": "포인터 아래의 자리가 바뀔 때마다, 그리고 놓을 때 한 번 더 항목 `id`가 `to`로 갈 수 있는지 알려 줍니다."
     },
     "onCreate": {
-      "en": "Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. The press floors to the grid cell that contains it, and the end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0.",
-      "ko": "빈 레인 공간을 누르고 손을 떼어 새 자리가 생기면 한 번 불립니다. 넘기지 않으면 빈 공간에서는 끌기가 시작되지 않습니다. 끌면 누른 지점과 포인터 사이의 구간이 됩니다. 누른 지점은 그 지점을 담은 칸으로 내려가고, 포인터 아래의 끝은 가장 가까운 격자점에 맞춰집니다. 끌기 임계값 안에서 떼면 그 칸에서 `minSpan` 길이의 칸이 생기고 레인의 클릭은 삼키며, `minSpan`이 0이면 아무것도 생기지 않습니다."
+      "en": "Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. Dragged forward, the press floors to the grid cell that contains it. Dragged back, that cell runs up to the next grid point. The end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0.",
+      "ko": "빈 레인 공간을 누르고 손을 떼어 새 자리가 생기면 한 번 불립니다. 넘기지 않으면 빈 공간에서는 끌기가 시작되지 않습니다. 끌면 누른 지점과 포인터 사이의 구간이 됩니다. 앞으로 끌면 누른 지점은 그 지점을 담은 칸으로 내려가고, 뒤로 끌면 그 칸이 다음 격자점까지 이어집니다. 포인터 아래의 끝은 가장 가까운 격자점에 맞춰집니다. 끌기 임계값 안에서 떼면 그 칸에서 `minSpan` 길이의 칸이 생기고 레인의 클릭은 삼키며, `minSpan`이 0이면 아무것도 생기지 않습니다."
     },
     "disabled": {
       "en": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",

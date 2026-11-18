@@ -271,16 +271,16 @@ it('normalizes a create dragged back along the axis, including a column', () => 
   const onCreate = vi.fn();
   const { rerender } = render(<Board onCreate={onCreate} />);
   const lane = pressCreate(along('a', 55), along('a', 40));
-  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-60');
   pointer('pointerup', lane, along('a', 40).x, along('a', 40).y);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 60 });
   onCreate.mockClear();
   rerender(<Board onCreate={onCreate} axis="block" />);
   const column = pressCreate(along('a', 55, 'block'), along('a', 40, 'block'));
-  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-60');
   const end = along('a', 40, 'block');
   pointer('pointerup', column, end.x, end.y);
-  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 60 });
 });
 
 it('cancels a create on Escape and calls nothing on release', async () => {

@@ -71,8 +71,9 @@ export type UseLaneDragOptions = {
   onDrop: (change: LaneDragChange) => void;
   /**
    * Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing.
-   * A drag sets the span between the press and the pointer. The press floors to the grid cell that contains it,
-   * and the end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold
+   * A drag sets the span between the press and the pointer. Dragged forward, the press floors to the grid cell
+   * that contains it. Dragged back, that cell runs up to the next grid point. The end under the pointer snaps
+   * to the nearest grid point. A press that stays inside the drag threshold
    * creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0.
    */
   onCreate?: (place: LanePlace) => void;
@@ -217,8 +218,10 @@ const below = (grid: readonly number[], max: number, ceiling: number): number | 
 
 /**
  * The span a create gesture draws from the press value `anchor` to `pointer`.
- * The press floors to the grid cell that contains it. The end under the pointer
- * snaps to the nearest grid point, the way a resize does. The span runs forward,
+ * Dragged forward, the press floors to the grid cell that contains it. Dragged
+ * back, that cell runs up to the next grid point, so the pressed slot stays in
+ * the span. The end under the pointer snaps to the nearest grid point, the way
+ * a resize does. The span runs forward,
  * so a press below the anchor still has `start < end`, and it is at least
  * `minSpan` long. A click (`pointer === anchor`) grows forward by `minSpan` from
  * that cell, so the slot contains the press. It returns null when that length
@@ -257,6 +260,15 @@ function spanFromCreate(
     if (point === undefined || point < held.low) return held.low;
     return Math.min(point, held.high);
   };
+  // The top of the pressed cell. The first grid point above the press, and the next one when the press lands on a point.
+  const ceilSnap = (value: number) => {
+    const clamped = clamp(value);
+    const held = heldGrid();
+    if (held === null || grid === undefined) return clamped;
+    const point = above(grid, clamped, clamped);
+    if (point === undefined || point > hi) return hi;
+    return Math.min(Math.max(point, held.low), held.high);
+  };
   const forward = pointer >= anchor;
   if (forward) {
     let start = floorSnap(anchor);
@@ -276,7 +288,7 @@ function spanFromCreate(
     }
     return end > start && end - start >= need && start >= lo && end <= hi ? { start, end } : null;
   }
-  let end = floorSnap(anchor);
+  let end = ceilSnap(anchor);
   let start = nearestSnap(pointer);
   if (start > end) start = end;
   if (!(end > start) && need === 0) return null;
@@ -546,9 +558,9 @@ function createLaneDrag(
     return shown;
   };
 
-  /** What `check` says of `to`. A create has no item, so it isn't checked. */
+  /** What `check` says of `to`. */
   const judge = (current: Session, to: LanePlace | null): LaneVerdict | null =>
-    to === null || current.part === 'create' ? null : (options().check?.(current.id, to) ?? null);
+    to === null ? null : (options().check?.(current.id, to) ?? null);
 
   /** Runs `step` while the press is down. A `check` that throws in it ends the drag as Escape does, and its error still reaches the page. */
   const guard = <T>(current: Session, step: () => T): T => {
