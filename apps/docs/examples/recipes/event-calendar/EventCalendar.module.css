@@ -50,6 +50,19 @@
   background: var(--todae-color-bg-canvas);
 }
 
+.corner + .corner {
+  inset-inline-start: 4.5rem;
+}
+
+.zone {
+  display: block;
+  margin: 0;
+  padding-block: var(--todae-space-2);
+  padding-inline: var(--todae-space-1);
+  text-align: end;
+  white-space: nowrap;
+}
+
 .day {
   margin: 0;
   padding: var(--todae-space-2);
@@ -119,6 +132,10 @@
   z-index: 2;
   background: var(--todae-color-bg-canvas);
   border-inline-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
+}
+
+.gutter[data-compare] {
+  inset-inline-start: 4.5rem;
 }
 
 .mark {

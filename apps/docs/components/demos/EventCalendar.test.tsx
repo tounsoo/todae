@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatTime } from '@tounsoo/todae';
-import EventCalendarExample, {
+import EventCalendarZones, {
+  EventCalendarExample,
   EventEditor,
   SLOT_MINUTES,
   adjustEvent,
@@ -595,6 +598,7 @@ describe('the calendar', () => {
     render(
       <EventCalendarExample
         locale="en-US"
+        timeZone={LA}
         events={[
           {
             id: 'tokyo',
@@ -1316,7 +1320,7 @@ describe('the event menu and dialog', () => {
 
   it('disables a day move onto a shorter day', async () => {
     const sync = event('sync', '2026-03-09T01:00:00-07:00[America/Los_Angeles]', '2026-03-09T03:30:00-07:00[America/Los_Angeles]', { title: 'Sync' });
-    render(<EventCalendarExample locale="en-US" anchor={date('2026-03-09')} opens={time('01:00')} closes={time('04:00')} events={[sync]} />);
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-03-09')} opens={time('01:00')} closes={time('04:00')} events={[sync]} />);
     const button = screen.getByRole('button', { name: `Sync, ${clock('01:00')} to ${clock('03:30')}` });
     await act(async () => {
       fireEvent.pointerDown(button, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
@@ -1434,5 +1438,199 @@ describe('the event menu and dialog', () => {
     dialog?.dispatchEvent(new Event('cancel', { cancelable: true }));
     await vi.waitFor(() => expect(document.body.dataset.cancelled).toBe('yes'));
     delete document.body.dataset.cancelled;
+  });
+});
+
+function shortZone(timeZone: string, locale: string): string {
+  return (
+    new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName: 'short' })
+      .formatToParts(Date.UTC(2026, 10, 16, 16))
+      .find((part) => part.type === 'timeZoneName')?.value ?? ''
+  );
+}
+
+function calendarBoard(): HTMLElement {
+  const board = document.querySelector<HTMLElement>('[aria-label="Calendar"]');
+  if (!board) throw new Error('missing calendar');
+  return board;
+}
+
+function described(): string[] {
+  return (calendarBoard().getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .map((id) => document.getElementById(id)?.textContent ?? '');
+}
+
+function hourColumns(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => [...el.children].some((child) => (child as HTMLElement).style?.top));
+}
+
+const once = (start: Temporal.Instant | Temporal.ZonedDateTime, end: Temporal.Instant | Temporal.ZonedDateTime) => ({
+  id: 'once',
+  title: 'Once',
+  start,
+  end,
+  allDay: false as const,
+});
+
+describe('the time zone', () => {
+  it('names the grid zone in English and Korean', () => {
+    const zone = Temporal.Now.timeZoneId();
+    render(<EventCalendarExample locale="en-US" events={[]} />);
+    expect(screen.getByText(shortZone(zone, 'en-US'))).toBeTruthy();
+    expect(described()).toEqual([shortZone(zone, 'en-US')]);
+    expect(described()[0] && screen.getByText(described()[0]!).closest('[aria-hidden="true"]')).toBeNull();
+    cleanup();
+
+    render(<EventCalendarExample locale="ko" events={[]} />);
+    expect(screen.getByText(shortZone(zone, 'ko'))).toBeTruthy();
+    expect(described()).toEqual([shortZone(zone, 'ko')]);
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone={LA} events={[]} />);
+    expect(screen.getByText('PST')).toBeTruthy();
+    expect(described()).toEqual(['PST']);
+    cleanup();
+
+    render(<EventCalendarExample locale="ko" timeZone={LA} events={[]} />);
+    expect(screen.getByText('GMT-8')).toBeTruthy();
+    expect(described()).toEqual(['GMT-8']);
+  });
+
+  it('places one instant in a different hour for a different zone', () => {
+    const start = Temporal.Instant.from('2026-11-16T17:00:00Z');
+    const end = Temporal.Instant.from('2026-11-16T18:00:00Z');
+    const zoned = once(start.toZonedDateTimeISO('Asia/Tokyo'), end.toZonedDateTimeISO('Asia/Tokyo'));
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-11-16')} events={[once(start, end)]} />);
+    const pacific = screen.getByRole('button', { name: `Once, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(pacific)).toBe(true);
+    expect(pacific.parentElement?.style.top).toBe('10%');
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone="UTC" anchor={date('2026-11-16')} events={[once(start, end)]} />);
+    const utc = screen.getByRole('button', { name: `Once, ${clock('17:00')} to ${clock('18:00')}` });
+    expect(utc.parentElement?.style.top).toBe('90%');
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-11-16')} events={[zoned]} />);
+    const same = screen.getByRole('button', { name: `Once, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(same)).toBe(true);
+    expect(same.parentElement?.style.top).toBe('10%');
+  });
+
+  it('shows the second zone’s hour, including a partial offset and a day shift', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    expect(described()).toEqual(['PST', 'GMT+5:30']);
+    const columns = hourColumns();
+    expect(columns).toHaveLength(2);
+    const primary = [...columns[0]!.querySelectorAll<HTMLElement>('span')];
+    const compare = [...columns[1]!.querySelectorAll<HTMLElement>('span')];
+    const open = primary.find((node) => node.textContent === clock('08:00'));
+    const late = primary.find((node) => node.textContent === clock('17:00'));
+    expect(open).toBeTruthy();
+    expect(late).toBeTruthy();
+    expect(compare.find((node) => node.style.top === open!.style.top)?.textContent).toBe(clock('21:30'));
+    expect(compare.find((node) => node.style.top === late!.style.top)?.textContent).toBe(`${clock('06:30')} +1 day`);
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kathmandu" anchor={date('2026-11-16')} events={[]} />);
+    expect(screen.getByText('GMT+5:45')).toBeTruthy();
+    const kathmandu = hourColumns()[1];
+    const eight = hourColumns()[0]?.querySelector<HTMLElement>('span')?.style.top;
+    expect([...kathmandu!.querySelectorAll<HTMLElement>('span')].find((node) => node.style.top === eight)?.textContent).toBe(clock('21:45'));
+    cleanup();
+
+    render(<EventCalendarExample locale="ko" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    const koTime = (text: string) => formatTime(Temporal.PlainTime.from(text), { locale: 'ko' });
+    const koColumns = hourColumns();
+    const koLate = [...koColumns[0]!.querySelectorAll<HTMLElement>('span')].find((node) => node.textContent === koTime('17:00'));
+    expect([...koColumns[1]!.querySelectorAll<HTMLElement>('span')].find((node) => node.style.top === koLate?.style.top)?.textContent).toBe(`${koTime('06:30')} +1일`);
+  });
+
+  it('keeps spring-forward and fall-back hours and lines the second zone up with them', () => {
+    const spring = once(Temporal.Instant.from('2027-03-14T10:00:00Z'), Temporal.Instant.from('2027-03-14T10:30:00Z'));
+    render(
+      <EventCalendarExample locale="en-US" timeZone={LA} compareZone="UTC" anchor={SPRING} opens={time('00:00')} closes={time('04:00')} events={[spring]} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    const [primary, compare] = hourColumns();
+    const labels = [...primary!.querySelectorAll<HTMLElement>('span')].map((node) => node.textContent);
+    expect(labels).toEqual([clock('00:00'), clock('01:00'), clock('03:00')]);
+    expect(labels).not.toContain(clock('02:00'));
+    const other = [...compare!.querySelectorAll<HTMLElement>('span')];
+    expect(other.map((node) => node.textContent)).toEqual([clock('08:00'), clock('09:00'), clock('10:00')]);
+    expect(other.map((node) => node.style.top)).toEqual([...primary!.querySelectorAll<HTMLElement>('span')].map((node) => node.style.top));
+    const gap = screen.getByRole('button', { name: `Once, ${clock('03:00')} to ${clock('03:30')}` });
+    expect(gap.parentElement?.style.top).toBe('66.6667%');
+    cleanup();
+
+    const repeated = once(Temporal.Instant.from('2027-11-07T09:00:00Z'), Temporal.Instant.from('2027-11-07T09:30:00Z'));
+    render(
+      <EventCalendarExample locale="en-US" timeZone={LA} compareZone="UTC" anchor={FALL} opens={time('00:00')} closes={time('04:00')} events={[repeated]} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    const [fallPrimary, fallCompare] = hourColumns();
+    const fallLabels = [...fallPrimary!.querySelectorAll<HTMLElement>('span')];
+    const ones = fallLabels.filter((node) => node.textContent === clock('01:00'));
+    expect(ones).toHaveLength(2);
+    expect(ones[0]!.style.top).not.toBe(ones[1]!.style.top);
+    const paired = [...fallCompare!.querySelectorAll<HTMLElement>('span')];
+    expect(paired.map((node) => node.style.top)).toEqual(fallLabels.map((node) => node.style.top));
+    expect(paired.find((node) => node.style.top === ones[0]!.style.top)?.textContent).toBe(clock('08:00'));
+    expect(paired.find((node) => node.style.top === ones[1]!.style.top)?.textContent).toBe(clock('09:00'));
+    const second = screen.getByRole('button', { name: `Once, ${clock('01:00')} to ${clock('01:30')}` });
+    expect(second.parentElement?.style.top).toBe(ones[1]!.style.top);
+    expect(second.parentElement?.style.top).toBe('40%');
+  });
+
+  it('describes the grid by its zone and keeps the hour columns out of the announcement', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    const region = calendarBoard();
+    expect(described()).toEqual(['PST', 'GMT+5:30']);
+    for (const id of (region.getAttribute('aria-describedby') ?? '').split(' ')) {
+      const label = document.getElementById(id);
+      expect(label?.closest('[aria-hidden="true"]')).toBeNull();
+    }
+    const columns = hourColumns();
+    expect(columns).toHaveLength(2);
+    for (const column of columns) expect(column.getAttribute('aria-hidden')).toBe('true');
+    const announced = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+      if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true') return '';
+      return [...node.childNodes].map((child) => announced(child)).join('');
+    };
+    const heard = announced(region);
+    expect(heard).toContain('PST');
+    expect(heard).toContain('GMT+5:30');
+    expect(heard).not.toContain(clock('08:00'));
+    expect(heard).not.toContain('+1 day');
+  });
+
+  it('explains the zone and shows a second zone on the English and Korean pages', () => {
+    render(<EventCalendarZones locale="en-US" />);
+    expect(described()).toEqual(['PST', 'GMT+5:30']);
+    expect(hourColumns()[1]?.textContent).toContain('+1 day');
+    expect(screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` })).toBeTruthy();
+    cleanup();
+
+    render(<EventCalendarZones locale="ko" />);
+    expect(described()).toEqual(['GMT-8', 'GMT+5:30']);
+    expect(hourColumns()[1]?.textContent).toContain('+1일');
+    cleanup();
+
+    const en = readFileSync(join(process.cwd(), 'app/(en)/recipes/event-calendar/page.mdx'), 'utf8');
+    const ko = readFileSync(join(process.cwd(), 'app/ko/recipes/event-calendar/page.mdx'), 'utf8');
+    for (const page of [en, ko]) {
+      expect(page).toContain('<Example of={EventCalendarZones} />');
+      expect(page).toContain('timeZone');
+      expect(page).toContain('compareZone');
+      expect(page).toContain('Asia/Kolkata');
+      expect(page).toContain('Asia/Kathmandu');
+    }
+    expect(en).toContain('such as PST or GMT-8');
+    expect(en).toContain('+1 day');
+    expect(ko).toContain('PST나 GMT-8');
+    expect(ko).toContain('+1일');
   });
 });

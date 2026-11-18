@@ -9,7 +9,7 @@ import '../../app/globals.css';
 import { paintedContrast } from '../../../../packages/design-system/src/test/paintedContrast';
 import { settle } from '../../../../packages/design-system/src/test/settle';
 import { Example } from '../Example';
-import EventCalendarExample from '../../examples/recipes/event-calendar/EventCalendarExample';
+import { EventCalendarExample } from '../../examples/recipes/event-calendar/EventCalendarExample';
 import { AXE_OPTIONS, describeViolations } from '../../test/axe';
 import { APPEARANCE_KEY } from '../appearanceScript';
 import { Providers } from '../Providers';
@@ -325,7 +325,7 @@ describe('moving, resizing, and editing', () => {
     };
     render(
       <Providers>
-        <EventCalendarExample locale="en-US" events={[talk]} />
+        <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" events={[talk]} />
       </Providers>,
     );
     const button = screen.getByRole('button', { name: `Talk, ${clock('10:07')} to ${clock('12:00')}` });
@@ -386,7 +386,7 @@ describe('moving, resizing, and editing', () => {
     };
     render(
       <Providers>
-        <EventCalendarExample locale="en-US" anchor={Temporal.PlainDate.from('2026-03-08')} opens={Temporal.PlainTime.from('01:00')} closes={Temporal.PlainTime.from('04:00')} events={[sync]} />
+        <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" anchor={Temporal.PlainDate.from('2026-03-08')} opens={Temporal.PlainTime.from('01:00')} closes={Temporal.PlainTime.from('04:00')} events={[sync]} />
       </Providers>,
     );
     const name = `Sync, ${clock('01:00')} to ${clock('01:30')}`;
@@ -1439,5 +1439,68 @@ describe('creating an event from empty lane space', () => {
     } finally {
       await page.viewport(1280, 800);
     }
+  });
+
+  it('hides the second zone column at 375px and keeps the primary label', async () => {
+    await page.viewport(800, 900);
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" events={[]} />
+      </Providers>,
+    );
+    const columns = () =>
+      [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => [...el.children].some((child) => (child as HTMLElement).style?.top));
+    await expect.poll(() => columns().length).toBeGreaterThan(1);
+    expect(screen.getByText('PST')).toBeTruthy();
+    expect(screen.getByText('GMT+5:30')).toBeTruthy();
+
+    await page.viewport(375, 800);
+    await expect.poll(() => columns().length).toBe(1);
+    expect(screen.getByText('PST')).toBeTruthy();
+    expect(screen.queryByText('GMT+5:30')).toBeNull();
+    const calendar = document.querySelector<HTMLElement>('[class*="calendar"]');
+    expect(calendar).toBeTruthy();
+    expect(calendar!.scrollWidth).toBeLessThanOrEqual(calendar!.clientWidth + 1);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+    await page.viewport(1280, 800);
+  });
+
+  it('creates and places events in a zone that is not the viewer’s', async () => {
+    const start = Temporal.Instant.from('2026-11-16T00:00:00Z');
+    const end = Temporal.Instant.from('2026-11-16T01:00:00Z');
+    render(
+      <Providers>
+        <EventCalendarExample
+          locale="en-US"
+          timeZone="Asia/Tokyo"
+          anchor={Temporal.PlainDate.from('2026-11-16')}
+          events={[{ id: 'call', title: 'Call', start, end, allDay: false }]}
+        />
+      </Providers>,
+    );
+    expect(screen.getByText('GMT+9')).toBeTruthy();
+    const call = screen.getByRole('button', { name: `Call, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(call.parentElement?.style.top).toBe('10%');
+
+    screen.getByRole('heading', { name: 'Mon, Nov 16' }).focus();
+    screen.getByRole('button', { name: 'New event' }).focus();
+    await userEvent.keyboard('{Enter}');
+    const keyed = await newEventDialog();
+    expect(within(keyed).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('08:00'));
+    expect(within(keyed).getByRole('textbox', { name: 'End' })).toHaveValue(clock('08:15'));
+    await userEvent.type(within(keyed).getByRole('textbox', { name: 'Title' }), 'Breakfast');
+    await userEvent.click(within(keyed).getByRole('button', { name: 'Save' }));
+    const breakfast = await screen.findByRole('button', { name: `Breakfast, ${clock('08:00')} to ${clock('08:15')}` });
+    expect(breakfast.parentElement?.style.top).toBe('0%');
+    await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toBe(`Added Breakfast, ${clock('08:00')} to ${clock('08:15')}`);
+
+    dragLane('Mon, Nov 16', 60, 120).drop();
+    const dragged = await newEventDialog();
+    expect(within(dragged).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('09:00'));
+    expect(within(dragged).getByRole('textbox', { name: 'End' })).toHaveValue(clock('10:00'));
+    await userEvent.type(within(dragged).getByRole('textbox', { name: 'Title' }), 'Standup');
+    await userEvent.click(within(dragged).getByRole('button', { name: 'Save' }));
+    const standup = await screen.findByRole('button', { name: `Standup, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(standup.parentElement?.style.top).toBe(call.parentElement?.style.top);
   });
 });

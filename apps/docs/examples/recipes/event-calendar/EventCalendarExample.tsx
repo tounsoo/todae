@@ -34,6 +34,25 @@ export type CalendarEvent = {
   allDay: boolean;
 };
 
+/** An absolute instant, or a zoned value whose instant is what the grid places. */
+export type CalendarPoint = Temporal.ZonedDateTime | Temporal.Instant;
+
+/** A value the grid can be given. An all-day event keeps the zone it was written in. */
+export type CalendarEventInput = Omit<CalendarEvent, 'start' | 'end'> & {
+  start: CalendarPoint;
+  end: CalendarPoint;
+};
+
+/** The instant as a zoned value in `timeZone`. A zoned value keeps that instant. */
+export function inZone(value: CalendarPoint, timeZone: string): Temporal.ZonedDateTime {
+  return value instanceof Temporal.Instant ? value.toZonedDateTimeISO(timeZone) : value.withTimeZone(timeZone);
+}
+
+function projectEvent(event: CalendarEventInput, timeZone: string): CalendarEvent {
+  const keep = (value: CalendarPoint) => (event.allDay && value instanceof Temporal.ZonedDateTime ? value : inZone(value, timeZone));
+  return { ...event, start: keep(event.start), end: keep(event.end) };
+}
+
 export type DaySegment = {
   day: Temporal.PlainDate;
   opens: Temporal.ZonedDateTime;
@@ -589,39 +608,69 @@ export function hourMarks(segment: DaySegment): HourMark[] {
   return marks;
 }
 
+/** The short zone name `locale` writes at `at`, such as PST in English or GMT-8 in Korean. */
+export function zoneLabel(timeZone: string, locale: string, at: Temporal.ZonedDateTime): string {
+  const name = new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName: 'short' })
+    .formatToParts(at.epochMilliseconds)
+    .find((part) => part.type === 'timeZoneName')?.value;
+  return name?.trim() || timeZone;
+}
+
+/** A signed day count in `locale`, such as "+1 day" or "+1일". Nothing when the dates match. */
+export function dayShiftLabel(days: number, locale: string): string | null {
+  if (days === 0) return null;
+  const count = new Intl.NumberFormat(locale, { signDisplay: 'always', maximumFractionDigits: 0 }).format(days);
+  const unit = new Intl.DisplayNames(locale, { type: 'dateTimeField', style: 'narrow' }).of('day') ?? 'day';
+  const space = /\p{Script=Hangul}/u.test(unit) ? '' : ' ';
+  return `${count}${space}${unit}`;
+}
+
+export type CompareMark = { units: number; time: Temporal.ZonedDateTime; dayShift: number };
+
+/** The other zone's time at each shared hour, and how many dates it sits from that hour. */
+export function compareMarks(segments: readonly DaySegment[], units: readonly number[], compareZone: string): CompareMark[] {
+  return units.flatMap((at) => {
+    const time = segments.map((segment) => fromUnits(segment, at, 'start')).find((value) => value !== null);
+    if (!time) return [];
+    const there = time.withTimeZone(compareZone);
+    return [{ units: at, time: there, dayShift: time.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days }];
+  });
+}
+
 // Pinned so the page shows the same week whenever it opens.
-const ZONE = 'America/Los_Angeles';
 const OPENS = Temporal.PlainTime.from('08:00');
 const CLOSES = Temporal.PlainTime.from('18:00');
 const ANCHOR = Temporal.PlainDate.from('2026-11-16');
 
-function at(day: string, clock: string): Temporal.ZonedDateTime {
-  return Temporal.PlainDateTime.from(`${day}T${clock}`).toZonedDateTime(ZONE);
-}
+const SAMPLE = [
+  ['review', 'Design review', '2026-11-16', '09:00', '2026-11-16', '10:30', false],
+  ['standup', 'Standup', '2026-11-16', '09:00', '2026-11-16', '09:30', false],
+  ['handoff', 'Handoff', '2026-11-16', '17:00', '2026-11-17', '09:30', false],
+  ['interview', 'Interview', '2026-11-17', '10:00', '2026-11-17', '11:00', false],
+  ['early', 'Early sync', '2026-11-18', '07:00', '2026-11-18', '09:00', false],
+  ['workshop', 'Workshop', '2026-11-18', '14:00', '2026-11-18', '16:30', false],
+  ['planning', 'Planning', '2026-11-19', '10:00', '2026-11-19', '12:00', false],
+  ['one', '1:1', '2026-11-19', '11:00', '2026-11-19', '11:30', false],
+  ['crit', 'Crit', '2026-11-19', '11:00', '2026-11-19', '12:30', false],
+  ['ship', 'Ship review', '2026-11-19', '15:00', '2026-11-19', '18:30', false],
+  ['hiring', 'Hiring loop', '2026-11-19', '15:30', '2026-11-19', '16:30', false],
+  ['sync', 'Staff sync', '2026-11-19', '16:00', '2026-11-19', '17:00', false],
+  ['demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00', false],
+  ['offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true],
+  ['hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00', false],
+  ['retreat', 'Retreat', '2026-11-20', '00:00', '2026-11-23', '00:00', true],
+  ['launch', 'Launch watch', '2026-11-18', '22:00', '2026-11-19', '02:00', false],
+] as const;
 
-function timed(id: string, title: string, startDay: string, start: string, endDay: string, end: string, allDay = false): CalendarEvent {
-  return { id, title, start: at(startDay, start), end: at(endDay, end), allDay };
+function sampleEvents(timeZone: string): CalendarEvent[] {
+  return SAMPLE.map(([id, title, startDay, start, endDay, end, allDay]) => ({
+    id,
+    title,
+    allDay,
+    start: Temporal.PlainDateTime.from(`${startDay}T${start}`).toZonedDateTime(timeZone),
+    end: Temporal.PlainDateTime.from(`${endDay}T${end}`).toZonedDateTime(timeZone),
+  }));
 }
-
-const EVENTS: readonly CalendarEvent[] = [
-  timed('review', 'Design review', '2026-11-16', '09:00', '2026-11-16', '10:30'),
-  timed('standup', 'Standup', '2026-11-16', '09:00', '2026-11-16', '09:30'),
-  timed('handoff', 'Handoff', '2026-11-16', '17:00', '2026-11-17', '09:30'),
-  timed('interview', 'Interview', '2026-11-17', '10:00', '2026-11-17', '11:00'),
-  timed('early', 'Early sync', '2026-11-18', '07:00', '2026-11-18', '09:00'),
-  timed('workshop', 'Workshop', '2026-11-18', '14:00', '2026-11-18', '16:30'),
-  timed('planning', 'Planning', '2026-11-19', '10:00', '2026-11-19', '12:00'),
-  timed('one', '1:1', '2026-11-19', '11:00', '2026-11-19', '11:30'),
-  timed('crit', 'Crit', '2026-11-19', '11:00', '2026-11-19', '12:30'),
-  timed('ship', 'Ship review', '2026-11-19', '15:00', '2026-11-19', '18:30'),
-  timed('hiring', 'Hiring loop', '2026-11-19', '15:30', '2026-11-19', '16:30'),
-  timed('sync', 'Staff sync', '2026-11-19', '16:00', '2026-11-19', '17:00'),
-  timed('demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00'),
-  timed('offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true),
-  timed('hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00'),
-  timed('retreat', 'Retreat', '2026-11-20', '00:00', '2026-11-23', '00:00', true),
-  timed('launch', 'Launch watch', '2026-11-18', '22:00', '2026-11-19', '02:00'),
-];
 
 type CalendarView = 'month' | 'week' | 'day';
 
@@ -700,10 +749,10 @@ function stripKey(id: string): string {
   return `strip:${id}`;
 }
 
-/** A strip bar's grid lines. Column 1 is the gutter, and the end never passes the last day. */
-function stripColumn(column: number, span: number, days: number): string {
-  const start = column + 2;
-  const end = Math.min(start + span, days + 2);
+/** A strip bar's grid lines. The gutters come first, and the end never passes the last day. */
+function stripColumn(column: number, span: number, days: number, gutters: number): string {
+  const start = column + gutters + 1;
+  const end = Math.min(start + span, days + gutters + 1);
   return `${start} / ${end}`;
 }
 
@@ -759,6 +808,7 @@ type ColumnShared = {
   onAdjust: (event: CalendarEvent, segment: DaySegment, change: SlotChange) => void;
   onEdit: (event: CalendarEvent, day: Temporal.PlainDate) => void;
   pendingCreate: { day: Temporal.PlainDate; start: number; end: number } | null;
+  gutters: number;
 };
 
 function eventName(event: CalendarEvent, segment: DaySegment, locale: string, timeZone: string): { name: string; timeText: string; short: boolean } {
@@ -904,7 +954,7 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
   const handoff = useFocusHandoff({ to: shared.landing });
   const key = stripKey(bar.event.id);
   return (
-    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: stripColumn(bar.column, bar.span, shared.days), gridRow: bar.row + 1 }}>
+    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: stripColumn(bar.column, bar.span, shared.days, shared.gutters), gridRow: bar.row + 1 }}>
       <Menu.Root>
         <Menu.Trigger
           ref={key === shared.focusKey ? shared.landing : undefined}
@@ -1067,30 +1117,38 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
   );
 }
 
-export default function EventCalendarExample({
+export function EventCalendarExample({
   locale = 'en-US',
-  timeZone = ZONE,
+  timeZone = Temporal.Now.timeZoneId(),
+  compareZone,
   opens = OPENS,
   closes = CLOSES,
   anchor: initialAnchor = ANCHOR,
-  events = EVENTS,
+  events,
 }: {
   locale?: string;
+  /** IANA time zone the grid renders in. The viewer's zone when omitted. */
   timeZone?: string;
+  /** A second IANA zone. Each primary hour then shows that zone's time. */
+  compareZone?: string;
   opens?: Temporal.PlainTime;
   closes?: Temporal.PlainTime;
   anchor?: Temporal.PlainDate;
-  events?: readonly CalendarEvent[];
+  events?: readonly CalendarEventInput[];
 }) {
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
-  const [items, setItems] = useState<CalendarEvent[]>(() => events.map((event) => ({ ...event })));
+  const [items, setItems] = useState<CalendarEvent[]>(() => (events ?? sampleEvents(timeZone)).map((event) => projectEvent(event, timeZone)));
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
   const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
   const [session, setSession] = useState<EditorSession | null>(null);
   const notedDay = useRef(initialAnchor);
   const notedUnits = useRef(0);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
+  const zoneId = useId();
+  const compareId = useId();
   const pendingFocus = useRef<'day' | null>(null);
   const landing = useRef<HTMLButtonElement | null>(null);
   const returnFocus = useRef(false);
@@ -1108,11 +1166,17 @@ export default function EventCalendarExample({
     return { segment, placed, columns };
   });
   const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
-  const tracks = `4.5rem ${dayTracks}`;
+  const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
+  const gutters = showCompare ? 2 : 1;
+  const tracks = `${showCompare ? '4.5rem 6.5rem' : '4.5rem'} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
-  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), 4.5)}rem`;
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), showCompare ? 11 : 4.5)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
+  const compared = showCompare && compareZone ? compareMarks(axis.segments, gutterMarks, compareZone) : [];
+  const zoneAt = axis.segments[0]?.opens ?? initialAnchor.toZonedDateTime({ timeZone, plainTime: opens });
+  const primaryName = zoneLabel(timeZone, locale, zoneAt);
+  const compareName = showCompare && compareZone ? zoneLabel(compareZone, locale, zoneAt) : null;
   const step = view === 'week' ? 7 : 1;
   const move = view === 'week' ? 'week' : 'day';
   const grid = [...new Set(axis.segments.flatMap((segment) => snapGrid(segment, SLOT_MINUTES)))].sort((a, b) => a - b);
@@ -1257,7 +1321,21 @@ export default function EventCalendarExample({
     onAdjust,
     onEdit,
     pendingCreate: session?.intent === 'create' ? session.place : null,
+    gutters,
   };
+
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const read = () => {
+      const width = el.getBoundingClientRect().width;
+      setNarrow(width > 0 && Math.round(width) <= 375);
+    };
+    const watcher = new ResizeObserver(read);
+    watcher.observe(el);
+    read();
+    return () => watcher.disconnect();
+  }, []);
 
   useLayoutEffect(() => {
     setPinFocus(view !== 'month');
@@ -1287,7 +1365,7 @@ export default function EventCalendarExample({
   };
 
   return (
-    <div className={styles.calendar} onFocusCapture={(event) => noteFocus(event.target)}>
+    <div ref={rootRef} className={styles.calendar} onFocusCapture={(event) => noteFocus(event.target)}>
       <div className={styles.toolbar}>
         <ToggleGroup.Root
           aria-label="Calendar view"
@@ -1342,7 +1420,7 @@ export default function EventCalendarExample({
           />
         </Calendar.Root>
       ) : (
-        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" className={styles.board}>
+        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" aria-describedby={compareName ? `${zoneId} ${compareId}` : zoneId} className={styles.board}>
           <div
             className={styles.frame}
             style={{
@@ -1354,7 +1432,18 @@ export default function EventCalendarExample({
             }}
           >
             <div className={styles.head}>
-              <div className={styles.corner} />
+              <div className={styles.corner}>
+                <Text.Root as="span" id={zoneId} variant="label" tone="muted" className={styles.zone}>
+                  {primaryName}
+                </Text.Root>
+              </div>
+              {compareName ? (
+                <div className={styles.corner}>
+                  <Text.Root as="span" id={compareId} variant="label" tone="muted" className={styles.zone}>
+                    {compareName}
+                  </Text.Root>
+                </div>
+              ) : null}
               {axis.segments.map((segment) => (
                 <Text.Root as="h3" variant="label" tabIndex={-1} id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
                   {dayHeading(segment.day, locale)}
@@ -1363,7 +1452,9 @@ export default function EventCalendarExample({
             </div>
             {stripBars.length === 0 ? null : (
               <div className={styles.strip}>
-                <div className={styles.corner} />
+                {Array.from({ length: gutters }, (_, index) => (
+                  <div key={index} className={styles.corner} />
+                ))}
                 {stripBars.map((bar) => {
                   const segment = axis.segments[view === 'day' ? 0 : bar.column] ?? axis.segments[0];
                   if (!segment) return null;
@@ -1391,6 +1482,28 @@ export default function EventCalendarExample({
                   );
                 })}
               </div>
+              {compared.length === 0 ? null : (
+                // The hours repeat the primary instants. The description names this zone, so the column stays quiet.
+                <div className={styles.gutter} aria-hidden="true" data-compare="">
+                  {compared.map((mark) => {
+                    const shift = dayShiftLabel(mark.dayShift, locale);
+                    return (
+                      <Text.Root
+                        as="span"
+                        key={mark.units}
+                        variant="label"
+                        tone="muted"
+                        className={styles.mark}
+                        data-first={mark.units === 0 ? '' : undefined}
+                        style={{ top: percent(mark.units / scale) }}
+                      >
+                        {formatTime(mark.time.toPlainTime(), { locale })}
+                        {shift ? ` ${shift}` : ''}
+                      </Text.Root>
+                    );
+                  })}
+                </div>
+              )}
               {lanes.map(({ segment, placed }) => (
                 <EventColumn
                   key={segment.day.toString()}
@@ -1566,4 +1679,9 @@ export function EventEditor({
       </Form.Root>
     </Dialog.Root>
   );
+}
+
+/** The page. Pacific time, with India Standard Time in the second column. */
+export default function EventCalendarZones({ locale = 'en-US' }: { locale?: string }) {
+  return <EventCalendarExample locale={locale} timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" />;
 }
