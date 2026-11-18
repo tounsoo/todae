@@ -1149,10 +1149,13 @@ export default function EventCalendarExample({
 
   // The dialog unmounts in the same commit that records the edit, so its own
   // focus return has no button to land on yet. This runs after that commit.
+  // The heading is consumed here. A value left from a cancelled create would
+  // steal focus from a later cancelled edit.
   useLayoutEffect(() => {
     if (!returnFocus.current || session) return;
     returnFocus.current = false;
     const day = focusHeading.current;
+    focusHeading.current = null;
     if (day) {
       document.getElementById(`${heading}-${day.toString()}`)?.focus();
       return;

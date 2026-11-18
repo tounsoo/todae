@@ -927,6 +927,10 @@ describe('creating an event from empty lane space', () => {
         <EventCalendarExample locale="en-US" />
       </Providers>,
     );
+    clickLane('Sun, Nov 15', 120);
+    await newEventDialog();
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('heading', { name: 'Sun, Nov 15' }));
     const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
     review.focus();
     await userEvent.keyboard('{Enter}');
