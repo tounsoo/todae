@@ -294,12 +294,12 @@
   gap: var(--todae-space-1);
 }
 
-.eventLine > :first-child {
+.eventLine > * {
   min-inline-size: 0;
 }
 
 .repeats {
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .allDay {
