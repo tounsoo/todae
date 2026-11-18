@@ -20,25 +20,33 @@ const clock = (text: string) => formatTime(Temporal.PlainTime.from(text), { loca
 
 function inkLines(el: HTMLElement): string[] {
   const range = document.createRange();
+  range.selectNodeContents(el);
+  const lines = [...range.getClientRects()]
+    .filter((rect) => rect.width >= 0.5 && rect.height >= 0.5)
+    .map((rect) => ({ top: rect.top, bottom: rect.bottom, chars: [] as { x: number; ch: string }[] }))
+    .sort((a, b) => a.top - b.top);
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-  const rows: { top: number; chars: { x: number; ch: string }[] }[] = [];
   while (walker.nextNode()) {
     const text = walker.currentNode.textContent ?? '';
     for (let index = 0; index < text.length; index += 1) {
       range.setStart(walker.currentNode, index);
       range.setEnd(walker.currentNode, index + 1);
       const rect = range.getBoundingClientRect();
-      if (rect.width < 0.5 || rect.height < 0.5) continue;
-      const top = Math.round(rect.top);
-      const row = rows.find((item) => Math.abs(item.top - top) <= 1);
-      const found = row ?? { top, chars: [] };
-      if (!row) rows.push(found);
-      found.chars.push({ x: rect.left, ch: text[index] ?? '' });
+      if (rect.width < 0.5 || rect.height < 0.5 || lines.length === 0) continue;
+      const mid = (rect.top + rect.bottom) / 2;
+      const inside = lines.find((item) => mid >= item.top && mid <= item.bottom);
+      const line =
+        inside ??
+        lines.reduce((nearest, item) => {
+          const distance = Math.abs((item.top + item.bottom) / 2 - mid);
+          const nearestDistance = Math.abs((nearest.top + nearest.bottom) / 2 - mid);
+          return distance < nearestDistance ? item : nearest;
+        });
+      line.chars.push({ x: rect.left, ch: text[index] ?? '' });
     }
   }
-  return rows
-    .sort((a, b) => a.top - b.top)
-    .map((row) => row.chars.sort((a, b) => a.x - b.x).map((item) => item.ch).join('').trim())
+  return lines
+    .map((line) => line.chars.sort((a, b) => a.x - b.x).map((item) => item.ch).join('').trim())
     .filter((line) => line.length > 0);
 }
 
