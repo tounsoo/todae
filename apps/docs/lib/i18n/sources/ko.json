@@ -1291,16 +1291,17 @@
     "(section order)": "428f0e0773ae"
   },
   "utilities/use-lane-drag": {
-    "(top)": "eb186fb551e5",
-    "# useLaneDrag": "14a0c7064498",
-    "## Places": "f4f54b92ba05",
+    "(top)": "68018145fd13",
+    "# useLaneDrag": "4346ba8d6016",
+    "## Places": "f5132ae1d664",
+    "## Creating a place": "f57390ccca58",
     "## Checking a place": "8612d14aa3db",
-    "## Showing the drag": "02443dfa404d",
-    "## Touch and the pointer": "33e7c6db69ee",
-    "## Accessible composition": "733031f65e3c",
+    "## Showing the drag": "19b0a5dc5604",
+    "## Touch and the pointer": "2e0566b5d1c6",
+    "## Accessible composition": "000df8cad315",
     "## When to use": "cecff069efe2",
     "## Props": "32a999fe1daf",
-    "(section order)": "603e4f49094e"
+    "(section order)": "5887f4a84402"
   },
   "utilities/use-mentions": {
     "(top)": "0b4c34b76bb5",
