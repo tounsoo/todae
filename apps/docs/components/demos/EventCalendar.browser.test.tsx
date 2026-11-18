@@ -930,6 +930,54 @@ describe('month bar polish', () => {
     view.unmount();
     await page.viewport(1280, 800);
   });
+
+  it('keeps today\'s bars below the date mark and level with the rest of the week', async () => {
+    const clock = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(Temporal.PlainDate.from('2026-11-18'));
+    try {
+      const view = render(
+        <Providers>
+          <main>
+            <EventCalendarExample locale="en-US" />
+          </main>
+        </Providers>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+      await settle();
+      for (const width of [1280, 375]) {
+        await page.viewport(width, 900);
+        await settle();
+        const today = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
+        const mark = today.querySelector<HTMLElement>('[class*="dateMark"]');
+        const bar = today.querySelector<HTMLElement>('[data-bar="launch"]');
+        if (!mark || !bar) throw new Error(`${width}: today is missing its mark or Launch watch`);
+        const markBox = mark.getBoundingClientRect();
+        const barBox = bar.getBoundingClientRect();
+        const cellBox = today.getBoundingClientRect();
+        expect(markBox.width, `${width} mark`).toBeLessThan(cellBox.width / 2);
+        expect(markBox.right, `${width} mark`).toBeLessThanOrEqual(cellBox.right);
+        expect(barBox.top, `${width} below mark`).toBeGreaterThanOrEqual(markBox.bottom - 0.5);
+        const hit = document.elementFromPoint((barBox.left + barBox.right) / 2, (barBox.top + barBox.bottom) / 2);
+        expect(hit?.closest('[data-bar]')?.getAttribute('data-bar'), `${width} hit`).toBe('launch');
+        const row = today.closest('tr');
+        if (!row) throw new Error('today is not in a week');
+        const tracks = [...row.querySelectorAll<HTMLElement>('[class*="barRows"]')].map((track) => track.getBoundingClientRect().top);
+        expect(tracks.length, `${width} tracks`).toBeGreaterThan(2);
+        for (const top of tracks) expect(Math.abs(top - tracks[0]!), `${width} track`).toBeLessThan(1);
+        const topBars = [...row.querySelectorAll<HTMLElement>('[data-bar]')].filter((item) => {
+          const box = item.getBoundingClientRect();
+          return box.height > 1 && Math.abs(box.top - barBox.top) < 1;
+        });
+        const days = new Set(topBars.map((item) => item.closest('[data-todae-calendar-cell]')?.getAttribute('aria-label')));
+        expect(days.has('Monday, November 16, 2026'), `${width} row`).toBe(true);
+        expect(days.has('Wednesday, November 18, 2026'), `${width} row`).toBe(true);
+        expect(days.has('Friday, November 20, 2026'), `${width} row`).toBe(true);
+      }
+      view.unmount();
+    } finally {
+      clock.mockRestore();
+      await page.viewport(1280, 800);
+    }
+  });
 });
 
 describe('the month in light and dark', () => {

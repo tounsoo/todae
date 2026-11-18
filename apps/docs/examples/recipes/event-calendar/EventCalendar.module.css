@@ -301,6 +301,7 @@
 }
 
 .month :global(td button[type='button']) {
+  --_date-mark: calc(var(--todae-font-size-2) * 2);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -314,6 +315,8 @@
   min-block-size: calc(var(--todae-calendar-day-size) * 3);
   padding-block: var(--todae-space-1);
   padding-inline: var(--todae-space-1);
+  font-size: var(--todae-calendar-font-size);
+  line-height: 1;
   text-align: start;
 }
 
@@ -333,15 +336,22 @@
   color: var(--todae-color-fg-default);
 }
 
+.dateRow {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--_date-mark);
+  block-size: var(--_date-mark);
+  /* The day number is the button's text node, so this row pulls up over it and the bars follow the row. */
+  margin-block-start: calc(-1 * 1lh);
+}
+
 .dateMark {
-  position: absolute;
-  z-index: 2;
-  inset-block-start: var(--todae-space-1);
-  inset-inline-start: var(--todae-space-1);
   display: grid;
   place-items: center;
-  inline-size: calc(var(--todae-font-size-2) * 2);
-  block-size: calc(var(--todae-font-size-2) * 2);
+  inline-size: 100%;
+  block-size: 100%;
   border-radius: var(--todae-radius-full);
   background: var(--todae-color-accent-default);
   color: var(--todae-color-on-accent);
@@ -491,6 +501,15 @@
 }
 
 @container month (max-inline-size: 30rem) {
+  .month :global(td button[type='button']) {
+    --_date-mark: var(--todae-space-4);
+    font-size: var(--todae-font-size-1);
+  }
+
+  .dateMark {
+    font-size: var(--todae-font-size-1);
+  }
+
   .barRows {
     --_row: var(--todae-space-1);
   }
