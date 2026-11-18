@@ -239,7 +239,7 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'scaffold_design_system',
-    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. When the draft fits, returns tokenFiles and otherFiles, the shape build_tokens takes, plus whether those files build. A draft over the 40000 character budget comes back one file at a time. Pass cursor.offset for the next file, and cursor.char when a file continues. Save the files yourself; nothing is written to your machine.',
+    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. When the draft fits, returns tokenFiles and otherFiles, the shape build_tokens takes, plus whether those files build. A draft over the 40000 character budget comes back one file at a time. The first next call is this tool again, with the original arguments plus cursor.offset, and cursor.char when a file continues. Pass that call as it is. Save the files yourself; nothing is written to your machine.',
     {
       name: contextName,
       colors: z.object({ light: colorMap, dark: colorMap }).optional(),
@@ -250,7 +250,7 @@ function registerTools(server: McpServer) {
     },
     async ({ offset: from, char, ...options }) => {
       try {
-        return ok(presentScaffold(await scaffoldDesignSystem(options), from ?? 0, char ?? 0));
+        return ok(presentScaffold(await scaffoldDesignSystem(options), from ?? 0, char ?? 0, options));
       } catch (error) {
         return fail(error);
       }

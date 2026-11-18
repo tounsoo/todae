@@ -18,7 +18,7 @@ export const LARGE_PAGE_TOKENS = 4_000;
 
 const FALLBACK = Symbol('todae.mcp.fallback');
 
-export type NextCall = { tool: string; arguments: Record<string, string | number | boolean>; why: string };
+export type NextCall = { tool: string; arguments: Record<string, unknown>; why: string };
 
 export type Nav = {
   what: string;

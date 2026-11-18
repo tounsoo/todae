@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { withExampleCode } from '../../../lib/exampleCode';
 import { buildTokenFiles } from '../../../lib/docs-mcp/build';
 import { getChanges } from '../../../lib/docs-mcp/changes';
-import { resetPagesForTests } from '../../../lib/docs-mcp/catalog';
+import { pageRecord, resetPagesForTests } from '../../../lib/docs-mcp/catalog';
 import { absolutize } from '../../../lib/docs-mcp/mdx';
 import { scaffoldDesignSystem, type Oklch, type ScaffoldOptions } from '../../../lib/docs-mcp/scaffold';
 import { listComponents } from '../../../lib/docs-mcp/tools';
@@ -108,8 +108,9 @@ describe('route regressions', () => {
     let continuedInFile = false;
     let fileOffset = 0;
     let char = 0;
+    let args: Record<string, unknown> = { ...options };
     for (let step = 0; step < 80; step += 1) {
-      const { error, body, raw } = await tool('scaffold_design_system', { ...options, offset: fileOffset, ...(char ? { char } : {}) });
+      const { error, body, raw } = await tool('scaffold_design_system', args);
       expect(error).toBeNull();
       expect(raw.length).toBeLessThanOrEqual(MAX_RESPONSE_CHARS);
       const file = body?.file as { group?: string; path?: string; contents?: string } | undefined;
@@ -122,12 +123,16 @@ describe('route regressions', () => {
       if (file?.group === 'build' && file.path === 'build-error' && typeof file.contents === 'string') buildError += file.contents;
       const cursor = body?.cursor as { offset?: number; char?: number } | undefined;
       if (cursor && typeof cursor.char === 'number' && cursor.offset === fileOffset) continuedInFile = true;
+      const suggestion = (body?.nav as { next?: { tool?: string; arguments?: Record<string, unknown> }[] } | undefined)?.next?.[0];
       if (!cursor) break;
+      expect(suggestion?.tool).toBe('scaffold_design_system');
       const next = cursor.offset ?? fileOffset;
       const nextChar = cursor.char ?? 0;
+      expect(suggestion?.arguments).toMatchObject({ name: 'acme', offset: next, char: nextChar });
       expect(next > fileOffset || nextChar > char).toBe(true);
       fileOffset = next;
       char = nextChar;
+      args = suggestion?.arguments ?? {};
     }
     expect(tokenFiles).toEqual(drafted.tokenFiles);
     expect(otherFiles).toEqual(drafted.otherFiles);
@@ -286,6 +291,31 @@ describe('route regressions', () => {
     expect(next?.arguments?.locale).toBe('ko');
   });
 
+  it('keeps locale on the next lines of a long Korean example', async () => {
+    const page = pageRecord('ko', 'recipes/scheduler');
+    const example = page?.examples.find((item) => item.file === 'SchedulerExample.tsx');
+    if (!example) throw new Error('expected the Korean scheduler example');
+    const lines = example.text.split('\n');
+    const first = await tool('get_example', { page: 'recipes/scheduler', file: 'SchedulerExample.tsx', locale: 'ko' });
+    expect(first.error).toBeNull();
+    const cursor = first.body?.cursor as { startLine?: number } | undefined;
+    expect(typeof cursor?.startLine).toBe('number');
+    const next = (first.body?.nav as { next?: { tool?: string; arguments?: Record<string, unknown> }[] } | undefined)?.next?.[0];
+    expect(next?.tool).toBe('get_example');
+    expect(next?.arguments).toMatchObject({ locale: 'ko', startLine: cursor?.startLine, file: 'SchedulerExample.tsx' });
+    const followed = await tool('get_example', next?.arguments ?? {});
+    expect(followed.error).toBeNull();
+    expect(followed.body?.locale).toBe('ko');
+    const start = followed.body?.startLine;
+    const end = followed.body?.endLine;
+    if (typeof start !== 'number' || typeof end !== 'number') throw new Error('expected a line window');
+    const source = String(followed.body?.code ?? '')
+      .split('\n')
+      .map((line) => line.replace(/^\s*\d+ \| /, ''))
+      .join('\n');
+    expect(source).toBe(lines.slice(start - 1, end).join('\n'));
+  });
+
   it('keeps the MCP manual off a product question and opens it when the question names it', async () => {
     const product = await tool('search_docs', { query: '세션을 다른 무대로 끌기', locale: 'ko' });
     expect(product.error).toBeNull();
@@ -337,7 +367,12 @@ describe('route regressions', () => {
       const sheet = await tool('get_example', { page: 'paired', file: 'EventCalendar.module.css' });
       expect(sheet.error).toBeNull();
       expect(sheet.body?.code).toContain('canvastext');
+      expect(String(sheet.body?.code ?? '')).not.toContain('lanegrid');
       expect(String(sheet.body?.code ?? '')).not.toContain('every week');
+      const lane = await tool('get_example', { page: 'paired', file: 'Lane.module.css' });
+      expect(lane.error).toBeNull();
+      expect(lane.body?.code).toContain('lanegrid');
+      expect(String(lane.body?.code ?? '')).not.toContain('every week');
       const script = await tool('get_example', { page: 'paired', file: 'recurrence.ts' });
       expect(script.error).toBeNull();
       expect(script.body?.code).toContain('every week');

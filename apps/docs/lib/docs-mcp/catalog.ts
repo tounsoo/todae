@@ -5,7 +5,7 @@ import { DOCS_ORIGIN } from '../origin';
 import { exampleOf } from '../exampleCode';
 import { parseMdx } from '../mdxAst';
 import { pageSummary } from '../pageSummary.mjs';
-import { defaultImports, exampleBlocks, exampleFile, exampleLocalModules, exampleStylesheets, EXAMPLES_DIR } from '../remarkExamples.mjs';
+import { defaultImports, exampleBlocks, exampleFile, exampleLocalModules, EXAMPLES_DIR } from '../remarkExamples.mjs';
 import { absolutize, loadPages } from './mdx';
 import { headingAnchor, tokensOf } from './units';
 
@@ -121,12 +121,13 @@ function exampleRow(path: string, lang: string, value: string, id: string, demon
 function filesFor(file: string, id: string, demonstrates: string, anchor: string, shown: Set<string>): ExampleFile[] {
   const text = readFileSync(file, 'utf8');
   // The page renders the tsx and the stylesheets only. A sibling module is listed for get_example.
-  const sheetPaths = exampleStylesheets(file, text).filter((path) => !shown.has(path));
-  const [tsx, ...sheets] = exampleBlocks(file, shown);
+  // Each stylesheet block carries its path, so two imports cannot swap contents by position.
+  const blocks = exampleBlocks(file, shown);
+  const tsx = blocks.find((block) => block.lang === 'tsx');
   return [
     exampleRow(file, tsx?.lang ?? 'tsx', tsx?.value ?? '', id, demonstrates, anchor),
     ...exampleLocalModules(file, text).map((path) => exampleRow(path, 'ts', readFileSync(path, 'utf8').trimEnd(), id, demonstrates, anchor)),
-    ...sheetPaths.map((path, index) => exampleRow(path, 'css', sheets[index]?.value ?? '', id, demonstrates, anchor)),
+    ...blocks.filter((block) => block.lang === 'css').map((block) => exampleRow(block.path, block.lang, block.value, id, demonstrates, anchor)),
   ];
 }
 
