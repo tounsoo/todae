@@ -11,6 +11,7 @@ import EventCalendarExample, {
   daySegments,
   eventFromDraft,
   eventFromLane,
+  shiftDraft,
   findConflicts,
   finishGesture,
   fromUnits,
@@ -1000,6 +1001,64 @@ describe('moving and resizing a timed event', () => {
     const ship = event('ship', '2026-11-19T15:00:00-08:00[America/Los_Angeles]', '2026-11-19T18:30:00-08:00[America/Los_Angeles]');
     expect(adjustEvent(ship, lane(axis, '2026-11-19'), axis, { kind: 'length', slots: 1 })).toBeNull();
     expect(adjustEvent(review, segment, axis, { kind: 'day', days: -8 })).toBeNull();
+    const offGrid = event('edge', '2026-11-16T08:07:00-08:00[America/Los_Angeles]', '2026-11-16T09:00:00-08:00[America/Los_Angeles]');
+    expect(adjustEvent(offGrid, segment, axis, { kind: 'shift', slots: -1 })).toBeNull();
+  });
+
+  it('keeps the shown time when a day move crosses a clock change in another zone', () => {
+    const axis = daySegments({
+      days: [date('2026-10-31'), date('2026-11-01')],
+      opens: time('08:00'),
+      closes: time('18:00'),
+      timeZone: LA,
+    });
+    const segment = lane(axis, '2026-10-31');
+    const start = Temporal.PlainDateTime.from('2026-10-31T10:00').toZonedDateTime(LA).withTimeZone('Asia/Tokyo');
+    const end = Temporal.PlainDateTime.from('2026-10-31T11:00').toZonedDateTime(LA).withTimeZone('Asia/Tokyo');
+    const talk = event('tokyo', start.toString(), end.toString(), { title: 'Tokyo' });
+    const moved = adjustEvent(talk, segment, axis, { kind: 'day', days: 1 });
+    expect(moved?.start.withTimeZone(LA).toString()).toBe('2026-11-01T10:00:00-08:00[America/Los_Angeles]');
+    expect(moved?.end.withTimeZone(LA).toString()).toBe('2026-11-01T11:00:00-08:00[America/Los_Angeles]');
+    const dragged = eventFromLane(
+      talk,
+      { from: { day: segment.day, start: 120, end: 180 }, to: { day: date('2026-11-01'), start: 120, end: 180 }, kind: 'move' },
+      axis,
+    );
+    expect(dragged?.start.withTimeZone(LA).toString()).toBe('2026-11-01T10:00:00-08:00[America/Los_Angeles]');
+  });
+
+  it('refuses a day move that would pass the shorter day close', () => {
+    const axis = daySegments({
+      days: [date('2026-03-08'), date('2026-03-09')],
+      opens: time('01:00'),
+      closes: time('04:00'),
+      timeZone: LA,
+    });
+    expect(lane(axis, '2026-03-08').length).toBe(120);
+    expect(lane(axis, '2026-03-09').length).toBe(180);
+    const sync = event('sync', '2026-03-09T01:00:00-07:00[America/Los_Angeles]', '2026-03-09T03:30:00-07:00[America/Los_Angeles]');
+    expect(adjustEvent(sync, lane(axis, '2026-03-09'), axis, { kind: 'day', days: -1 })).toBeNull();
+  });
+
+  it('keeps a drop at the minutes the drag already chose', () => {
+    const axis = daySegments({ days: [date('2026-11-16')], opens: time('08:00'), closes: time('18:00'), timeZone: LA });
+    const segment = lane(axis, '2026-11-16');
+    const review = event('review', '2026-11-16T09:00:00-08:00[America/Los_Angeles]', '2026-11-16T10:30:00-08:00[America/Los_Angeles]');
+    const moved = eventFromLane(review, { from: { day: segment.day, start: 60, end: 150 }, to: { day: segment.day, start: 72, end: 162 }, kind: 'move' }, axis);
+    expect(moved?.start.toString()).toBe('2026-11-16T09:12:00-08:00[America/Los_Angeles]');
+    expect(moved?.end.toString()).toBe('2026-11-16T10:42:00-08:00[America/Los_Angeles]');
+  });
+
+  it('moves the end with the date and with the start', () => {
+    const draft = { title: 'Design review', date: date('2026-11-16'), endDate: date('2026-11-16'), start: time('09:00'), end: time('10:30'), allDay: false };
+    const dated = shiftDraft(draft, 'date', date('2026-11-24'), LA);
+    expect(dated.date?.toString()).toBe('2026-11-24');
+    expect(dated.endDate?.toString()).toBe('2026-11-24');
+    expect(dated.end?.toString()).toBe('10:30:00');
+    const started = shiftDraft(draft, 'start', time('19:00'), LA);
+    expect(started.start?.toString()).toBe('19:00:00');
+    expect(started.end?.toString()).toBe('20:30:00');
+    expect(started.endDate?.toString()).toBe('2026-11-16');
   });
 
   it('moves a clipped event by the snapped delta, so the hidden part comes with it', () => {
@@ -1022,6 +1081,11 @@ describe('moving and resizing a timed event', () => {
       zone,
     );
     expect(invalid).toEqual({ ok: false, issue: { field: 'end', message: 'End must be after the start.' } });
+    const sameInstant = eventFromDraft(
+      { title: 'Design review', date: date('2026-11-16'), endDate: date('2026-11-16'), start: time('09:00'), end: time('09:00'), allDay: false },
+      zone,
+    );
+    expect(sameInstant).toEqual({ ok: false, issue: { field: 'end', message: 'End must be after the start.' } });
     const saved = eventFromDraft(
       { title: '  Design review  ', date: date('2026-11-16'), endDate: date('2026-11-16'), start: time('09:00'), end: time('11:00'), allDay: false },
       zone,
@@ -1111,6 +1175,24 @@ describe('the event menu and dialog', () => {
     const menu = await openMenu();
     expect(within(menu).queryByRole('menuitem', { name: 'Move to next day' })).toBeNull();
     expect(within(menu).getByRole('menuitem', { name: '15 minutes earlier' }).getAttribute('aria-disabled')).toBe('true');
+    const before = early.getAttribute('aria-label');
+    fireEvent.click(within(menu).getByRole('menuitem', { name: '15 minutes earlier' }));
+    expect(early.getAttribute('aria-label')).toBe(before);
+  });
+
+  it('disables a day move onto a shorter day', async () => {
+    const sync = event('sync', '2026-03-09T01:00:00-07:00[America/Los_Angeles]', '2026-03-09T03:30:00-07:00[America/Los_Angeles]', { title: 'Sync' });
+    render(<EventCalendarExample locale="en-US" anchor={date('2026-03-09')} opens={time('01:00')} closes={time('04:00')} events={[sync]} />);
+    const button = screen.getByRole('button', { name: `Sync, ${clock('01:00')} to ${clock('03:30')}` });
+    await act(async () => {
+      fireEvent.pointerDown(button, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.pointerUp(button, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.click(button);
+    });
+    const menu = await openMenu();
+    expect(within(menu).getByRole('menuitem', { name: 'Move to previous day' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Move to previous day' }));
+    expect(screen.getByRole('list', { name: 'Mon, Mar 9' }).contains(button)).toBe(true);
   });
 
   it('shows a field error when the end is not after the start, then saves a later end', async () => {
@@ -1126,6 +1208,48 @@ describe('the event menu and dialog', () => {
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     const saved = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('11:00')}` });
     expect(document.activeElement).toBe(saved);
+  });
+
+  it('opens the dialog on the title', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Design review, ${clock('09:00')} to ${clock('10:30')}`, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Design review' });
+    await vi.waitFor(() => expect(document.activeElement).toBe(within(dialog).getByRole('textbox', { name: 'Title' })));
+  });
+
+  it('keeps the length when only the date changes, and focuses the event on its new week', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Design review, ${clock('09:00')} to ${clock('10:30')}`, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Design review' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Date' }), { target: { value: '11/24/2026' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const saved = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    expect(screen.getByRole('list', { name: 'Tue, Nov 24' }).contains(saved)).toBe(true);
+    expect(screen.queryByRole('heading', { name: 'Mon, Nov 16' })).toBeNull();
+    expect(document.activeElement).toBe(saved);
+  });
+
+  it('focuses the day heading when Save takes the event off the lanes', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const name = `Design review, ${clock('09:00')} to ${clock('10:30')}`;
+    await choose(name, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Design review' });
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByRole('button', { name: /^Design review,/ })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Mon, Nov 16' }));
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(name, 'Edit…');
+    const again = await screen.findByRole('dialog', { name: 'Edit Design review' });
+    fireEvent.change(within(again).getByRole('textbox', { name: 'Start' }), { target: { value: '7:00 PM' } });
+    fireEvent.click(within(again).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByRole('button', { name: /^Design review,/ })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Mon, Nov 16' }));
   });
 
   it('cancels the dialog on Escape and keeps the event', async () => {

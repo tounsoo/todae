@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
@@ -94,9 +95,9 @@ function dayLane(name: string): HTMLElement {
   return column;
 }
 
-function atUnits(name: string, units: number) {
+function atUnits(name: string, units: number, scale = SCALE) {
   const box = dayLane(name).getBoundingClientRect();
-  return { x: box.left + box.width / 2, y: box.top + (units / SCALE) * box.height };
+  return { x: box.left + box.width / 2, y: box.top + (units / scale) * box.height };
 }
 
 const pointer = (type: string, target: EventTarget, x: number, y: number) => {
@@ -188,9 +189,68 @@ describe('moving, resizing, and editing', () => {
       </Providers>,
     );
     const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
-    dragBlock(review, atUnits('Mon, Nov 16', 180)).escape();
+    const gesture = dragBlock(review, atUnits('Mon, Nov 16', 180));
+    // The Escape listener mounts in an effect after the drag renders. Sending the key in the same turn never reaches it.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    gesture.escape();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     expect(reviewName()).toBe(`Design review, ${clock('09:00')} to ${clock('10:30')}`);
+  });
+
+  it('snaps a drop that lands between slots', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    dragBlock(review, atUnits('Mon, Nov 16', 72)).drop();
+    await expect.poll(() => reviewName()).toBe(`Design review, ${clock('09:15')} to ${clock('10:45')}`);
+  });
+
+  it('stops a resize at one slot', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    const handle = review.closest('li')?.querySelector<HTMLElement>('[data-edge="end"]');
+    if (!handle) throw new Error('missing resize handle');
+    const from = handle.getBoundingClientRect();
+    const to = atUnits('Mon, Nov 16', 65);
+    pointer('pointerdown', handle, from.left + from.width / 2, from.top + from.height / 2);
+    pointer('pointermove', handle, from.left + from.width / 2, from.top + 8);
+    pointer('pointermove', handle, to.x, to.y);
+    pointer('pointerup', handle, to.x, to.y);
+    await expect.poll(() => reviewName()).toBe(`Design review, ${clock('09:00')} to ${clock('09:15')}`);
+  });
+
+  it('refuses a drop past a shorter day close', async () => {
+    const sync = {
+      id: 'sync',
+      title: 'Sync',
+      allDay: false,
+      start: Temporal.ZonedDateTime.from('2026-03-08T01:00:00-08:00[America/Los_Angeles]'),
+      end: Temporal.ZonedDateTime.from('2026-03-08T01:30:00-08:00[America/Los_Angeles]'),
+    };
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" anchor={Temporal.PlainDate.from('2026-03-08')} opens={Temporal.PlainTime.from('01:00')} closes={Temporal.PlainTime.from('04:00')} events={[sync]} />
+      </Providers>,
+    );
+    const name = `Sync, ${clock('01:00')} to ${clock('01:30')}`;
+    const button = screen.getByRole('button', { name });
+    dragBlock(button, atUnits('Sun, Mar 8', 150, 180)).drop();
     await expect.poll(() => document.querySelector('[data-dragging]')).toBeNull();
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined)));
+    });
+    expect(screen.getByRole('button', { name }).getAttribute('aria-label')).toBe(name);
   });
 
   it('moves an event from the keyboard and returns focus to it', async () => {

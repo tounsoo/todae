@@ -213,6 +213,10 @@
   gap: var(--todae-space-3);
 }
 
+.allDay {
+  margin-block-start: var(--todae-space-2);
+}
+
 .month {
   inline-size: 100%;
   min-inline-size: 0;

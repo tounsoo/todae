@@ -201,8 +201,11 @@ export function finishGesture<T>(original: T, next: T | null, gesture: 'drop' | 
 
 export type SlotChange = { kind: 'shift'; slots: number } | { kind: 'day'; days: number } | { kind: 'length'; slots: number };
 
-function shiftEvent(event: CalendarEvent, minutes: number, days: number): CalendarEvent {
-  return { ...event, start: event.start.add({ days }).add({ minutes }), end: event.end.add({ days }).add({ minutes }) };
+function shiftEvent(event: CalendarEvent, minutes: number, days: number, timeZone: string): CalendarEvent {
+  // Add the day in the calendar's zone. The event's own zone keeps its wall
+  // clock across a clock change, so a 10:00 shown in this zone would land at 9:00.
+  const shift = (value: Temporal.ZonedDateTime) => value.withTimeZone(timeZone).add({ days, minutes });
+  return { ...event, start: shift(event.start), end: shift(event.end) };
 }
 
 function clippedUnits(segment: DaySegment, event: CalendarEvent): LaneSpan | null {
@@ -228,15 +231,13 @@ export function adjustEvent(event: CalendarEvent, segment: DaySegment, axis: Day
   if (change.kind === 'shift') {
     const proposed = { start: visible.start + change.slots * step, end: visible.end + change.slots * step };
     if (proposed.start < 0 || proposed.end > segment.length) return null;
-    const clamped = clampSpan(visible, proposed, segment.length, step, 'move');
-    if (!clamped || clamped.start !== proposed.start) return null;
-    return shiftEvent(event, clamped.start - visible.start, 0);
+    return shiftEvent(event, change.slots * step, 0, segment.opens.timeZoneId);
   }
   if (change.kind === 'day') {
     const targetDay = segment.day.add({ days: change.days });
     const target = axis.segments.find((each) => each.day.equals(targetDay));
     if (!target || visible.end > target.length) return null;
-    return shiftEvent(event, 0, change.days);
+    return shiftEvent(event, 0, change.days, segment.opens.timeZoneId);
   }
   const proposedEnd = visible.end + change.slots * step;
   if (proposedEnd > segment.length || proposedEnd - visible.start < step) return null;
@@ -258,22 +259,21 @@ export type LaneDrop = {
  * including the part a lane clips, by the snapped delta. A resize writes the
  * drawn edge, so a handle on a clipped side sets the real start or end.
  */
-export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxis, step = SLOT_MINUTES): CalendarEvent | null {
+export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxis): CalendarEvent | null {
   const segment = axis.segments.find((each) => each.day.equals(drop.to.day));
   if (!segment) return null;
-  const edge: SlotEdge = drop.kind === 'move' ? 'move' : drop.kind === 'resize-start' ? 'start' : 'end';
-  const clamped = clampSpan(drop.from, drop.to, segment.length, step, edge);
-  if (!clamped) return null;
+  const zone = segment.opens.timeZoneId;
+  // `to` is the place useLaneDrag already snapped. Snapping it again would hide a grid change.
   if (drop.kind === 'move') {
     const days = drop.from.day.until(drop.to.day, { largestUnit: 'day' }).days;
-    return shiftEvent(event, clamped.start - drop.from.start, days);
+    return shiftEvent(event, drop.to.start - drop.from.start, days, zone);
   }
   if (drop.kind === 'resize-end') {
-    const end = fromUnits(segment, clamped.end, 'end');
+    const end = fromUnits(segment, drop.to.end, 'end');
     if (!end || Temporal.ZonedDateTime.compare(end, event.start) <= 0) return null;
     return { ...event, end };
   }
-  const start = fromUnits(segment, clamped.start, 'start');
+  const start = fromUnits(segment, drop.to.start, 'start');
   if (!start || Temporal.ZonedDateTime.compare(event.end, start) <= 0) return null;
   return { ...event, start };
 }
@@ -288,6 +288,21 @@ export type EventDraft = {
 };
 
 export type DraftIssue = { field: 'title' | 'date' | 'start' | 'end'; message: string };
+
+/** Keeps the draft's length when the date or the start moves, and leaves every other field as it was set. */
+export function shiftDraft<K extends keyof EventDraft>(draft: EventDraft, key: K, value: EventDraft[K], timeZone: string): EventDraft {
+  if (key === 'date' && value instanceof Temporal.PlainDate && draft.date && draft.endDate) {
+    const days = draft.date.until(value, { largestUnit: 'day' }).days;
+    return { ...draft, date: value, endDate: draft.endDate.add({ days }) };
+  }
+  if (key === 'start' && value instanceof Temporal.PlainTime && draft.start && draft.end && draft.date && draft.endDate) {
+    const from = draft.date.toZonedDateTime({ timeZone, plainTime: draft.start });
+    const to = draft.endDate.toZonedDateTime({ timeZone, plainTime: draft.end });
+    const next = to.add(from.until(draft.date.toZonedDateTime({ timeZone, plainTime: value })));
+    return { ...draft, start: value, endDate: next.withTimeZone(timeZone).toPlainDate(), end: next.withTimeZone(timeZone).toPlainTime() };
+  }
+  return { ...draft, [key]: value };
+}
 
 /** The event a dialog's fields name, or the first field that is wrong. */
 export function eventFromDraft(draft: EventDraft, timeZone: string): { ok: true; value: Pick<CalendarEvent, 'title' | 'start' | 'end' | 'allDay'> } | { ok: false; issue: DraftIssue } {
@@ -757,7 +772,9 @@ export default function EventCalendarExample({
   const heading = useId();
   const pendingFocus = useRef<'day' | null>(null);
   const landing = useRef<HTMLButtonElement | null>(null);
+  const boardNode = useRef<HTMLDivElement>(null);
   const returnFocus = useRef(false);
+  const focusHeading = useRef<Temporal.PlainDate | null>(null);
   const [pinFocus, setPinFocus] = useState(true);
   const announce = useAnnouncer();
   const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
@@ -777,10 +794,19 @@ export default function EventCalendarExample({
   const move = view === 'week' ? 'week' : 'day';
   const grid = [...new Set(axis.segments.flatMap((segment) => snapGrid(segment, SLOT_MINUTES)))].sort((a, b) => a - b);
 
-  const commit = (next: CalendarEvent, day: Temporal.PlainDate) => {
+  const shownDay = (event: CalendarEvent, day: Temporal.PlainDate): Temporal.PlainDate | null => {
+    if (event.allDay) return null;
+    const around = view === 'day' ? [day.add({ days: -1 }), day, day.add({ days: 1 })] : weekOf(day, locale);
+    const next = daySegments({ days: around, opens, closes, timeZone });
+    return next.segments.find((segment) => clippedUnits(segment, event))?.day ?? null;
+  };
+
+  const commit = (next: CalendarEvent, day: Temporal.PlainDate, where: 'event' | 'heading' = 'event') => {
     const current = items.find((each) => each.id === next.id) ?? next;
     const settled = finishGesture(current, next, 'drop');
-    setFocusKey(settled.allDay ? null : blockKey(settled.id, day));
+    const onLane = where === 'event' && !settled.allDay;
+    setFocusKey(onLane ? blockKey(settled.id, day) : null);
+    focusHeading.current = onLane ? null : day;
     setItems((list) => list.map((each) => (each.id === settled.id ? settled : each)));
     const start = settled.start.withTimeZone(timeZone);
     const end = settled.end.withTimeZone(timeZone);
@@ -794,8 +820,18 @@ export default function EventCalendarExample({
   useLayoutEffect(() => {
     if (!returnFocus.current || editing) return;
     returnFocus.current = false;
-    landing.current?.focus();
-  }, [editing, focusKey, items]);
+    const day = focusHeading.current;
+    if (day) {
+      const headingEl = document.getElementById(`${heading}-${day.toString()}`);
+      if (headingEl) {
+        headingEl.focus();
+        return;
+      }
+      boardNode.current?.focus();
+      return;
+    }
+    if (landing.current?.isConnected) landing.current.focus();
+  }, [anchor, editing, focusKey, heading, items]);
 
   const board = useLaneDrag({
     range: { start: 0, end: Math.max(scale, SLOT_MINUTES) },
@@ -946,7 +982,7 @@ export default function EventCalendarExample({
           />
         </Calendar.Root>
       ) : (
-        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" className={styles.board}>
+        <ScrollArea.Root {...board.getBoardProps()} ref={boardNode} axis="both" focusable aria-label="Calendar" className={styles.board}>
           <div
             className={styles.frame}
             style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
@@ -1005,7 +1041,9 @@ export default function EventCalendarExample({
           }}
           onSave={(next) => {
             const day = next.start.withTimeZone(timeZone).toPlainDate();
-            commit(next, day);
+            const home = shownDay(next, day);
+            setAnchor(home ?? day);
+            commit(next, home ?? day, home ? 'event' : 'heading');
             setEditing(null);
           }}
         />
@@ -1034,6 +1072,7 @@ export function EventEditor({
   restoreFocusRef?: RefObject<HTMLElement | null>;
 }) {
   const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId() };
+  const titleRef = useRef<HTMLInputElement>(null);
   const [fields, setFields] = useState<EventDraft>(() => {
     const start = event.start.withTimeZone(timeZone);
     const end = event.end.withTimeZone(timeZone);
@@ -1044,7 +1083,7 @@ export function EventEditor({
     <K extends keyof EventDraft>(key: K) =>
     (value: EventDraft[K]) => {
       setErrors({});
-      setFields((current) => ({ ...current, [key]: value }));
+      setFields((current) => shiftDraft(current, key, value, timeZone));
     };
 
   const submit = (submitEvent: SubmitEvent<HTMLFormElement>) => {
@@ -1058,7 +1097,7 @@ export function EventEditor({
   };
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onCancel()} restoreFocusRef={restoreFocusRef}>
+    <Dialog.Root open onOpenChange={(open) => !open && onCancel()} initialFocusRef={titleRef} restoreFocusRef={restoreFocusRef}>
       <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.dialog} className={styles.fields}>
         <Dialog.Header>
           <Dialog.Title id={ids.dialog}>{`Edit ${event.title}`}</Dialog.Title>
@@ -1068,7 +1107,7 @@ export function EventEditor({
           <Field.Group>
             <Label.Root htmlFor={ids.title}>Title</Label.Root>
             <Field.Root id={ids.title} name="title">
-              <Field.TextInput required value={fields.title} onValueChange={edit('title')} />
+              <Field.TextInput ref={titleRef} required value={fields.title} onValueChange={edit('title')} />
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
@@ -1079,7 +1118,7 @@ export function EventEditor({
             </Field.Root>
             <ErrorMessage.Root />
           </Field.Group>
-          <Switch.Root checked={fields.allDay} onCheckedChange={edit('allDay')}>
+          <Switch.Root className={styles.allDay} checked={fields.allDay} onCheckedChange={edit('allDay')}>
             All day
           </Switch.Root>
           {fields.allDay ? null : (

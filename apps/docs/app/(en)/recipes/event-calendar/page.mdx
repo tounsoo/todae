@@ -48,7 +48,7 @@ The menu on each event makes every move a drag can make. It moves the event one 
 
 ## Editing
 
-Edit… opens a [Dialog](/dialog). The fields are the title, the date, the start, the end date, the end, and an all-day switch, using [Field](/field) date and time inputs. Save writes the event. Cancel and Escape leave it as it was. The end has to be after the start. When it is not, the end field shows "End must be after the start." An all-day event covers that date, from midnight to the next midnight, and leaves the time lanes. The month still lists it.
+Edit… opens a [Dialog](/dialog). The fields are the title, the date, the start, the end date, the end, and an all-day switch, using [Field](/field) date and time inputs. Changing the date or the start keeps the length and moves the end with it. Save writes the event and returns focus to it, or to that day's heading when the event is off the time lanes. Cancel and Escape leave it as it was. The end has to be after the start. When it is not, the end field shows "End must be after the start." An all-day event covers that date, from midnight to the next midnight, and leaves the time lanes. The month still lists it.
 
 `EventEditor` is that dialog. It takes the event to edit and calls `onSave` with the edited event. A later drag that creates an event can open the same dialog.
 
