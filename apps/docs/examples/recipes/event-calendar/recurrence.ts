@@ -499,14 +499,22 @@ export function truncateBefore(series: EventSeries, originalStart: Temporal.Zone
   };
 }
 
+/**
+ * How many occurrences a counted series still has at `originalStart`, including
+ * that one. Null when the series is not counted, or the instant is not one it generates.
+ */
+export function remainingCount(series: EventSeries, originalStart: Temporal.ZonedDateTime): number | null {
+  if (series.rule?.end.kind !== 'count') return null;
+  const index = occurrenceIndex(series, originalStart);
+  if (index === null) return null;
+  return Math.max(1, series.rule.end.count - index);
+}
+
 function countedRemainder(series: EventSeries, originalStart: Temporal.ZonedDateTime, rule: RecurrenceRule | null): RecurrenceRule | null {
   if (!rule || rule.end.kind !== 'count' || series.rule?.end.kind !== 'count') return rule;
-  const index = occurrenceIndex(series, originalStart);
-  if (index === null) return rule;
-  const remaining = series.rule.end.count - index;
-  if (remaining < 1) return { ...rule, end: { kind: 'count', count: 1 } };
-  if (rule.end.count === series.rule.end.count) return { ...rule, end: { kind: 'count', count: remaining } };
-  return rule;
+  const left = remainingCount(series, originalStart);
+  if (left === null || rule.end.count !== series.rule.end.count) return rule;
+  return { ...rule, end: { kind: 'count', count: left } };
 }
 
 /** This and the following occurrences. The earlier series is `truncateBefore`. */

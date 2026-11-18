@@ -199,6 +199,23 @@ describe('docs examples', () => {
     expect(globs.some((glob) => matchesGlob(seriesTest, glob))).toBe(false);
   });
 
+  it('does not paste a sibling module into the event calendar pages', () => {
+    const marker = 'export function expandSeries';
+    expect(readFileSync(join(EXAMPLES, 'recipes/event-calendar/recurrence.ts'), 'utf8')).toContain(marker);
+    for (const folder of ['(en)', 'ko']) {
+      const page = join(APP, folder, 'recipes', 'event-calendar', 'page.mdx');
+      const tree = parseMdx(readFileSync(page, 'utf8'));
+      for (const plugin of remarkPlugins) (plugin as () => (tree: Root, file: { path: string }) => void)()(tree, { path: page });
+      const pasted: string[] = [];
+      const visit = (node: Root | Root['children'][number]) => {
+        if (node.type === 'code' && node.value.includes(marker)) pasted.push(relative(APP, page));
+        if ('children' in node) for (const child of node.children) visit(child as Root['children'][number]);
+      };
+      visit(tree);
+      expect(pasted).toEqual([]);
+    }
+  });
+
   it('uses no class name that only the docs stylesheet defines', () => {
     const docsCss = readFileSync(join(APP, 'globals.css'), 'utf8');
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));

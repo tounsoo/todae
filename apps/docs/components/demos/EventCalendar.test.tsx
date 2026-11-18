@@ -1472,7 +1472,9 @@ describe('repeating events', () => {
   it('shows each occurrence in the week, the day, and the month, and says that it repeats', () => {
     render(<EventCalendarExample locale="en-US" />);
     const club = screen.getByRole('button', { name: bookClubName });
-    expect(club.textContent).toMatch(/Repeats/);
+    const mark = club.querySelector('[title="Repeats"]');
+    expect(mark?.textContent).toBe('↻');
+    expect(mark?.checkVisibility()).toBe(true);
     expect(screen.getByRole('list', { name: 'Sun, Nov 15' }).contains(club)).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Day' }));
@@ -1642,8 +1644,12 @@ describe('repeating events', () => {
     fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
     const days = within(dialog).getByRole('group', { name: 'Days' });
     expect(within(days).getByRole('button', { name: 'Mon' }).getAttribute('aria-pressed')).toBe('true');
-    expect(within(dialog).getByText('Days')).toBeTruthy();
-    expect(within(dialog).getByText('Ends')).toBeTruthy();
+    const daysLabel = document.getElementById(within(dialog).getByLabelText('Days').getAttribute('aria-labelledby') ?? '');
+    const endsLabel = document.getElementById(within(dialog).getByLabelText('Ends').getAttribute('aria-labelledby') ?? '');
+    expect(daysLabel?.textContent).toBe('Days');
+    expect(endsLabel?.textContent).toBe('Ends');
+    expect(daysLabel?.checkVisibility()).toBe(true);
+    expect(endsLabel?.checkVisibility()).toBe(true);
     const date = within(dialog).getByRole('textbox', { name: 'Date' });
     fireEvent.change(date, { target: { value: '11/19/2026' } });
     fireEvent.blur(date);
@@ -1666,8 +1672,13 @@ describe('repeating events', () => {
     const days = within(dialog).getByRole('group', { name: 'Days' });
     fireEvent.click(within(days).getByRole('button', { name: 'Wed' }));
     fireEvent.click(within(days).getByRole('button', { name: 'Mon' }));
+    const date = within(dialog).getByRole('textbox', { name: 'Date' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
-    expect(within(dialog).getByText('The start day has to be one of the weekly days.')).toBeTruthy();
+    await vi.waitFor(() => expect(date.getAttribute('aria-invalid')).toBe('true'));
+    expect(document.activeElement).toBe(date);
+    expect(within(dialog).getByLabelText('Repeat').getAttribute('aria-invalid')).not.toBe('true');
+    const described = date.getAttribute('aria-describedby')?.split(' ').map((id) => document.getElementById(id)?.textContent).join(' ');
+    expect(described).toContain('The start day has to be one of the weekly days.');
     expect(screen.getByRole('dialog')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Reading,/ })).toBeNull();
   });
@@ -1709,7 +1720,10 @@ describe('repeating events', () => {
     fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.getByRole('button', { name: 'Holiday, November 16, 2026, repeats' })).toBeTruthy();
+    const holiday = screen.getByRole('button', { name: 'Holiday, November 16, 2026, repeats' });
+    const cue = within(holiday).getByText('Repeats');
+    expect(cue.checkVisibility()).toBe(true);
+    expect(cue.getAttribute('aria-hidden')).not.toBe('true');
   });
 
   it('loads the series start and its weekdays when a later occurrence edits all events', async () => {
@@ -1769,5 +1783,28 @@ describe('repeating events', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
     fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
     expect(within(screen.getByRole('list', { name: 'Sun, Nov 15' })).getByRole('button', { name: bookClubName })).toBeTruthy();
+  });
+
+  it('names the date when one occurrence is deleted, in English and Korean', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(bookClubName, 'Delete');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete repeating event' })).getByRole('button', { name: 'This event' }));
+    await vi.waitFor(() => expect(polite()?.textContent).toBe('Deleted this event. Book club, Sun, Nov 22.'));
+    cleanup();
+    render(<EventCalendarExample locale="ko" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    const club = screen.getByRole('button', { name: /^Book club,/ });
+    await act(async () => {
+      fireEvent.pointerDown(club, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.pointerUp(club, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
+      fireEvent.click(club);
+    });
+    const menu = await openMenu();
+    await act(async () => {
+      fireEvent.click(within(menu).getByRole('menuitem', { name: 'Delete' }));
+    });
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete repeating event' })).getByRole('button', { name: 'This event' }));
+    await vi.waitFor(() => expect(polite()?.textContent).toBe('Deleted this event. Book club, 11월 22일 (일).'));
   });
 });

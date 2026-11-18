@@ -29,8 +29,8 @@ import {
   continueFrom,
   excludeOccurrence,
   expandSeries,
-  occurrenceIndex,
   overrideOccurrence,
+  remainingCount,
   replaceSeries,
   seriesFromDraft,
   seriesId,
@@ -942,7 +942,7 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
         >
           <span className={styles.eventLine}>
             {span.event.repeats ? (
-              <span className={styles.repeats} aria-hidden="true">
+              <span className={styles.repeats} aria-hidden="true" title="Repeats">
                 ↻
               </span>
             ) : null}
@@ -1857,7 +1857,7 @@ export function EventEditor({
       setFields(draft);
       setRepeat(oneWeekdayFollows(repeatFromRule(rule, template.start.withTimeZone(timeZone).toPlainDate()), draft.date));
     }
-    if (next === 'following' && rule?.end.kind === 'count' && template && event.originalStart) {
+    if (next === 'following' && rule && template && event.originalStart) {
       const probe = seriesFromDraft(seriesId('probe'), {
         title: template.title,
         start: template.start,
@@ -1865,8 +1865,8 @@ export function EventEditor({
         allDay: template.allDay,
         rule,
       });
-      const index = occurrenceIndex(probe, event.originalStart);
-      if (index !== null) setRepeat((current) => ({ ...current, end: 'count', count: Math.max(1, rule.end.kind === 'count' ? rule.end.count - index : 1) }));
+      const left = remainingCount(probe, event.originalStart);
+      if (left !== null) setRepeat((current) => ({ ...current, end: 'count', count: left }));
     }
   };
 

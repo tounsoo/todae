@@ -289,6 +289,8 @@ describe('the recipe pages', () => {
     expect(korean).toContain('31일이 없는 달을 건너뜁니다');
     expect(english).toContain('Dragging one occurrence moves that occurrence only');
     expect(korean).toContain('발생 하나를 끌면 그 발생만 옮겨 가고');
+    expect(english).toContain('an edit at 1:00 PM is at 3:00 PM when this and the following events start two hours later');
+    expect(korean).toContain('오후 1시로 고친 발생은 새 시리즈가 두 시간 늦으면 오후 3시가 됩니다');
   });
 });
 
@@ -410,6 +412,39 @@ describe('editing a series', () => {
     expect(days(expandSeries(later, window(LA, '2026-11-01T00:00:00-08:00', '2026-12-31T00:00:00-08:00')))).toEqual(['2026-11-23', '2026-12-07']);
     const earlier = truncateBefore(edited, splitAt);
     expect(days(expandSeries(earlier!, window(LA, '2026-11-01T00:00:00-08:00', '2026-12-31T00:00:00-08:00')))).toEqual(['2026-11-16']);
+  });
+
+  it('carries a later edit onto this and the following series, shifted with the new start', () => {
+    const item = series({
+      start: at(LA, '2026-11-16T09:00:00-08:00'),
+      end: at(LA, '2026-11-16T10:00:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['MO'], end: { kind: 'count', count: 4 } }),
+    });
+    const editedAt = at(LA, '2026-11-30T09:00:00-08:00');
+    const edited = overrideOccurrence(item, editedAt, {
+      title: 'Special',
+      start: at(LA, '2026-11-30T13:00:00-08:00'),
+      end: at(LA, '2026-11-30T14:00:00-08:00'),
+      allDay: false,
+    });
+    const splitAt = at(LA, '2026-11-23T09:00:00-08:00');
+    const later = continueFrom(
+      edited,
+      splitAt,
+      {
+        title: 'Later',
+        start: at(LA, '2026-11-23T11:00:00-08:00'),
+        end: at(LA, '2026-11-23T12:00:00-08:00'),
+        allDay: false,
+        rule: item.rule,
+      },
+      seriesId('later'),
+    );
+    expect(expandSeries(later, window(LA, '2026-11-01T00:00:00-08:00', '2026-12-31T00:00:00-08:00')).map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString(), occurrence.title])).toEqual([
+      ['2026-11-23', '11:00:00', 'Later'],
+      ['2026-11-30', '15:00:00', 'Special'],
+      ['2026-12-07', '11:00:00', 'Later'],
+    ]);
   });
 
   it('moves a one-weekday series onto the new start weekday and refuses a start the other days leave out', () => {
