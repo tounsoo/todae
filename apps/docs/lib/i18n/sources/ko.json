@@ -732,15 +732,16 @@
     "(section order)": "c1f728c5db97"
   },
   "recipes/event-calendar": {
-    "(top)": "ea49fce3875e",
+    "(top)": "12f267b918b4",
     "# Event calendar": "2ebcf97d590c",
     "## The time lanes": "16126cb44b52",
-    "## The event block": "928fa27628e4",
+    "## The event block": "f34c1f7abc02",
     "## The month": "6ea32620a27d",
-    "## Dragging": "d759e06aa32d",
-    "## Accessible composition": "388662d90425",
+    "## Dragging": "02345c9f1938",
+    "## Editing": "bdb412537c21",
+    "## Accessible composition": "245dee1aea4b",
     "## When to use": "d504fd453481",
-    "(section order)": "f277a6d3d4fa"
+    "(section order)": "9989e7e8864c"
   },
   "recipes/file-upload": {
     "(top)": "8b01f1fb714b",

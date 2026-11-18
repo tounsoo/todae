@@ -1,6 +1,6 @@
 import EventCalendarExample from '../../../../examples/recipes/event-calendar/EventCalendarExample';
 
-export const description = 'A recipe for an event calendar: a month, a week, or a day. The week and the day place each event from its start and end. Overlapping events sit side by side.';
+export const description = 'A month, week, or day calendar. Timed events can be dragged, resized, or edited, and overlapping ones sit side by side.';
 
 # Event calendar
 
@@ -22,7 +22,7 @@ The example is the week of 16 November 2026 in `America/Los_Angeles`, open from 
 
 `placeOverlaps()` packs one lane's spans into columns. Spans that overlap in time, including a chain where each one overlaps the next, share that cluster's column count. Each span takes the first column that is free when it starts. When two start together, the longer one takes the column on the left. A span may widen into columns on its right that nothing else uses while it runs. The left edge and the width are fractions of the lane, so nothing is measured. Spans that only touch at an endpoint each keep the full width, one after the other. A span with no length overlaps a span only when its instant is strictly inside that span, and two spans with no length at the same instant do not overlap. The grid does not draw a span with no length, because `visibleSpans()` drops it. Each day column is at least 5.5rem wide, and another 4rem for every column in that day's busiest cluster, so a busy week scrolls sideways.
 
-The block is a [Button](/button). Its name is the title, then the event's own start and end, written with `formatTime`. When the start or the end falls on another day, the name includes that day in the same form as the column heading. A block the visible hours clip says "started earlier" or "continues", and the text shows "…" on that side. A block shorter than 45 minutes shows the title only. The button does nothing yet. A details popover comes later.
+The block is a [Menu](/menu) button. Its name is the title, then the event's own start and end, written with `formatTime`. When the start or the end falls on another day, the name includes that day in the same form as the column heading. A block the visible hours clip says "started earlier" or "continues", and the text shows "…" on that side. A block shorter than 45 minutes shows the title only. Drag the block to move the event. Drag the top or bottom edge to change that end. The edges are not keyboard controls. The menu is.
 
 `findConflicts()` lists other occurrences that overlap an event in time. Touching at an endpoint is not an overlap. `placeOverlaps()` uses that same test on the lane's minutes.
 
@@ -40,15 +40,25 @@ An event that covers more than one day shows its title on each of those days. A 
 
 ## Dragging
 
-This recipe does not drag. [`useLaneDrag`](/utilities/use-lane-drag) can run on `axis: "block"`, down the page, but every lane has to cover one shared range. These lanes do not, once a clock change falls inside the visible hours. Moving and resizing need a drag that reads each day's own length, and a way to make the same change from the keyboard.
+In the week and the day, [`useLaneDrag`](/utilities/use-lane-drag) runs on `axis: "block"`. Each day column is a lane. Every lane covers one shared range, the longest day's open minutes, which is the height of the columns. A drag snaps to a 15 minute slot. A move keeps the event's length, including any part the lane clips, and can land on another day in the week. A resize stays on the day it started and writes the edge that was dragged. Escape cancels the drag and leaves the event where it was.
+
+`useLaneDrag` reads that one shared range. When a clock change falls inside the visible hours, a day is shorter than the range. A place past that day's close is blocked, so the drop does not land. A resize cannot cross into the next day. The library keeps a resize on the lane where it started.
+
+The menu on each event makes every move a drag can make. It moves the event one slot earlier or later, and, in the week, to the previous or next day. It lengthens or shortens the event by one slot, from the end. An item that would leave the day's open hours is unavailable. The day view has no previous or next day, because that board has one lane. After each item, focus returns to the event. A live region reads the new time, and the button's name reads it too.
+
+## Editing
+
+Edit… opens a [Dialog](/dialog). The fields are the title, the date, the start, the end date, the end, and an all-day switch, using [Field](/field) date and time inputs. Save writes the event. Cancel and Escape leave it as it was. The end has to be after the start. When it is not, the end field shows "End must be after the start." An all-day event covers that date, from midnight to the next midnight, and leaves the time lanes. The month still lists it.
+
+`EventEditor` is that dialog. It takes the event to edit and calls `onSave` with the edited event. A later drag that creates an event can open the same dialog.
 
 ## Accessible composition
 
-**Todae handles:** [ToggleGroup](/toggle-group) switches Month, Week and Day and keeps one selected. [Button](/button) moves to the previous or next week or day. [Calendar](/calendar) draws the month, names the focused month from `Calendar.Header`, keeps one tab stop, names each day with the full date, and reads that day's titles as the description. [ScrollArea](/scroll-area) scrolls the week and the day and keeps a focused block's ring in view. [Text](/text) clamps the title and the time. The event button takes its focus ring from Button.
+**Todae handles:** [ToggleGroup](/toggle-group) switches Month, Week and Day and keeps one selected. [Button](/button) moves to the previous or next week or day. [Calendar](/calendar) draws the month, names the focused month from `Calendar.Header`, keeps one tab stop, names each day with the full date, and reads that day's titles as the description. [ScrollArea](/scroll-area) scrolls the week and the day and keeps a focused block's ring in view. [Text](/text) clamps the title and the time. [`useLaneDrag`](/utilities/use-lane-drag) moves and resizes a block with the pointer, snaps it to the slot grid, and cancels on Escape. [Menu](/menu) is the keyboard path for those same changes. [Dialog](/dialog) and [Field](/field) edit the exact title and time. The event button takes its focus ring from Button. A live region reads the time after a change.
 
-**You supply:** A title for each event. A time zone and the visible hours. Day headings that name each column and the list of events in it. An accessible name on each event that starts with the title and includes the event's real start and end, not only the hours on screen.
+**You supply:** A title for each event. A time zone and the visible hours. Day headings that name each column and the list of events in it. An accessible name on each event that starts with the title and includes the event's real start and end, not only the hours on screen. The 15 minute slot, and a check that the end is after the start.
 
-**Watch for:** An event named only by its color. Times written in the browser's zone when the calendar's zone is the one that matters. A week of columns with nowhere to scroll on a narrow screen. An all-day event drawn on the time grid. A day column fixed so narrow that side-by-side blocks are squeezed to a letter. A control inside a month day. The day button is the only interaction there.
+**Watch for:** An event named only by its color. Times written in the browser's zone when the calendar's zone is the one that matters. A week of columns with nowhere to scroll on a narrow screen. An all-day event drawn on the time grid. A day column fixed so narrow that side-by-side blocks are squeezed to a letter. A control inside a month day. The day button is the only interaction there. A drag with no keyboard path. A resize that tries to cross a day. An end that is not after the start, with nothing saying so.
 
 ## When to use
 
