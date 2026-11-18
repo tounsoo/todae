@@ -1715,12 +1715,12 @@ export function EventCalendarExample({
     };
     const widest = (nodes: HTMLElement[], extra: (node: HTMLElement) => number) =>
       nodes.reduce((max, node) => Math.max(max, node.getBoundingClientRect().width + extra(node)), 0);
-    const head = root.querySelector(`.${styles.head}`);
-    const primaryNames = [...(head?.firstElementChild?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
-    const primaryMarks = [...root.querySelectorAll<HTMLElement>(`.${styles.gutter}:not([data-compare]) > .${styles.mark}`)];
-    const compareNames = [...(head?.firstElementChild?.nextElementSibling?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
-    const pieces = [...root.querySelectorAll<HTMLElement>(`[data-compare] .${styles.markPiece}`)];
     const measure = () => {
+      const head = root.querySelector(`.${styles.head}`);
+      const primaryNames = [...(head?.firstElementChild?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
+      const primaryMarks = [...root.querySelectorAll<HTMLElement>(`.${styles.gutter}:not([data-compare]) > .${styles.mark}`)];
+      const compareNames = [...(head?.firstElementChild?.nextElementSibling?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
+      const pieces = [...root.querySelectorAll<HTMLElement>(`[data-compare] .${styles.markPiece}`)];
       const primary = Math.max(
         widest(primaryNames, zonePad),
         widest(primaryMarks, (node) => {
@@ -1747,9 +1747,12 @@ export function EventCalendarExample({
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const watcher = new ResizeObserver(measure);
-    for (const node of [...primaryNames, ...primaryMarks, ...compareNames, ...pieces]) watcher.observe(node);
+    watcher.observe(root);
+    const head = root.querySelector(`.${styles.head}`);
+    if (head) watcher.observe(head);
+    for (const gutter of root.querySelectorAll<HTMLElement>(`.${styles.gutter}`)) watcher.observe(gutter);
     return () => watcher.disconnect();
-  }, [showCompare, pieceKey]);
+  }, [showCompare, pieceKey, view, anchor]);
 
   useLayoutEffect(() => {
     if (pendingFocus.current !== 'day' || view !== 'day') return;

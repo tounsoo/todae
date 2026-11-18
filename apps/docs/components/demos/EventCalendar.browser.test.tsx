@@ -74,6 +74,19 @@ function comparePiecesInside(): boolean {
   return boxesInside(pieces, compare.getBoundingClientRect());
 }
 
+function compareRowsSeparated(): boolean {
+  const compare = document.querySelector<HTMLElement>('[data-compare]');
+  if (!compare) return false;
+  const rows = ([...compare.children] as HTMLElement[]).filter((row) => row.style.top);
+  if (rows.length < 2) return false;
+  const ordered = [...rows].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  return ordered.every((row, index) => {
+    if (index === 0) return true;
+    const above = ordered[index - 1]!.getBoundingClientRect();
+    return above.bottom <= row.getBoundingClientRect().top + 1;
+  });
+}
+
 function zoneNamesFit() {
   const names = [...document.querySelectorAll<HTMLElement>('[class*="zoneName"]')];
   expect(names.length).toBeGreaterThan(0);
@@ -1790,6 +1803,43 @@ describe('creating an event from empty lane space', () => {
       await page.viewport(375, 800);
       await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
       await expect.poll(primaryLabelsInside).toBe(true);
+    } finally {
+      document.documentElement.style.fontSize = '';
+      await page.viewport(1280, 800);
+      cleanup();
+    }
+  });
+
+  it('keeps the second-zone times inside the column after the week returns at a larger text size', async () => {
+    const cases = [
+      { locale: 'en-US' as const, timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata' },
+      { locale: 'ko' as const, timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata' },
+      { locale: 'en-US' as const, timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
+      { locale: 'ko' as const, timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
+      { locale: 'ko' as const, timeZone: 'Asia/Tokyo', compareZone: 'America/New_York', anchor: '2026-03-08' },
+    ];
+    await page.viewport(1280, 900);
+    try {
+      for (const item of cases) {
+        render(
+          <Providers>
+            <EventCalendarExample
+              locale={item.locale}
+              timeZone={item.timeZone}
+              compareZone={item.compareZone}
+              anchor={item.anchor ? Temporal.PlainDate.from(item.anchor) : undefined}
+              events={[]}
+            />
+          </Providers>,
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Week' }));
+        document.documentElement.style.fontSize = '20px';
+        await expect.poll(comparePiecesInside).toBe(true);
+        await expect.poll(compareRowsSeparated).toBe(true);
+        document.documentElement.style.fontSize = '';
+        cleanup();
+      }
     } finally {
       document.documentElement.style.fontSize = '';
       await page.viewport(1280, 800);
