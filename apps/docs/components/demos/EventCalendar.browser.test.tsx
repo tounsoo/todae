@@ -1458,6 +1458,9 @@ describe('creating an event from empty lane space', () => {
     await expect.poll(() => columns().length).toBe(1);
     expect(screen.getByText('PST')).toBeTruthy();
     expect(screen.queryByText('GMT+5:30')).toBeNull();
+    const described = document.getElementById(document.querySelector('[aria-label="Calendar"]')?.getAttribute('aria-describedby') ?? '')?.textContent ?? '';
+    expect(described).toContain('PST');
+    expect(described).not.toContain('Second column');
     const calendar = document.querySelector<HTMLElement>('[class*="calendar"]');
     expect(calendar).toBeTruthy();
     expect(calendar!.scrollWidth).toBeLessThanOrEqual(calendar!.clientWidth + 1);
@@ -1502,5 +1505,36 @@ describe('creating an event from empty lane space', () => {
     await userEvent.click(within(dragged).getByRole('button', { name: 'Save' }));
     const standup = await screen.findByRole('button', { name: `Standup, ${clock('09:00')} to ${clock('10:00')}` });
     expect(standup.parentElement?.style.top).toBe(call.parentElement?.style.top);
+  });
+
+  it('lines an all-day bar up with its day when a second hour column is showing', async () => {
+    await page.viewport(1280, 900);
+    render(
+      <Providers>
+        <EventCalendarExample
+          locale="en-US"
+          timeZone="America/Los_Angeles"
+          compareZone="Asia/Kolkata"
+          anchor={Temporal.PlainDate.from('2026-11-16')}
+          events={[
+            {
+              id: 'offsite',
+              title: 'Offsite',
+              start: Temporal.ZonedDateTime.from('2026-11-16T00:00:00-08:00[America/Los_Angeles]'),
+              end: Temporal.ZonedDateTime.from('2026-11-17T00:00:00-08:00[America/Los_Angeles]'),
+              allDay: true,
+            },
+          ]}
+        />
+      </Providers>,
+    );
+    const bar = screen.getByRole('button', { name: /Offsite/ });
+    const heading = screen.getByRole('heading', { name: 'Mon, Nov 16' });
+    const barBox = bar.getBoundingClientRect();
+    const headBox = heading.getBoundingClientRect();
+    expect(barBox.width).toBeGreaterThan(0);
+    expect(headBox.width).toBeGreaterThan(0);
+    expect(Math.abs(barBox.left - headBox.left)).toBeLessThan(32);
+    expect(Math.abs(barBox.right - headBox.right)).toBeLessThan(32);
   });
 });

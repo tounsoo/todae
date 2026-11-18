@@ -1479,23 +1479,25 @@ describe('the time zone', () => {
     const zone = Temporal.Now.timeZoneId();
     render(<EventCalendarExample locale="en-US" events={[]} />);
     expect(screen.getByText(shortZone(zone, 'en-US'))).toBeTruthy();
-    expect(described()).toEqual([shortZone(zone, 'en-US')]);
+    expect(described()[0]?.startsWith('Times in')).toBe(true);
+    expect(described()[0]).toContain(shortZone(zone, 'en-US'));
     expect(described()[0] && screen.getByText(described()[0]!).closest('[aria-hidden="true"]')).toBeNull();
     cleanup();
 
     render(<EventCalendarExample locale="ko" events={[]} />);
     expect(screen.getByText(shortZone(zone, 'ko'))).toBeTruthy();
-    expect(described()).toEqual([shortZone(zone, 'ko')]);
+    expect(described()[0]?.startsWith('시각은')).toBe(true);
+    expect(described()[0]).toContain(shortZone(zone, 'ko'));
     cleanup();
 
     render(<EventCalendarExample locale="en-US" timeZone={LA} events={[]} />);
     expect(screen.getByText('PST')).toBeTruthy();
-    expect(described()).toEqual(['PST']);
+    expect(described()).toEqual(['Times in PST (GMT-8).']);
     cleanup();
 
     render(<EventCalendarExample locale="ko" timeZone={LA} events={[]} />);
     expect(screen.getByText('GMT-8')).toBeTruthy();
-    expect(described()).toEqual(['GMT-8']);
+    expect(described()).toEqual(['시각은 GMT-8입니다.']);
   });
 
   it('places one instant in a different hour for a different zone', () => {
@@ -1521,7 +1523,7 @@ describe('the time zone', () => {
 
   it('shows the second zone’s hour, including a partial offset and a day shift', () => {
     render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
-    expect(described()).toEqual(['PST', 'GMT+5:30']);
+    expect(described()).toEqual(['Times in PST (GMT-8). Second column GMT+5:30, 13 h 30 min ahead.']);
     const columns = hourColumns();
     expect(columns).toHaveLength(2);
     const primary = [...columns[0]!.querySelectorAll<HTMLElement>('span')];
@@ -1587,7 +1589,7 @@ describe('the time zone', () => {
   it('describes the grid by its zone and keeps the hour columns out of the announcement', () => {
     render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
     const region = calendarBoard();
-    expect(described()).toEqual(['PST', 'GMT+5:30']);
+    expect(described()).toEqual(['Times in PST (GMT-8). Second column GMT+5:30, 13 h 30 min ahead.']);
     for (const id of (region.getAttribute('aria-describedby') ?? '').split(' ')) {
       const label = document.getElementById(id);
       expect(label?.closest('[aria-hidden="true"]')).toBeNull();
@@ -1601,21 +1603,21 @@ describe('the time zone', () => {
       return [...node.childNodes].map((child) => announced(child)).join('');
     };
     const heard = announced(region);
-    expect(heard).toContain('PST');
-    expect(heard).toContain('GMT+5:30');
+    expect(heard).toContain('Times in PST (GMT-8)');
+    expect(heard).toContain('13 h 30 min ahead');
     expect(heard).not.toContain(clock('08:00'));
     expect(heard).not.toContain('+1 day');
   });
 
   it('explains the zone and shows a second zone on the English and Korean pages', () => {
     render(<EventCalendarZones locale="en-US" />);
-    expect(described()).toEqual(['PST', 'GMT+5:30']);
+    expect(described()).toEqual(['Times in PST (GMT-8). Second column GMT+5:30, 13 h 30 min ahead.']);
     expect(hourColumns()[1]?.textContent).toContain('+1 day');
     expect(screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` })).toBeTruthy();
     cleanup();
 
     render(<EventCalendarZones locale="ko" />);
-    expect(described()).toEqual(['GMT-8', 'GMT+5:30']);
+    expect(described()).toEqual(['시각은 GMT-8입니다. 둘째 열은 GMT+5:30이며, 13시간 30분 빠릅니다.']);
     expect(hourColumns()[1]?.textContent).toContain('+1일');
     cleanup();
 
@@ -1628,9 +1630,83 @@ describe('the time zone', () => {
       expect(page).toContain('Asia/Kolkata');
       expect(page).toContain('Asia/Kathmandu');
     }
-    expect(en).toContain('such as PST or GMT-8');
+    expect(en).toContain('PST / PDT');
+    expect(en).toContain('server-rendered app passes `timeZone` explicitly');
     expect(en).toContain('+1 day');
-    expect(ko).toContain('PST나 GMT-8');
+    expect(ko).toContain('PST / PDT');
+    expect(ko).toContain('서버에서 그리는 앱은 `timeZone`을 직접 넘깁니다');
     expect(ko).toContain('+1일');
+  });
+});
+
+function compareRow(top: string): string | undefined {
+  const column = document.querySelector<HTMLElement>('[data-compare]');
+  return ([...(column?.children ?? [])] as HTMLElement[]).find((node) => node.style.top === top)?.textContent;
+}
+
+describe('a zone whose offset changes inside the visible week', () => {
+  it('does not show one column’s second-zone time beside columns where it is wrong (compare zone changes midweek)', () => {
+    // Israel springs forward Fri 27 Mar 2026. 8:00 PDT is 17:00 Jerusalem Sun-Thu, 18:00 Fri-Sat.
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    const primary = hourColumns()[0];
+    const eight = [...primary!.children].find((node) => node.textContent === '8:00 AM') as HTMLElement;
+    expect(compareRow(eight.style.top)).toBeUndefined();
+    expect(document.querySelector('[data-compare]')?.textContent).toBe('');
+    expect(screen.getByText('GMT+2 / GMT+3')).toBeTruthy();
+  });
+
+  it('does not label the second zone from Sunday alone when the grid zone springs forward that Sunday', () => {
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={LA}
+        compareZone="UTC"
+        anchor={Temporal.PlainDate.from('2027-03-14')}
+        opens={Temporal.PlainTime.from('00:00')}
+        closes={Temporal.PlainTime.from('04:00')}
+        events={[]}
+      />,
+    );
+    const primary = hourColumns()[0];
+    const midnight = [...primary!.children].find((node) => node.textContent === '12:00 AM') as HTMLElement;
+    expect(compareRow(midnight.style.top)).toBeUndefined();
+    expect(document.querySelector('[data-compare]')?.textContent).toBe('');
+  });
+
+  it('names every offset the week shows, not only Sunday’s', () => {
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={LA}
+        anchor={Temporal.PlainDate.from('2027-03-14')}
+        opens={Temporal.PlainTime.from('00:00')}
+        closes={Temporal.PlainTime.from('04:00')}
+        events={[]}
+      />,
+    );
+    expect(described().join(' ')).toContain('PDT');
+    expect(screen.getByText('PST / PDT')).toBeTruthy();
+  });
+
+  it('shows a second-zone hour only when that time is the same in every column', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    const [primary, compare] = hourColumns();
+    const days = Array.from({ length: 7 }, (_, index) => Temporal.PlainDate.from('2026-11-15').add({ days: index }));
+    const rows = [...compare!.children] as HTMLElement[];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const hour = ([...primary!.children] as HTMLElement[]).find((node) => node.style.top === row.style.top);
+      const wall = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].find((value) => clock(value) === hour?.textContent);
+      expect(wall).toBeTruthy();
+      const texts = days.map((day) => {
+        const at = day.toZonedDateTime({ timeZone: LA, plainTime: Temporal.PlainTime.from(wall!) });
+        const there = at.withTimeZone('Asia/Kolkata');
+        const shift = at.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days;
+        const label = formatTime(there.toPlainTime(), { locale: 'en-US' });
+        return shift === 0 ? label : `${label} ${shift > 0 ? '+' : ''}${shift} day`;
+      });
+      expect(new Set(texts).size).toBe(1);
+      expect(row.textContent).toBe(texts[0]);
+    }
   });
 });

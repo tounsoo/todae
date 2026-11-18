@@ -60,7 +60,7 @@
   padding-block: var(--todae-space-2);
   padding-inline: var(--todae-space-1);
   text-align: end;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .day {

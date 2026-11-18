@@ -608,12 +608,80 @@ export function hourMarks(segment: DaySegment): HourMark[] {
   return marks;
 }
 
+type ZoneFace = { name: string; offset: string };
+
+/** The short zone name and the offset `locale` writes at `at`. */
+function zoneFace(timeZone: string, locale: string, at: Temporal.ZonedDateTime): ZoneFace {
+  const read = (timeZoneName: 'short' | 'shortOffset') =>
+    new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName })
+      .formatToParts(at.epochMilliseconds)
+      .find((part) => part.type === 'timeZoneName')
+      ?.value?.trim() || timeZone;
+  return { name: read('short'), offset: read('shortOffset') };
+}
+
 /** The short zone name `locale` writes at `at`, such as PST in English or GMT-8 in Korean. */
 export function zoneLabel(timeZone: string, locale: string, at: Temporal.ZonedDateTime): string {
-  const name = new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName: 'short' })
-    .formatToParts(at.epochMilliseconds)
-    .find((part) => part.type === 'timeZoneName')?.value;
-  return name?.trim() || timeZone;
+  return zoneFace(timeZone, locale, at).name;
+}
+
+/** Every distinct face the visible hours take, in the order the days meet them. */
+function zoneFaces(timeZone: string, locale: string, times: readonly Temporal.ZonedDateTime[]): ZoneFace[] {
+  const faces: ZoneFace[] = [];
+  for (const at of times) {
+    const face = zoneFace(timeZone, locale, at);
+    if (!faces.some((item) => item.name === face.name && item.offset === face.offset)) faces.push(face);
+  }
+  return faces;
+}
+
+function zoneSamples(segments: readonly DaySegment[]): Temporal.ZonedDateTime[] {
+  const times = segments.flatMap((segment) => hourMarks(segment).map((mark) => mark.time));
+  return times.length > 0 ? times : segments.map((segment) => segment.opens);
+}
+
+/** "PST / PDT" from the short names, in the order the week meets them. */
+function zoneNames(faces: readonly ZoneFace[]): string {
+  return faces.map((face) => face.name).join(' / ');
+}
+
+/** "PST / PDT (GMT-8 / GMT-7)", or just the offset when the short name already is one. */
+function zonePhrase(faces: readonly ZoneFace[]): string {
+  const names = zoneNames(faces);
+  if (faces.every((face) => face.name === face.offset)) return names;
+  return `${names} (${faces.map((face) => face.offset).join(' / ')})`;
+}
+
+function durationText(minutes: number, locale: string): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (locale.toLowerCase().startsWith('ko')) {
+    if (hours > 0 && rest > 0) return `${hours}시간 ${rest}분`;
+    return hours > 0 ? `${hours}시간` : `${rest}분`;
+  }
+  const parts = [];
+  if (hours > 0) parts.push(`${hours} h`);
+  if (rest > 0) parts.push(`${rest} min`);
+  return parts.join(' ');
+}
+
+/**
+ * A sentence for the grid's description. The second column's lead is included only when
+ * every visible hour has that same lead, so a midweek change is not described as one number.
+ */
+export function zoneDescription(timeZone: string, compareZone: string | null, locale: string, segments: readonly DaySegment[]): string {
+  const samples = zoneSamples(segments);
+  const ko = locale.toLowerCase().startsWith('ko');
+  const primary = zonePhrase(zoneFaces(timeZone, locale, samples));
+  const times = ko ? `시각은 ${primary}입니다.` : `Times in ${primary}.`;
+  if (!compareZone) return times;
+  const gaps = samples.map((at) => Math.round((at.withTimeZone(compareZone).offsetNanoseconds - at.offsetNanoseconds) / 60_000_000_000));
+  const gap = gaps.length > 0 && gaps.every((value) => value === gaps[0]) ? gaps[0]! : null;
+  const compare = zonePhrase(zoneFaces(compareZone, locale, samples));
+  if (gap === null || gap === 0) return ko ? `${times} 둘째 열은 ${compare}입니다.` : `${times} Second column ${compare}.`;
+  const duration = durationText(Math.abs(gap), locale);
+  if (ko) return `${times} 둘째 열은 ${compare}이며, ${duration} ${gap > 0 ? '빠릅니다' : '느립니다'}.`;
+  return `${times} Second column ${compare}, ${duration} ${gap > 0 ? 'ahead' : 'behind'}.`;
 }
 
 /** A signed day count in `locale`, such as "+1 day" or "+1일". Nothing when the dates match. */
@@ -627,13 +695,24 @@ export function dayShiftLabel(days: number, locale: string): string | null {
 
 export type CompareMark = { units: number; time: Temporal.ZonedDateTime; dayShift: number };
 
-/** The other zone's time at each shared hour, and how many dates it sits from that hour. */
+/**
+ * The other zone's time at a shared hour. The row is kept only when every visible column
+ * has that same wall time and day shift. A time that is true for one day and wrong for
+ * another is left out. It is not written inside the day column: that column's hour is the
+ * grid zone, and a second time there would have no zone name beside it.
+ */
 export function compareMarks(segments: readonly DaySegment[], units: readonly number[], compareZone: string): CompareMark[] {
   return units.flatMap((at) => {
-    const time = segments.map((segment) => fromUnits(segment, at, 'start')).find((value) => value !== null);
-    if (!time) return [];
-    const there = time.withTimeZone(compareZone);
-    return [{ units: at, time: there, dayShift: time.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days }];
+    const rows = segments.flatMap((segment) => {
+      const time = fromUnits(segment, at, 'start');
+      if (!time) return [];
+      const there = time.withTimeZone(compareZone);
+      return [{ time: there, dayShift: time.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days }];
+    });
+    const first = rows[0];
+    if (!first || rows.length !== segments.length) return [];
+    const agreed = rows.every((row) => Temporal.PlainTime.compare(row.time.toPlainTime(), first.time.toPlainTime()) === 0 && row.dayShift === first.dayShift);
+    return agreed ? [{ units: at, time: first.time, dayShift: first.dayShift }] : [];
   });
 }
 
@@ -1147,8 +1226,7 @@ export function EventCalendarExample({
   const notedUnits = useRef(0);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
-  const zoneId = useId();
-  const compareId = useId();
+  const descriptionId = useId();
   const pendingFocus = useRef<'day' | null>(null);
   const landing = useRef<HTMLButtonElement | null>(null);
   const returnFocus = useRef(false);
@@ -1174,9 +1252,10 @@ export function EventCalendarExample({
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
   const compared = showCompare && compareZone ? compareMarks(axis.segments, gutterMarks, compareZone) : [];
-  const zoneAt = axis.segments[0]?.opens ?? initialAnchor.toZonedDateTime({ timeZone, plainTime: opens });
-  const primaryName = zoneLabel(timeZone, locale, zoneAt);
-  const compareName = showCompare && compareZone ? zoneLabel(compareZone, locale, zoneAt) : null;
+  const samples = zoneSamples(axis.segments);
+  const primaryName = zoneNames(zoneFaces(timeZone, locale, samples));
+  const compareName = showCompare && compareZone ? zoneNames(zoneFaces(compareZone, locale, samples)) : null;
+  const description = zoneDescription(timeZone, compareName && compareZone ? compareZone : null, locale, axis.segments);
   const step = view === 'week' ? 7 : 1;
   const move = view === 'week' ? 'week' : 'day';
   const grid = [...new Set(axis.segments.flatMap((segment) => snapGrid(segment, SLOT_MINUTES)))].sort((a, b) => a - b);
@@ -1420,7 +1499,8 @@ export function EventCalendarExample({
           />
         </Calendar.Root>
       ) : (
-        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" aria-describedby={compareName ? `${zoneId} ${compareId}` : zoneId} className={styles.board}>
+        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" aria-describedby={descriptionId} className={styles.board}>
+          <VisuallyHidden.Root id={descriptionId}>{description}</VisuallyHidden.Root>
           <div
             className={styles.frame}
             style={{
@@ -1433,13 +1513,13 @@ export function EventCalendarExample({
           >
             <div className={styles.head}>
               <div className={styles.corner}>
-                <Text.Root as="span" id={zoneId} variant="label" tone="muted" className={styles.zone}>
+                <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
                   {primaryName}
                 </Text.Root>
               </div>
               {compareName ? (
                 <div className={styles.corner}>
-                  <Text.Root as="span" id={compareId} variant="label" tone="muted" className={styles.zone}>
+                  <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
                     {compareName}
                   </Text.Root>
                 </div>
@@ -1482,8 +1562,8 @@ export function EventCalendarExample({
                   );
                 })}
               </div>
-              {compared.length === 0 ? null : (
-                // The hours repeat the primary instants. The description names this zone, so the column stays quiet.
+              {showCompare ? (
+                // The hours repeat the primary instants, and only where every day agrees. The description names this zone, so the column stays quiet.
                 <div className={styles.gutter} aria-hidden="true" data-compare="">
                   {compared.map((mark) => {
                     const shift = dayShiftLabel(mark.dayShift, locale);
@@ -1503,7 +1583,7 @@ export function EventCalendarExample({
                     );
                   })}
                 </div>
-              )}
+              ) : null}
               {lanes.map(({ segment, placed }) => (
                 <EventColumn
                   key={segment.day.toString()}
