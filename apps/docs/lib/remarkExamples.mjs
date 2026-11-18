@@ -41,15 +41,7 @@ export function exampleFile(pagePath, imports, name) {
   return file;
 }
 
-/**
- * The stylesheets an example file imports from its own folder, as `import styles from './Name.module.css';`,
- * which a page shows after the example's code. For a recipe or component page whose CSS is part of what
- * a product copies. Any other CSS import is refused, since the page could not show it.
- */
-/**
- * A sibling `.ts` module an example imports as `from './name'`. The page shows it
- * after the example, the way it shows a stylesheet, so the copy includes the module.
- */
+/** A sibling `.ts` module an example imports as `from './name'`. */
 export function exampleLocalModules(file, text) {
   return [...text.matchAll(/from\s+['"](\.\/[\w-]+)['"]/g)].map((match) => {
     const spec = match[1];
@@ -59,6 +51,11 @@ export function exampleLocalModules(file, text) {
   });
 }
 
+/**
+ * The stylesheets an example file imports from its own folder, as `import styles from './Name.module.css';`,
+ * which a page shows after the example's code. For a recipe or component page whose CSS is part of what
+ * a product copies. Any other CSS import is refused, since the page could not show it.
+ */
 export function exampleStylesheets(file, text) {
   return [...text.matchAll(/^[ \t]*import\b[^;]*?['"]([^'"]+\.(?:css|scss|sass|less)(?:\?[^'"]*)?)['"][^\n]*$/gm)].map((match) => {
     const own = /^import\s+\w+\s+from\s+'\.\/([\w-]+\.module\.css)';$/.exec(match[0]);
@@ -70,8 +67,8 @@ export function exampleStylesheets(file, text) {
 }
 
 /**
- * The code blocks a page shows for an example file: its code, then each stylesheet it imports from its
- * folder that the page has not shown yet. `shown` holds the stylesheets already shown on the page.
+ * The code blocks a page shows for an example file: its code, then each sibling module and stylesheet
+ * it imports from its folder that the page has not shown yet. `shown` holds the paths already shown.
  */
 export function exampleBlocks(file, shown = new Set()) {
   const text = readFileSync(file, 'utf8');
