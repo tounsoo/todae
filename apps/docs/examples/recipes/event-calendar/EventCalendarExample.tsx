@@ -955,7 +955,7 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
   const covering = bars.filter((bar) => index >= bar.column && index < bar.column + bar.span);
   const visible = covering.filter((bar) => bar.row < MONTH_TITLES).sort((a, b) => a.row - b.row);
   const hidden = covering.length - visible.length;
-  const barRows = bars.reduce((max, bar) => (bar.row < MONTH_TITLES ? Math.max(max, bar.row + 1) : max), 0);
+  const barRows = visible.reduce((max, bar) => Math.max(max, bar.row + 1), 0);
   const placed = new Set(bars.map((bar) => bar.event.id));
   const chips = list.filter((event) => !placed.has(event.id));
   const shown = chips.slice(0, Math.max(0, MONTH_TITLES - visible.length));
@@ -1238,6 +1238,13 @@ export default function EventCalendarExample({
             showOutsideDays
             renderDay={(day) => (
               <span className={styles.chips} data-date={day.date.toString()}>
+                <span className={styles.dateRow}>
+                  {day.today ? (
+                    <span className={styles.dateMark} aria-hidden="true">
+                      {day.date.day}
+                    </span>
+                  ) : null}
+                </span>
                 {day.date.day === 1 && !day.outside ? <SyncTabStop onDay={keepAnchor} /> : null}
                 <MonthDay day={day.date} events={items} timeZone={timeZone} locale={locale} />
               </span>

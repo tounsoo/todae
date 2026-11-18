@@ -277,15 +277,31 @@
 .month :global(table) {
   inline-size: 100%;
   table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.month :global(th[scope='col']) {
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  background: var(--todae-color-bg-canvas);
+  padding-inline: var(--todae-space-1);
+  text-align: start;
 }
 
 .month :global(td) {
   max-inline-size: 0;
+  block-size: 100%;
   overflow: visible;
   vertical-align: top;
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  background: var(--todae-color-bg-canvas);
 }
 
-.month :global(td button) {
+.month :global(td:has(button[data-outside])) {
+  background: var(--todae-color-bg-subtle);
+}
+
+.month :global(td button[type='button']) {
+  --_date-mark: calc(var(--todae-font-size-2) * 2);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -293,12 +309,59 @@
   justify-content: flex-start;
   box-sizing: border-box;
   inline-size: 100%;
+  block-size: 100%;
   max-inline-size: 100%;
   min-inline-size: 0;
+  min-block-size: calc(var(--todae-calendar-day-size) * 3);
   padding-block: var(--todae-space-1);
   padding-inline: var(--todae-space-1);
-  overflow: visible;
-  text-align: center;
+  font-size: var(--todae-calendar-font-size);
+  line-height: 1;
+  text-align: start;
+}
+
+.month :global(td button[type='button'] > span) {
+  align-items: stretch;
+  align-self: stretch;
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+.month :global(td button[type='button'][aria-current='date']) {
+  border-color: transparent;
+  color: transparent;
+}
+
+.month :global(td button[type='button'][aria-current='date'] > span) {
+  color: var(--todae-color-fg-default);
+}
+
+.dateRow {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--_date-mark);
+  block-size: var(--_date-mark);
+  /* The day number is the button's text node, so this row pulls up over it and the bars follow the row. */
+  margin-block-start: calc(-1 * 1lh);
+}
+
+.dateMark {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: var(--todae-radius-full);
+  background: var(--todae-color-accent-default);
+  color: var(--todae-color-on-accent);
+  font-size: var(--todae-calendar-font-size);
+  line-height: 1;
+}
+
+.month :global(td button[type='button']:focus-visible) {
+  outline: var(--todae-focus-ring-width) solid var(--todae-calendar-day-ring-focus);
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
 }
 
 .chips,
@@ -352,6 +415,8 @@
 }
 
 .monthBar {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: var(--todae-space-1);
@@ -360,9 +425,9 @@
   block-size: 100%;
   overflow: hidden;
   padding-inline: var(--todae-space-1);
-  border-block: var(--todae-border-width) solid var(--todae-color-border-default);
-  background: var(--todae-color-bg-surface);
-  color: var(--todae-color-fg-default);
+  border-block: var(--todae-border-width) solid var(--todae-color-accent-default);
+  background: var(--todae-color-accent-default);
+  color: var(--todae-color-on-accent);
   font-size: var(--todae-text-label-font-size);
   line-height: var(--todae-text-leading-tight);
   text-align: start;
@@ -382,19 +447,25 @@
 }
 
 .monthBar:not([data-cut-end]):not([data-join-end]) {
-  border-inline-end: var(--todae-border-width) solid var(--todae-color-border-default);
+  border-inline-end: var(--todae-border-width) solid var(--todae-color-accent-default);
   border-start-end-radius: var(--todae-radius-sm);
   border-end-end-radius: var(--todae-radius-sm);
 }
 
-.monthBar[data-cut-start],
-.monthBar[data-join-start] {
+.monthBar[data-cut-start] {
   margin-inline-start: calc(-1 * var(--todae-calendar-day-border-width));
 }
 
-.monthBar[data-cut-end],
-.monthBar[data-join-end] {
+.monthBar[data-cut-end] {
   margin-inline-end: calc(-1 * var(--todae-calendar-day-border-width));
+}
+
+.monthBar[data-join-start] {
+  margin-inline-start: calc(-1 * (var(--todae-calendar-day-border-width) + 2 * var(--todae-border-width)));
+}
+
+.monthBar[data-join-end] {
+  margin-inline-end: calc(-1 * (var(--todae-calendar-day-border-width) + 2 * var(--todae-border-width)));
 }
 
 .cue {
@@ -430,6 +501,15 @@
 }
 
 @container month (max-inline-size: 30rem) {
+  .month :global(td button[type='button']) {
+    --_date-mark: var(--todae-space-4);
+    font-size: var(--todae-font-size-1);
+  }
+
+  .dateMark {
+    font-size: var(--todae-font-size-1);
+  }
+
   .barRows {
     --_row: var(--todae-space-1);
   }
@@ -440,6 +520,7 @@
 
   .barLabel,
   .cue,
+  .cueEnd,
   .chip,
   .more {
     position: absolute;
