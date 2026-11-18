@@ -266,6 +266,42 @@
   gap: var(--todae-space-3);
 }
 
+.scopeChoices {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--todae-space-2);
+}
+
+.repeatBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--todae-space-1);
+}
+
+.repeatDays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--todae-space-1);
+}
+
+.eventLine {
+  display: flex;
+  align-items: baseline;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  gap: var(--todae-space-1);
+}
+
+.eventLine > * {
+  min-inline-size: 0;
+}
+
+.repeats {
+  flex: 0 0 auto;
+}
+
 .allDay {
   margin-block-start: var(--todae-space-2);
 }
