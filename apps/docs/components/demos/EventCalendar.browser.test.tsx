@@ -1491,4 +1491,19 @@ describe('a repeating event from the keyboard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(screen.getByRole('button', { name: readers })).toBeTruthy();
   });
+
+  it('drags one occurrence and leaves the later ones where the series put them', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const club = screen.getByRole('button', { name: bookClubName });
+    dragBlock(club, atUnits('Sun, Nov 15', 480)).drop();
+    const moved = `Book club, ${clock('16:00')} to ${clock('17:00')}, repeats`;
+    await expect.poll(() => screen.getByRole('button', { name: moved }).textContent).toMatch(/Repeats/);
+    await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByRole('button', { name: bookClubName })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: moved })).toBeNull();
+  });
 });

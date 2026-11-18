@@ -193,6 +193,10 @@ describe('docs examples', () => {
     });
     expect(read.some((file) => file.endsWith('.css'))).toBe(true);
     expect(read.filter((file) => !globs.some((glob) => matchesGlob(file, glob))).map((file) => relative(EXAMPLES, file))).toEqual([]);
+    const seriesFile = join(EXAMPLES, 'recipes/event-calendar/recurrence.ts');
+    const seriesTest = join(EXAMPLES, 'recipes/event-calendar/recurrence.test.ts');
+    expect(globs.some((glob) => matchesGlob(seriesFile, glob))).toBe(true);
+    expect(globs.some((glob) => matchesGlob(seriesTest, glob))).toBe(false);
   });
 
   it('uses no class name that only the docs stylesheet defines', () => {

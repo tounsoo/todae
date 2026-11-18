@@ -71,7 +71,7 @@ const nextConfig = {
       '../../packages/design-system/CHANGELOG.md',
       './app/(en)/**/page.mdx',
       './examples/**/*.tsx',
-      './examples/**/*.ts',
+      './examples/**/!(*.test).ts',
       './examples/**/*.module.css',
       '../../packages/design-system/tokens/**/*.json',
       '../../packages/design-system/dist/scripts/**/*.js',

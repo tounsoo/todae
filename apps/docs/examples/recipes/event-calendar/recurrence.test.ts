@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   EXPANSION_CAP,
+  continueFrom,
   excludeOccurrence,
   expandSeries,
   occurrenceIndex,
@@ -73,6 +74,32 @@ describe('expandSeries', () => {
     });
     const result = expandSeries(item, window(LA, '2026-11-16T09:00:00-08:00', '2026-11-17T09:00:00-08:00'));
     expect(days(result)).toEqual(['2026-11-16']);
+  });
+
+  it('steps a daily series by its interval', () => {
+    const item = series({
+      start: at(LA, '2026-11-16T09:00:00-08:00'),
+      end: at(LA, '2026-11-16T10:00:00-08:00'),
+      rule: rule({ freq: 'DAILY', interval: 2, end: { kind: 'count', count: 3 } }),
+    });
+    expect(days(expandSeries(item, window(LA, '2026-11-01T00:00:00-08:00', '2026-12-01T00:00:00-08:00')))).toEqual([
+      '2026-11-16',
+      '2026-11-18',
+      '2026-11-20',
+    ]);
+  });
+
+  it('counts from the series start when the window opens on a later occurrence', () => {
+    const item = series({
+      start: at(LA, '2026-11-16T09:00:00-08:00'),
+      end: at(LA, '2026-11-16T10:00:00-08:00'),
+      rule: rule({ freq: 'DAILY', end: { kind: 'count', count: 5 } }),
+    });
+    expect(days(expandSeries(item, window(LA, '2026-11-18T00:00:00-08:00', '2026-12-01T00:00:00-08:00')))).toEqual([
+      '2026-11-18',
+      '2026-11-19',
+      '2026-11-20',
+    ]);
   });
 
   it('supports weekly BYDAY and INTERVAL, and does not emit a chosen day before the series start', () => {
@@ -176,6 +203,7 @@ describe('expandSeries', () => {
       }),
       removed,
     );
+    if (!edited) throw new Error('occurrences remain');
     const range = window(LA, '2026-11-16T00:00:00-08:00', '2026-11-20T00:00:00-08:00');
     const result = expandSeries(edited, range);
     expect(result.map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.title])).toEqual([
@@ -187,6 +215,7 @@ describe('expandSeries', () => {
     expect(shifted?.originalStart.toString()).toBe(moved.toString());
     expect(shifted?.id).toBe(expandSeries(item, range)[2]?.id);
     const counted = excludeOccurrence(series({ start, end, rule: rule({ freq: 'DAILY', end: { kind: 'count', count: 3 } }) }), removed);
+    if (!counted) throw new Error('occurrences remain');
     expect(days(expandSeries(counted, window(LA, '2026-11-16T00:00:00-08:00', '2026-12-01T00:00:00-08:00')))).toEqual(['2026-11-16', '2026-11-18']);
     expect(days(expandSeries(edited, window(LA, '2026-11-18T00:00:00-08:00', '2026-11-19T00:00:00-08:00')))).toEqual(['2026-11-18']);
   });
@@ -258,6 +287,8 @@ describe('the recipe pages', () => {
     }
     expect(english).toContain('skips a month that has no 31st');
     expect(korean).toContain('31일이 없는 달을 건너뜁니다');
+    expect(english).toContain('Dragging one occurrence moves that occurrence only');
+    expect(korean).toContain('발생 하나를 끌면 그 발생만 옮겨 가고');
   });
 });
 
@@ -308,6 +339,103 @@ describe('editing a series', () => {
       '2026-12-14',
     ]);
     expect(truncateBefore(item, item.start)).toBeNull();
+  });
+
+  it('keeps a deletion and an edit on their local time when the series start crosses a daylight-saving change', () => {
+    const start = at(LA, '2026-03-02T09:00:00-08:00');
+    const end = at(LA, '2026-03-02T10:00:00-08:00');
+    const item = series({ start, end, rule: rule({ freq: 'WEEKLY', byDay: ['MO'] }) });
+    const removed = at(LA, '2026-03-16T09:00:00-07:00');
+    const editedAt = at(LA, '2026-03-23T09:00:00-07:00');
+    const edited = excludeOccurrence(
+      overrideOccurrence(item, editedAt, {
+        title: 'Special',
+        start: at(LA, '2026-03-23T11:00:00-07:00'),
+        end: at(LA, '2026-03-23T12:00:00-07:00'),
+        allDay: false,
+      }),
+      removed,
+    );
+    if (!edited) throw new Error('occurrences remain');
+    const moved = replaceSeries(edited, {
+      title: 'Stand-up',
+      start: at(LA, '2026-03-09T09:00:00-07:00'),
+      end: at(LA, '2026-03-09T10:00:00-07:00'),
+      allDay: false,
+      rule: item.rule,
+    });
+    const result = expandSeries(moved, window(LA, '2026-03-09T00:00:00-07:00', '2026-04-06T00:00:00-07:00'));
+    expect(result.map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString(), occurrence.title])).toEqual([
+      ['2026-03-09', '09:00:00', 'Stand-up'],
+      ['2026-03-16', '09:00:00', 'Stand-up'],
+      ['2026-03-30', '11:00:00', 'Special'],
+    ]);
+  });
+
+  it('removes the series when its last occurrence is deleted', () => {
+    const item = series({
+      start: at(LA, '2026-11-16T09:00:00-08:00'),
+      end: at(LA, '2026-11-16T10:00:00-08:00'),
+      rule: rule({ freq: 'DAILY', end: { kind: 'count', count: 2 } }),
+    });
+    const once = excludeOccurrence(item, at(LA, '2026-11-16T09:00:00-08:00'));
+    if (!once) throw new Error('one occurrence remains');
+    expect(excludeOccurrence(once, at(LA, '2026-11-17T09:00:00-08:00'))).toBeNull();
+    expect(excludeOccurrence(series({ start: item.start, end: item.end, rule: rule({ freq: 'DAILY', end: { kind: 'count', count: 1 } }) }), item.start)).toBeNull();
+  });
+
+  it('gives this and the following occurrences the remaining count, and carries the later exceptions', () => {
+    const item = series({
+      start: at(LA, '2026-11-16T09:00:00-08:00'),
+      end: at(LA, '2026-11-16T10:00:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['MO'], end: { kind: 'count', count: 4 } }),
+    });
+    const removed = at(LA, '2026-11-30T09:00:00-08:00');
+    const edited = excludeOccurrence(item, removed);
+    if (!edited) throw new Error('occurrences remain');
+    const splitAt = at(LA, '2026-11-23T09:00:00-08:00');
+    const later = continueFrom(
+      edited,
+      splitAt,
+      {
+        title: 'Later',
+        start: splitAt,
+        end: at(LA, '2026-11-23T10:00:00-08:00'),
+        allDay: false,
+        rule: item.rule,
+      },
+      seriesId('later'),
+    );
+    expect(later.rule?.end).toEqual({ kind: 'count', count: 3 });
+    expect(days(expandSeries(later, window(LA, '2026-11-01T00:00:00-08:00', '2026-12-31T00:00:00-08:00')))).toEqual(['2026-11-23', '2026-12-07']);
+    const earlier = truncateBefore(edited, splitAt);
+    expect(days(expandSeries(earlier!, window(LA, '2026-11-01T00:00:00-08:00', '2026-12-31T00:00:00-08:00')))).toEqual(['2026-11-16']);
+  });
+
+  it('moves a one-weekday series onto the new start weekday and refuses a start the other days leave out', () => {
+    const sunday = series({
+      start: at(LA, '2026-11-15T15:00:00-08:00'),
+      end: at(LA, '2026-11-15T16:00:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['SU'] }),
+    });
+    const monday = replaceSeries(sunday, {
+      title: 'Book club',
+      start: at(LA, '2026-11-16T15:00:00-08:00'),
+      end: at(LA, '2026-11-16T16:00:00-08:00'),
+      allDay: false,
+      rule: sunday.rule,
+    });
+    expect(monday.rule?.byDay).toEqual(['MO']);
+    expect(days(expandSeries(monday, window(LA, '2026-11-15T00:00:00-08:00', '2026-11-24T00:00:00-08:00')))).toEqual(['2026-11-16', '2026-11-23']);
+    expect(() =>
+      replaceSeries(sunday, {
+        title: 'Book club',
+        start: at(LA, '2026-11-19T15:00:00-08:00'),
+        end: at(LA, '2026-11-19T16:00:00-08:00'),
+        allDay: false,
+        rule: rule({ freq: 'WEEKLY', byDay: ['MO', 'WE'] }),
+      }),
+    ).toThrow(RangeError);
   });
 
   it('reports the index of a generated start and rejects a day the rule skips', () => {

@@ -1596,6 +1596,7 @@ describe('repeating events', () => {
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     const later = `Later, ${clock('15:00')} to ${clock('16:00')}, repeats`;
     expect(screen.getByRole('list', { name: 'Sun, Nov 22' }).contains(screen.getByRole('button', { name: later }))).toBe(true);
+    expect(screen.queryByRole('button', { name: bookClubName })).toBeNull();
     await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Changed this and following events\./));
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(screen.getByRole('button', { name: later })).toBeTruthy();
@@ -1631,5 +1632,142 @@ describe('repeating events', () => {
     await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Deleted all events\./));
     fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
     expect(screen.queryByRole('button', { name: bookClubName })).toBeNull();
+  });
+
+  it('keeps a weekly series on the date’s weekday', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'New event' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New event' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), { target: { value: 'Reading' } });
+    fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
+    const days = within(dialog).getByRole('group', { name: 'Days' });
+    expect(within(days).getByRole('button', { name: 'Mon' }).getAttribute('aria-pressed')).toBe('true');
+    expect(within(dialog).getByText('Days')).toBeTruthy();
+    expect(within(dialog).getByText('Ends')).toBeTruthy();
+    const date = within(dialog).getByRole('textbox', { name: 'Date' });
+    fireEvent.change(date, { target: { value: '11/19/2026' } });
+    fireEvent.blur(date);
+    expect(within(days).getByRole('button', { name: 'Thu' }).getAttribute('aria-pressed')).toBe('true');
+    expect(within(days).getByRole('button', { name: 'Mon' }).getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const reading = `Reading, ${clock('08:00')} to ${clock('08:15')}, repeats`;
+    expect(within(screen.getByRole('list', { name: 'Thu, Nov 19' })).getByRole('button', { name: reading })).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Mon, Nov 16' })).queryByRole('button', { name: reading })).toBeNull();
+    await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Added /));
+  });
+
+  it('refuses a weekly series whose days leave out the start', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'New event' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New event' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), { target: { value: 'Reading' } });
+    fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
+    const days = within(dialog).getByRole('group', { name: 'Days' });
+    fireEvent.click(within(days).getByRole('button', { name: 'Wed' }));
+    fireEvent.click(within(days).getByRole('button', { name: 'Mon' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(within(dialog).getByText('The start day has to be one of the weekly days.')).toBeTruthy();
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Reading,/ })).toBeNull();
+  });
+
+  it('moves a one-weekday series onto the new date and keeps a deleted occurrence deleted', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(bookClubName, 'Delete');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete repeating event' })).getByRole('button', { name: 'This event' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+    await choose(bookClubName, 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    const form = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    expect((within(form).getByLabelText('Repeat') as HTMLSelectElement).value).toBe('WEEKLY');
+    expect(within(form).getByRole('group', { name: 'Days' }).querySelector('[aria-pressed="true"]')?.textContent).toBe('Sun');
+    const date = within(form).getByRole('textbox', { name: 'Date' });
+    fireEvent.change(date, { target: { value: '11/16/2026' } });
+    fireEvent.blur(date);
+    expect(within(form).getByRole('button', { name: 'Mon' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const moved = `Book club, ${clock('15:00')} to ${clock('16:00')}, repeats`;
+    expect(within(screen.getByRole('list', { name: 'Mon, Nov 16' })).getByRole('button', { name: moved })).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Sun, Nov 15' })).queryByRole('button', { name: moved })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(within(screen.getByRole('list', { name: 'Sun, Nov 22' })).queryByRole('button', { name: moved })).toBeNull();
+    expect(within(screen.getByRole('list', { name: 'Mon, Nov 23' })).queryByRole('button', { name: moved })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(within(screen.getByRole('list', { name: 'Mon, Nov 30' })).getByRole('button', { name: moved })).toBeTruthy();
+  });
+
+  it('names an all-day repeating bar with repeats', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'New event' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New event' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), { target: { value: 'Holiday' } });
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'All day' }));
+    fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByRole('button', { name: 'Holiday, November 16, 2026, repeats' })).toBeTruthy();
+  });
+
+  it('loads the series start and its weekdays when a later occurrence edits all events', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(bookClubName, 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    const form = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    expect((within(form).getByRole('textbox', { name: 'Date' }) as HTMLInputElement).value).toBe('11/15/2026');
+    expect(within(form).getByRole('button', { name: 'Sun' }).getAttribute('aria-pressed')).toBe('true');
+    expect((within(form).getByLabelText('Repeat') as HTMLSelectElement).value).toBe('WEEKLY');
+  });
+
+  it('stops this and the following occurrences where the old count stopped', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'New event' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New event' });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), { target: { value: 'Reading' } });
+    fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'After' }));
+    const times = within(dialog).getByRole('spinbutton', { name: 'Times' });
+    fireEvent.change(times, { target: { value: '4' } });
+    fireEvent.blur(times);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const reading = `Reading, ${clock('08:00')} to ${clock('08:15')}, repeats`;
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(reading, 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'This and following' }));
+    const form = await screen.findByRole('dialog', { name: 'Edit Reading' });
+    expect((within(form).getByRole('spinbutton', { name: 'Times' }) as HTMLInputElement).value).toBe('3');
+    fireEvent.change(within(form).getByRole('textbox', { name: 'Title' }), { target: { value: 'Later' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const later = `Later, ${clock('08:00')} to ${clock('08:15')}, repeats`;
+    expect(within(screen.getByRole('list', { name: 'Mon, Nov 23' })).queryByRole('button', { name: reading })).toBeNull();
+    expect(within(screen.getByRole('list', { name: 'Mon, Nov 23' })).getByRole('button', { name: later })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByRole('button', { name: later })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByRole('button', { name: later })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.queryByRole('button', { name: later })).toBeNull();
+    expect(screen.queryByRole('button', { name: reading })).toBeNull();
+  });
+
+  it('deletes this and the following occurrences, and names the date', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(bookClubName, 'Delete');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete repeating event' })).getByRole('button', { name: 'This and following' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByRole('button', { name: bookClubName })).toBeNull();
+    await vi.waitFor(() => expect(polite()?.textContent).toBe('Deleted this and following events. Book club, Sun, Nov 22.'));
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.queryByRole('button', { name: bookClubName })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+    expect(within(screen.getByRole('list', { name: 'Sun, Nov 15' })).getByRole('button', { name: bookClubName })).toBeTruthy();
   });
 });

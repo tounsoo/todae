@@ -397,27 +397,39 @@ export type SeriesDraft = {
   rule: RecurrenceRule | null;
 };
 
-function shiftInstant(value: Temporal.ZonedDateTime, delta: Temporal.Duration): Temporal.ZonedDateTime {
-  return value.add(delta);
+function shiftWall(value: Temporal.ZonedDateTime, from: Temporal.ZonedDateTime, to: Temporal.ZonedDateTime, timeZone: string): Temporal.ZonedDateTime {
+  const delta = from.withTimeZone(timeZone).toPlainDateTime().until(to.withTimeZone(timeZone).toPlainDateTime());
+  return value.withTimeZone(timeZone).toPlainDateTime().add(delta).toZonedDateTime(timeZone);
 }
 
-/** All events. The template changes, and exceptions stay attached to the same ordinal start. */
+/** A single chosen weekday is the series start's weekday. Several weekdays must include it. */
+function withStartWeekday(rule: RecurrenceRule | null, start: Temporal.ZonedDateTime): RecurrenceRule | null {
+  if (!rule || rule.freq !== 'WEEKLY') return rule;
+  const day = byDayOf(start.toPlainDate());
+  const listed = [...(rule.byDay ?? [])];
+  if (listed.length <= 1) return { ...rule, byDay: [day] };
+  if (!listed.includes(day)) throw new RangeError('a weekly series starts on one of its weekdays');
+  return rule;
+}
+
+/** All events. The template changes, and exceptions stay on the same local time. */
 export function replaceSeries(series: EventSeries, next: SeriesDraft): EventSeries {
-  const delta = series.start.until(next.start);
+  const zone = next.start.timeZoneId;
+  const shift = (value: Temporal.ZonedDateTime) => shiftWall(value, series.start, next.start, zone);
   return {
     ...series,
     title: next.title,
-    timeZone: next.start.timeZoneId,
+    timeZone: zone,
     start: next.start,
     end: next.end,
     allDay: next.allDay,
-    rule: next.rule,
-    exdates: series.exdates.map((date) => shiftInstant(date, delta)),
+    rule: withStartWeekday(next.rule, next.start),
+    exdates: series.exdates.map(shift),
     overrides: series.overrides.map((item) => ({
       ...item,
-      originalStart: shiftInstant(item.originalStart, delta),
-      start: shiftInstant(item.start, delta),
-      end: shiftInstant(item.end, delta),
+      originalStart: shift(item.originalStart),
+      start: shift(item.start),
+      end: shift(item.end),
     })),
   };
 }
@@ -429,16 +441,45 @@ export function overrideOccurrence(series: EventSeries, originalStart: Temporal.
   return { ...series, overrides };
 }
 
-/** This event, removed. The original start is an EXDATE and no longer an override. */
-export function excludeOccurrence(series: EventSeries, originalStart: Temporal.ZonedDateTime): EventSeries {
-  if (series.exdates.some((date) => sameInstant(date, originalStart))) {
-    return { ...series, overrides: series.overrides.filter((item) => !sameInstant(item.originalStart, originalStart)) };
+function hasOccurrence(series: EventSeries): boolean {
+  const rule = series.rule;
+  if (rule === null) return !exdated(series, series.start);
+  if (rule.end.kind === 'never') return true;
+  const startWall = wall(series.start, series.timeZone);
+  const startDate = startWall.toPlainDate();
+  const time = startWall.toPlainTime();
+  const limit = rule.end.kind === 'count' ? rule.end.count : Number.POSITIVE_INFINITY;
+  const until = rule.end.kind === 'until' ? rule.end.until : null;
+  let step = 0;
+  let seen = 0;
+  let spins = 0;
+  const spinLimit = rule.end.kind === 'count' ? rule.end.count * 8 + 8 : 20000;
+  while (seen < limit && spins < spinLimit) {
+    spins += 1;
+    const current = stepAt(rule, startDate, step);
+    step += 1;
+    if (current.dates.length === 0) continue;
+    for (const date of current.dates) {
+      if (seen >= limit) return false;
+      const original = atWall(date, time, series.timeZone);
+      if (until && Temporal.ZonedDateTime.compare(original, until) > 0) return false;
+      seen += 1;
+      if (!exdated(series, original)) return true;
+    }
   }
-  return {
-    ...series,
-    exdates: [...series.exdates, originalStart],
-    overrides: series.overrides.filter((item) => !sameInstant(item.originalStart, originalStart)),
-  };
+  return false;
+}
+
+/** This event, removed. Null when that was the last occurrence, so the series is gone. */
+export function excludeOccurrence(series: EventSeries, originalStart: Temporal.ZonedDateTime): EventSeries | null {
+  const next = series.exdates.some((date) => sameInstant(date, originalStart))
+    ? { ...series, overrides: series.overrides.filter((item) => !sameInstant(item.originalStart, originalStart)) }
+    : {
+        ...series,
+        exdates: [...series.exdates, originalStart],
+        overrides: series.overrides.filter((item) => !sameInstant(item.originalStart, originalStart)),
+      };
+  return hasOccurrence(next) ? next : null;
 }
 
 /**
@@ -458,6 +499,35 @@ export function truncateBefore(series: EventSeries, originalStart: Temporal.Zone
   };
 }
 
+function countedRemainder(series: EventSeries, originalStart: Temporal.ZonedDateTime, rule: RecurrenceRule | null): RecurrenceRule | null {
+  if (!rule || rule.end.kind !== 'count' || series.rule?.end.kind !== 'count') return rule;
+  const index = occurrenceIndex(series, originalStart);
+  if (index === null) return rule;
+  const remaining = series.rule.end.count - index;
+  if (remaining < 1) return { ...rule, end: { kind: 'count', count: 1 } };
+  if (rule.end.count === series.rule.end.count) return { ...rule, end: { kind: 'count', count: remaining } };
+  return rule;
+}
+
+/** This and the following occurrences. The earlier series is `truncateBefore`. */
+export function continueFrom(series: EventSeries, originalStart: Temporal.ZonedDateTime, draft: SeriesDraft, id: SeriesId): EventSeries {
+  const rule = countedRemainder(series, originalStart, withStartWeekday(draft.rule, draft.start));
+  const later = seriesFromDraft(id, { ...draft, rule });
+  const zone = series.timeZone;
+  const shift = (value: Temporal.ZonedDateTime) => shiftWall(value, originalStart, draft.start, zone);
+  const after = (value: Temporal.ZonedDateTime) => Temporal.ZonedDateTime.compare(value, originalStart) >= 0;
+  return {
+    ...later,
+    exdates: series.exdates.filter(after).map(shift),
+    overrides: series.overrides.filter((item) => after(item.originalStart)).map((item) => ({
+      ...item,
+      originalStart: shift(item.originalStart),
+      start: shift(item.start),
+      end: shift(item.end),
+    })),
+  };
+}
+
 export function seriesFromDraft(id: SeriesId, draft: SeriesDraft): EventSeries {
   return {
     id,
@@ -466,7 +536,7 @@ export function seriesFromDraft(id: SeriesId, draft: SeriesDraft): EventSeries {
     start: draft.start,
     end: draft.end,
     allDay: draft.allDay,
-    rule: draft.rule,
+    rule: withStartWeekday(draft.rule, draft.start),
     exdates: [],
     overrides: [],
   };

@@ -26,8 +26,10 @@ import {
 import { memo, useId, useLayoutEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react';
 import {
   byDayOf,
+  continueFrom,
   excludeOccurrence,
   expandSeries,
+  occurrenceIndex,
   overrideOccurrence,
   replaceSeries,
   seriesFromDraft,
@@ -938,19 +940,17 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
           aria-label={name}
           tooltip={false}
         >
-          <Text.Root as="span" weight="medium" lines={1}>
-            {span.event.title}
-          </Text.Root>
+          <span className={styles.eventLine}>
+            <Text.Root as="span" weight="medium" lines={1}>
+              {span.event.title}
+            </Text.Root>
+            {span.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
+          </span>
           {short ? null : (
             <Text.Root as="span" variant="label" tone="muted" lines={1}>
               {timeText}
             </Text.Root>
           )}
-          {span.event.repeats ? (
-            <Text.Root as="span" variant="label" tone="muted" lines={1}>
-              Repeats
-            </Text.Root>
-          ) : null}
         </Menu.Trigger>
         <Menu.Content>
           <EventMoves event={span.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} onDelete={shared.onDelete} />
@@ -1018,14 +1018,12 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
               …
             </span>
           ) : null}
-          <Text.Root as="span" weight="medium" lines={1}>
-            {bar.event.title}
-          </Text.Root>
-          {bar.event.repeats ? (
-            <Text.Root as="span" variant="label" lines={1}>
-              Repeats
+          <span className={styles.eventLine}>
+            <Text.Root as="span" weight="medium" lines={1}>
+              {bar.event.title}
             </Text.Root>
-          ) : null}
+            {bar.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
+          </span>
           {bar.cutEnd ? (
             <span aria-hidden="true" className={styles.cueEnd}>
               …
@@ -1359,7 +1357,7 @@ export default function EventCalendarExample({
     setSeriesList((list) => list.filter((item) => item.id !== (event.seriesId ?? event.id)));
     focusHeading.current = day;
     setFocusKey(null);
-    announce(`Deleted ${event.title}.`);
+    announce(`Deleted ${event.title}, ${dayHeading(day, locale)}.`);
     returnFocus.current = true;
   };
 
@@ -1371,13 +1369,17 @@ export default function EventCalendarExample({
       list.flatMap((item) => {
         if (item.id !== id) return [item];
         if (scope === 'series') return [];
-        if (scope === 'occurrence') return [excludeOccurrence(item, event.originalStart!)];
+        if (scope === 'occurrence') {
+          const kept = excludeOccurrence(item, event.originalStart!);
+          return kept ? [kept] : [];
+        }
         const kept = truncateBefore(item, event.originalStart!);
         return kept ? [kept] : [];
       }),
     );
     const which = scope === 'occurrence' ? 'this event' : scope === 'following' ? 'this and following events' : 'all events';
-    announce(`Deleted ${which}. ${event.title}.`);
+    const when = dayHeading(event.start.withTimeZone(timeZone).toPlainDate(), locale);
+    announce(`Deleted ${which}. ${event.title}, ${when}.`);
     focusHeading.current = event.start.withTimeZone(timeZone).toPlainDate();
     setFocusKey(null);
     returnFocus.current = true;
@@ -1632,7 +1634,7 @@ export default function EventCalendarExample({
               const saved = { ...editing, ...next, id: editing.id, seriesId: current.id, repeats: true, originalStart: editing.originalStart };
               reveal(saved, `Changed this event. ${labelOf(saved)}.`);
             } else if (detail.scope === 'following' && editing.originalStart) {
-              const created = seriesFromDraft(freshSeriesId(), { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
+              const created = continueFrom(current, editing.originalStart, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule }, freshSeriesId());
               const previous = truncateBefore(current, editing.originalStart);
               setSeriesList((list) => list.flatMap((item) => (item.id === current.id ? (previous ? [previous, created] : [created]) : [item])));
               const saved = firstOf(created) ?? { ...next, id: created.id, seriesId: created.id, repeats: detail.rule !== null, originalStart: next.start };
@@ -1711,11 +1713,18 @@ function endOfChosenDay(date: Temporal.PlainDate, timeZone: string): Temporal.Zo
   return zoned(date.add({ days: 1 }), MIDNIGHT, timeZone).subtract({ nanoseconds: 1 });
 }
 
-function ruleFromRepeat(fields: RepeatFields, timeZone: string): RecurrenceRule | null | string {
+function oneWeekdayFollows(fields: RepeatFields, date: Temporal.PlainDate | null): RepeatFields {
+  if (fields.freq !== 'WEEKLY' || fields.byDay.length !== 1 || !date) return fields;
+  const day = byDayOf(date);
+  return fields.byDay[0] === day ? fields : { ...fields, byDay: [day] };
+}
+
+function ruleFromRepeat(fields: RepeatFields, start: Temporal.PlainDate | null, timeZone: string): RecurrenceRule | null | { field: 'date' | 'repeat'; message: string } {
   if (fields.freq === 'none') return null;
-  if (fields.freq === 'WEEKLY' && fields.byDay.length === 0) return 'Choose at least one day.';
-  if (fields.end === 'count' && (fields.count === null || !Number.isInteger(fields.count) || fields.count < 1)) return 'Choose how many times it repeats.';
-  if (fields.end === 'until' && !fields.until) return 'Choose the last date.';
+  if (fields.freq === 'WEEKLY' && fields.byDay.length === 0) return { field: 'repeat', message: 'Choose at least one day.' };
+  if (fields.freq === 'WEEKLY' && start && !fields.byDay.includes(byDayOf(start))) return { field: 'date', message: 'The start day has to be one of the weekly days.' };
+  if (fields.end === 'count' && (fields.count === null || !Number.isInteger(fields.count) || fields.count < 1)) return { field: 'repeat', message: 'Choose how many times it repeats.' };
+  if (fields.end === 'until' && !fields.until) return { field: 'repeat', message: 'Choose the last date.' };
   const byDay = fields.freq === 'WEEKLY' ? fields.byDay : undefined;
   if (fields.end === 'count') return { freq: fields.freq, interval: 1, byDay, end: { kind: 'count', count: fields.count ?? 1 } };
   if (fields.end === 'until' && fields.until) return { freq: fields.freq, interval: 1, byDay, end: { kind: 'until', until: endOfChosenDay(fields.until, timeZone) } };
@@ -1797,7 +1806,7 @@ export function EventEditor({
   onCancel: () => void;
   restoreFocusRef?: RefObject<HTMLElement | null>;
 }) {
-  const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId(), ask: useId(), repeat: useId(), count: useId(), until: useId() };
+  const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId(), ask: useId(), repeat: useId(), count: useId(), until: useId(), days: useId(), ends: useId() };
   const titleRef = useRef<HTMLInputElement>(null);
   const choiceRef = useRef<HTMLButtonElement>(null);
   const remembered = useRef<{ start: Temporal.PlainTime | null; end: Temporal.PlainTime | null; endDate?: Temporal.PlainDate | null; daySpan?: number } | null>(prior);
@@ -1815,6 +1824,7 @@ export function EventEditor({
     (value: EventDraft[K]) => {
       setErrors({});
       setFields((current) => shiftDraft(current, key, value, timeZone));
+      if (key === 'date') setRepeat((current) => oneWeekdayFollows(current, value instanceof Temporal.PlainDate ? value : null));
     };
   const setAllDay = (on: boolean) => {
     setErrors({});
@@ -1838,8 +1848,20 @@ export function EventEditor({
   const pickScope = (next: EditScope) => {
     setScope(next);
     if (next === 'series' && template) {
-      setFields(draftFromEvent(template, timeZone));
-      setRepeat(repeatFromRule(rule, template.start.withTimeZone(timeZone).toPlainDate()));
+      const draft = draftFromEvent(template, timeZone);
+      setFields(draft);
+      setRepeat(oneWeekdayFollows(repeatFromRule(rule, template.start.withTimeZone(timeZone).toPlainDate()), draft.date));
+    }
+    if (next === 'following' && rule?.end.kind === 'count' && template && event.originalStart) {
+      const probe = seriesFromDraft(seriesId('probe'), {
+        title: template.title,
+        start: template.start,
+        end: template.end,
+        allDay: template.allDay,
+        rule,
+      });
+      const index = occurrenceIndex(probe, event.originalStart);
+      if (index !== null) setRepeat((current) => ({ ...current, end: 'count', count: Math.max(1, rule.end.kind === 'count' ? rule.end.count - index : 1) }));
     }
   };
 
@@ -1851,9 +1873,9 @@ export function EventEditor({
       return;
     }
     const showRepeat = scope !== 'occurrence';
-    const parsed = showRepeat ? ruleFromRepeat(repeat, timeZone) : null;
-    if (typeof parsed === 'string') {
-      setErrors({ repeat: parsed });
+    const parsed = showRepeat ? ruleFromRepeat(repeat, fields.date, timeZone) : null;
+    if (parsed && 'message' in parsed) {
+      setErrors({ [parsed.field]: parsed.message });
       return;
     }
     onSave({ ...event, ...result.value }, { rule: parsed, scope: scope ?? 'series' });
@@ -1944,11 +1966,11 @@ export function EventEditor({
                     onValueChange={(value) => {
                       setErrors({});
                       const freq = value === 'DAILY' || value === 'WEEKLY' || value === 'MONTHLY' || value === 'YEARLY' ? value : 'none';
-                      setRepeat((current) => ({
+                      setRepeat((current) => oneWeekdayFollows({
                         ...current,
                         freq,
                         byDay: freq === 'WEEKLY' && current.byDay.length === 0 && fields.date ? [byDayOf(fields.date)] : current.byDay,
-                      }));
+                      }, fields.date));
                     }}
                   >
                     <option value="none">None</option>
@@ -1962,27 +1984,36 @@ export function EventEditor({
               </Field.Group>
             )}
             {scope === 'occurrence' || repeat.freq !== 'WEEKLY' ? null : (
-              <ToggleGroup.Root
-                aria-label="Days"
-                selectionMode="multiple"
-                value={repeat.byDay}
-                onValueChange={(value) => {
-                  setErrors({});
-                  setRepeat((current) => ({ ...current, byDay: value.filter((day): day is ByDay => WEEK_FROM_SUNDAY.includes(day as ByDay)) }));
-                }}
-                className={styles.repeatDays}
-              >
-                {days.map((day) => (
-                  <ToggleGroup.Item key={day} value={day}>
-                    {weekdayName(day, locale)}
-                  </ToggleGroup.Item>
-                ))}
-              </ToggleGroup.Root>
+              <div className={styles.repeatBlock}>
+                <Text.Root id={ids.days} as="span" variant="label" weight="medium">
+                  Days
+                </Text.Root>
+                <ToggleGroup.Root
+                  aria-labelledby={ids.days}
+                  selectionMode="multiple"
+                  value={repeat.byDay}
+                  onValueChange={(value) => {
+                    setErrors({});
+                    setRepeat((current) => ({ ...current, byDay: value.filter((day): day is ByDay => WEEK_FROM_SUNDAY.includes(day as ByDay)) }));
+                  }}
+                  className={styles.repeatDays}
+                >
+                  {days.map((day) => (
+                    <ToggleGroup.Item key={day} value={day}>
+                      {weekdayName(day, locale)}
+                    </ToggleGroup.Item>
+                  ))}
+                </ToggleGroup.Root>
+              </div>
             )}
             {scope === 'occurrence' || repeat.freq === 'none' ? null : (
               <>
+                <div className={styles.repeatBlock}>
+                <Text.Root id={ids.ends} as="span" variant="label" weight="medium">
+                  Ends
+                </Text.Root>
                 <RadioGroup.Root
-                  aria-label="Ends"
+                  aria-labelledby={ids.ends}
                   value={repeat.end}
                   onValueChange={(value) => {
                     if (value === 'never' || value === 'count' || value === 'until') setRepeat((current) => ({ ...current, end: value }));
@@ -1992,6 +2023,7 @@ export function EventEditor({
                   <RadioGroup.Item value="count">After</RadioGroup.Item>
                   <RadioGroup.Item value="until">On</RadioGroup.Item>
                 </RadioGroup.Root>
+                </div>
                 {repeat.end === 'count' ? (
                   <Field.Group>
                     <Label.Root htmlFor={ids.count}>Times</Label.Root>

@@ -273,14 +273,33 @@
   gap: var(--todae-space-2);
 }
 
+.repeatBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--todae-space-1);
+}
+
 .repeatDays {
   display: flex;
   flex-wrap: wrap;
   gap: var(--todae-space-1);
 }
 
+.eventLine {
+  display: flex;
+  align-items: baseline;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  gap: var(--todae-space-1);
+}
+
+.eventLine > :first-child {
+  min-inline-size: 0;
+}
+
 .repeats {
-  margin-inline-start: var(--todae-space-1);
+  flex-shrink: 0;
 }
 
 .allDay {
