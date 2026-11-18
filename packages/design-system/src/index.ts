@@ -408,6 +408,7 @@ export {
 export {
   useLaneDrag,
   useLaneDragState,
+  type LaneCreateDrag,
   type LaneDragChange,
   type LaneDragKind,
   type LaneDragStore,
