@@ -1605,8 +1605,8 @@ describe('creating an event from empty lane space', () => {
               timeZone={week.timeZone}
               compareZone={week.compareZone}
               anchor={Temporal.PlainDate.from(week.anchor)}
-              opens={'opens' in week ? Temporal.PlainTime.from(week.opens) : undefined}
-              closes={'closes' in week ? Temporal.PlainTime.from(week.closes) : undefined}
+              opens={'opens' in week && week.opens !== undefined ? Temporal.PlainTime.from(week.opens) : undefined}
+              closes={'closes' in week && week.closes !== undefined ? Temporal.PlainTime.from(week.closes) : undefined}
               events={[]}
             />
           </Providers>,
