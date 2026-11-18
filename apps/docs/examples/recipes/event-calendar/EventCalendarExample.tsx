@@ -688,6 +688,13 @@ function stripKey(id: string): string {
   return `strip:${id}`;
 }
 
+/** A strip bar's grid lines. Column 1 is the gutter, and the end never passes the last day. */
+function stripColumn(column: number, span: number, days: number): string {
+  const start = column + 2;
+  const end = Math.min(start + span, days + 2);
+  return `${start} / ${end}`;
+}
+
 function eventRangeLabel(event: CalendarEvent, locale: string, timeZone: string): string {
   const covered = coveredDays(event, timeZone);
   if (!covered) return '';
@@ -730,6 +737,7 @@ function parseBlockKey(key: string): { id: string; day: string } {
 type ColumnShared = {
   locale: string;
   timeZone: string;
+  days: number;
   scale: number;
   axis: DayAxis;
   week: boolean;
@@ -862,7 +870,7 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
   const handoff = useFocusHandoff({ to: shared.landing });
   const key = stripKey(bar.event.id);
   return (
-    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: `${bar.column + 1} / span ${bar.span}`, gridRow: bar.row + 1 }}>
+    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: stripColumn(bar.column, bar.span, shared.days), gridRow: bar.row + 1 }}>
       <Menu.Root>
         <Menu.Trigger
           ref={key === shared.focusKey ? shared.landing : undefined}
@@ -883,7 +891,7 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
             {bar.event.title}
           </Text.Root>
           {bar.cutEnd ? (
-            <span aria-hidden="true" className={styles.cue}>
+            <span aria-hidden="true" className={styles.cueEnd}>
               …
             </span>
           ) : null}
@@ -985,7 +993,7 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
                   {index === bar.column ? <span className={styles.barLabel}>{bar.event.title}</span> : <VisuallyHidden.Root>{bar.event.title}</VisuallyHidden.Root>}
                   <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
                   {cutEnd ? (
-                    <span aria-hidden="true" className={styles.cue}>
+                    <span aria-hidden="true" className={styles.cueEnd}>
                       …
                     </span>
                   ) : null}
@@ -1153,6 +1161,7 @@ export default function EventCalendarExample({
   const columnShared: ColumnShared = {
     locale,
     timeZone,
+    days: days.length,
     scale,
     axis,
     week: view === 'week',
@@ -1258,13 +1267,11 @@ export default function EventCalendarExample({
             {stripBars.length === 0 ? null : (
               <div className={styles.strip}>
                 <div className={styles.corner} />
-                <div className={styles.stripBars}>
-                  {stripBars.map((bar) => {
-                    const segment = axis.segments[view === 'day' ? 0 : bar.column] ?? axis.segments[0];
-                    if (!segment) return null;
-                    return <StripBar key={bar.event.id} bar={bar} segment={segment} shared={columnShared} />;
-                  })}
-                </div>
+                {stripBars.map((bar) => {
+                  const segment = axis.segments[view === 'day' ? 0 : bar.column] ?? axis.segments[0];
+                  if (!segment) return null;
+                  return <StripBar key={bar.event.id} bar={bar} segment={segment} shared={columnShared} />;
+                })}
               </div>
             )}
             <div className={styles.body}>

@@ -8,6 +8,7 @@ import '@tounsoo/todae/todae.css';
 import '../../app/globals.css';
 import { paintedContrast } from '../../../../packages/design-system/src/test/paintedContrast';
 import { settle } from '../../../../packages/design-system/src/test/settle';
+import { Example } from '../Example';
 import EventCalendarExample from '../../examples/recipes/event-calendar/EventCalendarExample';
 import { AXE_OPTIONS, describeViolations } from '../../test/axe';
 import { APPEARANCE_KEY } from '../appearanceScript';
@@ -404,6 +405,27 @@ async function openEditor(name: string | RegExp | HTMLElement) {
   return screen.findByRole('dialog');
 }
 
+function ringRoom(el: HTMLElement): number {
+  const style = getComputedStyle(el);
+  const width = style.outlineStyle === 'none' ? 0 : Number.parseFloat(style.outlineWidth) || 0;
+  return width + (Number.parseFloat(style.outlineOffset) || 0);
+}
+
+function expectStripInsideBoard() {
+  const board = document.querySelector<HTMLElement>('[class*="board"]');
+  if (!board) throw new Error('missing board');
+  const bars = [...board.querySelectorAll<HTMLButtonElement>('[class*="stripSlot"] button')];
+  expect(bars.length).toBeGreaterThan(0);
+  const edge = board.getBoundingClientRect().left + board.clientLeft + board.clientWidth;
+  for (const bar of bars) {
+    bar.focus({ focusVisible: true } as FocusOptions);
+    const box = bar.getBoundingClientRect();
+    const name = bar.getAttribute('aria-label') ?? '';
+    expect(box.right, name).toBeLessThanOrEqual(edge + 0.5);
+    expect(box.right + ringRoom(bar), name).toBeLessThanOrEqual(edge + 0.5);
+  }
+}
+
 describe('multi-day bars', () => {
   it('draws a week-crossing event as one bar, with a cut at the week boundary', async () => {
     render(
@@ -430,6 +452,9 @@ describe('multi-day bars', () => {
     expect(saturday.hasAttribute('data-join-start')).toBe(true);
     expect(saturday.hasAttribute('data-cut-end')).toBe(true);
     expect(sunday.hasAttribute('data-cut-start')).toBe(true);
+    const saturdayCue = saturday.querySelector<HTMLElement>('[class*="cueEnd"]');
+    expect(saturdayCue).toBeTruthy();
+    expect(saturday.getBoundingClientRect().right - saturdayCue!.getBoundingClientRect().right).toBeLessThan(12);
     const handoffMonday = monthBar('Monday, November 16, 2026', 'handoff');
     const handoffTuesday = monthBar('Tuesday, November 17, 2026', 'handoff');
     expect(Math.abs(handoffMonday.getBoundingClientRect().top - handoffTuesday.getBoundingClientRect().top)).toBeLessThan(2);
@@ -455,6 +480,12 @@ describe('multi-day bars', () => {
     expect(box.width).toBeGreaterThan(friday.width * 1.4);
     expect(box.top).toBeLessThan(dayLane('Fri, Nov 20').getBoundingClientRect().top);
     expect(retreat.hasAttribute('data-cut-end')).toBe(true);
+    const cue = retreat.querySelector<HTMLElement>('[class*="cueEnd"]');
+    expect(cue).toBeTruthy();
+    expect(retreat.getBoundingClientRect().right - cue!.getBoundingClientRect().right).toBeLessThan(16);
+    const stripButtons = [...document.querySelectorAll<HTMLButtonElement>('[class*="stripSlot"] button')];
+    expect(stripButtons.map((button) => button.getAttribute('aria-label')?.split(',')[0])).toEqual(['Offsite', 'Launch watch', 'Retreat']);
+    expectStripInsideBoard();
     const launch = screen.getByRole('button', { name: `Launch watch, ${longRange('2026-11-18', '2026-11-19')}, ${clock('22:00')} to ${clock('02:00')}` });
     expect(dayLane('Wed, Nov 18').contains(launch)).toBe(false);
     const handoff = screen.getAllByRole('button', { name: /^Handoff,/ });
@@ -577,6 +608,31 @@ describe('multi-day bars', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
     expect(screen.getByRole('button', { name: 'Saturday, November 21, 2026' }).querySelector('[data-bar="demo"]')).toBeNull();
     expect(spoken(document.getElementById(screen.getByRole('button', { name: 'Friday, November 20, 2026' }).getAttribute('aria-describedby') ?? '')!)).toContain('Demo');
+  });
+
+  it('keeps each strip bar and its focus ring inside the board', async () => {
+    try {
+      for (const [width, height] of [
+        [414, 896],
+        [375, 800],
+        [1280, 800],
+      ] as const) {
+        await page.viewport(width, height);
+        const view = render(
+          <Providers>
+            <main>
+              <Example>
+                <EventCalendarExample locale="en-US" />
+              </Example>
+            </main>
+          </Providers>,
+        );
+        expectStripInsideBoard();
+        view.unmount();
+      }
+    } finally {
+      await page.viewport(1280, 800);
+    }
   });
 });
 

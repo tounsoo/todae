@@ -64,18 +64,11 @@
   border-block-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
 }
 
-.stripBars {
-  grid-column: 2 / -1;
-  display: grid;
-  grid-template-columns: var(--day-tracks, repeat(var(--days), minmax(0, 1fr)));
-  gap: var(--todae-space-1);
-  padding: var(--todae-space-1);
-  min-inline-size: 0;
-}
-
 .stripSlot {
   display: flex;
+  box-sizing: border-box;
   min-inline-size: 0;
+  padding: var(--todae-space-1);
 }
 
 .stripSlot > * {
@@ -406,6 +399,11 @@
 
 .cue {
   flex: none;
+}
+
+.cueEnd {
+  flex: none;
+  margin-inline-start: auto;
 }
 
 .dot {
