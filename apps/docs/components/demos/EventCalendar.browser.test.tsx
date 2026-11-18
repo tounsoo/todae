@@ -1537,4 +1537,48 @@ describe('creating an event from empty lane space', () => {
     expect(Math.abs(barBox.left - headBox.left)).toBeLessThan(32);
     expect(Math.abs(barBox.right - headBox.right)).toBeLessThan(32);
   });
+
+  it('keeps both second-zone times inside the calendar, and hides that column at 375', async () => {
+    for (const locale of ['en-US', 'ko'] as const) {
+      await page.viewport(1280, 900);
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="Australia/Sydney"
+            compareZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2026-03-08')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      const compare = document.querySelector<HTMLElement>('[data-compare]');
+      expect(compare).toBeTruthy();
+      const row = compare!.querySelector<HTMLElement>('span');
+      expect(row?.textContent).toContain('/');
+      const rowBox = row!.getBoundingClientRect();
+      const gutterBox = compare!.getBoundingClientRect();
+      expect(rowBox.left).toBeGreaterThanOrEqual(gutterBox.left - 1);
+      expect(rowBox.right).toBeLessThanOrEqual(gutterBox.right + 1);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+      cleanup();
+
+      await page.viewport(375, 800);
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="Australia/Sydney"
+            compareZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2026-03-08')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+      cleanup();
+    }
+    await page.viewport(1280, 800);
+  });
 });

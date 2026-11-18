@@ -1631,9 +1631,16 @@ describe('the time zone', () => {
       expect(page).toContain('Asia/Kathmandu');
     }
     expect(en).toContain('PST / PDT');
+    expect(en).toContain('5:00 PM / 6:00 PM');
+    expect(en).toContain('later offset begins');
+    expect(en).not.toContain('names every zone name');
+    expect(en).not.toContain('keeps a row only');
     expect(en).toContain('server-rendered app passes `timeZone` explicitly');
     expect(en).toContain('+1 day');
     expect(ko).toContain('PST / PDT');
+    expect(ko).toContain('5:00 PM / 6:00 PM');
+    expect(ko).toContain('나중 오프셋이 시작되는 날');
+    expect(ko).not.toContain('같은 규칙일 때만');
     expect(ko).toContain('서버에서 그리는 앱은 `timeZone`을 직접 넘깁니다');
     expect(ko).toContain('+1일');
   });
@@ -1644,18 +1651,47 @@ function compareRow(top: string): string | undefined {
   return ([...(column?.children ?? [])] as HTMLElement[]).find((node) => node.style.top === top)?.textContent;
 }
 
+function weekDays(anchor: string): Temporal.PlainDate[] {
+  const day = Temporal.PlainDate.from(anchor);
+  const sunday = day.subtract({ days: day.dayOfWeek % 7 });
+  return Array.from({ length: 7 }, (_, index) => sunday.add({ days: index }));
+}
+
+/** The second-zone label a reader should see, in the order the week meets each offset. */
+function compareLabel(grid: string, compare: string, days: readonly Temporal.PlainDate[], wall: string, locale: string): string {
+  const seen = new Map<string, string>();
+  for (const day of days) {
+    const at = day.toZonedDateTime({ timeZone: grid, plainTime: Temporal.PlainTime.from(wall) });
+    const there = at.withTimeZone(compare);
+    const offset = new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone: compare, timeZoneName: 'shortOffset' })
+      .formatToParts(at.epochMilliseconds)
+      .find((part) => part.type === 'timeZoneName')?.value;
+    if (!offset || seen.has(offset)) continue;
+    const shift = at.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days;
+    const count = shift === 0 ? '' : ` ${new Intl.NumberFormat(locale, { signDisplay: 'always', maximumFractionDigits: 0 }).format(shift)}`;
+    const unit = shift === 0 ? '' : new Intl.DisplayNames(locale, { type: 'dateTimeField', style: 'narrow' }).of('day') ?? 'day';
+    const space = unit && !/\p{Script=Hangul}/u.test(unit) ? ' ' : '';
+    seen.set(offset, `${formatTime(there.toPlainTime(), { locale })}${count}${space}${unit}`);
+  }
+  return [...seen.values()].join(' / ');
+}
+
 describe('a zone whose offset changes inside the visible week', () => {
-  it('does not show one column’s second-zone time beside columns where it is wrong (compare zone changes midweek)', () => {
+  it('lists both second-zone times when the compare zone changes midweek', () => {
     // Israel springs forward Fri 27 Mar 2026. 8:00 PDT is 17:00 Jerusalem Sun-Thu, 18:00 Fri-Sat.
     render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    const days = weekDays('2026-03-22');
     const primary = hourColumns()[0];
     const eight = [...primary!.children].find((node) => node.textContent === '8:00 AM') as HTMLElement;
-    expect(compareRow(eight.style.top)).toBeUndefined();
-    expect(document.querySelector('[data-compare]')?.textContent).toBe('');
+    expect(compareRow(eight.style.top)).toBe('5:00 PM / 6:00 PM');
+    expect(compareRow(eight.style.top)).toBe(compareLabel(LA, 'Asia/Jerusalem', days, '08:00', 'en-US'));
     expect(screen.getByText('GMT+2 / GMT+3')).toBeTruthy();
+    // 17:00 PDT Thursday is Friday 02:00 in Jerusalem, the instant the clocks spring forward.
+    const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26' });
+    expect(document.getElementById(thursday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to GMT+3');
   });
 
-  it('does not label the second zone from Sunday alone when the grid zone springs forward that Sunday', () => {
+  it('lists both second-zone times when the grid zone changes and the second zone does not', () => {
     render(
       <EventCalendarExample
         locale="en-US"
@@ -1669,8 +1705,36 @@ describe('a zone whose offset changes inside the visible week', () => {
     );
     const primary = hourColumns()[0];
     const midnight = [...primary!.children].find((node) => node.textContent === '12:00 AM') as HTMLElement;
-    expect(compareRow(midnight.style.top)).toBeUndefined();
-    expect(document.querySelector('[data-compare]')?.textContent).toBe('');
+    expect(compareRow(midnight.style.top)).toBe('8:00 AM / 7:00 AM');
+    const sunday = screen.getByRole('heading', { name: 'Sun, Mar 14' });
+    expect(document.getElementById(sunday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to PDT');
+  });
+
+  it('keeps every hour of a Sydney week beside Los Angeles, and each time matches the days that use it', () => {
+    render(<EventCalendarExample locale="en-US" timeZone="Australia/Sydney" compareZone={LA} anchor={Temporal.PlainDate.from('2026-03-08')} events={[]} />);
+    const days = weekDays('2026-03-08');
+    const [primary, compare] = hourColumns();
+    const rows = [...compare!.children] as HTMLElement[];
+    expect(rows).toHaveLength(10);
+    const walls = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+    for (const row of rows) {
+      const hour = ([...primary!.children] as HTMLElement[]).find((node) => node.style.top === row.style.top);
+      const wall = walls.find((value) => clock(value) === hour?.textContent);
+      expect(wall).toBeTruthy();
+      expect(row.textContent).toBe(compareLabel('Australia/Sydney', LA, days, wall!, 'en-US'));
+    }
+    const monday = screen.getByRole('heading', { name: 'Mon, Mar 9' });
+    expect(document.getElementById(monday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to PDT');
+  });
+
+  it('does not describe a midweek change as one lead, in English or Korean', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    expect(described()).toEqual(['Times in PDT (GMT-7). Second column GMT+2 / GMT+3.']);
+    cleanup();
+    render(<EventCalendarExample locale="ko" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    expect(described()).toEqual(['시각은 GMT-7입니다. 둘째 열은 GMT+2 / GMT+3입니다.']);
+    const changed = screen.getAllByRole('heading', { level: 3 }).find((heading) => document.getElementById(heading.getAttribute('aria-describedby') ?? '')?.textContent === 'GMT+3 시작');
+    expect(changed?.textContent).toContain('3월 26일');
   });
 
   it('names every offset the week shows, not only Sunday’s', () => {
@@ -1688,7 +1752,7 @@ describe('a zone whose offset changes inside the visible week', () => {
     expect(screen.getByText('PST / PDT')).toBeTruthy();
   });
 
-  it('shows a second-zone hour only when that time is the same in every column', () => {
+  it('shows one second-zone time on every row when that zone keeps one offset', () => {
     render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
     const [primary, compare] = hourColumns();
     const days = Array.from({ length: 7 }, (_, index) => Temporal.PlainDate.from('2026-11-15').add({ days: index }));

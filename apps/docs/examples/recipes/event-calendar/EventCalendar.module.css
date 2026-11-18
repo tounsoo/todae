@@ -70,6 +70,16 @@
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-subtle);
 }
 
+.changeMark {
+  display: inline-block;
+  inline-size: var(--todae-space-2);
+  block-size: var(--todae-space-2);
+  margin-inline-start: var(--todae-space-1);
+  border-radius: var(--todae-radius-full);
+  background: var(--todae-color-accent-default);
+  vertical-align: middle;
+}
+
 .strip {
   display: grid;
   grid-template-columns: var(--tracks, 4.5rem repeat(var(--days), minmax(5.5rem, 1fr)));
@@ -136,6 +146,12 @@
 
 .gutter[data-compare] {
   inset-inline-start: 4.5rem;
+}
+
+.gutter[data-compare] .mark {
+  inset-inline-start: var(--todae-space-1);
+  white-space: normal;
+  text-align: end;
 }
 
 .mark {
