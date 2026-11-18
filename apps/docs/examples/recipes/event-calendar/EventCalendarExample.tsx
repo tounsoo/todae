@@ -955,7 +955,6 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
   const covering = bars.filter((bar) => index >= bar.column && index < bar.column + bar.span);
   const visible = covering.filter((bar) => bar.row < MONTH_TITLES).sort((a, b) => a.row - b.row);
   const hidden = covering.length - visible.length;
-  // Rows this day draws. A week-wide count left an empty track under the last bar and pushed the timed titles into their own band.
   const barRows = visible.reduce((max, bar) => Math.max(max, bar.row + 1), 0);
   const placed = new Set(bars.map((bar) => bar.event.id));
   const chips = list.filter((event) => !placed.has(event.id));

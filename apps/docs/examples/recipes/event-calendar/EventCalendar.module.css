@@ -330,7 +330,7 @@
 
 .month :global(td button[type='button']:focus-visible) {
   outline: var(--todae-focus-ring-width) solid var(--todae-calendar-day-ring-focus);
-  outline-offset: calc(-1 * var(--todae-focus-ring-offset));
+  outline-offset: calc(-1 * var(--todae-focus-ring-width));
 }
 
 .chips,

@@ -714,7 +714,8 @@ describe('month day cells', () => {
         const wednesday = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
         const launch = wednesday.querySelector<HTMLElement>('[data-bar="launch"]');
         const early = [...wednesday.querySelectorAll<HTMLElement>('[class*="chip_"]')].find((event) => event.textContent?.includes('Early sync'));
-        if (launch && early && getComputedStyle(early).position !== 'absolute') {
+        if (!launch || !early) throw new Error(`${width}: Wednesday is missing Launch watch or Early sync`);
+        if (getComputedStyle(early).position !== 'absolute') {
           expect(early.getBoundingClientRect().top - launch.getBoundingClientRect().bottom, `${width}`).toBeLessThan(12);
         }
         wednesday.focus({ focusVisible: true } as FocusOptions);
