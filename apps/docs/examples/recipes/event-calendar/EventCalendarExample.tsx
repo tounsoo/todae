@@ -2004,7 +2004,13 @@ export function EventCalendarExample({
               const replaced = replaceSeries(current, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
               setSeriesList((list) => list.map((item) => (item.id === current.id ? replaced : item)));
               const saved = firstOf(replaced) ?? { ...next, id: replaced.id, seriesId: replaced.id, repeats: detail.rule !== null, originalStart: next.start };
-              reveal(saved, editing.repeats ? `Changed all events. ${labelOf(saved)}.` : undefined);
+              if (editing.repeats) {
+                // The saved series starts on its first week. The week on screen is the one this edit started from.
+                announce(`Changed all events. ${labelOf(saved)}.`);
+                returnFocus.current = true;
+              } else {
+                reveal(saved);
+              }
             }
             setSession(null);
           }}
