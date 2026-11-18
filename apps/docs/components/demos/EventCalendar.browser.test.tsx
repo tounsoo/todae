@@ -1004,3 +1004,54 @@ describe('the month in light and dark', () => {
     document.documentElement.removeAttribute('data-appearance');
   });
 });
+
+describe('a repeating event from the keyboard', () => {
+  const bookClubName = `Book club, ${clock('15:00')} to ${clock('16:00')}, repeats`;
+
+  it('moves through the choice with Tab and applies the one that Enter activates', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const club = screen.getByRole('button', { name: bookClubName });
+    club.focus();
+    await userEvent.keyboard('{Enter}');
+    const menu = await openMenu();
+    const edit = within(menu).getAllByRole('menuitem').findIndex((item) => item.textContent === 'Edit…');
+    await userEvent.keyboard('{ArrowDown}'.repeat(edit));
+    await userEvent.keyboard('{Enter}');
+    const choice = await screen.findByRole('dialog', { name: 'Edit repeating event' });
+    const thisEvent = within(choice).getByRole('button', { name: 'This event' });
+    await expect.poll(() => document.activeElement).toBe(thisEvent);
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('button', { name: bookClubName }));
+
+    screen.getByRole('button', { name: bookClubName }).focus();
+    await userEvent.keyboard('{Enter}');
+    const again = await openMenu();
+    const editAgain = within(again).getAllByRole('menuitem').findIndex((item) => item.textContent === 'Edit…');
+    await userEvent.keyboard('{ArrowDown}'.repeat(editAgain));
+    await userEvent.keyboard('{Enter}');
+    const reopened = await screen.findByRole('dialog', { name: 'Edit repeating event' });
+    await expect.poll(() => document.activeElement).toBe(within(reopened).getByRole('button', { name: 'This event' }));
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(within(reopened).getByRole('button', { name: 'This and following' }));
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(within(reopened).getByRole('button', { name: 'All events' }));
+    await userEvent.keyboard('{Enter}');
+    const form = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    const title = within(form).getByRole('textbox', { name: 'Title' });
+    await expect.poll(() => document.activeElement).toBe(title);
+    await userEvent.clear(title);
+    await userEvent.type(title, 'Readers');
+    await userEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    const readers = `Readers, ${clock('15:00')} to ${clock('16:00')}, repeats`;
+    expect(screen.getByRole('button', { name: readers }).textContent).toMatch(/Repeats/);
+    await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toMatch(/^Changed all events\./);
+    await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByRole('button', { name: readers })).toBeTruthy();
+  });
+});

@@ -46,6 +46,19 @@ export function exampleFile(pagePath, imports, name) {
  * which a page shows after the example's code. For a recipe or component page whose CSS is part of what
  * a product copies. Any other CSS import is refused, since the page could not show it.
  */
+/**
+ * A sibling `.ts` module an example imports as `from './name'`. The page shows it
+ * after the example, the way it shows a stylesheet, so the copy includes the module.
+ */
+export function exampleLocalModules(file, text) {
+  return [...text.matchAll(/from\s+['"](\.\/[\w-]+)['"]/g)].map((match) => {
+    const spec = match[1];
+    const path = resolve(dirname(file), `${spec.slice(2)}.ts`);
+    if (!existsSync(path)) throw new Error(`${file} imports ${spec}, but no ${spec.slice(2)}.ts exists in its folder`);
+    return path;
+  });
+}
+
 export function exampleStylesheets(file, text) {
   return [...text.matchAll(/^[ \t]*import\b[^;]*?['"]([^'"]+\.(?:css|scss|sass|less)(?:\?[^'"]*)?)['"][^\n]*$/gm)].map((match) => {
     const own = /^import\s+\w+\s+from\s+'\.\/([\w-]+\.module\.css)';$/.exec(match[0]);
@@ -62,10 +75,12 @@ export function exampleStylesheets(file, text) {
  */
 export function exampleBlocks(file, shown = new Set()) {
   const text = readFileSync(file, 'utf8');
+  const modules = exampleLocalModules(file, text).filter((path) => !shown.has(path));
   const sheets = exampleStylesheets(file, text).filter((path) => !shown.has(path));
-  for (const path of sheets) shown.add(path);
+  for (const path of [...modules, ...sheets]) shown.add(path);
   return [
     { lang: 'tsx', value: exampleSource(text) },
+    ...modules.map((path) => ({ lang: 'ts', value: readFileSync(path, 'utf8').trimEnd() })),
     ...sheets.map((path) => ({ lang: 'css', value: readFileSync(path, 'utf8').trimEnd() })),
   ];
 }
@@ -78,8 +93,9 @@ export function exampleImports(pagePath, text) {
 }
 
 /**
- * Renders `<Example of={Name} />` as the code of the example `Name`, and any stylesheet it imports
- * from its folder that the page has not shown yet, followed by the example itself,
+ * Renders `<Example of={Name} />` as the code of the example `Name`, any sibling module it
+ * imports, and any stylesheet it imports from its folder that the page has not shown yet,
+ * followed by the example itself,
  * and refuses an `<Example>` without `of`, whose demo would show with no code.
  * `Name` is a page's default import from a file in `apps/docs/examples`. The element becomes a code
  * block of that file's code and `<Example><Name locale="…" /></Example>`, with the page's locale.

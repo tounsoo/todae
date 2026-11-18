@@ -9,6 +9,7 @@ import {
   Form,
   Label,
   Menu,
+  RadioGroup,
   ScrollArea,
   Switch,
   Text,
@@ -23,6 +24,22 @@ import {
   type UseLaneDragResult,
 } from '@tounsoo/todae';
 import { memo, useId, useLayoutEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react';
+import {
+  byDayOf,
+  excludeOccurrence,
+  expandSeries,
+  overrideOccurrence,
+  replaceSeries,
+  seriesFromDraft,
+  seriesId,
+  truncateBefore,
+  viewWindow,
+  type ByDay,
+  type EventSeries,
+  type ExpandWindow,
+  type RecurrenceRule,
+  type SeriesId,
+} from './recurrence';
 import styles from './EventCalendar.module.css';
 
 export type CalendarEvent = {
@@ -32,7 +49,13 @@ export type CalendarEvent = {
   start: Temporal.ZonedDateTime;
   end: Temporal.ZonedDateTime;
   allDay: boolean;
+  /** True when the event is one occurrence of a repeating series. */
+  repeats?: boolean;
+  /** The start the rule generated, before an override moved it. */
+  originalStart?: Temporal.ZonedDateTime;
 };
+
+export type EditScope = 'occurrence' | 'following' | 'series';
 
 export type DaySegment = {
   day: Temporal.PlainDate;
@@ -615,7 +638,77 @@ const EVENTS: readonly CalendarEvent[] = [
   timed('launch', 'Launch watch', '2026-11-18', '22:00', '2026-11-19', '02:00'),
 ];
 
+const BOOK_CLUB: EventSeries = {
+  id: seriesId('book-club'),
+  title: 'Book club',
+  timeZone: ZONE,
+  start: at('2026-11-15', '15:00'),
+  end: at('2026-11-15', '16:00'),
+  allDay: false,
+  rule: { freq: 'WEEKLY', interval: 1, byDay: ['SU'], end: { kind: 'never' } },
+  exdates: [],
+  overrides: [],
+};
+
+function initialSeries(source: readonly CalendarEvent[]): EventSeries[] {
+  const list = source.map((event) =>
+    seriesFromDraft(seriesId(event.seriesId ?? event.id), {
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      allDay: event.allDay,
+      rule: null,
+    }),
+  );
+  if (source === EVENTS) list.push(BOOK_CLUB);
+  return list;
+}
+
 type CalendarView = 'month' | 'week' | 'day';
+
+function visibleBounds(view: CalendarView, day: Temporal.PlainDate, locale: string, timeZone: string): ExpandWindow {
+  if (view === 'month') {
+    const first = day.with({ day: 1 });
+    const last = first.add({ months: 1 }).subtract({ days: 1 });
+    const leading = weekOf(first, locale)[0];
+    const trailing = weekOf(last, locale)[6];
+    if (!leading || !trailing) throw new RangeError('a week has 7 days');
+    return { start: zoned(leading, MIDNIGHT, timeZone), end: zoned(trailing.add({ days: 1 }), MIDNIGHT, timeZone) };
+  }
+  const shown = view === 'week' ? weekOf(day, locale) : [day];
+  const first = shown[0];
+  const last = shown[shown.length - 1];
+  if (!first || !last) throw new RangeError('a view has a day');
+  return { start: zoned(first, MIDNIGHT, timeZone), end: zoned(last.add({ days: 1 }), MIDNIGHT, timeZone) };
+}
+
+function occurrenceEvent(occurrence: {
+  id: string;
+  seriesId: string;
+  title: string;
+  start: Temporal.ZonedDateTime;
+  end: Temporal.ZonedDateTime;
+  allDay: boolean;
+  repeats: boolean;
+  originalStart: Temporal.ZonedDateTime;
+}): CalendarEvent {
+  return occurrence;
+}
+
+function freshSeriesId(): SeriesId {
+  const values = crypto.getRandomValues(new Uint32Array(2));
+  return seriesId(`event-${(values[0] ?? 0).toString(36)}-${(values[1] ?? 0).toString(36)}`);
+}
+
+function blankEvent(day: Temporal.PlainDate, open: Temporal.PlainTime, timeZone: string): CalendarEvent {
+  const start = zoned(day, open, timeZone);
+  return { id: 'draft', title: '', start, end: start.add({ minutes: SLOT_MINUTES }), allDay: false };
+}
+
+function firstOf(item: EventSeries): CalendarEvent | null {
+  const occurrence = expandSeries(item, { start: item.start.subtract({ days: 1 }), end: item.end.add({ days: 1 }) })[0];
+  return occurrence ? occurrenceEvent(occurrence) : null;
+}
 
 const MONTH_TITLES = 2;
 
@@ -707,9 +800,10 @@ function eventRangeLabel(event: CalendarEvent, locale: string, timeZone: string)
 
 function barLabel(event: CalendarEvent, locale: string, timeZone: string): string {
   const range = eventRangeLabel(event, locale, timeZone);
-  if (event.allDay) return `${event.title}, ${range}`;
-  const clock = (value: Temporal.ZonedDateTime) => formatTime(value.toPlainTime(), { locale });
-  return `${event.title}, ${range}, ${clock(event.start.withTimeZone(timeZone))} to ${clock(event.end.withTimeZone(timeZone))}`;
+  const base = event.allDay
+    ? `${event.title}, ${range}`
+    : `${event.title}, ${range}, ${formatTime(event.start.withTimeZone(timeZone).toPlainTime(), { locale })} to ${formatTime(event.end.withTimeZone(timeZone).toPlainTime(), { locale })}`;
+  return event.repeats ? `${base}, repeats` : base;
 }
 
 type DrawnBar = WeekBar & { cutStart: boolean; cutEnd: boolean };
@@ -746,6 +840,7 @@ type ColumnShared = {
   focusKey: string | null;
   onAdjust: (event: CalendarEvent, segment: DaySegment, change: SlotChange) => void;
   onEdit: (event: CalendarEvent, day: Temporal.PlainDate) => void;
+  onDelete: (event: CalendarEvent, day: Temporal.PlainDate) => void;
 };
 
 function eventName(event: CalendarEvent, segment: DaySegment, locale: string, timeZone: string): { name: string; timeText: string; short: boolean } {
@@ -756,7 +851,7 @@ function eventName(event: CalendarEvent, segment: DaySegment, locale: string, ti
   const endLabel = clockLabel(end, locale, spansDays);
   const startedEarlier = Temporal.ZonedDateTime.compare(start, segment.opens) < 0;
   const continues = Temporal.ZonedDateTime.compare(end, segment.closes) > 0;
-  const cue = [startedEarlier ? 'started earlier' : null, continues ? 'continues' : null].filter(Boolean).join(', ');
+  const cue = [startedEarlier ? 'started earlier' : null, continues ? 'continues' : null, event.repeats ? 'repeats' : null].filter(Boolean).join(', ');
   const name = [`${event.title}, ${startLabel} to ${endLabel}`, cue].filter(Boolean).join(', ');
   const timeText = `${startedEarlier ? '…' : ''}${startLabel} to ${endLabel}${continues ? '…' : ''}`;
   const visible = clippedUnits(segment, event);
@@ -764,7 +859,7 @@ function eventName(event: CalendarEvent, segment: DaySegment, locale: string, ti
   return { name, timeText, short };
 }
 
-function EventMoves({ event, segment, axis, week, onAdjust, onEdit }: Pick<ColumnShared, 'axis' | 'week' | 'onAdjust' | 'onEdit'> & { event: CalendarEvent; segment: DaySegment }) {
+function EventMoves({ event, segment, axis, week, onAdjust, onEdit, onDelete }: Pick<ColumnShared, 'axis' | 'week' | 'onAdjust' | 'onEdit' | 'onDelete'> & { event: CalendarEvent; segment: DaySegment }) {
   if (event.allDay) {
     return (
       <>
@@ -772,6 +867,7 @@ function EventMoves({ event, segment, axis, week, onAdjust, onEdit }: Pick<Colum
         <Menu.Item onSelect={() => onAdjust(event, segment, { kind: 'day', days: 1 })}>Move to next day</Menu.Item>
         <Menu.Separator />
         <Menu.Item onSelect={() => onEdit(event, segment.day)}>Edit…</Menu.Item>
+        <Menu.Item onSelect={() => onDelete(event, segment.day)}>Delete</Menu.Item>
       </>
     );
   }
@@ -807,6 +903,7 @@ function EventMoves({ event, segment, axis, week, onAdjust, onEdit }: Pick<Colum
       </Menu.Item>
       <Menu.Separator />
       <Menu.Item onSelect={() => onEdit(event, segment.day)}>Edit…</Menu.Item>
+      <Menu.Item onSelect={() => onDelete(event, segment.day)}>Delete</Menu.Item>
     </>
   );
 }
@@ -841,9 +938,14 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
               {timeText}
             </Text.Root>
           )}
+          {span.event.repeats ? (
+            <Text.Root as="span" variant="label" tone="muted" lines={1}>
+              Repeats
+            </Text.Root>
+          ) : null}
         </Menu.Trigger>
         <Menu.Content>
-          <EventMoves event={span.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} />
+          <EventMoves event={span.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} onDelete={shared.onDelete} />
         </Menu.Content>
       </Menu.Root>
       <span {...shared.lanes.getHandleProps(key, 'start')} aria-hidden className={styles.edge} data-edge="start" />
@@ -890,6 +992,11 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
           <Text.Root as="span" weight="medium" lines={1}>
             {bar.event.title}
           </Text.Root>
+          {bar.event.repeats ? (
+            <Text.Root as="span" variant="label" lines={1}>
+              Repeats
+            </Text.Root>
+          ) : null}
           {bar.cutEnd ? (
             <span aria-hidden="true" className={styles.cueEnd}>
               …
@@ -897,7 +1004,7 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
           ) : null}
         </Menu.Trigger>
         <Menu.Content>
-          <EventMoves event={bar.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} />
+          <EventMoves event={bar.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} onDelete={shared.onDelete} />
         </Menu.Content>
       </Menu.Root>
     </div>
@@ -992,6 +1099,12 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
                   ) : null}
                   {index === bar.column ? <span className={styles.barLabel}>{bar.event.title}</span> : <VisuallyHidden.Root>{bar.event.title}</VisuallyHidden.Root>}
                   <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
+                  {bar.event.repeats ? <VisuallyHidden.Root>, repeats</VisuallyHidden.Root> : null}
+                  {bar.event.repeats && index === bar.column ? (
+                    <span aria-hidden="true" className={styles.repeats}>
+                      Repeats
+                    </span>
+                  ) : null}
                   {cutEnd ? (
                     <span aria-hidden="true" className={styles.cueEnd}>
                       …
@@ -1009,6 +1122,13 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
             <span key={event.id} className={styles.chip}>
               {comma ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
               {event.title}
+              {event.repeats ? <VisuallyHidden.Root>, repeats</VisuallyHidden.Root> : null}
+              {event.repeats ? (
+                <span aria-hidden="true" className={styles.repeats}>
+                  {' '}
+                  Repeats
+                </span>
+              ) : null}
             </span>
           );
         })}
@@ -1044,9 +1164,10 @@ export default function EventCalendarExample({
 }) {
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
-  const [items, setItems] = useState<CalendarEvent[]>(() => events.map((event) => ({ ...event })));
+  const [seriesList, setSeriesList] = useState<EventSeries[]>(() => initialSeries(events));
   const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
-  const [editing, setEditing] = useState<CalendarEvent | null>(null);
+  const [editing, setEditing] = useState<{ event: CalendarEvent; mode: 'create' | 'edit' } | null>(null);
+  const [deleting, setDeleting] = useState<CalendarEvent | null>(null);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
   const pendingFocus = useRef<'day' | null>(null);
@@ -1055,6 +1176,9 @@ export default function EventCalendarExample({
   const focusHeading = useRef<Temporal.PlainDate | null>(null);
   const [pinFocus, setPinFocus] = useState(true);
   const announce = useAnnouncer();
+  const bounds = visibleBounds(view, anchor, locale, timeZone);
+  const items = seriesList.flatMap((item) => expandSeries(item, viewWindow(item, bounds)).map(occurrenceEvent));
+  const editingSeries = editing ? (seriesList.find((item) => item.id === (editing.event.seriesId ?? editing.event.id)) ?? null) : null;
   const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
   const week = weekOf(anchor, locale);
   const axis = daySegments({ days, opens, closes, timeZone });
@@ -1095,7 +1219,15 @@ export default function EventCalendarExample({
     const laneHome = strip ? null : shownDay(settled, day);
     setFocusKey(strip ? stripKey(settled.id) : laneHome ? blockKey(settled.id, laneHome) : null);
     focusHeading.current = strip || laneHome ? null : day;
-    setItems((list) => list.map((each) => (each.id === settled.id ? settled : each)));
+    setSeriesList((list) =>
+      list.map((item) => {
+        if (item.id !== (settled.seriesId ?? settled.id)) return item;
+        if (settled.repeats && settled.originalStart) {
+          return overrideOccurrence(item, settled.originalStart, { title: settled.title, start: settled.start, end: settled.end, allDay: settled.allDay });
+        }
+        return replaceSeries(item, { title: settled.title, start: settled.start, end: settled.end, allDay: settled.allDay, rule: item.rule });
+      }),
+    );
     const start = settled.start.withTimeZone(timeZone);
     const end = settled.end.withTimeZone(timeZone);
     const spansDays = !start.toPlainDate().equals(end.toPlainDate());
@@ -1106,7 +1238,7 @@ export default function EventCalendarExample({
   // The dialog unmounts in the same commit that records the edit, so its own
   // focus return has no button to land on yet. This runs after that commit.
   useLayoutEffect(() => {
-    if (!returnFocus.current || editing) return;
+    if (!returnFocus.current || editing || deleting) return;
     returnFocus.current = false;
     const day = focusHeading.current;
     if (day) {
@@ -1114,7 +1246,7 @@ export default function EventCalendarExample({
       return;
     }
     if (landing.current?.isConnected) landing.current.focus();
-  }, [anchor, editing, focusKey, heading, items]);
+  }, [anchor, deleting, editing, focusKey, heading, seriesList]);
 
   const board = useLaneDrag({
     range: { start: 0, end: Math.max(scale, SLOT_MINUTES) },
@@ -1155,7 +1287,41 @@ export default function EventCalendarExample({
 
   const onEdit = (event: CalendarEvent, day: Temporal.PlainDate) => {
     setFocusKey(showsInStrip(event, timeZone, opens, closes) ? stripKey(event.id) : blockKey(event.id, day));
-    setEditing(event);
+    setEditing({ event, mode: 'edit' });
+  };
+
+  const onDelete = (event: CalendarEvent, day: Temporal.PlainDate) => {
+    setFocusKey(showsInStrip(event, timeZone, opens, closes) ? stripKey(event.id) : blockKey(event.id, day));
+    if (event.repeats) {
+      setDeleting(event);
+      return;
+    }
+    setSeriesList((list) => list.filter((item) => item.id !== (event.seriesId ?? event.id)));
+    focusHeading.current = day;
+    setFocusKey(null);
+    announce(`Deleted ${event.title}.`);
+    returnFocus.current = true;
+  };
+
+  const finishDelete = (scope: EditScope) => {
+    const event = deleting;
+    if (!event?.originalStart) return;
+    const id = event.seriesId ?? event.id;
+    setSeriesList((list) =>
+      list.flatMap((item) => {
+        if (item.id !== id) return [item];
+        if (scope === 'series') return [];
+        if (scope === 'occurrence') return [excludeOccurrence(item, event.originalStart!)];
+        const kept = truncateBefore(item, event.originalStart!);
+        return kept ? [kept] : [];
+      }),
+    );
+    const which = scope === 'occurrence' ? 'this event' : scope === 'following' ? 'this and following events' : 'all events';
+    announce(`Deleted ${which}. ${event.title}.`);
+    focusHeading.current = event.start.withTimeZone(timeZone).toPlainDate();
+    setFocusKey(null);
+    returnFocus.current = true;
+    setDeleting(null);
   };
 
   const columnShared: ColumnShared = {
@@ -1170,6 +1336,7 @@ export default function EventCalendarExample({
     focusKey,
     onAdjust,
     onEdit,
+    onDelete,
   };
 
   useLayoutEffect(() => {
@@ -1213,6 +1380,9 @@ export default function EventCalendarExample({
           <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
           <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
         </ToggleGroup.Root>
+        <Button.Root variant="secondary" onClick={() => setEditing({ mode: 'create', event: blankEvent(anchor, opens, timeZone) })}>
+          New event
+        </Button.Root>
         {view === 'month' ? null : (
           <>
             <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: -step }))}>
@@ -1317,32 +1487,198 @@ export default function EventCalendarExample({
       )}
       {editing ? (
         <EventEditor
-          event={editing}
+          event={editing.event}
+          mode={editing.mode}
           locale={locale}
           timeZone={timeZone}
           opens={opens}
-          prior={timedBefore.current.get(editing.id) ?? null}
+          prior={timedBefore.current.get(editing.event.id) ?? null}
+          rule={editingSeries?.rule ?? null}
+          template={
+            editingSeries
+              ? { id: editingSeries.id, seriesId: editingSeries.id, title: editingSeries.title, start: editingSeries.start, end: editingSeries.end, allDay: editingSeries.allDay, repeats: editingSeries.rule !== null, originalStart: editingSeries.start }
+              : null
+          }
+          chooseScope={editing.mode === 'edit' && editing.event.repeats === true}
           restoreFocusRef={landing}
           onCancel={() => {
             returnFocus.current = true;
             setEditing(null);
           }}
-          onSave={(next) => {
+          onSave={(next, detail) => {
             const day = next.start.withTimeZone(timeZone).toPlainDate();
-            const home = shownDay(next, day);
-            setAnchor(home ?? day);
-            commit(next, home ?? day);
+            const labelOf = (saved: CalendarEvent) => {
+              const strip = showsInStrip(saved, timeZone, opens, closes);
+              const start = saved.start.withTimeZone(timeZone);
+              const end = saved.end.withTimeZone(timeZone);
+              const spansDays = !start.toPlainDate().equals(end.toPlainDate());
+              return strip ? barLabel(saved, locale, timeZone) : `${saved.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`;
+            };
+            const reveal = (saved: CalendarEvent, message?: string) => {
+              const home = shownDay(saved, day);
+              setAnchor(home ?? day);
+              if (saved.allDay && !editing.event.allDay) {
+                const start = editing.event.start.withTimeZone(timeZone);
+                const end = editing.event.end.withTimeZone(timeZone);
+                timedBefore.current.set(saved.id, { start: start.toPlainTime(), end: end.toPlainTime(), daySpan: start.toPlainDate().until(end.toPlainDate(), { largestUnit: 'day' }).days });
+              }
+              if (!saved.allDay) timedBefore.current.delete(saved.id);
+              const strip = showsInStrip(saved, timeZone, opens, closes);
+              const laneHome = strip ? null : shownDay(saved, home ?? day);
+              setFocusKey(strip ? stripKey(saved.id) : laneHome ? blockKey(saved.id, laneHome) : null);
+              focusHeading.current = strip || laneHome ? null : (home ?? day);
+              announce(message ?? labelOf(saved));
+              returnFocus.current = true;
+            };
+            if (editing.mode === 'create') {
+              const created = seriesFromDraft(freshSeriesId(), { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
+              setSeriesList((list) => [...list, created]);
+              const saved = firstOf(created) ?? { ...next, id: created.id, seriesId: created.id, repeats: detail.rule !== null, originalStart: next.start };
+              reveal(saved, `Created ${labelOf(saved)}.`);
+              setEditing(null);
+              return;
+            }
+            const current = seriesList.find((item) => item.id === (editing.event.seriesId ?? editing.event.id));
+            if (!current) return;
+            if (detail.scope === 'occurrence' && editing.event.originalStart) {
+              setSeriesList((list) => list.map((item) => (item.id === current.id ? overrideOccurrence(item, editing.event.originalStart!, { title: next.title, start: next.start, end: next.end, allDay: next.allDay }) : item)));
+              const saved = { ...editing.event, ...next, id: editing.event.id, seriesId: current.id, repeats: true, originalStart: editing.event.originalStart };
+              reveal(saved, `Changed this event. ${labelOf(saved)}.`);
+            } else if (detail.scope === 'following' && editing.event.originalStart) {
+              const created = seriesFromDraft(freshSeriesId(), { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
+              const previous = truncateBefore(current, editing.event.originalStart);
+              setSeriesList((list) => list.flatMap((item) => (item.id === current.id ? (previous ? [previous, created] : [created]) : [item])));
+              const saved = firstOf(created) ?? { ...next, id: created.id, seriesId: created.id, repeats: detail.rule !== null, originalStart: next.start };
+              reveal(saved, `Changed this and following events. ${labelOf(saved)}.`);
+            } else {
+              const replaced = replaceSeries(current, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
+              setSeriesList((list) => list.map((item) => (item.id === current.id ? replaced : item)));
+              const saved = firstOf(replaced) ?? { ...next, id: replaced.id, seriesId: replaced.id, repeats: detail.rule !== null, originalStart: next.start };
+              reveal(saved, editing.event.repeats ? `Changed all events. ${labelOf(saved)}.` : undefined);
+            }
             setEditing(null);
           }}
+        />
+      ) : null}
+      {deleting ? (
+        <ScopeChoice
+          intent="delete"
+          restoreFocusRef={landing}
+          onCancel={() => {
+            returnFocus.current = true;
+            setDeleting(null);
+          }}
+          onChoose={finishDelete}
         />
       ) : null}
     </div>
   );
 }
 
+const WEEK_FROM_SUNDAY: readonly ByDay[] = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+function orderedDays(locale: string): ByDay[] {
+  const sunday = Temporal.PlainDate.from('2026-11-15');
+  const start = weekOf(sunday, locale)[0] ?? sunday;
+  return Array.from({ length: 7 }, (_, index) => byDayOf(start.add({ days: index })));
+}
+
+function weekdayName(day: ByDay, locale: string): string {
+  const date = Temporal.PlainDate.from('2026-11-15').add({ days: WEEK_FROM_SUNDAY.indexOf(day) });
+  return new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(Date.UTC(date.year, date.month - 1, date.day));
+}
+
+type RepeatFields = {
+  freq: 'none' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  byDay: ByDay[];
+  end: 'never' | 'count' | 'until';
+  count: number | null;
+  until: Temporal.PlainDate | null;
+};
+
+function draftFromEvent(event: CalendarEvent, timeZone: string): EventDraft {
+  const start = event.start.withTimeZone(timeZone);
+  const end = event.end.withTimeZone(timeZone);
+  const covered = event.allDay ? coveredDays(event, timeZone) : null;
+  return {
+    title: event.title,
+    date: covered?.first ?? start.toPlainDate(),
+    endDate: covered?.last ?? end.toPlainDate(),
+    start: start.toPlainTime(),
+    end: end.toPlainTime(),
+    allDay: event.allDay,
+  };
+}
+
+function repeatFromRule(rule: RecurrenceRule | null, day: Temporal.PlainDate): RepeatFields {
+  return {
+    freq: rule?.freq ?? 'none',
+    byDay: rule?.byDay ? [...rule.byDay] : [byDayOf(day)],
+    end: rule?.end.kind ?? 'never',
+    count: rule?.end.kind === 'count' ? rule.end.count : 10,
+    until: rule?.end.kind === 'until' ? rule.end.until.toPlainDate() : null,
+  };
+}
+
+function endOfChosenDay(date: Temporal.PlainDate, timeZone: string): Temporal.ZonedDateTime {
+  return zoned(date.add({ days: 1 }), MIDNIGHT, timeZone).subtract({ nanoseconds: 1 });
+}
+
+function ruleFromRepeat(fields: RepeatFields, timeZone: string): RecurrenceRule | null | string {
+  if (fields.freq === 'none') return null;
+  if (fields.freq === 'WEEKLY' && fields.byDay.length === 0) return 'Choose at least one day.';
+  if (fields.end === 'count' && (fields.count === null || !Number.isInteger(fields.count) || fields.count < 1)) return 'Choose how many times it repeats.';
+  if (fields.end === 'until' && !fields.until) return 'Choose the last date.';
+  const byDay = fields.freq === 'WEEKLY' ? fields.byDay : undefined;
+  if (fields.end === 'count') return { freq: fields.freq, interval: 1, byDay, end: { kind: 'count', count: fields.count ?? 1 } };
+  if (fields.end === 'until' && fields.until) return { freq: fields.freq, interval: 1, byDay, end: { kind: 'until', until: endOfChosenDay(fields.until, timeZone) } };
+  return { freq: fields.freq, interval: 1, byDay, end: { kind: 'never' } };
+}
+
+function ScopeChoice({
+  intent,
+  onChoose,
+  onCancel,
+  restoreFocusRef,
+}: {
+  intent: 'edit' | 'delete';
+  onChoose: (scope: EditScope) => void;
+  onCancel: () => void;
+  restoreFocusRef?: RefObject<HTMLElement | null>;
+}) {
+  const first = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
+  const verb = intent === 'delete' ? 'Delete' : 'Edit';
+  return (
+    <Dialog.Root open onOpenChange={(open) => !open && onCancel()} initialFocusRef={first} restoreFocusRef={restoreFocusRef} aria-describedby={descriptionId}>
+      <div className={styles.fields}>
+        <Dialog.Header>
+          <Dialog.Title id={titleId}>{`${verb} repeating event`}</Dialog.Title>
+          <Dialog.Close />
+        </Dialog.Header>
+        <Dialog.Body>
+          <p id={descriptionId}>{`This event repeats. Choose which events to ${intent}.`}</p>
+          <div className={styles.scopeChoices} role="group" aria-labelledby={titleId}>
+            <Button.Root ref={first} variant="secondary" onClick={() => onChoose('occurrence')}>
+              This event
+            </Button.Root>
+            <Button.Root variant="secondary" onClick={() => onChoose('following')}>
+              This and following
+            </Button.Root>
+            <Button.Root variant="secondary" onClick={() => onChoose('series')}>
+              All events
+            </Button.Root>
+          </div>
+        </Dialog.Body>
+      </div>
+    </Dialog.Root>
+  );
+}
+
 /**
- * Edits one event's title and time. Drag-to-create can open it with the event
- * a drag sketched and read the saved event from `onSave`.
+ * Edits one event's title and time, and, for a new event or a whole series, how it repeats.
+ * Drag-to-create can open it with the event a drag sketched and read the saved event from `onSave`.
  */
 export function EventEditor({
   event,
@@ -1350,6 +1686,10 @@ export function EventEditor({
   timeZone,
   opens = OPENS,
   prior = null,
+  mode = 'edit',
+  rule = null,
+  template = null,
+  chooseScope = false,
   onSave,
   onCancel,
   restoreFocusRef,
@@ -1359,27 +1699,28 @@ export function EventEditor({
   timeZone: string;
   opens?: Temporal.PlainTime;
   prior?: { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number } | null;
-  onSave: (event: CalendarEvent) => void;
+  mode?: 'create' | 'edit';
+  rule?: RecurrenceRule | null;
+  template?: CalendarEvent | null;
+  /** A repeating event asks which occurrences the edit applies to before the fields. */
+  chooseScope?: boolean;
+  onSave: (event: CalendarEvent, detail: { rule: RecurrenceRule | null; scope: EditScope }) => void;
   onCancel: () => void;
   restoreFocusRef?: RefObject<HTMLElement | null>;
 }) {
-  const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId() };
+  const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId(), ask: useId(), repeat: useId(), count: useId(), until: useId() };
   const titleRef = useRef<HTMLInputElement>(null);
+  const choiceRef = useRef<HTMLButtonElement>(null);
   const remembered = useRef<{ start: Temporal.PlainTime | null; end: Temporal.PlainTime | null; endDate?: Temporal.PlainDate | null; daySpan?: number } | null>(prior);
-  const [fields, setFields] = useState<EventDraft>(() => {
-    const start = event.start.withTimeZone(timeZone);
-    const end = event.end.withTimeZone(timeZone);
-    const covered = event.allDay ? coveredDays(event, timeZone) : null;
-    return {
-      title: event.title,
-      date: covered?.first ?? start.toPlainDate(),
-      endDate: covered?.last ?? end.toPlainDate(),
-      start: start.toPlainTime(),
-      end: end.toPlainTime(),
-      allDay: event.allDay,
-    };
-  });
+  const [scope, setScope] = useState<EditScope | null>(chooseScope ? null : 'series');
+  const [fields, setFields] = useState<EventDraft>(() => draftFromEvent(event, timeZone));
+  const [repeat, setRepeat] = useState<RepeatFields>(() => repeatFromRule(rule, event.start.withTimeZone(timeZone).toPlainDate()));
   const [errors, setErrors] = useState<FormErrors>({});
+  const asking = chooseScope && scope === null;
+  useLayoutEffect(() => {
+    if (asking || !chooseScope) return;
+    titleRef.current?.focus();
+  }, [asking, chooseScope]);
   const edit =
     <K extends keyof EventDraft>(key: K) =>
     (value: EventDraft[K]) => {
@@ -1405,6 +1746,13 @@ export function EventEditor({
       return { ...current, allDay: false, start: opens, end: opens.add({ minutes: SLOT_MINUTES }), endDate: current.date };
     });
   };
+  const pickScope = (next: EditScope) => {
+    setScope(next);
+    if (next === 'series' && template) {
+      setFields(draftFromEvent(template, timeZone));
+      setRepeat(repeatFromRule(rule, template.start.withTimeZone(timeZone).toPlainDate()));
+    }
+  };
 
   const submit = (submitEvent: SubmitEvent<HTMLFormElement>) => {
     submitEvent.preventDefault();
@@ -1413,65 +1761,174 @@ export function EventEditor({
       setErrors({ [result.issue.field]: result.issue.message });
       return;
     }
-    onSave({ ...event, ...result.value });
+    const showRepeat = scope !== 'occurrence';
+    const parsed = showRepeat ? ruleFromRepeat(repeat, timeZone) : null;
+    if (typeof parsed === 'string') {
+      setErrors({ repeat: parsed });
+      return;
+    }
+    onSave({ ...event, ...result.value }, { rule: parsed, scope: scope ?? 'series' });
   };
 
+  const dialogTitle = mode === 'create' ? 'New event' : asking ? 'Edit repeating event' : `Edit ${fields.title || event.title}`;
+  const days = orderedDays(locale);
+
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onCancel()} initialFocusRef={titleRef} restoreFocusRef={restoreFocusRef}>
-      <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.dialog} className={styles.fields}>
-        <Dialog.Header>
-          <Dialog.Title id={ids.dialog}>{`Edit ${event.title}`}</Dialog.Title>
-          <Dialog.Close />
-        </Dialog.Header>
-        <Dialog.Body>
-          <Field.Group>
-            <Label.Root htmlFor={ids.title}>Title</Label.Root>
-            <Field.Root id={ids.title} name="title">
-              <Field.TextInput ref={titleRef} required value={fields.title} onValueChange={edit('title')} />
-            </Field.Root>
-            <ErrorMessage.Root />
-          </Field.Group>
-          <Field.Group>
-            <Label.Root htmlFor={ids.date}>Date</Label.Root>
-            <Field.Root id={ids.date} name="date">
-              <Field.DateInput required value={fields.date} onValueChange={edit('date')} locale={locale} />
-            </Field.Root>
-            <ErrorMessage.Root />
-          </Field.Group>
-          <Switch.Root className={styles.allDay} checked={fields.allDay} onCheckedChange={setAllDay}>
-            All day
-          </Switch.Root>
-          {fields.allDay ? null : (
+    <Dialog.Root open onOpenChange={(open) => !open && onCancel()} initialFocusRef={asking ? choiceRef : titleRef} restoreFocusRef={restoreFocusRef} aria-describedby={asking ? ids.ask : undefined}>
+      {asking ? (
+        <div className={styles.fields}>
+          <Dialog.Header>
+            <Dialog.Title id={ids.dialog}>{dialogTitle}</Dialog.Title>
+            <Dialog.Close />
+          </Dialog.Header>
+          <Dialog.Body>
+            <p id={ids.ask}>This event repeats. Choose which events to edit.</p>
+            <div className={styles.scopeChoices} role="group" aria-labelledby={ids.dialog}>
+              <Button.Root ref={choiceRef} variant="secondary" onClick={() => pickScope('occurrence')}>
+                This event
+              </Button.Root>
+              <Button.Root variant="secondary" onClick={() => pickScope('following')}>
+                This and following
+              </Button.Root>
+              <Button.Root variant="secondary" onClick={() => pickScope('series')}>
+                All events
+              </Button.Root>
+            </div>
+          </Dialog.Body>
+        </div>
+      ) : (
+        <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.dialog} className={styles.fields}>
+          <Dialog.Header>
+            <Dialog.Title id={ids.dialog}>{dialogTitle}</Dialog.Title>
+            <Dialog.Close />
+          </Dialog.Header>
+          <Dialog.Body>
             <Field.Group>
-              <Label.Root htmlFor={ids.start}>Start</Label.Root>
-              <Field.Root id={ids.start} name="start">
-                <Field.TimeInput required value={fields.start} onValueChange={edit('start')} locale={locale} />
+              <Label.Root htmlFor={ids.title}>Title</Label.Root>
+              <Field.Root id={ids.title} name="title">
+                <Field.TextInput ref={titleRef} required value={fields.title} onValueChange={edit('title')} />
               </Field.Root>
               <ErrorMessage.Root />
             </Field.Group>
-          )}
-          <Field.Group>
-            <Label.Root htmlFor={ids.endDate}>End date</Label.Root>
-            <Field.Root id={ids.endDate} name="endDate">
-              <Field.DateInput required value={fields.endDate} onValueChange={edit('endDate')} locale={locale} />
-            </Field.Root>
-            <ErrorMessage.Root />
-          </Field.Group>
-          {fields.allDay ? null : (
             <Field.Group>
-              <Label.Root htmlFor={ids.end}>End</Label.Root>
-              <Field.Root id={ids.end} name="end">
-                <Field.TimeInput required value={fields.end} onValueChange={edit('end')} locale={locale} />
+              <Label.Root htmlFor={ids.date}>Date</Label.Root>
+              <Field.Root id={ids.date} name="date">
+                <Field.DateInput required value={fields.date} onValueChange={edit('date')} locale={locale} />
               </Field.Root>
               <ErrorMessage.Root />
             </Field.Group>
-          )}
-        </Dialog.Body>
-        <Dialog.Footer>
-          <Dialog.Close>Cancel</Dialog.Close>
-          <Button.Root type="submit">Save</Button.Root>
-        </Dialog.Footer>
-      </Form.Root>
+            <Switch.Root className={styles.allDay} checked={fields.allDay} onCheckedChange={setAllDay}>
+              All day
+            </Switch.Root>
+            {fields.allDay ? null : (
+              <Field.Group>
+                <Label.Root htmlFor={ids.start}>Start</Label.Root>
+                <Field.Root id={ids.start} name="start">
+                  <Field.TimeInput required value={fields.start} onValueChange={edit('start')} locale={locale} />
+                </Field.Root>
+                <ErrorMessage.Root />
+              </Field.Group>
+            )}
+            <Field.Group>
+              <Label.Root htmlFor={ids.endDate}>End date</Label.Root>
+              <Field.Root id={ids.endDate} name="endDate">
+                <Field.DateInput required value={fields.endDate} onValueChange={edit('endDate')} locale={locale} />
+              </Field.Root>
+              <ErrorMessage.Root />
+            </Field.Group>
+            {fields.allDay ? null : (
+              <Field.Group>
+                <Label.Root htmlFor={ids.end}>End</Label.Root>
+                <Field.Root id={ids.end} name="end">
+                  <Field.TimeInput required value={fields.end} onValueChange={edit('end')} locale={locale} />
+                </Field.Root>
+                <ErrorMessage.Root />
+              </Field.Group>
+            )}
+            {scope === 'occurrence' ? null : (
+              <Field.Group>
+                <Label.Root htmlFor={ids.repeat}>Repeat</Label.Root>
+                <Field.Root id={ids.repeat} name="repeat">
+                  <Field.Select
+                    value={repeat.freq}
+                    onValueChange={(value) => {
+                      setErrors({});
+                      const freq = value === 'DAILY' || value === 'WEEKLY' || value === 'MONTHLY' || value === 'YEARLY' ? value : 'none';
+                      setRepeat((current) => ({
+                        ...current,
+                        freq,
+                        byDay: freq === 'WEEKLY' && current.byDay.length === 0 && fields.date ? [byDayOf(fields.date)] : current.byDay,
+                      }));
+                    }}
+                  >
+                    <option value="none">None</option>
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="MONTHLY">Monthly</option>
+                    <option value="YEARLY">Yearly</option>
+                  </Field.Select>
+                </Field.Root>
+                <ErrorMessage.Root />
+              </Field.Group>
+            )}
+            {scope === 'occurrence' || repeat.freq !== 'WEEKLY' ? null : (
+              <ToggleGroup.Root
+                aria-label="Days"
+                selectionMode="multiple"
+                value={repeat.byDay}
+                onValueChange={(value) => {
+                  setErrors({});
+                  setRepeat((current) => ({ ...current, byDay: value.filter((day): day is ByDay => WEEK_FROM_SUNDAY.includes(day as ByDay)) }));
+                }}
+                className={styles.repeatDays}
+              >
+                {days.map((day) => (
+                  <ToggleGroup.Item key={day} value={day}>
+                    {weekdayName(day, locale)}
+                  </ToggleGroup.Item>
+                ))}
+              </ToggleGroup.Root>
+            )}
+            {scope === 'occurrence' || repeat.freq === 'none' ? null : (
+              <>
+                <RadioGroup.Root
+                  aria-label="Ends"
+                  value={repeat.end}
+                  onValueChange={(value) => {
+                    if (value === 'never' || value === 'count' || value === 'until') setRepeat((current) => ({ ...current, end: value }));
+                  }}
+                >
+                  <RadioGroup.Item value="never">Never</RadioGroup.Item>
+                  <RadioGroup.Item value="count">After</RadioGroup.Item>
+                  <RadioGroup.Item value="until">On</RadioGroup.Item>
+                </RadioGroup.Root>
+                {repeat.end === 'count' ? (
+                  <Field.Group>
+                    <Label.Root htmlFor={ids.count}>Times</Label.Root>
+                    <Field.Root id={ids.count} name="count">
+                      <Field.NumberInput min={1} step={1} value={repeat.count} onValueChange={(count) => setRepeat((current) => ({ ...current, count }))} locale={locale} />
+                    </Field.Root>
+                    <ErrorMessage.Root />
+                  </Field.Group>
+                ) : null}
+                {repeat.end === 'until' ? (
+                  <Field.Group>
+                    <Label.Root htmlFor={ids.until}>Last date</Label.Root>
+                    <Field.Root id={ids.until} name="until">
+                      <Field.DateInput value={repeat.until} onValueChange={(until) => setRepeat((current) => ({ ...current, until }))} locale={locale} />
+                    </Field.Root>
+                    <ErrorMessage.Root />
+                  </Field.Group>
+                ) : null}
+              </>
+            )}
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Dialog.Close>Cancel</Dialog.Close>
+            <Button.Root type="submit">Save</Button.Root>
+          </Dialog.Footer>
+        </Form.Root>
+      )}
     </Dialog.Root>
   );
 }
