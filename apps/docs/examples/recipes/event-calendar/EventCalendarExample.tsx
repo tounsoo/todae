@@ -1141,7 +1141,9 @@ export default function EventCalendarExample({
     const start = settled.start.withTimeZone(timeZone);
     const end = settled.end.withTimeZone(timeZone);
     const spansDays = !start.toPlainDate().equals(end.toPlainDate());
-    announce(strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`);
+    const detail = strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`;
+    const created = !items.some((each) => each.id === settled.id);
+    announce(created ? `Added ${detail}` : detail);
     returnFocus.current = true;
   };
 
@@ -1236,8 +1238,8 @@ export default function EventCalendarExample({
     const iso = lane?.getAttribute('data-todae-lane');
     if (!iso) return;
     notedDay.current = Temporal.PlainDate.from(iso);
-    const start = target.closest('[data-todae-lane-item]')?.getAttribute('data-todae-lane-start');
-    notedUnits.current = start ? Number(start) : 0;
+    const end = target.closest('[data-todae-lane-item]')?.getAttribute('data-todae-lane-end');
+    notedUnits.current = end ? Number(end) : 0;
   };
 
   const columnShared: ColumnShared = {
