@@ -279,6 +279,14 @@ export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxi
   return { ...event, start };
 }
 
+/** A new event for a snapped place on `segment`. The title is empty until the dialog saves it. */
+export function eventFromPlace(segment: DaySegment, start: number, end: number): CalendarEvent | null {
+  const startAt = fromUnits(segment, start, 'start');
+  const endAt = fromUnits(segment, end, 'end');
+  if (!startAt || !endAt || Temporal.ZonedDateTime.compare(endAt, startAt) <= 0) return null;
+  return { id: crypto.randomUUID(), title: '', start: startAt, end: endAt, allDay: false };
+}
+
 export type EventDraft = {
   title: string;
   date: Temporal.PlainDate | null;
@@ -617,6 +625,10 @@ const EVENTS: readonly CalendarEvent[] = [
 
 type CalendarView = 'month' | 'week' | 'day';
 
+type CreatePlace = { day: Temporal.PlainDate; start: number; end: number };
+
+type EditorSession = { intent: 'edit'; event: CalendarEvent } | { intent: 'create'; event: CalendarEvent; place: CreatePlace };
+
 const MONTH_TITLES = 2;
 
 function SyncTabStop({ onDay }: { onDay: (day: Temporal.PlainDate) => void }) {
@@ -746,6 +758,7 @@ type ColumnShared = {
   focusKey: string | null;
   onAdjust: (event: CalendarEvent, segment: DaySegment, change: SlotChange) => void;
   onEdit: (event: CalendarEvent, day: Temporal.PlainDate) => void;
+  pendingCreate: { day: Temporal.PlainDate; start: number; end: number } | null;
 };
 
 function eventName(event: CalendarEvent, segment: DaySegment, locale: string, timeZone: string): { name: string; timeText: string; short: boolean } {
@@ -852,15 +865,36 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
   );
 }
 
-const DragPreview = memo(function DragPreview({ drag, segment, scale, locale }: { drag: UseLaneDragResult['drag']; segment: DaySegment; scale: number; locale: string }) {
+const DragPreview = memo(function DragPreview({
+  drag,
+  segment,
+  scale,
+  locale,
+  pending,
+}: {
+  drag: UseLaneDragResult['drag'];
+  segment: DaySegment;
+  scale: number;
+  locale: string;
+  pending: { start: number; end: number } | null;
+}) {
   const change = useLaneDragState(drag, (state) => (state?.to?.lane === segment.day.toString() ? state : null));
-  if (change?.to == null || scale <= 0) return null;
-  const box = spanFrame({ start: change.to.start, end: change.to.end }, scale);
-  const start = fromUnits(segment, change.to.start, 'start');
-  const end = fromUnits(segment, change.to.end, 'end');
+  const live = change?.to ?? null;
+  const place = live ?? pending;
+  if (place == null || scale <= 0) return null;
+  const creating = change?.kind === 'create' || (live == null && pending != null);
+  const box = spanFrame({ start: place.start, end: place.end }, scale);
+  const start = fromUnits(segment, place.start, 'start');
+  const end = fromUnits(segment, place.end, 'end');
   const label = start && end ? `${formatTime(start.toPlainTime(), { locale })} to ${formatTime(end.toPlainTime(), { locale })}` : null;
   return (
-    <div className={styles.preview} data-level={change.verdict?.level} style={{ top: percent(box.top), height: percent(box.height) }}>
+    <div
+      aria-hidden="true"
+      className={styles.preview}
+      data-create={creating ? '' : undefined}
+      data-level={change?.verdict?.level}
+      style={{ top: percent(box.top), height: percent(box.height) }}
+    >
       {label ? <span className={styles.previewTime}>{label}</span> : null}
     </div>
   );
@@ -936,7 +970,13 @@ function EventColumn({
           );
         })}
       </div>
-      <DragPreview drag={shared.lanes.drag} segment={segment} scale={shared.scale} locale={shared.locale} />
+      <DragPreview
+        drag={shared.lanes.drag}
+        segment={segment}
+        scale={shared.scale}
+        locale={shared.locale}
+        pending={shared.pendingCreate?.day.equals(segment.day) ? shared.pendingCreate : null}
+      />
       <ol className={styles.events} aria-labelledby={headingId}>
         {placed.map(({ item, left, width }) => (
           <EventBlock key={blockKey(item.event.id, segment.day)} span={{ ...item, left, width }} segment={segment} shared={shared} />
@@ -1046,7 +1086,9 @@ export default function EventCalendarExample({
   const [anchor, setAnchor] = useState(initialAnchor);
   const [items, setItems] = useState<CalendarEvent[]>(() => events.map((event) => ({ ...event })));
   const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
-  const [editing, setEditing] = useState<CalendarEvent | null>(null);
+  const [session, setSession] = useState<EditorSession | null>(null);
+  const notedDay = useRef(initialAnchor);
+  const notedUnits = useRef(0);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
   const pendingFocus = useRef<'day' | null>(null);
@@ -1095,26 +1137,40 @@ export default function EventCalendarExample({
     const laneHome = strip ? null : shownDay(settled, day);
     setFocusKey(strip ? stripKey(settled.id) : laneHome ? blockKey(settled.id, laneHome) : null);
     focusHeading.current = strip || laneHome ? null : day;
-    setItems((list) => list.map((each) => (each.id === settled.id ? settled : each)));
+    setItems((list) => (list.some((each) => each.id === settled.id) ? list.map((each) => (each.id === settled.id ? settled : each)) : [...list, settled]));
     const start = settled.start.withTimeZone(timeZone);
     const end = settled.end.withTimeZone(timeZone);
     const spansDays = !start.toPlainDate().equals(end.toPlainDate());
-    announce(strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`);
+    const detail = strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`;
+    const created = !items.some((each) => each.id === settled.id);
+    announce(created ? `Added ${detail}` : detail);
     returnFocus.current = true;
   };
 
   // The dialog unmounts in the same commit that records the edit, so its own
   // focus return has no button to land on yet. This runs after that commit.
+  // The heading is consumed here. A value left from a cancelled create would
+  // steal focus from a later cancelled edit.
   useLayoutEffect(() => {
-    if (!returnFocus.current || editing) return;
+    if (!returnFocus.current || session) return;
     returnFocus.current = false;
     const day = focusHeading.current;
+    focusHeading.current = null;
     if (day) {
       document.getElementById(`${heading}-${day.toString()}`)?.focus();
       return;
     }
     if (landing.current?.isConnected) landing.current.focus();
-  }, [anchor, editing, focusKey, heading, items]);
+  }, [anchor, session, focusKey, heading, items]);
+
+  const beginCreate = (segment: DaySegment, start: number, end: number) => {
+    const event = eventFromPlace(segment, start, end);
+    if (!event) return;
+    returnFocus.current = false;
+    focusHeading.current = segment.day;
+    setFocusKey(null);
+    setSession({ intent: 'create', event, place: { day: segment.day, start, end } });
+  };
 
   const board = useLaneDrag({
     range: { start: 0, end: Math.max(scale, SLOT_MINUTES) },
@@ -1139,6 +1195,11 @@ export default function EventCalendarExample({
       const settled = finishGesture(event, next, 'drop');
       if (settled !== event) commit(settled, toDay);
     },
+    onCreate: (place) => {
+      const segment = axis.segments.find((each) => each.day.toString() === place.lane);
+      if (!segment) return;
+      beginCreate(segment, place.start, place.end);
+    },
   });
 
   const onAdjust = (event: CalendarEvent, segment: DaySegment, change: SlotChange) => {
@@ -1155,7 +1216,32 @@ export default function EventCalendarExample({
 
   const onEdit = (event: CalendarEvent, day: Temporal.PlainDate) => {
     setFocusKey(showsInStrip(event, timeZone, opens, closes) ? stripKey(event.id) : blockKey(event.id, day));
-    setEditing(event);
+    setSession({ intent: 'edit', event });
+  };
+
+  const openNewEvent = () => {
+    const noted = axis.segments.find((segment) => segment.day.equals(notedDay.current));
+    const segment = noted ?? axis.segments.find((each) => each.day.equals(anchor)) ?? axis.segments[0];
+    if (!segment || segment.length < SLOT_MINUTES) return;
+    const start = noted && Number.isFinite(notedUnits.current) ? Math.min(Math.max(0, notedUnits.current), segment.length - SLOT_MINUTES) : 0;
+    beginCreate(segment, start, start + SLOT_MINUTES);
+  };
+
+  const noteFocus = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return;
+    const head = target.closest('h3');
+    const prefix = `${heading}-`;
+    if (head?.id.startsWith(prefix)) {
+      notedDay.current = Temporal.PlainDate.from(head.id.slice(prefix.length));
+      notedUnits.current = 0;
+      return;
+    }
+    const lane = target.closest('[data-todae-lane]');
+    const iso = lane?.getAttribute('data-todae-lane');
+    if (!iso) return;
+    notedDay.current = Temporal.PlainDate.from(iso);
+    const end = target.closest('[data-todae-lane-item]')?.getAttribute('data-todae-lane-end');
+    notedUnits.current = end ? Number(end) : 0;
   };
 
   const columnShared: ColumnShared = {
@@ -1170,6 +1256,7 @@ export default function EventCalendarExample({
     focusKey,
     onAdjust,
     onEdit,
+    pendingCreate: session?.intent === 'create' ? session.place : null,
   };
 
   useLayoutEffect(() => {
@@ -1200,7 +1287,7 @@ export default function EventCalendarExample({
   };
 
   return (
-    <div className={styles.calendar}>
+    <div className={styles.calendar} onFocusCapture={(event) => noteFocus(event.target)}>
       <div className={styles.toolbar}>
         <ToggleGroup.Root
           aria-label="Calendar view"
@@ -1215,6 +1302,9 @@ export default function EventCalendarExample({
         </ToggleGroup.Root>
         {view === 'month' ? null : (
           <>
+            <Button.Root variant="secondary" onClick={openNewEvent}>
+              New event
+            </Button.Root>
             <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: -step }))}>
               {`Previous ${move}`}
             </Button.Root>
@@ -1315,24 +1405,25 @@ export default function EventCalendarExample({
           </div>
         </ScrollArea.Root>
       )}
-      {editing ? (
+      {session ? (
         <EventEditor
-          event={editing}
+          event={session.event}
+          intent={session.intent}
           locale={locale}
           timeZone={timeZone}
           opens={opens}
-          prior={timedBefore.current.get(editing.id) ?? null}
+          prior={timedBefore.current.get(session.event.id) ?? null}
           restoreFocusRef={landing}
           onCancel={() => {
             returnFocus.current = true;
-            setEditing(null);
+            setSession(null);
           }}
           onSave={(next) => {
             const day = next.start.withTimeZone(timeZone).toPlainDate();
             const home = shownDay(next, day);
             setAnchor(home ?? day);
             commit(next, home ?? day);
-            setEditing(null);
+            setSession(null);
           }}
         />
       ) : null}
@@ -1341,11 +1432,11 @@ export default function EventCalendarExample({
 }
 
 /**
- * Edits one event's title and time. Drag-to-create can open it with the event
- * a drag sketched and read the saved event from `onSave`.
+ * Edits one event, or fills in a new one. `onSave` receives the event the fields name.
  */
 export function EventEditor({
   event,
+  intent = 'edit',
   locale,
   timeZone,
   opens = OPENS,
@@ -1355,6 +1446,7 @@ export function EventEditor({
   restoreFocusRef,
 }: {
   event: CalendarEvent;
+  intent?: 'edit' | 'create';
   locale: string;
   timeZone: string;
   opens?: Temporal.PlainTime;
@@ -1420,7 +1512,7 @@ export function EventEditor({
     <Dialog.Root open onOpenChange={(open) => !open && onCancel()} initialFocusRef={titleRef} restoreFocusRef={restoreFocusRef}>
       <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.dialog} className={styles.fields}>
         <Dialog.Header>
-          <Dialog.Title id={ids.dialog}>{`Edit ${event.title}`}</Dialog.Title>
+          <Dialog.Title id={ids.dialog}>{intent === 'create' ? 'New event' : `Edit ${event.title}`}</Dialog.Title>
           <Dialog.Close />
         </Dialog.Header>
         <Dialog.Body>

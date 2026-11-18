@@ -1,9 +1,9 @@
 import { act } from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { page, userEvent } from 'vitest/browser';
+import { cdp, page, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { formatTime } from '@tounsoo/todae';
+import { formatDate, formatTime } from '@tounsoo/todae';
 import '@tounsoo/todae/todae.css';
 import '../../app/globals.css';
 import { paintedContrast } from '../../../../packages/design-system/src/test/paintedContrast';
@@ -121,14 +121,14 @@ function atUnits(name: string, units: number, scale = SCALE) {
   return { x: box.left + box.width / 2, y: box.top + (units / scale) * box.height };
 }
 
-const pointer = (type: string, target: EventTarget, x: number, y: number) => {
+const pointer = (type: string, target: EventTarget, x: number, y: number, pointerType: 'mouse' | 'touch' = 'mouse') => {
   target.dispatchEvent(
     new PointerEvent(type, {
       bubbles: true,
       cancelable: true,
       composed: true,
       pointerId: 1,
-      pointerType: 'mouse',
+      pointerType,
       isPrimary: true,
       button: 0,
       buttons: type === 'pointerup' ? 0 : 1,
@@ -137,6 +137,76 @@ const pointer = (type: string, target: EventTarget, x: number, y: number) => {
     }),
   );
 };
+
+function dragLane(name: string | HTMLElement, from: number, to: number, scale = SCALE, pointerType: 'mouse' | 'touch' = 'mouse') {
+  const lane = typeof name === 'string' ? dayLane(name) : name;
+  const box = lane.getBoundingClientRect();
+  const yAt = (units: number) => box.top + (units / scale) * box.height;
+  const x = box.left + box.width / 2;
+  const fromY = yAt(from);
+  const toY = yAt(to);
+  pointer('pointerdown', lane, x, fromY, pointerType);
+  pointer('pointermove', lane, x, fromY + (toY >= fromY ? 8 : -8), pointerType);
+  pointer('pointermove', lane, x, toY, pointerType);
+  return {
+    lane,
+    drop: () => pointer('pointerup', lane, x, toY, pointerType),
+    escape: () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      pointer('pointerup', lane, x, toY, pointerType);
+    },
+  };
+}
+
+async function frameBox() {
+  const read = await cdp().send('Runtime.evaluate', {
+    expression:
+      '(() => { const frame = document.querySelector(\'[data-vitest="true"]\'); const box = frame.getBoundingClientRect(); return { left: box.left, top: box.top, width: box.width, height: box.height }; })()',
+    returnByValue: true,
+  });
+  return read.result.value as { left: number; top: number; width: number; height: number };
+}
+
+async function fingerDrag(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const session = cdp();
+  const box = await frameBox();
+  const point = (x: number, y: number) => ({
+    x: box.left + x * (box.width / window.innerWidth),
+    y: box.top + y * (box.height / window.innerHeight),
+    id: 0,
+  });
+  const step = to.y === from.y ? { x: from.x + (to.x >= from.x ? 12 : -12), y: from.y } : { x: from.x, y: from.y + (to.y >= from.y ? 12 : -12) };
+  await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point(from.x, from.y)] });
+  await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [point(step.x, step.y)] });
+  await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [point(to.x, to.y)] });
+  await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+}
+
+function clickLane(name: string, units: number, scale = SCALE, pointerType: 'mouse' | 'touch' = 'mouse') {
+  const lane = dayLane(name);
+  const box = lane.getBoundingClientRect();
+  const x = box.left + box.width / 2;
+  const y = box.top + (units / scale) * box.height;
+  pointer('pointerdown', lane, x, y, pointerType);
+  pointer('pointerup', lane, x, y, pointerType);
+  return lane;
+}
+
+function expectCreatePreview(lane: HTMLElement, start: number, end: number, scale = SCALE) {
+  const preview = lane.querySelector<HTMLElement>('[data-create]');
+  expect(preview).toBeTruthy();
+  if (!preview) throw new Error('missing create preview');
+  expect(preview.getAttribute('aria-hidden')).toBe('true');
+  expect(preview.closest('button')).toBeNull();
+  expect(getComputedStyle(preview).pointerEvents).toBe('none');
+  expect(getComputedStyle(preview).borderTopStyle).toBe('dashed');
+  const laneBox = lane.getBoundingClientRect();
+  const box = preview.getBoundingClientRect();
+  expect(Math.abs(box.top - (laneBox.top + (start / scale) * laneBox.height))).toBeLessThan(2);
+  expect(Math.abs(box.height - ((end - start) / scale) * laneBox.height)).toBeLessThan(2);
+  expect(lane.contains(preview)).toBe(true);
+  return preview;
+}
 
 function dragBlock(button: HTMLElement, to: { x: number; y: number }) {
   const item = button.closest('li');
@@ -1002,5 +1072,372 @@ describe('the month in light and dark', () => {
   afterEach(() => {
     window.localStorage.removeItem(APPEARANCE_KEY);
     document.documentElement.removeAttribute('data-appearance');
+  });
+});
+
+const dayText = (iso: string, locale: string) => formatDate(Temporal.PlainDate.from(iso), { locale });
+
+async function newEventDialog() {
+  const dialog = await screen.findByRole('dialog', { name: 'New event' });
+  const title = within(dialog).getByRole('textbox', { name: 'Title' });
+  await expect.poll(() => document.activeElement).toBe(title);
+  expect(title).toHaveValue('');
+  return dialog;
+}
+
+describe('creating an event from empty lane space', () => {
+  it('shows a preview that tracks a downward drag and an upward drag', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const down = dragLane('Wed, Nov 18', 240, 330);
+    await expect.poll(() => down.lane.querySelector('[data-create]')).toBeTruthy();
+    const preview = expectCreatePreview(down.lane, 240, 330);
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` }).closest('li');
+    expect(review).toBeTruthy();
+    expect(Math.abs(preview.getBoundingClientRect().height - review!.getBoundingClientRect().height)).toBeLessThan(2);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    down.escape();
+    await expect.poll(() => down.lane.querySelector('[data-create]')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    const up = dragLane('Wed, Nov 18', 240, 140);
+    await expect.poll(() => up.lane.querySelector('[data-create]')).toBeTruthy();
+    expectCreatePreview(up.lane, 135, 255);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    up.escape();
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('opens the editor on release and adds the event when it is saved', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const gesture = dragLane('Wed, Nov 18', 240, 330);
+    await expect.poll(() => gesture.lane.querySelector('[data-create]')).toBeTruthy();
+    gesture.drop();
+    const dialog = await newEventDialog();
+    expectCreatePreview(gesture.lane, 240, 330);
+    expect(document.querySelectorAll('[data-create]')).toHaveLength(1);
+    expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-18', 'en-US'));
+    expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('12:00'));
+    expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('13:30'));
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Lunch');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    const saved = screen.getByRole('button', { name: `Lunch, ${clock('12:00')} to ${clock('13:30')}` });
+    expect(gesture.lane.contains(saved)).toBe(true);
+    expect(gesture.lane.querySelector('[data-create]')).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(saved);
+    await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toBe(`Added Lunch, ${clock('12:00')} to ${clock('13:30')}`);
+  });
+
+  it('opens the editor for one slot when empty space is clicked', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const lane = clickLane('Wed, Nov 18', 248);
+    const dialog = await newEventDialog();
+    expectCreatePreview(lane, 240, 255);
+    expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('12:00'));
+    expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('12:15'));
+    expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-18', 'en-US'));
+  });
+
+  it('adds nothing and returns focus to the day heading when the editor is cancelled', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const lane = clickLane('Wed, Nov 18', 248);
+    await newEventDialog();
+    expect(lane.querySelector('[data-create]')).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    expect(lane.querySelector('[data-create]')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Lunch/ })).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('heading', { name: 'Wed, Nov 18' }));
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('cancels a create drag on Escape and opens no editor', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const gesture = dragLane('Wed, Nov 18', 240, 330);
+    await expect.poll(() => gesture.lane.querySelector('[data-create]')).toBeTruthy();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    gesture.escape();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(gesture.lane.querySelector('[data-create]')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'New event' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Lunch/ })).toBeNull();
+  });
+
+  it('moves an event from a press on it, and a press on that control does not create', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    dragBlock(review, atUnits('Mon, Nov 16', 120)).drop();
+    await expect.poll(() => screen.getByRole('button', { name: /^Design review,/ }).getAttribute('aria-label')).toBe(`Design review, ${clock('10:00')} to ${clock('11:30')}`);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const button = screen.getByRole('button', { name: `Design review, ${clock('10:00')} to ${clock('11:30')}` });
+    const box = button.getBoundingClientRect();
+    pointer('pointerdown', button, box.left + box.width / 2, box.top + box.height / 2);
+    pointer('pointerup', button, box.left + box.width / 2, box.top + box.height / 2);
+    expect(screen.queryByRole('dialog', { name: 'New event' })).toBeNull();
+    const handle = button.closest('li')?.querySelector<HTMLElement>('[data-edge="end"]');
+    if (!handle) throw new Error('missing resize handle');
+    const edge = handle.getBoundingClientRect();
+    pointer('pointerdown', handle, edge.left + edge.width / 2, edge.top + edge.height / 2);
+    pointer('pointerup', handle, edge.left + edge.width / 2, edge.top + edge.height / 2);
+    expect(screen.queryByRole('dialog', { name: 'New event' })).toBeNull();
+  });
+
+  it('opens the same editor from New event at the focused day and time', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    expect(screen.getAllByRole('button', { name: 'New event' })).toHaveLength(1);
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    review.focus();
+    const create = screen.getByRole('button', { name: 'New event' });
+    create.focus();
+    await userEvent.keyboard('{Enter}');
+    const dialog = await newEventDialog();
+    expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-16', 'en-US'));
+    expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('10:30'));
+    expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('10:45'));
+  });
+
+  it('starts a new event at the close when the focused event runs into it', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const ship = screen.getByRole('button', { name: `Ship review, ${clock('15:00')} to ${clock('18:30')}, continues` });
+    ship.focus();
+    screen.getByRole('button', { name: 'New event' }).focus();
+    await userEvent.keyboard('{Enter}');
+    const dialog = await newEventDialog();
+    expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-19', 'en-US'));
+    expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('17:45'));
+    expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('18:00'));
+  });
+
+  it('starts at the first slot after a day heading takes focus', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` }).focus();
+    screen.getByRole('heading', { name: 'Wed, Nov 18' }).focus();
+    screen.getByRole('button', { name: 'New event' }).focus();
+    await userEvent.keyboard('{Enter}');
+    const dialog = await newEventDialog();
+    expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-18', 'en-US'));
+    expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('08:00'));
+    expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('08:15'));
+  });
+
+  it('returns focus to the event when an edit is cancelled', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    clickLane('Sun, Nov 15', 120);
+    await newEventDialog();
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('heading', { name: 'Sun, Nov 15' }));
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    review.focus();
+    await userEvent.keyboard('{Enter}');
+    const menu = await openMenu();
+    const items = within(menu).getAllByRole('menuitem');
+    const target = items.findIndex((item) => item.textContent === 'Edit…');
+    await userEvent.keyboard('{ArrowDown}'.repeat(target));
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog', { name: 'Edit Design review' });
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(review);
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('announces a created event as added, in English and in Korean', async () => {
+    for (const locale of ['en-US', 'ko'] as const) {
+      const view = render(
+        <Providers>
+          <EventCalendarExample locale={locale} />
+        </Providers>,
+      );
+      const heading = locale === 'ko' ? screen.getAllByRole('heading', { level: 3 }).find((item) => item.id.endsWith('2026-11-18')) : screen.getByRole('heading', { name: 'Wed, Nov 18' });
+      if (!heading?.textContent) throw new Error('missing Wednesday');
+      const gesture = dragLane(heading.textContent, 120, 195);
+      await expect.poll(() => gesture.lane.querySelector('[data-create]')).toBeTruthy();
+      gesture.drop();
+      const dialog = await newEventDialog();
+      await userEvent.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Probe');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+      const start = formatTime(Temporal.PlainTime.from('10:00'), { locale });
+      const end = formatTime(Temporal.PlainTime.from('11:15'), { locale });
+      if (locale === 'ko') expect(start).toContain('오전');
+      await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toBe(`Added Probe, ${start} to ${end}`);
+      expect(screen.getByRole('button', { name: `Probe, ${start} to ${end}` })).toBeTruthy();
+      view.unmount();
+      cleanup();
+    }
+  });
+
+  it('creates from empty space in the day view', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Day' }));
+    const lane = clickLane('Mon, Nov 16', 188);
+    const dialog = await newEventDialog();
+    expectCreatePreview(lane, 180, 195);
+    expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('11:00'));
+    expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('11:15'));
+  });
+
+  it('does not create from the month', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(screen.queryByRole('button', { name: 'New event' })).toBeNull();
+    expect(document.querySelector('[data-create]')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Thursday, November 19, 2026' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(planning());
+  });
+
+  it('creates from a touch on a narrow day, in Korean, in light and in dark', async () => {
+    const errors: string[] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => {
+      errors.push(args.map((item) => (typeof item === 'string' ? item : String(item))).join(' '));
+      original.apply(console, args);
+    };
+    try {
+      for (const appearance of ['dark', 'light'] as const) {
+        window.localStorage.setItem(APPEARANCE_KEY, appearance);
+        await page.viewport(appearance === 'dark' ? 375 : 1280, 800);
+        const view = render(
+          <Providers>
+            <EventCalendarExample locale="ko" />
+          </Providers>,
+        );
+        await settle();
+        expect(document.documentElement.getAttribute('data-appearance')).toBe(appearance);
+        await userEvent.click(screen.getByRole('button', { name: 'Day' }));
+        const heading = screen.getAllByRole('heading', { level: 3 })[0];
+        if (!heading?.textContent) throw new Error('missing day heading');
+        const lane = clickLane(heading.textContent, 368, SCALE, 'touch');
+        const dialog = await newEventDialog();
+        const start = formatTime(Temporal.PlainTime.from('14:00'), { locale: 'ko' });
+        const end = formatTime(Temporal.PlainTime.from('14:15'), { locale: 'ko' });
+        expect(start).toContain('오후');
+        expect(end).toContain('오후');
+        expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(start);
+        expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(end);
+        expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-16', 'ko'));
+        expectCreatePreview(lane, 360, 375);
+        if (appearance === 'light') {
+          await userEvent.keyboard('{Escape}');
+          await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+          await userEvent.click(screen.getByRole('button', { name: 'Week' }));
+          const lane = document.querySelector<HTMLElement>('[data-todae-lane="2026-11-18"]');
+          if (!lane) throw new Error('missing Wednesday lane');
+          const week = dragLane(lane, 240, 330);
+          await expect.poll(() => week.lane.querySelector('[data-create]')).toBeTruthy();
+          expectCreatePreview(week.lane, 240, 330);
+          await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          });
+          week.escape();
+        }
+        view.unmount();
+        cleanup();
+      }
+      expect(errors).toEqual([]);
+    } finally {
+      console.error = original;
+      window.localStorage.removeItem(APPEARANCE_KEY);
+      document.documentElement.removeAttribute('data-appearance');
+      await page.viewport(1280, 800);
+    }
+  });
+
+  it('creates from a real finger on empty space at 375, and a sideways swipe still scrolls', async () => {
+    await page.viewport(375, 800);
+    try {
+      render(
+        <Providers>
+          <EventCalendarExample locale="en-US" />
+        </Providers>,
+      );
+      const sunday = dayLane('Sun, Nov 15');
+      const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+      const edge = review.closest('li')?.querySelector<HTMLElement>('[data-edge="end"]');
+      if (!edge) throw new Error('missing resize handle');
+      expect(getComputedStyle(sunday).touchAction).toBe('pan-x');
+      expect(getComputedStyle(review).touchAction).toBe('none');
+      expect(getComputedStyle(edge).touchAction).toBe('none');
+      if (!/Chrome/.test(navigator.userAgent)) return;
+
+      const scroller = screen.getByRole('region', { name: 'Calendar' });
+      const start = atUnits('Sun, Nov 15', 180);
+      const before = scroller.scrollLeft;
+      await fingerDrag(start, { x: start.x - 140, y: start.y });
+      await expect.poll(() => scroller.scrollLeft).toBeGreaterThan(before + 20);
+      expect(screen.queryByRole('dialog', { name: 'New event' })).toBeNull();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Day' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Next day' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Next day' }));
+      const from = atUnits('Wed, Nov 18', 120);
+      const to = atUnits('Wed, Nov 18', 210);
+      await fingerDrag(from, to);
+      const dialog = await newEventDialog();
+      expect(within(dialog).getByRole('textbox', { name: 'Date' })).toHaveValue(dayText('2026-11-18', 'en-US'));
+      expect(within(dialog).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('10:00'));
+      expect(within(dialog).getByRole('textbox', { name: 'End' })).toHaveValue(clock('11:30'));
+      expectCreatePreview(dayLane('Wed, Nov 18'), 120, 210);
+      expect(document.querySelectorAll('[data-create]')).toHaveLength(1);
+    } finally {
+      await page.viewport(1280, 800);
+    }
   });
 });

@@ -137,6 +137,8 @@
 .column {
   position: relative;
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-subtle);
+  /* pan-x keeps a sideways swipe on the week. none would take that swipe. auto lets the browser claim a vertical touch for scrolling, so a finger on empty space never creates. */
+  touch-action: pan-x;
 }
 
 .hours {
