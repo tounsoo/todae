@@ -1715,6 +1715,40 @@ describe('creating an event from empty lane space', () => {
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
       cleanup();
     }
+
+    await page.viewport(1280, 900);
+    render(
+      <Providers>
+        <EventCalendarExample
+          locale="en-US"
+          timeZone="Australia/Sydney"
+          compareZone="America/Los_Angeles"
+          anchor={Temporal.PlainDate.from('2026-03-08')}
+          events={[]}
+        />
+      </Providers>,
+    );
+    const contained = () => {
+      const compare = document.querySelector<HTMLElement>('[data-compare]');
+      if (!compare) return false;
+      const gutter = compare.getBoundingClientRect();
+      const pieces = [...compare.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+      return (
+        pieces.length > 0 &&
+        pieces.every((piece) => {
+          const box = piece.getBoundingClientRect();
+          return box.left >= gutter.left - 0.5 && box.right <= gutter.right + 0.5;
+        })
+      );
+    };
+    await expect.poll(contained).toBe(true);
+    document.documentElement.style.fontSize = '20px';
+    try {
+      await expect.poll(contained).toBe(true);
+    } finally {
+      document.documentElement.style.fontSize = '';
+      cleanup();
+    }
     await page.viewport(1280, 800);
   });
 });

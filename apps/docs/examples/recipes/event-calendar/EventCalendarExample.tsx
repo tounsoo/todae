@@ -1699,6 +1699,7 @@ export function EventCalendarExample({
     setPinFocus(view !== 'month');
   }, [view]);
 
+  // The times are absolutely positioned, so they don't size the column.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -1717,29 +1718,36 @@ export function EventCalendarExample({
     const head = root.querySelector(`.${styles.head}`);
     const primaryNames = [...(head?.firstElementChild?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
     const primaryMarks = [...root.querySelectorAll<HTMLElement>(`.${styles.gutter}:not([data-compare]) > .${styles.mark}`)];
-    const primary = Math.max(
-      widest(primaryNames, zonePad),
-      widest(primaryMarks, (node) => {
-        const style = getComputedStyle(node);
-        const border = node.parentElement ? length(getComputedStyle(node.parentElement).borderInlineEndWidth) : 0;
-        return length(style.insetInlineStart) + length(style.insetInlineEnd) + border;
-      }),
-    );
-    if (primary >= 1) {
-      const next = Math.ceil(primary);
-      setPrimaryPx((current) => (current === next ? current : next));
-    }
-    if (!showCompare) return;
-    const compareMark = root.querySelector<HTMLElement>('[data-compare] > span');
     const compareNames = [...(head?.firstElementChild?.nextElementSibling?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
     const pieces = [...root.querySelectorAll<HTMLElement>(`[data-compare] .${styles.markPiece}`)];
-    const markStyle = compareMark ? getComputedStyle(compareMark) : null;
-    const markPad = markStyle ? length(markStyle.insetInlineStart) + length(markStyle.insetInlineEnd) : 0;
-    const markBorder = compareMark?.parentElement ? length(getComputedStyle(compareMark.parentElement).borderInlineEndWidth) : 0;
-    const compare = Math.max(widest(compareNames, zonePad), widest(pieces, () => markPad + markBorder));
-    if (compare < 1) return;
-    const next = Math.ceil(compare);
-    setComparePx((current) => (current === next ? current : next));
+    const measure = () => {
+      const primary = Math.max(
+        widest(primaryNames, zonePad),
+        widest(primaryMarks, (node) => {
+          const style = getComputedStyle(node);
+          const border = node.parentElement ? length(getComputedStyle(node.parentElement).borderInlineEndWidth) : 0;
+          return length(style.insetInlineStart) + length(style.insetInlineEnd) + border;
+        }),
+      );
+      if (primary >= 1) {
+        const next = Math.ceil(primary);
+        setPrimaryPx((current) => (current === next ? current : next));
+      }
+      if (!showCompare) return;
+      const compareMark = root.querySelector<HTMLElement>('[data-compare] > span');
+      const markStyle = compareMark ? getComputedStyle(compareMark) : null;
+      const markPad = markStyle ? length(markStyle.insetInlineStart) + length(markStyle.insetInlineEnd) : 0;
+      const markBorder = compareMark?.parentElement ? length(getComputedStyle(compareMark.parentElement).borderInlineEndWidth) : 0;
+      const compare = Math.max(widest(compareNames, zonePad), widest(pieces, () => markPad + markBorder));
+      if (compare < 1) return;
+      const next = Math.ceil(compare);
+      setComparePx((current) => (current === next ? current : next));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const watcher = new ResizeObserver(measure);
+    for (const node of [...primaryNames, ...primaryMarks, ...compareNames, ...pieces]) watcher.observe(node);
+    return () => watcher.disconnect();
   }, [showCompare, pieceKey]);
 
   useLayoutEffect(() => {
