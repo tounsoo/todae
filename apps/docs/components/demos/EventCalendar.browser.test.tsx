@@ -18,6 +18,30 @@ afterEach(cleanup);
 
 const clock = (text: string) => formatTime(Temporal.PlainTime.from(text), { locale: 'en-US' });
 
+function inkLines(el: HTMLElement): string[] {
+  const range = document.createRange();
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const rows: { top: number; chars: { x: number; ch: string }[] }[] = [];
+  while (walker.nextNode()) {
+    const text = walker.currentNode.textContent ?? '';
+    for (let index = 0; index < text.length; index += 1) {
+      range.setStart(walker.currentNode, index);
+      range.setEnd(walker.currentNode, index + 1);
+      const rect = range.getBoundingClientRect();
+      if (rect.width < 0.5 || rect.height < 0.5) continue;
+      const top = Math.round(rect.top);
+      const row = rows.find((item) => Math.abs(item.top - top) <= 1);
+      const found = row ?? { top, chars: [] };
+      if (!row) rows.push(found);
+      found.chars.push({ x: rect.left, ch: text[index] ?? '' });
+    }
+  }
+  return rows
+    .sort((a, b) => a.top - b.top)
+    .map((row) => row.chars.sort((a, b) => a.x - b.x).map((item) => item.ch).join('').trim())
+    .filter((line) => line.length > 0);
+}
+
 function spoken(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
   if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true' || node.hasAttribute('hidden')) return '';
@@ -1539,43 +1563,71 @@ describe('creating an event from empty lane space', () => {
   });
 
   it('keeps both second-zone times inside the calendar, and hides that column at 375', async () => {
+    const weeks = [
+      { timeZone: 'Australia/Sydney', compareZone: 'America/Los_Angeles', anchor: '2026-03-08' },
+      { timeZone: 'America/Los_Angeles', compareZone: 'Asia/Jerusalem', anchor: '2026-03-22' },
+      { timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
+      { timeZone: 'Asia/Tokyo', compareZone: 'America/New_York', anchor: '2026-03-08' },
+      { timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata', anchor: '2026-11-16' },
+    ];
     for (const locale of ['en-US', 'ko'] as const) {
       await page.viewport(1280, 900);
-      render(
-        <Providers>
-          <EventCalendarExample
-            locale={locale}
-            timeZone="Australia/Sydney"
-            compareZone="America/Los_Angeles"
-            anchor={Temporal.PlainDate.from('2026-03-08')}
-            events={[]}
-          />
-        </Providers>,
-      );
-      const compare = document.querySelector<HTMLElement>('[data-compare]');
-      expect(compare).toBeTruthy();
-      const rows = [...compare!.children] as HTMLElement[];
-      const longest = rows.reduce((best, row) => {
-        const pieces = [...row.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
-        const width = Math.max(0, ...pieces.map((piece) => piece.getBoundingClientRect().width));
-        return width > best.width ? { row, width } : best;
-      }, { row: rows[0]!, width: 0 });
-      const pieces = [...longest.row!.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
-      expect(pieces.length).toBeGreaterThan(1);
-      for (const piece of pieces) {
-        const tops = [...piece.getClientRects()].map((rect) => rect.top);
-        expect(tops.length).toBeGreaterThan(0);
-        expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+      for (const week of weeks) {
+        render(
+          <Providers>
+            <EventCalendarExample
+              locale={locale}
+              timeZone={week.timeZone}
+              compareZone={week.compareZone}
+              anchor={Temporal.PlainDate.from(week.anchor)}
+              events={[]}
+            />
+          </Providers>,
+        );
+        const compare = document.querySelector<HTMLElement>('[data-compare]');
+        expect(compare).toBeTruthy();
+        const gutter = compare!.getBoundingClientRect();
+        const rows = ([...compare!.children] as HTMLElement[]).filter((row) => row.style.top);
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows) {
+          const pieces = [...row.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+          expect(pieces.length).toBeGreaterThan(0);
+          for (const piece of pieces) {
+            const box = piece.getBoundingClientRect();
+            const tops = [...piece.getClientRects()].map((rect) => rect.top);
+            expect(tops.length).toBeGreaterThan(0);
+            expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+            expect(box.left).toBeGreaterThanOrEqual(gutter.left - 0.5);
+            expect(box.right).toBeLessThanOrEqual(gutter.right + 0.5);
+          }
+          const lines = inkLines(row);
+          for (const line of lines) expect(line.startsWith('/')).toBe(false);
+          if (pieces.length > 1) expect(lines.some((line) => line.includes('/'))).toBe(true);
+        }
+        const ordered = [...rows].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+        for (let index = 1; index < ordered.length; index += 1) {
+          const above = ordered[index - 1]!.getBoundingClientRect();
+          const below = ordered[index]!.getBoundingClientRect();
+          expect(above.bottom).toBeLessThanOrEqual(below.top + 1);
+        }
+        for (const zone of document.querySelectorAll<HTMLElement>('[class*="zone"]')) {
+          const names = (zone.textContent ?? '').split(' / ').map((name) => name.trim()).filter(Boolean);
+          expect(names.length).toBeGreaterThan(0);
+          for (const line of inkLines(zone)) {
+            const cleaned = line.replace(/(?:\s*\/\s*)+$/u, '').replace(/^(?:\s*\/\s*)+/u, '').trim();
+            const tokens = cleaned.split(/\s*\/\s*/u).filter(Boolean);
+            expect(tokens.length).toBeGreaterThan(0);
+            for (const token of tokens) expect(names).toContain(token);
+          }
+        }
+        if (week.timeZone === 'Australia/Sydney' && week.compareZone === 'America/Los_Angeles') {
+          if (locale === 'en-US') expect(rows.some((row) => row.textContent === '1:00 PM -1 day / 2:00 PM -1 day')).toBe(true);
+          const marked = screen.getByRole('heading', { name: locale === 'ko' ? /둘째 열 GMT-7 시작/ : 'Mon, Mar 9 · Second column PDT begins' });
+          expect(marked.getBoundingClientRect().height).toBeGreaterThan(0);
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+        }
+        cleanup();
       }
-      expect(longest.width).toBeGreaterThan(longest.row!.getBoundingClientRect().width);
-      if (locale === 'en-US') {
-        const eight = rows.find((row) => row.textContent === '1:00 PM -1 day / 2:00 PM -1 day');
-        expect(eight).toBeTruthy();
-      }
-      const marked = screen.getByRole('heading', { name: locale === 'ko' ? /둘째 열 GMT-7 시작/ : 'Mon, Mar 9 · Second column PDT begins' });
-      expect(marked.getBoundingClientRect().height).toBeGreaterThan(0);
-      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
-      cleanup();
 
       await page.viewport(375, 800);
       render(
