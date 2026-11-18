@@ -1726,7 +1726,8 @@ export function EventCalendarExample({
         widest(primaryMarks, (node) => {
           const style = getComputedStyle(node);
           const border = node.parentElement ? length(getComputedStyle(node.parentElement).borderInlineEndWidth) : 0;
-          return length(style.insetInlineStart) + length(style.insetInlineEnd) + border;
+          // inset-inline-start is auto, so the computed value is the used offset. Adding it makes the column equal itself.
+          return length(style.insetInlineEnd) + border;
         }),
       );
       if (primary >= 1) {

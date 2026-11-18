@@ -50,6 +50,30 @@ function inkLines(el: HTMLElement): string[] {
     .filter((line) => line.length > 0);
 }
 
+function boxesInside(nodes: HTMLElement[], bounds: DOMRect): boolean {
+  return (
+    nodes.length > 0 &&
+    nodes.every((node) => {
+      const box = node.getBoundingClientRect();
+      return box.left >= bounds.left - 0.5 && box.right <= bounds.right + 0.5;
+    })
+  );
+}
+
+function primaryLabelsInside(): boolean {
+  const gutter = document.querySelector<HTMLElement>('[class*="gutter"]:not([data-compare])');
+  if (!gutter) return false;
+  const marks = [...gutter.querySelectorAll<HTMLElement>(':scope > [class*="mark"]')];
+  return boxesInside(marks, gutter.getBoundingClientRect());
+}
+
+function comparePiecesInside(): boolean {
+  const compare = document.querySelector<HTMLElement>('[data-compare]');
+  if (!compare) return false;
+  const pieces = [...compare.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+  return boxesInside(pieces, compare.getBoundingClientRect());
+}
+
 function zoneNamesFit() {
   const names = [...document.querySelectorAll<HTMLElement>('[class*="zoneName"]')];
   expect(names.length).toBeGreaterThan(0);
@@ -1750,6 +1774,27 @@ describe('creating an event from empty lane space', () => {
       cleanup();
     }
     await page.viewport(1280, 800);
+  });
+
+  it('keeps the Korean hour labels inside the first column when the text grows', async () => {
+    await page.viewport(1280, 900);
+    render(
+      <Providers>
+        <EventCalendarExample locale="ko" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" />
+      </Providers>,
+    );
+    await expect.poll(primaryLabelsInside).toBe(true);
+    document.documentElement.style.fontSize = '20px';
+    try {
+      await expect.poll(primaryLabelsInside).toBe(true);
+      await page.viewport(375, 800);
+      await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
+      await expect.poll(primaryLabelsInside).toBe(true);
+    } finally {
+      document.documentElement.style.fontSize = '';
+      await page.viewport(1280, 800);
+      cleanup();
+    }
   });
 });
 
