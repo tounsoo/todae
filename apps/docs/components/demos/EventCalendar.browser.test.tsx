@@ -636,6 +636,108 @@ describe('multi-day bars', () => {
   });
 });
 
+function dayNumberBox(button: HTMLElement): DOMRect {
+  const text = [...button.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && (node.textContent ?? '').trim());
+  if (!text) throw new Error(`no day number on ${button.getAttribute('aria-label')}`);
+  const range = document.createRange();
+  range.selectNodeContents(text);
+  return range.getBoundingClientRect();
+}
+
+function paintedMonthEvents(day: HTMLElement): HTMLElement[] {
+  return [...day.querySelectorAll<HTMLElement>('[data-bar], [class*="chip_"], [class*="more_"], [class*="count_"]')].filter((event) => {
+    const box = event.getBoundingClientRect();
+    return box.width > 1 && box.height > 1 && getComputedStyle(event).position !== 'absolute';
+  });
+}
+
+describe('month day cells', () => {
+  it('keeps every event inside a bounded day, with week rows at least a calendar cell tall', async () => {
+    try {
+      for (const width of [1280, 1024, 768, 414, 375]) {
+        await page.viewport(width, 900);
+        const view = render(
+          <Providers>
+            <main>
+              <EventCalendarExample locale="en-US" />
+            </main>
+          </Providers>,
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+        const grid = screen.getByRole('grid');
+        const gridBox = grid.getBoundingClientRect();
+        const cells = [...grid.querySelectorAll<HTMLElement>('[data-todae-calendar-cell]')];
+        expect(cells.length, `${width}`).toBeGreaterThan(27);
+        for (const cell of cells) {
+          const td = cell.closest('td');
+          if (!(td instanceof HTMLElement)) throw new Error('day is not in a cell');
+          const cellBox = cell.getBoundingClientRect();
+          const tdBox = td.getBoundingClientRect();
+          const tdStyle = getComputedStyle(td);
+          const label = `${width} ${cell.getAttribute('aria-label')}`;
+          expect(parseFloat(tdStyle.borderTopWidth), label).toBeGreaterThan(0);
+          expect(parseFloat(tdStyle.borderInlineStartWidth), label).toBeGreaterThan(0);
+          expect(tdStyle.borderTopColor, label).not.toBe('rgba(0, 0, 0, 0)');
+          expect(tdBox.height - cellBox.height, label).toBeLessThan(4);
+          const number = dayNumberBox(cell);
+          expect(number.left - cellBox.left, label).toBeLessThan(cellBox.width / 4);
+          expect(number.top - cellBox.top, label).toBeLessThan(cellBox.height / 2);
+          for (const event of paintedMonthEvents(cell)) {
+            const box = event.getBoundingClientRect();
+            const name = `${label} ${event.getAttribute('data-bar') ?? event.textContent}`;
+            expect(box.left, name).toBeGreaterThanOrEqual(cellBox.left - 1);
+            expect(box.right, name).toBeLessThanOrEqual(cellBox.right + 1);
+            expect(box.top, name).toBeGreaterThanOrEqual(cellBox.top - 1);
+            expect(box.bottom, name).toBeLessThanOrEqual(cellBox.bottom + 1);
+            expect(box.left, name).toBeGreaterThanOrEqual(gridBox.left - 0.5);
+            expect(box.right, name).toBeLessThanOrEqual(gridBox.right + 0.5);
+            if (event.hasAttribute('data-bar')) {
+              expect(Math.abs(box.left - cellBox.left), name).toBeLessThan(3);
+              expect(Math.abs(box.right - cellBox.right), name).toBeLessThan(3);
+            }
+          }
+        }
+        const rows = [...grid.querySelectorAll('tbody tr')];
+        const empty = rows.filter((row) => row.querySelector('[data-bar], [class*="chip_"], [class*="count_"]') === null);
+        expect(empty.length, `${width}`).toBeGreaterThan(1);
+        const emptyHeight = empty[0]?.getBoundingClientRect().height ?? 0;
+        for (const row of empty) expect(Math.abs(row.getBoundingClientRect().height - emptyHeight), `${width}`).toBeLessThan(2);
+        for (const row of rows) expect(row.getBoundingClientRect().height, `${width}`).toBeGreaterThanOrEqual(emptyHeight - 1);
+        const sample = cells.find((cell) => !cell.hasAttribute('data-outside'));
+        if (!sample) throw new Error('no in-month day');
+        expect(emptyHeight, `${width}`).toBeGreaterThan(dayNumberBox(sample).height * 2);
+        const outside = cells.find((cell) => cell.hasAttribute('data-outside'));
+        const inside = cells.find((cell) => !cell.hasAttribute('data-outside'));
+        if (outside && inside) {
+          expect(getComputedStyle(outside.closest('td')!).backgroundColor, `${width}`).not.toBe(getComputedStyle(inside.closest('td')!).backgroundColor);
+        }
+        const wednesday = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
+        const launch = wednesday.querySelector<HTMLElement>('[data-bar="launch"]');
+        const early = [...wednesday.querySelectorAll<HTMLElement>('[class*="chip_"]')].find((event) => event.textContent?.includes('Early sync'));
+        if (launch && early && getComputedStyle(early).position !== 'absolute') {
+          expect(early.getBoundingClientRect().top - launch.getBoundingClientRect().bottom, `${width}`).toBeLessThan(12);
+        }
+        wednesday.focus({ focusVisible: true } as FocusOptions);
+        const focused = wednesday.getBoundingClientRect();
+        const home = wednesday.closest('td')!.getBoundingClientRect();
+        const focusStyle = getComputedStyle(wednesday);
+        expect(focusStyle.outlineStyle, `${width}`).not.toBe('none');
+        const outlineWidth = Number.parseFloat(focusStyle.outlineWidth) || 0;
+        const outlineOffset = Number.parseFloat(focusStyle.outlineOffset) || 0;
+        expect(outlineWidth, `${width}`).toBeGreaterThan(0);
+        const outer = Math.max(0, outlineWidth + outlineOffset);
+        expect(focused.top - outer, `${width}`).toBeGreaterThanOrEqual(home.top - 0.5);
+        expect(focused.left - outer, `${width}`).toBeGreaterThanOrEqual(home.left - 0.5);
+        expect(focused.right + outer, `${width}`).toBeLessThanOrEqual(home.right + 0.5);
+        expect(focused.bottom + outer, `${width}`).toBeLessThanOrEqual(home.bottom + 0.5);
+        view.unmount();
+      }
+    } finally {
+      await page.viewport(1280, 800);
+    }
+  });
+});
+
 describe('the month in light and dark', () => {
   for (const appearance of ['light', 'dark'] as const) {
     it(`paints the month titles and counts clearly in ${appearance}`, async () => {
