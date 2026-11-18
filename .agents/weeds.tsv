@@ -25,3 +25,4 @@ date	class	ref	caught_by	note
 2026-11-17	month-label-lags-focus	#484	review	Arrowing into the next month left the toolbar label and both aria-labels on the old month.
 2026-11-17	dialog-unmount-drops-focus	#485	review	Unmounting the edit dialog while it was still open skipped focus restore, so Save left focus on the body.
 2026-11-17	calendar-shift-own-zone	#485	review	A day move added the day in the event's zone, so a Tokyo event shown at 10:00 LA on Oct 31 landed at 9:00 on Nov 1.
+2026-11-17	calendar-shift-mixed-sign	#485	review	A day and the minutes went into one duration, so a drag to the next day at an earlier time threw and dropped nothing.

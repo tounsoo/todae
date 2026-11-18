@@ -1027,6 +1027,26 @@ describe('moving and resizing a timed event', () => {
     expect(dragged?.start.withTimeZone(LA).toString()).toBe('2026-11-01T10:00:00-08:00[America/Los_Angeles]');
   });
 
+  it('moves to a later day at an earlier time, and back to an earlier day at a later time', () => {
+    const axis = daySegments({ days: [date('2026-11-16'), date('2026-11-17')], opens: time('08:00'), closes: time('18:00'), timeZone: LA });
+    const review = event('review', '2026-11-16T10:00:00-08:00[America/Los_Angeles]', '2026-11-16T11:30:00-08:00[America/Los_Angeles]');
+    const tuesday = eventFromLane(
+      review,
+      { from: { day: date('2026-11-16'), start: 120, end: 210 }, to: { day: date('2026-11-17'), start: 60, end: 150 }, kind: 'move' },
+      axis,
+    );
+    expect(tuesday?.start.toString()).toBe('2026-11-17T09:00:00-08:00[America/Los_Angeles]');
+    expect(tuesday?.end.toString()).toBe('2026-11-17T10:30:00-08:00[America/Los_Angeles]');
+    if (!tuesday) throw new Error('expected the Tuesday event');
+    const monday = eventFromLane(
+      tuesday,
+      { from: { day: date('2026-11-17'), start: 60, end: 150 }, to: { day: date('2026-11-16'), start: 120, end: 210 }, kind: 'move' },
+      axis,
+    );
+    expect(monday?.start.toString()).toBe('2026-11-16T10:00:00-08:00[America/Los_Angeles]');
+    expect(monday?.end.toString()).toBe('2026-11-16T11:30:00-08:00[America/Los_Angeles]');
+  });
+
   it('refuses a day move that would pass the shorter day close', () => {
     const axis = daySegments({
       days: [date('2026-03-08'), date('2026-03-09')],

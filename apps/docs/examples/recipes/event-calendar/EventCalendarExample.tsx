@@ -202,9 +202,10 @@ export function finishGesture<T>(original: T, next: T | null, gesture: 'drop' | 
 export type SlotChange = { kind: 'shift'; slots: number } | { kind: 'day'; days: number } | { kind: 'length'; slots: number };
 
 function shiftEvent(event: CalendarEvent, minutes: number, days: number, timeZone: string): CalendarEvent {
-  // Add the day in the calendar's zone. The event's own zone keeps its wall
-  // clock across a clock change, so a 10:00 shown in this zone would land at 9:00.
-  const shift = (value: Temporal.ZonedDateTime) => value.withTimeZone(timeZone).add({ days, minutes });
+  // Add the day in the calendar's zone, then the minutes. One duration whose
+  // day and minute signs differ is rejected, and the event's own zone would
+  // keep its wall clock across a clock change.
+  const shift = (value: Temporal.ZonedDateTime) => value.withTimeZone(timeZone).add({ days }).add({ minutes });
   return { ...event, start: shift(event.start), end: shift(event.end) };
 }
 
@@ -772,7 +773,6 @@ export default function EventCalendarExample({
   const heading = useId();
   const pendingFocus = useRef<'day' | null>(null);
   const landing = useRef<HTMLButtonElement | null>(null);
-  const boardNode = useRef<HTMLDivElement>(null);
   const returnFocus = useRef(false);
   const focusHeading = useRef<Temporal.PlainDate | null>(null);
   const [pinFocus, setPinFocus] = useState(true);
@@ -822,12 +822,7 @@ export default function EventCalendarExample({
     returnFocus.current = false;
     const day = focusHeading.current;
     if (day) {
-      const headingEl = document.getElementById(`${heading}-${day.toString()}`);
-      if (headingEl) {
-        headingEl.focus();
-        return;
-      }
-      boardNode.current?.focus();
+      document.getElementById(`${heading}-${day.toString()}`)?.focus();
       return;
     }
     if (landing.current?.isConnected) landing.current.focus();
@@ -982,7 +977,7 @@ export default function EventCalendarExample({
           />
         </Calendar.Root>
       ) : (
-        <ScrollArea.Root {...board.getBoardProps()} ref={boardNode} axis="both" focusable aria-label="Calendar" className={styles.board}>
+        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" className={styles.board}>
           <div
             className={styles.frame}
             style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}

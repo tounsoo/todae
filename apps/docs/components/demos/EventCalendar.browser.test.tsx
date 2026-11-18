@@ -152,6 +152,18 @@ describe('moving, resizing, and editing', () => {
     expect(screen.getByRole('button', { name: /^Standup,/ }).parentElement?.style.inlineSize).toBe('100%');
   });
 
+  it('drags an event onto the next day at an earlier time', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
+    dragBlock(review, atUnits('Tue, Nov 17', 15)).drop();
+    await expect.poll(() => dayLane('Tue, Nov 17').contains(screen.getByRole('button', { name: /^Design review,/ }))).toBe(true);
+    expect(reviewName()).toBe(`Design review, ${clock('08:15')} to ${clock('09:45')}`);
+  });
+
   it('drags an event onto the next day', async () => {
     render(
       <Providers>
@@ -210,6 +222,49 @@ describe('moving, resizing, and editing', () => {
     const review = screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` });
     dragBlock(review, atUnits('Mon, Nov 16', 72)).drop();
     await expect.poll(() => reviewName()).toBe(`Design review, ${clock('09:15')} to ${clock('10:45')}`);
+  });
+
+  it('keeps one slot when a resize starts between grid points', async () => {
+    const talk = {
+      id: 'talk',
+      title: 'Talk',
+      allDay: false,
+      start: Temporal.ZonedDateTime.from('2026-11-16T10:07:00-08:00[America/Los_Angeles]'),
+      end: Temporal.ZonedDateTime.from('2026-11-16T12:00:00-08:00[America/Los_Angeles]'),
+    };
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" events={[talk]} />
+      </Providers>,
+    );
+    const button = screen.getByRole('button', { name: `Talk, ${clock('10:07')} to ${clock('12:00')}` });
+    const handle = button.closest('li')?.querySelector<HTMLElement>('[data-edge="end"]');
+    if (!handle) throw new Error('missing resize handle');
+    const from = handle.getBoundingClientRect();
+    const to = atUnits('Mon, Nov 16', 0);
+    pointer('pointerdown', handle, from.left + from.width / 2, from.top + from.height / 2);
+    pointer('pointermove', handle, from.left + from.width / 2, from.top + 8);
+    pointer('pointermove', handle, to.x, to.y);
+    pointer('pointerup', handle, to.x, to.y);
+    await expect.poll(() => screen.getByRole('button', { name: /^Talk,/ }).getAttribute('aria-label')).toBe(`Talk, ${clock('10:07')} to ${clock('10:30')}`);
+  });
+
+  it('stops a resize above the start at one slot', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const planning = screen.getByRole('button', { name: `Planning, ${clock('10:00')} to ${clock('12:00')}` });
+    const handle = planning.closest('li')?.querySelector<HTMLElement>('[data-edge="end"]');
+    if (!handle) throw new Error('missing resize handle');
+    const from = handle.getBoundingClientRect();
+    const to = atUnits('Thu, Nov 19', 0);
+    pointer('pointerdown', handle, from.left + from.width / 2, from.top + from.height / 2);
+    pointer('pointermove', handle, from.left + from.width / 2, from.top + 8);
+    pointer('pointermove', handle, to.x, to.y);
+    pointer('pointerup', handle, to.x, to.y);
+    await expect.poll(() => screen.getByRole('button', { name: /^Planning,/ }).getAttribute('aria-label')).toBe(`Planning, ${clock('10:00')} to ${clock('10:15')}`);
   });
 
   it('stops a resize at one slot', async () => {
