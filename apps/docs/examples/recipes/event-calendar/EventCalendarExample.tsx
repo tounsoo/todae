@@ -1,7 +1,28 @@
 'use client';
 
-import { Button, Calendar, ScrollArea, Text, ToggleGroup, VisuallyHidden, formatTime } from '@tounsoo/todae';
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import {
+  Button,
+  Calendar,
+  Dialog,
+  ErrorMessage,
+  Field,
+  Form,
+  Label,
+  Menu,
+  ScrollArea,
+  Switch,
+  Text,
+  ToggleGroup,
+  VisuallyHidden,
+  formatTime,
+  useAnnouncer,
+  useFocusHandoff,
+  useLaneDrag,
+  useLaneDragState,
+  type FormErrors,
+  type UseLaneDragResult,
+} from '@tounsoo/todae';
+import { memo, useId, useLayoutEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react';
 import styles from './EventCalendar.module.css';
 
 export type CalendarEvent = {
@@ -86,6 +107,204 @@ export function snapGrid(segment: DaySegment, step: number): number[] {
   for (let units = 0; units < segment.length; units += step) points.add(units);
   points.add(segment.length);
   return [...points].sort((a, b) => a - b);
+}
+
+/** The slot a timed event moves or resizes by. Week and day lanes snap to it. */
+export const SLOT_MINUTES = 15;
+
+export type LaneSpan = { start: number; end: number };
+
+export type SlotEdge = 'move' | 'start' | 'end';
+
+const GRID_DAY = Temporal.PlainDate.from('1970-01-01');
+const GRID_OPEN = GRID_DAY.toZonedDateTime('UTC');
+
+function gridFor(length: number, step: number): number[] {
+  return snapGrid({ day: GRID_DAY, opens: GRID_OPEN, closes: GRID_OPEN, length }, step);
+}
+
+/**
+ * The grid point nearest `units`. A tie goes to the earlier point, the same
+ * choice `useLaneDrag` makes. `length` is on the grid, so a close can be hit.
+ */
+export function snapToSlot(units: number, step: number, length: number): number {
+  const grid = gridFor(length, step);
+  let best = grid[0] ?? 0;
+  let bestDistance = Math.abs(units - best);
+  for (const point of grid) {
+    const distance = Math.abs(units - point);
+    if (distance < bestDistance || (distance === bestDistance && point < best)) {
+      best = point;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+function fittingStart(span: number, proposed: number, length: number, step: number): number | null {
+  if (span <= 0 || span > length) return null;
+  let start = snapToSlot(proposed, step, length);
+  if (start < 0) start = 0;
+  if (start + span <= length) return start;
+  const room = length - span;
+  start = snapToSlot(room, step, length);
+  if (start + span <= length && start >= 0) return start;
+  const grid = gridFor(length, step);
+  for (let index = grid.length - 1; index >= 0; index -= 1) {
+    const point = grid[index] ?? 0;
+    if (point >= 0 && point + span <= length) return point;
+  }
+  return null;
+}
+
+/**
+ * Where a move or a resize lands on a lane of `length` minutes.
+ * A move keeps its length, snaps the start, and slides back inside the lane.
+ * A resize snaps the moved edge, keeps the other, and stops one `step` short
+ * of it. Null when the span cannot sit in the lane.
+ */
+export function clampSpan(
+  current: LaneSpan,
+  proposed: LaneSpan,
+  length: number,
+  step: number,
+  edge: SlotEdge,
+): LaneSpan | null {
+  if (length <= 0 || step <= 0) return null;
+  if (edge === 'move') {
+    const span = current.end - current.start;
+    const start = fittingStart(span, proposed.start, length, step);
+    if (start === null) return null;
+    return { start, end: start + span };
+  }
+  if (edge === 'end') {
+    let end = snapToSlot(proposed.end, step, length);
+    if (end > length) end = snapToSlot(length, step, length);
+    const minEnd = current.start + step;
+    if (end < minEnd) end = minEnd;
+    if (end > length || end <= current.start) return null;
+    return { start: current.start, end };
+  }
+  let start = snapToSlot(proposed.start, step, length);
+  if (start < 0) start = 0;
+  const maxStart = current.end - step;
+  if (start > maxStart) start = maxStart;
+  if (start < 0 || start >= current.end) return null;
+  return { start, end: current.end };
+}
+
+/** A drop keeps `next`. Escape, or a drop with nowhere to land, keeps `original`. */
+export function finishGesture<T>(original: T, next: T | null, gesture: 'drop' | 'escape'): T {
+  if (gesture === 'escape' || next === null) return original;
+  return next;
+}
+
+export type SlotChange = { kind: 'shift'; slots: number } | { kind: 'day'; days: number } | { kind: 'length'; slots: number };
+
+function shiftEvent(event: CalendarEvent, minutes: number, days: number): CalendarEvent {
+  return { ...event, start: event.start.add({ days }).add({ minutes }), end: event.end.add({ days }).add({ minutes }) };
+}
+
+function clippedUnits(segment: DaySegment, event: CalendarEvent): LaneSpan | null {
+  if (event.allDay || segment.length === 0) return null;
+  if (Temporal.ZonedDateTime.compare(event.start, segment.closes) >= 0) return null;
+  if (Temporal.ZonedDateTime.compare(event.end, segment.opens) <= 0) return null;
+  const clippedStart = Temporal.ZonedDateTime.compare(event.start, segment.opens) < 0 ? segment.opens : event.start;
+  const clippedEnd = Temporal.ZonedDateTime.compare(event.end, segment.closes) > 0 ? segment.closes : event.end;
+  const start = (clippedStart.epochMilliseconds - segment.opens.epochMilliseconds) / 60_000;
+  const end = (clippedEnd.epochMilliseconds - segment.opens.epochMilliseconds) / 60_000;
+  if (end <= start) return null;
+  return { start, end };
+}
+
+/**
+ * One keyboard step on `segment`. A shift or a day move that would leave the
+ * lane does nothing, so the menu can disable it. Lengthening and shortening
+ * move the end, and stop at the close and at one slot long.
+ */
+export function adjustEvent(event: CalendarEvent, segment: DaySegment, axis: DayAxis, change: SlotChange, step = SLOT_MINUTES): CalendarEvent | null {
+  const visible = clippedUnits(segment, event);
+  if (!visible) return null;
+  if (change.kind === 'shift') {
+    const proposed = { start: visible.start + change.slots * step, end: visible.end + change.slots * step };
+    if (proposed.start < 0 || proposed.end > segment.length) return null;
+    const clamped = clampSpan(visible, proposed, segment.length, step, 'move');
+    if (!clamped || clamped.start !== proposed.start) return null;
+    return shiftEvent(event, clamped.start - visible.start, 0);
+  }
+  if (change.kind === 'day') {
+    const targetDay = segment.day.add({ days: change.days });
+    const target = axis.segments.find((each) => each.day.equals(targetDay));
+    if (!target || visible.end > target.length) return null;
+    return shiftEvent(event, 0, change.days);
+  }
+  const proposedEnd = visible.end + change.slots * step;
+  if (proposedEnd > segment.length || proposedEnd - visible.start < step) return null;
+  const clamped = clampSpan(visible, { start: visible.start, end: proposedEnd }, segment.length, step, 'end');
+  if (!clamped || clamped.end !== proposedEnd) return null;
+  const end = fromUnits(segment, clamped.end, 'end');
+  if (!end || Temporal.ZonedDateTime.compare(end, event.start) <= 0) return null;
+  return { ...event, end };
+}
+
+export type LaneDrop = {
+  from: { day: Temporal.PlainDate; start: number; end: number };
+  to: { day: Temporal.PlainDate; start: number; end: number };
+  kind: 'move' | 'resize-start' | 'resize-end';
+};
+
+/**
+ * The event a drop leaves. A move keeps the length and shifts the whole event,
+ * including the part a lane clips, by the snapped delta. A resize writes the
+ * drawn edge, so a handle on a clipped side sets the real start or end.
+ */
+export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxis, step = SLOT_MINUTES): CalendarEvent | null {
+  const segment = axis.segments.find((each) => each.day.equals(drop.to.day));
+  if (!segment) return null;
+  const edge: SlotEdge = drop.kind === 'move' ? 'move' : drop.kind === 'resize-start' ? 'start' : 'end';
+  const clamped = clampSpan(drop.from, drop.to, segment.length, step, edge);
+  if (!clamped) return null;
+  if (drop.kind === 'move') {
+    const days = drop.from.day.until(drop.to.day, { largestUnit: 'day' }).days;
+    return shiftEvent(event, clamped.start - drop.from.start, days);
+  }
+  if (drop.kind === 'resize-end') {
+    const end = fromUnits(segment, clamped.end, 'end');
+    if (!end || Temporal.ZonedDateTime.compare(end, event.start) <= 0) return null;
+    return { ...event, end };
+  }
+  const start = fromUnits(segment, clamped.start, 'start');
+  if (!start || Temporal.ZonedDateTime.compare(event.end, start) <= 0) return null;
+  return { ...event, start };
+}
+
+export type EventDraft = {
+  title: string;
+  date: Temporal.PlainDate | null;
+  endDate: Temporal.PlainDate | null;
+  start: Temporal.PlainTime | null;
+  end: Temporal.PlainTime | null;
+  allDay: boolean;
+};
+
+export type DraftIssue = { field: 'title' | 'date' | 'start' | 'end'; message: string };
+
+/** The event a dialog's fields name, or the first field that is wrong. */
+export function eventFromDraft(draft: EventDraft, timeZone: string): { ok: true; value: Pick<CalendarEvent, 'title' | 'start' | 'end' | 'allDay'> } | { ok: false; issue: DraftIssue } {
+  const title = draft.title.trim();
+  if (!title) return { ok: false, issue: { field: 'title', message: 'Add a title.' } };
+  if (!draft.date) return { ok: false, issue: { field: 'date', message: 'Choose a date.' } };
+  if (draft.allDay) {
+    const start = draft.date.toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from('00:00') });
+    const end = draft.date.add({ days: 1 }).toZonedDateTime({ timeZone, plainTime: Temporal.PlainTime.from('00:00') });
+    return { ok: true, value: { title, start, end, allDay: true } };
+  }
+  if (!draft.start) return { ok: false, issue: { field: 'start', message: 'Choose a start.' } };
+  if (!draft.end || !draft.endDate) return { ok: false, issue: { field: 'end', message: 'Choose an end.' } };
+  const start = draft.date.toZonedDateTime({ timeZone, plainTime: draft.start });
+  const end = draft.endDate.toZonedDateTime({ timeZone, plainTime: draft.end });
+  if (Temporal.ZonedDateTime.compare(end, start) <= 0) return { ok: false, issue: { field: 'end', message: 'End must be after the start.' } };
+  return { ok: true, value: { title, start, end, allDay: false } };
 }
 
 export function findConflicts(event: CalendarEvent, others: readonly CalendarEvent[]): { id: string }[] {
@@ -343,75 +562,173 @@ function dayTrack(columns: number): string {
   return `minmax(max(5.5rem, ${columns} * 4rem), 1fr)`;
 }
 
+function blockKey(id: string, day: Temporal.PlainDate): string {
+  return `${id}@${day.toString()}`;
+}
+
+function parseBlockKey(key: string): { id: string; day: string } {
+  const at = key.lastIndexOf('@');
+  return { id: key.slice(0, at), day: key.slice(at + 1) };
+}
+
+type ColumnShared = {
+  locale: string;
+  timeZone: string;
+  scale: number;
+  axis: DayAxis;
+  week: boolean;
+  lanes: UseLaneDragResult;
+  landing: RefObject<HTMLButtonElement | null>;
+  focusKey: string | null;
+  onAdjust: (event: CalendarEvent, segment: DaySegment, change: SlotChange) => void;
+  onEdit: (event: CalendarEvent, day: Temporal.PlainDate) => void;
+};
+
+function eventName(event: CalendarEvent, segment: DaySegment, locale: string, timeZone: string): { name: string; timeText: string; short: boolean } {
+  const start = event.start.withTimeZone(timeZone);
+  const end = event.end.withTimeZone(timeZone);
+  const spansDays = !start.toPlainDate().equals(end.toPlainDate());
+  const startLabel = clockLabel(start, locale, spansDays);
+  const endLabel = clockLabel(end, locale, spansDays);
+  const startedEarlier = Temporal.ZonedDateTime.compare(start, segment.opens) < 0;
+  const continues = Temporal.ZonedDateTime.compare(end, segment.closes) > 0;
+  const cue = [startedEarlier ? 'started earlier' : null, continues ? 'continues' : null].filter(Boolean).join(', ');
+  const name = [`${event.title}, ${startLabel} to ${endLabel}`, cue].filter(Boolean).join(', ');
+  const timeText = `${startedEarlier ? '…' : ''}${startLabel} to ${endLabel}${continues ? '…' : ''}`;
+  const visible = clippedUnits(segment, event);
+  const short = visible !== null && visible.end - visible.start < 45;
+  return { name, timeText, short };
+}
+
+function EventMoves({ event, segment, axis, week, onAdjust, onEdit }: Pick<ColumnShared, 'axis' | 'week' | 'onAdjust' | 'onEdit'> & { event: CalendarEvent; segment: DaySegment }) {
+  const item = (change: SlotChange) => adjustEvent(event, segment, axis, change);
+  const go = (change: SlotChange) => {
+    const next = item(change);
+    if (next) onAdjust(event, segment, change);
+  };
+  return (
+    <>
+      <Menu.Item disabled={item({ kind: 'shift', slots: -1 }) === null} onSelect={() => go({ kind: 'shift', slots: -1 })}>
+        {`${SLOT_MINUTES} minutes earlier`}
+      </Menu.Item>
+      <Menu.Item disabled={item({ kind: 'shift', slots: 1 }) === null} onSelect={() => go({ kind: 'shift', slots: 1 })}>
+        {`${SLOT_MINUTES} minutes later`}
+      </Menu.Item>
+      {week ? (
+        <>
+          <Menu.Item disabled={item({ kind: 'day', days: -1 }) === null} onSelect={() => go({ kind: 'day', days: -1 })}>
+            Move to previous day
+          </Menu.Item>
+          <Menu.Item disabled={item({ kind: 'day', days: 1 }) === null} onSelect={() => go({ kind: 'day', days: 1 })}>
+            Move to next day
+          </Menu.Item>
+        </>
+      ) : null}
+      <Menu.Separator />
+      <Menu.Item disabled={item({ kind: 'length', slots: 1 }) === null} onSelect={() => go({ kind: 'length', slots: 1 })}>
+        {`Lengthen ${SLOT_MINUTES} minutes`}
+      </Menu.Item>
+      <Menu.Item disabled={item({ kind: 'length', slots: -1 }) === null} onSelect={() => go({ kind: 'length', slots: -1 })}>
+        {`Shorten ${SLOT_MINUTES} minutes`}
+      </Menu.Item>
+      <Menu.Separator />
+      <Menu.Item onSelect={() => onEdit(event, segment.day)}>Edit…</Menu.Item>
+    </>
+  );
+}
+
+function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: number; width: number }; segment: DaySegment; shared: ColumnShared }) {
+  const handoff = useFocusHandoff({ to: shared.landing });
+  const key = blockKey(span.event.id, segment.day);
+  const place = { lane: segment.day.toString(), start: span.start, end: span.end };
+  const { name, timeText, short } = eventName(span.event, segment, shared.locale, shared.timeZone);
+  const box = spanFrame(span, shared.scale);
+  return (
+    <li
+      ref={handoff}
+      {...shared.lanes.getItemProps(key, place)}
+      className={styles.slot}
+      style={{ top: percent(box.top), height: percent(box.height), insetInlineStart: percent(span.left), inlineSize: percent(span.width) }}
+    >
+      <Menu.Root>
+        <Menu.Trigger
+          {...shared.lanes.getHandleProps(key, 'move')}
+          ref={key === shared.focusKey ? shared.landing : undefined}
+          variant="ghost"
+          className={styles.event}
+          aria-label={name}
+          tooltip={false}
+        >
+          <Text.Root as="span" weight="medium" lines={1}>
+            {span.event.title}
+          </Text.Root>
+          {short ? null : (
+            <Text.Root as="span" variant="label" tone="muted" lines={1}>
+              {timeText}
+            </Text.Root>
+          )}
+        </Menu.Trigger>
+        <Menu.Content>
+          <EventMoves event={span.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} />
+        </Menu.Content>
+      </Menu.Root>
+      <span {...shared.lanes.getHandleProps(key, 'start')} aria-hidden className={styles.edge} data-edge="start" />
+      <span {...shared.lanes.getHandleProps(key, 'end')} aria-hidden className={styles.edge} data-edge="end" />
+    </li>
+  );
+}
+
+const DragPreview = memo(function DragPreview({ drag, segment, scale, locale }: { drag: UseLaneDragResult['drag']; segment: DaySegment; scale: number; locale: string }) {
+  const change = useLaneDragState(drag, (state) => (state?.to?.lane === segment.day.toString() ? state : null));
+  if (change?.to == null || scale <= 0) return null;
+  const box = spanFrame({ start: change.to.start, end: change.to.end }, scale);
+  const start = fromUnits(segment, change.to.start, 'start');
+  const end = fromUnits(segment, change.to.end, 'end');
+  const label = start && end ? `${formatTime(start.toPlainTime(), { locale })} to ${formatTime(end.toPlainTime(), { locale })}` : null;
+  return (
+    <div className={styles.preview} data-level={change.verdict?.level} style={{ top: percent(box.top), height: percent(box.height) }}>
+      {label ? <span className={styles.previewTime}>{label}</span> : null}
+    </div>
+  );
+});
+
 function EventColumn({
   segment,
   placed,
-  scale,
-  locale,
-  timeZone,
-  headingId,
+  sharedMarks,
   shared,
+  headingId,
 }: {
   segment: DaySegment;
   placed: ReturnType<typeof placeOverlaps<VisibleSpan>>;
-  scale: number;
-  locale: string;
-  timeZone: string;
+  sharedMarks: ReadonlySet<number>;
+  shared: ColumnShared;
   headingId: string;
-  shared: ReadonlySet<number>;
 }) {
-  const marks = scale > 0 ? hourMarks(segment) : [];
+  const marks = shared.scale > 0 ? hourMarks(segment) : [];
   return (
-    <div className={styles.column}>
+    <div {...shared.lanes.getLaneProps(segment.day.toString())} className={styles.column}>
       <div className={styles.hours} aria-hidden="true">
         {marks.map((mark) => {
-          const top = percent(mark.units / scale);
-          const agreed = shared.has(mark.units);
+          const top = percent(mark.units / shared.scale);
+          const agreed = sharedMarks.has(mark.units);
           return (
             <div key={mark.units}>
               <div className={styles.line} style={{ top }} />
               {agreed ? null : (
                 <Text.Root as="span" variant="label" tone="muted" className={styles.columnMark} data-first={mark.units === 0 ? '' : undefined} style={{ top }}>
-                  {formatTime(mark.time.toPlainTime(), { locale })}
+                  {formatTime(mark.time.toPlainTime(), { locale: shared.locale })}
                 </Text.Root>
               )}
             </div>
           );
         })}
       </div>
+      <DragPreview drag={shared.lanes.drag} segment={segment} scale={shared.scale} locale={shared.locale} />
       <ol className={styles.events} aria-labelledby={headingId}>
-        {placed.map(({ item: span, left, width }) => {
-          const start = span.event.start.withTimeZone(timeZone);
-          const end = span.event.end.withTimeZone(timeZone);
-          const spansDays = !start.toPlainDate().equals(end.toPlainDate());
-          const startLabel = clockLabel(start, locale, spansDays);
-          const endLabel = clockLabel(end, locale, spansDays);
-          const startedEarlier = Temporal.ZonedDateTime.compare(start, segment.opens) < 0;
-          const continues = Temporal.ZonedDateTime.compare(end, segment.closes) > 0;
-          const cue = [startedEarlier ? 'started earlier' : null, continues ? 'continues' : null].filter(Boolean).join(', ');
-          const name = [`${span.event.title}, ${startLabel} to ${endLabel}`, cue].filter(Boolean).join(', ');
-          const timeText = `${startedEarlier ? '…' : ''}${startLabel} to ${endLabel}${continues ? '…' : ''}`;
-          const box = spanFrame(span, scale);
-          const short = span.end - span.start < 45;
-          return (
-            <li
-              key={`${span.event.id}-${segment.day.toString()}`}
-              className={styles.slot}
-              style={{ top: percent(box.top), height: percent(box.height), insetInlineStart: percent(left), inlineSize: percent(width) }}
-            >
-              <Button.Root variant="ghost" className={styles.event} aria-label={name} tooltip={false}>
-                <Text.Root as="span" weight="medium" lines={1}>
-                  {span.event.title}
-                </Text.Root>
-                {short ? null : (
-                  <Text.Root as="span" variant="label" tone="muted" lines={1}>
-                    {timeText}
-                  </Text.Root>
-                )}
-              </Button.Root>
-            </li>
-          );
-        })}
+        {placed.map(({ item, left, width }) => (
+          <EventBlock key={blockKey(item.event.id, segment.day)} span={{ ...item, left, width }} segment={segment} shared={shared} />
+        ))}
       </ol>
     </div>
   );
@@ -434,13 +751,19 @@ export default function EventCalendarExample({
 }) {
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
+  const [items, setItems] = useState<CalendarEvent[]>(() => events.map((event) => ({ ...event })));
+  const [editing, setEditing] = useState<CalendarEvent | null>(null);
+  const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
   const pendingFocus = useRef<'day' | null>(null);
+  const landing = useRef<HTMLButtonElement | null>(null);
+  const returnFocus = useRef(false);
   const [pinFocus, setPinFocus] = useState(true);
+  const announce = useAnnouncer();
   const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
-  const spans = visibleSpans(axis, events);
+  const spans = visibleSpans(axis, items);
   const lanes = axis.segments.map((segment) => {
     const placed = placeOverlaps(daySpans(spans, segment.day, locale));
     const columns = placed.reduce((count, place) => Math.max(count, place.columns), 1);
@@ -448,10 +771,81 @@ export default function EventCalendarExample({
   });
   const tracks = `4.5rem ${lanes.map((lane) => dayTrack(lane.columns)).join(' ')}`;
   const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), 4.5)}rem`;
-  const shared = sharedOffsets(axis.segments);
-  const gutterMarks = scale > 0 ? [...shared].sort((a, b) => a - b) : [];
+  const sharedMarks = sharedOffsets(axis.segments);
+  const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
   const step = view === 'week' ? 7 : 1;
   const move = view === 'week' ? 'week' : 'day';
+  const grid = [...new Set(axis.segments.flatMap((segment) => snapGrid(segment, SLOT_MINUTES)))].sort((a, b) => a - b);
+
+  const commit = (next: CalendarEvent, day: Temporal.PlainDate) => {
+    const current = items.find((each) => each.id === next.id) ?? next;
+    const settled = finishGesture(current, next, 'drop');
+    setFocusKey(settled.allDay ? null : blockKey(settled.id, day));
+    setItems((list) => list.map((each) => (each.id === settled.id ? settled : each)));
+    const start = settled.start.withTimeZone(timeZone);
+    const end = settled.end.withTimeZone(timeZone);
+    const spansDays = !start.toPlainDate().equals(end.toPlainDate());
+    announce(`${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`);
+    returnFocus.current = true;
+  };
+
+  // The dialog unmounts in the same commit that records the edit, so its own
+  // focus return has no button to land on yet. This runs after that commit.
+  useLayoutEffect(() => {
+    if (!returnFocus.current || editing) return;
+    returnFocus.current = false;
+    landing.current?.focus();
+  }, [editing, focusKey, items]);
+
+  const board = useLaneDrag({
+    range: { start: 0, end: Math.max(scale, SLOT_MINUTES) },
+    axis: 'block',
+    grid,
+    minSpan: SLOT_MINUTES,
+    disabled: view === 'month' || scale === 0,
+    check: (_id, to) => {
+      const segment = axis.segments.find((each) => each.day.toString() === to.lane);
+      if (!segment || to.end > segment.length || to.end - to.start < SLOT_MINUTES) return { level: 'blocked', reason: 'Outside this day' };
+      return null;
+    },
+    onDrop: (change) => {
+      if (change.to === null || change.from === null) return;
+      if (change.kind !== 'move' && change.kind !== 'resize-start' && change.kind !== 'resize-end') return;
+      const { id } = parseBlockKey(change.id);
+      const event = items.find((each) => each.id === id);
+      const fromDay = axis.segments.find((each) => each.day.toString() === change.from?.lane)?.day;
+      const toDay = axis.segments.find((each) => each.day.toString() === change.to?.lane)?.day;
+      if (!event || !fromDay || !toDay) return;
+      const next = eventFromLane(event, { from: { day: fromDay, start: change.from.start, end: change.from.end }, to: { day: toDay, start: change.to.start, end: change.to.end }, kind: change.kind }, axis);
+      const settled = finishGesture(event, next, 'drop');
+      if (settled !== event) commit(settled, toDay);
+    },
+  });
+
+  const onAdjust = (event: CalendarEvent, segment: DaySegment, change: SlotChange) => {
+    const next = adjustEvent(event, segment, axis, change);
+    if (!next) return;
+    const day = change.kind === 'day' ? segment.day.add({ days: change.days }) : segment.day;
+    commit(next, day);
+  };
+
+  const onEdit = (event: CalendarEvent, day: Temporal.PlainDate) => {
+    setFocusKey(blockKey(event.id, day));
+    setEditing(event);
+  };
+
+  const columnShared: ColumnShared = {
+    locale,
+    timeZone,
+    scale,
+    axis,
+    week: view === 'week',
+    lanes: board,
+    landing,
+    focusKey,
+    onAdjust,
+    onEdit,
+  };
 
   useLayoutEffect(() => {
     setPinFocus(view !== 'month');
@@ -518,7 +912,7 @@ export default function EventCalendarExample({
           <Calendar.Grid
             showOutsideDays
             renderDay={(day) => {
-              const list = eventsOnDay(day.date, events, timeZone, locale);
+              const list = eventsOnDay(day.date, items, timeZone, locale);
               const shown = list.slice(0, MONTH_TITLES);
               const extra = list.length - shown.length;
               return (
@@ -552,7 +946,7 @@ export default function EventCalendarExample({
           />
         </Calendar.Root>
       ) : (
-        <ScrollArea.Root axis="both" focusable aria-label="Calendar" className={styles.board}>
+        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" className={styles.board}>
           <div
             className={styles.frame}
             style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
@@ -590,17 +984,135 @@ export default function EventCalendarExample({
                   key={segment.day.toString()}
                   segment={segment}
                   placed={placed}
-                  scale={scale}
-                  locale={locale}
-                  timeZone={timeZone}
+                  sharedMarks={sharedMarks}
+                  shared={columnShared}
                   headingId={`${heading}-${segment.day.toString()}`}
-                  shared={shared}
                 />
               ))}
             </div>
           </div>
         </ScrollArea.Root>
       )}
+      {editing ? (
+        <EventEditor
+          event={editing}
+          locale={locale}
+          timeZone={timeZone}
+          restoreFocusRef={landing}
+          onCancel={() => {
+            returnFocus.current = true;
+            setEditing(null);
+          }}
+          onSave={(next) => {
+            const day = next.start.withTimeZone(timeZone).toPlainDate();
+            commit(next, day);
+            setEditing(null);
+          }}
+        />
+      ) : null}
     </div>
+  );
+}
+
+/**
+ * Edits one event's title and time. Drag-to-create can open it with the event
+ * a drag sketched and read the saved event from `onSave`.
+ */
+export function EventEditor({
+  event,
+  locale,
+  timeZone,
+  onSave,
+  onCancel,
+  restoreFocusRef,
+}: {
+  event: CalendarEvent;
+  locale: string;
+  timeZone: string;
+  onSave: (event: CalendarEvent) => void;
+  onCancel: () => void;
+  restoreFocusRef?: RefObject<HTMLElement | null>;
+}) {
+  const ids = { title: useId(), date: useId(), endDate: useId(), start: useId(), end: useId(), dialog: useId() };
+  const [fields, setFields] = useState<EventDraft>(() => {
+    const start = event.start.withTimeZone(timeZone);
+    const end = event.end.withTimeZone(timeZone);
+    return { title: event.title, date: start.toPlainDate(), endDate: end.toPlainDate(), start: start.toPlainTime(), end: end.toPlainTime(), allDay: event.allDay };
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const edit =
+    <K extends keyof EventDraft>(key: K) =>
+    (value: EventDraft[K]) => {
+      setErrors({});
+      setFields((current) => ({ ...current, [key]: value }));
+    };
+
+  const submit = (submitEvent: SubmitEvent<HTMLFormElement>) => {
+    submitEvent.preventDefault();
+    const result = eventFromDraft(fields, timeZone);
+    if (!result.ok) {
+      setErrors({ [result.issue.field]: result.issue.message });
+      return;
+    }
+    onSave({ ...event, ...result.value });
+  };
+
+  return (
+    <Dialog.Root open onOpenChange={(open) => !open && onCancel()} restoreFocusRef={restoreFocusRef}>
+      <Form.Root errors={errors} onSubmit={submit} aria-labelledby={ids.dialog} className={styles.fields}>
+        <Dialog.Header>
+          <Dialog.Title id={ids.dialog}>{`Edit ${event.title}`}</Dialog.Title>
+          <Dialog.Close />
+        </Dialog.Header>
+        <Dialog.Body>
+          <Field.Group>
+            <Label.Root htmlFor={ids.title}>Title</Label.Root>
+            <Field.Root id={ids.title} name="title">
+              <Field.TextInput required value={fields.title} onValueChange={edit('title')} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <Field.Group>
+            <Label.Root htmlFor={ids.date}>Date</Label.Root>
+            <Field.Root id={ids.date} name="date">
+              <Field.DateInput required value={fields.date} onValueChange={edit('date')} locale={locale} />
+            </Field.Root>
+            <ErrorMessage.Root />
+          </Field.Group>
+          <Switch.Root checked={fields.allDay} onCheckedChange={edit('allDay')}>
+            All day
+          </Switch.Root>
+          {fields.allDay ? null : (
+            <>
+              <Field.Group>
+                <Label.Root htmlFor={ids.start}>Start</Label.Root>
+                <Field.Root id={ids.start} name="start">
+                  <Field.TimeInput required value={fields.start} onValueChange={edit('start')} locale={locale} />
+                </Field.Root>
+                <ErrorMessage.Root />
+              </Field.Group>
+              <Field.Group>
+                <Label.Root htmlFor={ids.endDate}>End date</Label.Root>
+                <Field.Root id={ids.endDate} name="endDate">
+                  <Field.DateInput required value={fields.endDate} onValueChange={edit('endDate')} locale={locale} />
+                </Field.Root>
+                <ErrorMessage.Root />
+              </Field.Group>
+              <Field.Group>
+                <Label.Root htmlFor={ids.end}>End</Label.Root>
+                <Field.Root id={ids.end} name="end">
+                  <Field.TimeInput required value={fields.end} onValueChange={edit('end')} locale={locale} />
+                </Field.Root>
+                <ErrorMessage.Root />
+              </Field.Group>
+            </>
+          )}
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close>Cancel</Dialog.Close>
+          <Button.Root type="submit">Save</Button.Root>
+        </Dialog.Footer>
+      </Form.Root>
+    </Dialog.Root>
   );
 }
