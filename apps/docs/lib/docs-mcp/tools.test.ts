@@ -77,7 +77,7 @@ describe('docs mcp tools', () => {
     const body = mdx.split('## When to use\n')[1]?.split('\n## ')[0]?.trim().replaceAll('](/', `](${DOCS_ORIGIN}/`);
     const line = (prefix: string) => body?.split('\n').find((item) => item.startsWith(prefix))?.slice(prefix.length).trim();
     const result = whenToUse('OptionList');
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       status: 'present',
       whenToUse: line('**When:**'),
       whenNotToUse: line('**When not:**'),
@@ -85,6 +85,9 @@ describe('docs mcp tools', () => {
       section: 'When to use',
       source: 'todae-docs',
     });
+    if (!result.nav) throw new Error('missing nav');
+    expect(result.nav.what).toBe('when-to-use');
+    expect(result.nav.next.length).toBeGreaterThan(0);
     const part = whenToUse('OptionList.Option');
     expect(part).toMatchObject({ status: 'present', whenToUse: line('**When:**'), scope: 'page' });
   });
@@ -197,7 +200,7 @@ describe('docs mcp tools', () => {
   });
 
   it('resolves providers from the tokens page subsections', () => {
-    expect(whenToUse('ThemeProvider')).toEqual({
+    expect(whenToUse('ThemeProvider')).toMatchObject({
       status: 'present',
       whenToUse:
         "Set appearance (system / light / dark) for a subtree via `data-appearance`; a nested provider overrides it, or keeps the enclosing one's when it sets none. `overrides` for allowlisted token paths only.",
@@ -540,28 +543,35 @@ describe('docs mcp tools', () => {
 });
 
 describe('get_docs_page', () => {
-  it('returns the page a name, slug, path or docsUrl points to, with example code inlined', () => {
+  it('returns the page a name, slug, path or docsUrl points to, with each example as a stub', () => {
     const page = getDocsPage('useTooltip');
     expect(page).toMatchObject({
+      kind: 'page',
       slug: 'utilities/use-tooltip',
       title: 'useTooltip',
       docsUrl: `${DOCS_ORIGIN}/utilities/use-tooltip`,
       propsTables: ['useTooltip'],
       source: 'todae-docs',
     });
-    expect(page.markdown).toMatch(/```tsx\n[^`]*getTriggerProps[^`]*```\n\n<Example of=\{TooltipTime\} \/>/);
+    if (page.kind !== 'page') throw new Error('expected a page');
+    expect(page.markdown).toContain('Example `TooltipTime.tsx`');
+    expect(page.markdown).toContain('get_example');
+    expect(page.markdown).not.toContain('<Example of={TooltipTime} />');
     expect(page.markdown).not.toMatch(/\]\(\//);
+    const inlined = getDocsPage('useTooltip', { includeCode: true });
+    if (inlined.kind === 'outline') throw new Error('expected the page');
+    expect(inlined.markdown).toMatch(/```tsx\n[^`]*getTriggerProps[^`]*```\n\n<Example of=\{TooltipTime\} \/>/);
     for (const query of [
       'utilities/use-tooltip',
       'Utilities/Use-Tooltip',
       '/utilities/use-tooltip/',
       `${DOCS_ORIGIN}/utilities/use-tooltip`,
-      `${DOCS_ORIGIN}/utilities/use-tooltip#examples`,
       `${DOCS_ORIGIN}/utilities/use-tooltip?x=1`,
       'usetooltip',
     ]) {
       expect(getDocsPage(query)).toEqual(page);
     }
+    expect(() => getDocsPage(`${DOCS_ORIGIN}/utilities/use-tooltip#examples`)).toThrow('No section "examples"');
     expect(getDocsPage('Tooltip.Root').slug).toBe('tooltip');
     expect(getDocsPage('RadioGroup').slug).toBe('radio');
     expect(getDocsPage('recipes/data-table').title).toBe(getRecipe('data-table').title);
@@ -577,7 +587,9 @@ describe('get_docs_page', () => {
     const link = new RegExp(`\\]\\(${DOCS_ORIGIN.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/[^)\\s]*)\\)`, 'g');
     let opened = 0;
     for (const page of listPages()) {
-      for (const [, path] of getDocsPage(page.slug).markdown.matchAll(link)) {
+      const read = getDocsPage(page.slug);
+      const body = 'markdown' in read && typeof read.markdown === 'string' ? read.markdown : 'intro' in read && typeof read.intro === 'string' ? read.intro : '';
+      for (const [, path] of body.matchAll(link)) {
         // Pages with no MDX, such as the playground, are not docs pages the tool reads.
         if (['/', '/playground'].includes(path!.replace(/[?#].*$/, ''))) continue;
         expect(() => getDocsPage(`${DOCS_ORIGIN}${path}`), `${path} on ${page.slug}`).not.toThrow();

@@ -19,8 +19,21 @@ export type WhenCopy = {
   shared: boolean;
 };
 
-const WHEN_TO_USE = 'When to use';
-const WHEN_NOT_TO_USE = 'When not to use';
+export type WhenLabels = { heading: string; separate: string; when: string; whenNot: string };
+
+export const EN_WHEN: WhenLabels = {
+  heading: 'When to use',
+  separate: 'When not to use',
+  when: '**When:**',
+  whenNot: '**When not:**',
+};
+
+export const KO_WHEN: WhenLabels = {
+  heading: '언제 쓰나요',
+  separate: '쓰지 않을 때',
+  when: '**언제:**',
+  whenNot: '**쓰지 않을 때:**',
+};
 
 /** Names with no props table of their own, whose copy is only a `### Name` block on another page. */
 const PART_PAGE: Record<string, string> = {
@@ -127,9 +140,9 @@ function h3Blocks(page: Outline, range: Range): { preamble: Range; blocks: Map<s
   return { preamble: { from: range.from, to: h3s[0]?.from ?? range.to }, blocks };
 }
 
-function labeled(page: Outline, body: Range, separate: string | null): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
-  const when = marker(page, body, '**When:**');
-  const inlineNot = marker(page, body, '**When not:**');
+function labeled(page: Outline, body: Range, separate: string | null, labels: WhenLabels): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
+  const when = marker(page, body, labels.when);
+  const inlineNot = marker(page, body, labels.whenNot);
   if (when != null || inlineNot != null) {
     return { whenToUse: when, whenNotToUse: inlineNot ?? (separate || null) };
   }
@@ -137,20 +150,20 @@ function labeled(page: Outline, body: Range, separate: string | null): Pick<When
 }
 
 /** Page section, or only the `### name` subsection. A dotted name or token provider with no h3 is missing. */
-export function parseWhen(markdown: string, name: string): WhenCopy | null {
+export function parseWhen(markdown: string, name: string, labels: WhenLabels = EN_WHEN): WhenCopy | null {
   const page = outline(markdown);
-  const sectionBody = section(page, WHEN_TO_USE);
-  const separateRange = section(page, WHEN_NOT_TO_USE);
+  const sectionBody = section(page, labels.heading);
+  const separateRange = section(page, labels.separate);
   if (sectionBody == null && separateRange == null) return null;
   const separate = separateRange ? text(page, separateRange) : null;
   const empty = { from: 0, to: 0 };
   const { preamble, blocks } = h3Blocks(page, sectionBody ?? empty);
   const own = blocks.get(name);
-  if (own != null) return { ...labeled(page, own, null), shared: false };
+  if (own != null) return { ...labeled(page, own, null, labels), shared: false };
   if (name in PART_PAGE || (blocks.size > 0 && name.includes('.'))) return null;
   const body = blocks.size > 0 ? preamble : (sectionBody ?? empty);
   if (!text(page, body) && !separate) return null;
-  return { ...labeled(page, body, separate), shared: true };
+  return { ...labeled(page, body, separate, labels), shared: true };
 }
 
 function staysInside(root: string, full: string): boolean {
@@ -193,7 +206,8 @@ function pageSlugs(appDir: string): string[] {
   return slugs;
 }
 
-export function loadPages(appDir: string): PageDoc[] {
+export function loadPages(appDir: string, options?: { inlineExamples?: boolean }): PageDoc[] {
+  const inlineExamples = options?.inlineExamples !== false;
   return pageSlugs(appDir).flatMap((slug) => {
     if (slug.split('/').includes('..') || isAbsolute(slug)) return [];
     const file = join(appDir, slug, 'page.mdx');
@@ -211,7 +225,8 @@ export function loadPages(appDir: string): PageDoc[] {
     let markdown: string;
     try {
       // Pages name their examples with <Example of={…} />, so the code a reader sees lives in examples/.
-      markdown = withExampleCode(file, readFileSync(file, 'utf8'));
+      const source = readFileSync(file, 'utf8');
+      markdown = inlineExamples ? withExampleCode(file, source) : source;
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`, { cause: error });
@@ -232,7 +247,7 @@ const pages = readPages();
 
 export function missingWhenNote(markdown: string, slug: string): string {
   const page = outline(markdown);
-  if (section(page, WHEN_TO_USE) != null || section(page, WHEN_NOT_TO_USE) != null) {
+  if (section(page, EN_WHEN.heading) != null || section(page, EN_WHEN.separate) != null) {
     return `'When to use' on /${slug} has no page-level copy; see its parts`;
   }
   return `No 'When to use' section on /${slug}. Not inferred.`;

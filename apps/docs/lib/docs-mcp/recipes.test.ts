@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
+import { readExample } from './read';
 import { exportsIn, getRecipe, listRecipes } from './recipes';
 
 const recipeDirs = readdirSync(join(process.cwd(), 'app', '(en)', 'recipes'), { withFileTypes: true })
@@ -26,12 +27,15 @@ describe('docs mcp recipes', () => {
   it('reads a recipe by name or title', () => {
     const recipe = getRecipe('Reasoning');
     expect(recipe.name).toBe('reasoning');
-    expect(recipe.markdown).toContain('<Disclosure.Root open={thinking}>');
+    if (recipe.kind === 'outline') throw new Error('expected the page');
+    expect(recipe.markdown).toContain('Example `ReasoningExample.tsx`');
+    expect(recipe.markdown).not.toContain('<Disclosure.Root open={thinking}>');
+    expect(readExample('recipes/reasoning', 'ReasoningExample.tsx').code).toContain('<Disclosure.Root open={thinking}>');
     expect(recipe.markdown).toContain(`](${DOCS_ORIGIN}/disclosure)`);
     expect(recipe.whenToUse).toBeTruthy();
     expect(getRecipe('data-table').title).toBe('Data table');
     expect(getRecipe(' DATA TABLE ').name).toBe('data-table');
-    expect(Object.keys(recipe).sort()).toEqual(['docsUrl', 'markdown', 'name', 'source', 'title', 'whenNotToUse', 'whenToUse']);
+    expect(Object.keys(recipe)).toEqual(expect.arrayContaining(['docsUrl', 'markdown', 'name', 'source', 'title', 'whenNotToUse', 'whenToUse', 'kind', 'nav']));
     expect(() => getRecipe('dialog')).toThrow('Call list_recipes');
   });
 

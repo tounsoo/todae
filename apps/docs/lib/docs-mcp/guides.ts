@@ -1,7 +1,4 @@
-import { DOCS_ORIGIN } from '../origin';
-import { absolutize, pageBySlug } from './mdx';
-
-const SOURCE = 'todae-docs' as const;
+import { readPage, type ReadOptions } from './read';
 
 /** Docs pages about building on Todae that `get_guide` returns, by topic. */
 export const GUIDES = {
@@ -18,16 +15,8 @@ export type GuideTopic = keyof typeof GUIDES;
 
 export const GUIDE_TOPICS = Object.keys(GUIDES) as [GuideTopic, ...GuideTopic[]];
 
-/** The English page's MDX source, with links made absolute. */
-export function getGuide(topic: GuideTopic) {
-  const slug = GUIDES[topic];
-  const page = pageBySlug(slug);
-  if (!page) throw new Error(`No docs page for "${topic}"`);
-  return {
-    topic,
-    title: page.title,
-    markdown: absolutize(page.markdown),
-    docsUrl: `${DOCS_ORIGIN}/${slug}`,
-    source: SOURCE,
-  };
+/** A guide page. Same reads as get_docs_page: section, locale, and example stubs. */
+export function getGuide(topic: GuideTopic, options?: ReadOptions) {
+  const page = readPage(GUIDES[topic], options);
+  return { topic, ...page };
 }

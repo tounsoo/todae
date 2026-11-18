@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { MAX_CONCURRENT_BUILDS, MAX_ERROR_BYTES, baseContrast, buildTokenFiles, checkFiles, todaeTokensCli, todaeTokensDir } from './build';
+import { MAX_CONCURRENT_BUILDS, MAX_ERROR_BYTES, baseContrast, buildTokenFiles, checkFiles, resumeBuild, todaeTokensCli, todaeTokensDir } from './build';
+import { MAX_RESPONSE_CHARS, deliver } from './budget';
 import { GUIDES, GUIDE_TOPICS, getGuide } from './guides';
 import { scaffoldDesignSystem } from './scaffold';
 import { catalogTokens, getToken, listTokens } from './tokens';
@@ -286,8 +287,41 @@ describe('get_guide', () => {
     for (const topic of GUIDE_TOPICS) {
       const guide = getGuide(topic);
       expect(guide.docsUrl).toBe(`${DOCS_ORIGIN}/${GUIDES[topic]}`);
-      expect(guide.markdown).toMatch(/^# /m);
-      expect(guide.markdown).not.toMatch(/\]\(\/[a-z]/);
+      const text = guide.kind === 'outline' ? guide.intro : guide.markdown;
+      expect(text).toMatch(/^# /m);
+      expect(text).not.toMatch(/\]\(\/[a-z]/);
+      if (guide.kind === 'outline') {
+        const section = getGuide(topic, { section: guide.sections[0]?.anchor });
+        if (section.kind !== 'section') throw new Error('expected a section');
+        expect(section.markdown).not.toMatch(/\]\(\/[a-z]/);
+      }
     }
+  });
+});
+
+describe('build response budget', () => {
+  it('returns the rest of a large build from the cursor, with nothing dropped', () => {
+    const css = `${'a'.repeat(25_000)}\n${'b'.repeat(25_000)}\n`;
+    const overrideTypes = `${'export type Theme = { n: number };\n'.repeat(400)}`;
+    const full = { ok: true as const, css, overrideTypes, source: 'todae-docs' as const };
+    let cursor: { field?: 'css' | 'overrideTypes'; offset?: number } | undefined;
+    let cssOut = '';
+    let typesOut = '';
+    for (let step = 0; step < 8; step += 1) {
+      const text = deliver(resumeBuild(full, cursor));
+      expect(text.length).toBeLessThanOrEqual(MAX_RESPONSE_CHARS);
+      const body = JSON.parse(text) as { css?: string; overrideTypes?: string; cursor?: { field: 'css' | 'overrideTypes'; offset: number }; kind?: string };
+      expect(body.kind).not.toBe('over-budget');
+      cssOut += body.css ?? '';
+      typesOut += body.overrideTypes ?? '';
+      if (!body.cursor) {
+        cursor = undefined;
+        break;
+      }
+      cursor = body.cursor;
+    }
+    expect(cursor).toBeUndefined();
+    expect(cssOut).toBe(css);
+    expect(typesOut).toBe(overrideTypes);
   });
 });
