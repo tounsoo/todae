@@ -24,13 +24,19 @@ const count = (key: string) => {
 };
 
 const Ghost = memo(function Ghost({ drag, lane }: { drag: ReturnType<typeof useLaneDrag>['drag']; lane: string }) {
-  const to = useLaneDragState(drag, (state) => (state?.to?.lane === lane ? state.to : null));
+  const state = useLaneDragState(drag, (dragState) => (dragState?.to?.lane === lane ? dragState : null));
   count(`lane-${lane}`);
-  return to ? <span data-testid={`ghost-${lane}`}>{`${to.start}-${to.end}`}</span> : null;
+  return state?.to ? (
+    <span data-testid={`ghost-${lane}`} data-kind={state.kind} data-id={state.id} data-from={state.from === null ? 'none' : 'set'} data-verdict={state.verdict === null ? 'none' : state.verdict.level}>
+      {`${state.to.start}-${state.to.end}`}
+    </span>
+  ) : null;
 });
 
 function Board({
   onDrop,
+  onCreate,
+  onLaneClick,
   check,
   disabled,
   axis,
@@ -41,6 +47,8 @@ function Board({
   cover = 0,
 }: {
   onDrop?: (change: LaneDragChange) => void;
+  onCreate?: (place: LanePlace) => void;
+  onLaneClick?: () => void;
   check?: UseLaneDragOptions['check'];
   disabled?: boolean;
   axis?: 'inline' | 'block';
@@ -60,6 +68,7 @@ function Board({
     minSpan,
     check,
     disabled,
+    onCreate,
     onDrop: (change) => {
       onDrop?.(change);
       setTalks((list) => list.map((talk) => (talk.id === change.id ? { ...talk, at: change.to } : talk)));
@@ -74,7 +83,7 @@ function Board({
   return (
     <div {...lanes.getBoardProps({ 'data-testid': 'board' })} data-r="0,0,1000,1000" style={cover ? { scrollPaddingLeft: cover } : undefined}>
       {LANES.map((lane) => (
-        <div key={`${lane}-${version}`} {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}` })} data-r={box(lane)} style={dir ? { direction: dir } : undefined}>
+        <div key={`${lane}-${version}`} {...lanes.getLaneProps(lane, { 'data-testid': `lane-${lane}`, onClick: onLaneClick })} data-r={box(lane)} style={dir ? { direction: dir } : undefined}>
           {talks
             .filter((talk) => talk.at?.lane === lane)
             .map((talk) => (
@@ -912,4 +921,261 @@ it('selects from the drag with useLaneDragState and a custom isEqual', () => {
   expect(seen.length).toBe(started);
   release(62, 20);
   expect(seen.filter((value, index) => index === 0 || value !== seen[index - 1])).toEqual([null, 0, null]);
+});
+
+it('starts no create on empty space unless onCreate is set', () => {
+  const onDrop = vi.fn();
+  render(<Board onDrop={onDrop} />);
+  drag(screen.getByTestId('lane-a'), 450, 20, [[500, 20], [700, 20]]);
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  expect(onDrop).not.toHaveBeenCalled();
+  expect(screen.getByTestId('lane-a').hasAttribute('data-dragging')).toBe(false);
+});
+
+it('drags a new span out of empty lane space, snapped, and calls onCreate once with that place', () => {
+  const onCreate = vi.fn();
+  const onDrop = vi.fn();
+  const check = vi.fn(() => null);
+  render(<Board onCreate={onCreate} onDrop={onDrop} check={check} />);
+  const lane = screen.getByTestId('lane-a');
+  press(lane, 450, 20);
+  // Inside the slop the press is not a drag yet, so there is no ghost.
+  move(452, 20);
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  expect(onCreate).not.toHaveBeenCalled();
+  move(500, 20);
+  const ghost = screen.getByTestId('ghost-a');
+  expect(ghost.textContent).toBe('45-50');
+  expect(ghost.dataset.kind).toBe('create');
+  expect(ghost.dataset.id).toBe('');
+  expect(ghost.dataset.from).toBe('none');
+  expect(ghost.dataset.verdict).toBe('none');
+  expect(lane.hasAttribute('data-dragging')).toBe(true);
+  expect(lane.hasAttribute('data-drop-target')).toBe(true);
+  expect(screen.getByTestId('board').hasAttribute('data-dragging')).toBe(true);
+  expect(check).not.toHaveBeenCalled();
+  move(700, 20);
+  expect(screen.getByTestId('ghost-a').textContent).toBe('45-70');
+  expect(onCreate).not.toHaveBeenCalled();
+  release(700, 20);
+  expect(onCreate).toHaveBeenCalledTimes(1);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+  expect(onDrop).not.toHaveBeenCalled();
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  expect(lane.hasAttribute('data-dragging')).toBe(false);
+  expect(lane.hasAttribute('data-drop-target')).toBe(false);
+  move(800, 20);
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+});
+
+it('normalizes a create dragged back toward the start of the range, on either axis', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} />);
+  drag(screen.getByTestId('lane-a'), 700, 20, [[500, 20], [450, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+  onCreate.mockClear();
+  rerender(<Board onCreate={onCreate} axis="block" />);
+  // Lane a runs down the first 100px. Upward is toward the start.
+  drag(screen.getByTestId('lane-a'), 50, 700, [[50, 500], [50, 450]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+});
+
+it('keeps a create in the lane where the press went down', () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} axis="block" />);
+  drag(screen.getByTestId('lane-a'), 50, 450, [[150, 500], [150, 700]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+});
+
+it('snaps a create to the earlier grid point on a tie, and leaves the ends unsnapped when there is no grid', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} />);
+  // 12.5 is equidistant from 10 and 15, and 37.5 from 35 and 40. Ties go to the earlier point.
+  drag(screen.getByTestId('lane-a'), 125, 20, [[200, 20], [375, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 10, end: 35 });
+  onCreate.mockClear();
+  rerender(<Board onCreate={onCreate} grid={[]} />);
+  drag(screen.getByTestId('lane-a'), 123, 20, [[200, 20], [456, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 12.3, end: 45.6 });
+});
+
+it('grows a create to minSpan on the grid, including a short drag and a click', () => {
+  const onCreate = vi.fn();
+  const onLaneClick = vi.fn();
+  render(<Board onCreate={onCreate} onLaneClick={onLaneClick} minSpan={12} />);
+  const lane = screen.getByTestId('lane-a');
+  // 47 snaps back to 45, which is shorter than 12, so the end moves out to 60.
+  drag(lane, 450, 20, [[460, 20], [470, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 60 });
+  onCreate.mockClear();
+  // The same drag pulled backward grows the start down instead.
+  drag(lane, 450, 20, [[440, 20], [430, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 30, end: 45 });
+  onCreate.mockClear();
+  press(lane, 450, 20);
+  release(450, 20);
+  fireEvent.click(lane, { detail: 1 });
+  expect(onCreate).toHaveBeenCalledTimes(1);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 60 });
+  expect(onLaneClick).not.toHaveBeenCalled();
+});
+
+it('does nothing for a click when minSpan is 0, and lets that click through', () => {
+  const onCreate = vi.fn();
+  const onLaneClick = vi.fn();
+  render(<Board onCreate={onCreate} onLaneClick={onLaneClick} />);
+  const lane = screen.getByTestId('lane-a');
+  press(lane, 450, 20);
+  move(452, 20);
+  release(452, 20);
+  fireEvent.click(lane, { detail: 1 });
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(onLaneClick).toHaveBeenCalledTimes(1);
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+});
+
+it('clamps a create to the range, and shifts a minSpan slot back in at the end', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} />);
+  drag(screen.getByTestId('lane-a'), 900, 20, [[1100, 20], [1500, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 90, end: 100 });
+  onCreate.mockClear();
+  drag(screen.getByTestId('lane-a'), 80, 20, [[40, 20], [-100, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 0, end: 10 });
+  onCreate.mockClear();
+  rerender(<Board onCreate={onCreate} minSpan={12} />);
+  press(screen.getByTestId('lane-a'), 960, 20);
+  release(960, 20);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 85, end: 100 });
+});
+
+it('creates nothing when the range is shorter than minSpan', () => {
+  const onCreate = vi.fn();
+  function Short() {
+    const lanes = useLaneDrag({ range: { start: 0, end: 10 }, minSpan: 30, grid: GRID, onDrop: () => {}, onCreate });
+    return (
+      <div {...lanes.getBoardProps()} data-r="0,0,1000,1000">
+        <div {...lanes.getLaneProps('a', { 'data-testid': 'short' })} data-r="0,0,1000,40" />
+      </div>
+    );
+  }
+  render(<Short />);
+  drag(screen.getByTestId('short'), 100, 20, [[200, 20], [800, 20]]);
+  press(screen.getByTestId('short'), 100, 20);
+  release(100, 20);
+  expect(onCreate).not.toHaveBeenCalled();
+});
+
+it('reads a create from the right in a right-to-left lane', () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} dir="rtl" />);
+  drag(screen.getByTestId('lane-a'), 100, 20, [[200, 20], [400, 20]]);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 60, end: 90 });
+});
+
+it('still moves an item when onCreate is set, and a press on the item creates nothing', () => {
+  const onCreate = vi.fn();
+  const onDrop = vi.fn();
+  render(<Board onCreate={onCreate} onDrop={onDrop} />);
+  drag(screen.getByTestId('t1-move'), 150, 20, [[200, 20], [410, 20]]);
+  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ id: 't1', kind: 'move', to: { lane: 'a', start: 35, end: 55 } }));
+  expect(onCreate).not.toHaveBeenCalled();
+  press(screen.getByTestId('t1'), 150, 20);
+  move(400, 20);
+  release(400, 20);
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(onDrop).toHaveBeenCalledTimes(1);
+});
+
+it('starts no create from a button in the lane, another mouse button, or a second finger', () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} />);
+  const lane = screen.getByTestId('lane-a');
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.setAttribute('data-r', '400,0,40,40');
+  lane.append(button);
+  drag(button, 410, 20, [[450, 20], [700, 20]]);
+  fireEvent.pointerDown(lane, { clientX: 450, clientY: 20, pointerId: 1, pointerType: 'mouse', button: 2 });
+  move(700, 20);
+  release(700, 20);
+  fireEvent.pointerDown(lane, { clientX: 450, clientY: 20, pointerId: 2, pointerType: 'touch', isPrimary: false, button: 0 });
+  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: 700, clientY: 20, pointerId: 2, pointerType: 'touch', buttons: 1 })));
+  act(() => void window.dispatchEvent(new PointerEvent('pointerup', { clientX: 700, clientY: 20, pointerId: 2, pointerType: 'touch' })));
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+});
+
+it('creates with a finger or a pen the same way', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} />);
+  drag(screen.getByTestId('lane-a'), 450, 20, [[500, 20], [700, 20]], 'touch');
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+  onCreate.mockClear();
+  rerender(<Board onCreate={onCreate} />);
+  drag(screen.getByTestId('lane-a'), 450, 20, [[500, 20], [700, 20]], 'pen');
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 45, end: 70 });
+});
+
+it('cancels a create on Escape, and ends it with no onCreate on pointercancel, blur, or a lost button', () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} />);
+  const lane = screen.getByTestId('lane-a');
+  press(lane, 450, 20);
+  move(700, 20);
+  expect(screen.getByTestId('ghost-a').textContent).toBe('45-70');
+  act(() => void document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+  release(700, 20);
+  fireEvent.click(lane, { detail: 1 });
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(lane.hasAttribute('data-dragging')).toBe(false);
+
+  press(lane, 450, 20);
+  move(700, 20);
+  act(() => void window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1 })));
+  release(700, 20);
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(lane.hasAttribute('data-dragging')).toBe(false);
+
+  press(lane, 450, 20);
+  move(700, 20);
+  act(() => void window.dispatchEvent(new Event('blur')));
+  release(700, 20);
+  expect(onCreate).not.toHaveBeenCalled();
+
+  press(lane, 450, 20);
+  move(700, 20);
+  act(() => void window.dispatchEvent(new PointerEvent('pointermove', { clientX: 800, clientY: 20, pointerId: 1, buttons: 0 })));
+  release(800, 20);
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(screen.queryByTestId('ghost-a')).toBeNull();
+});
+
+it('starts no create while disabled, and a throw from onCreate still ends the drag', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} disabled />);
+  drag(screen.getByTestId('lane-a'), 450, 20, [[500, 20], [700, 20]]);
+  expect(onCreate).not.toHaveBeenCalled();
+  // An error thrown in a window listener goes to the window's error event, not to the dispatcher.
+  const errors: unknown[] = [];
+  const onError = (event: ErrorEvent) => {
+    errors.push(event.error);
+    event.preventDefault();
+  };
+  window.addEventListener('error', onError);
+  onCreate.mockImplementationOnce(() => {
+    throw new Error('nope');
+  });
+  try {
+    rerender(<Board onCreate={onCreate} />);
+    drag(screen.getByTestId('lane-a'), 450, 20, [[500, 20], [700, 20]]);
+    expect(screen.getByTestId('lane-a').hasAttribute('data-dragging')).toBe(false);
+    expect(screen.queryByTestId('ghost-a')).toBeNull();
+    drag(screen.getByTestId('lane-a'), 450, 20, [[500, 20], [700, 20]]);
+  } finally {
+    window.removeEventListener('error', onError);
+  }
+  expect(errors).toEqual([new Error('nope')]);
+  expect(onCreate).toHaveBeenLastCalledWith({ lane: 'a', start: 45, end: 70 });
 });

@@ -19,6 +19,8 @@ function Preview({ drag, lane }: { drag: ReturnType<typeof useLaneDrag>['drag'];
 
 function Board({
   onDrop,
+  onCreate,
+  minSpan,
   dir,
   axis,
   width = 600,
@@ -27,6 +29,8 @@ function Board({
   scale,
 }: {
   onDrop?: (change: LaneDragChange) => void;
+  onCreate?: (place: LanePlace) => void;
+  minSpan?: number;
   dir?: 'rtl';
   axis?: 'block';
   width?: number;
@@ -41,6 +45,8 @@ function Board({
     range: { start: 0, end: 60 },
     grid: Array.from({ length: 13 }, (_, i) => i * 5),
     axis,
+    minSpan,
+    onCreate,
     onDrop: (change) => {
       onDrop?.(change);
       setTalks((list) => list.map((talk) => (talk.id === change.id && change.to ? { ...talk, at: change.to } : talk)));
@@ -104,9 +110,9 @@ function Board({
   );
 }
 
-const pointer = (type: string, target: EventTarget, x: number, y: number) =>
+const pointer = (type: string, target: EventTarget, x: number, y: number, pointerType: 'mouse' | 'touch' | 'pen' = 'mouse') =>
   act(() => {
-    target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType, isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
   });
 
 /** The point `units` along the lane `lane`, in its middle across. */
@@ -236,4 +242,84 @@ it('cancels a drag on Escape before a dialog around the board, which stays open'
   expect(onOpenChange).not.toHaveBeenCalled();
   pointer('pointerup', handle, start.x + 60, start.y);
   expect(onDrop).not.toHaveBeenCalled();
+});
+
+/** Presses empty space in lane a, drags to `end`, and leaves the pointer down. */
+function pressCreate(start: { x: number; y: number }, end: { x: number; y: number }, pointerType: 'mouse' | 'touch' | 'pen' = 'mouse') {
+  const lane = screen.getByTestId('lane-a');
+  pointer('pointerdown', lane, start.x, start.y, pointerType);
+  pointer('pointermove', lane, start.x + 8, start.y + 8, pointerType);
+  pointer('pointermove', lane, end.x, end.y, pointerType);
+  return lane;
+}
+
+it('drags a new place out of empty lane space and calls onCreate on release', () => {
+  const onCreate = vi.fn();
+  const onDrop = vi.fn();
+  render(<Board onCreate={onCreate} onDrop={onDrop} />);
+  const lane = pressCreate(along('a', 40), along('a', 55));
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  expect(onCreate).not.toHaveBeenCalled();
+  pointer('pointerup', lane, along('a', 55).x, along('a', 55).y);
+  expect(onCreate).toHaveBeenCalledTimes(1);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+  expect(onDrop).not.toHaveBeenCalled();
+  expect(screen.queryByTestId('preview-a')).toBeNull();
+});
+
+it('normalizes a create dragged back along the axis, including a column', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} />);
+  const lane = pressCreate(along('a', 55), along('a', 40));
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  pointer('pointerup', lane, along('a', 40).x, along('a', 40).y);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+  onCreate.mockClear();
+  rerender(<Board onCreate={onCreate} axis="block" />);
+  const column = pressCreate(along('a', 55, 'block'), along('a', 40, 'block'));
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  const end = along('a', 40, 'block');
+  pointer('pointerup', column, end.x, end.y);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+});
+
+it('cancels a create on Escape and calls nothing on release', async () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} />);
+  const lane = pressCreate(along('a', 40), along('a', 55));
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  await userEvent.keyboard('{Escape}');
+  expect(screen.queryByTestId('preview-a')).toBeNull();
+  const end = along('a', 55);
+  pointer('pointerup', lane, end.x, end.y);
+  expect(onCreate).not.toHaveBeenCalled();
+});
+
+it('still moves an item when creating is on, and a finger can create too', () => {
+  const onCreate = vi.fn();
+  const onDrop = vi.fn();
+  render(<Board onCreate={onCreate} onDrop={onDrop} />);
+  dragFromTo(along('a', 12), along('b', 39));
+  expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ kind: 'move', to: { lane: 'b', start: 35, end: 45 } }));
+  expect(onCreate).not.toHaveBeenCalled();
+  const lane = pressCreate(along('a', 40), along('a', 55), 'touch');
+  const end = along('a', 55);
+  pointer('pointerup', lane, end.x, end.y, 'touch');
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+});
+
+it('places a minSpan slot on a click and does nothing when minSpan is 0', () => {
+  const onCreate = vi.fn();
+  const { rerender } = render(<Board onCreate={onCreate} minSpan={15} />);
+  const at = along('a', 40);
+  const lane = screen.getByTestId('lane-a');
+  pointer('pointerdown', lane, at.x, at.y);
+  pointer('pointerup', lane, at.x, at.y);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+  onCreate.mockClear();
+  rerender(<Board onCreate={onCreate} />);
+  const again = along('a', 40);
+  pointer('pointerdown', screen.getByTestId('lane-a'), again.x, again.y);
+  pointer('pointerup', screen.getByTestId('lane-a'), again.x, again.y);
+  expect(onCreate).not.toHaveBeenCalled();
 });
