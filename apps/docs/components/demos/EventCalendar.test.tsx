@@ -1657,7 +1657,6 @@ function weekDays(anchor: string): Temporal.PlainDate[] {
   return Array.from({ length: 7 }, (_, index) => sunday.add({ days: index }));
 }
 
-/** The second-zone label a reader should see, in the order the week meets each offset. */
 function compareLabel(grid: string, compare: string, days: readonly Temporal.PlainDate[], wall: string, locale: string): string {
   const seen = new Map<string, string>();
   for (const day of days) {
@@ -1686,7 +1685,6 @@ describe('a zone whose offset changes inside the visible week', () => {
     expect(compareRow(eight.style.top)).toBe('5:00 PM / 6:00 PM');
     expect(compareRow(eight.style.top)).toBe(compareLabel(LA, 'Asia/Jerusalem', days, '08:00', 'en-US'));
     expect(screen.getByText('GMT+2 / GMT+3')).toBeTruthy();
-    // 17:00 PDT Thursday is Friday 02:00 in Jerusalem, the instant the clocks spring forward.
     const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26' });
     expect(document.getElementById(thursday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to GMT+3');
   });

@@ -101,8 +101,6 @@ export function daySegments({
   };
 }
 
-// The close of one day and the open of the next can be one instant. A start
-// belongs to the later day, and an end to the earlier one.
 function holds(length: number, units: number, edge: Edge): boolean {
   return edge === 'start' ? units >= 0 && units < length : units > 0 && units <= length;
 }
@@ -283,7 +281,6 @@ export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxi
   const segment = axis.segments.find((each) => each.day.equals(drop.to.day));
   if (!segment) return null;
   const zone = segment.opens.timeZoneId;
-  // `to` is the place useLaneDrag already snapped. Snapping it again would hide a grid change.
   if (drop.kind === 'move') {
     const days = drop.from.day.until(drop.to.day, { largestUnit: 'day' }).days;
     return shiftEvent(event, drop.to.start - drop.from.start, days, zone);
@@ -408,7 +405,6 @@ export function eventsOnDay(day: Temporal.PlainDate, events: readonly CalendarEv
     });
 }
 
-/** The calendar days an event occupies. An end at midnight stays on the earlier day. An all-day event uses the dates in its own zone. */
 function coveredDays(event: CalendarEvent, timeZone: string): { first: Temporal.PlainDate; last: Temporal.PlainDate } | null {
   const start = event.allDay ? event.start : event.start.withTimeZone(timeZone);
   const end = event.allDay ? event.end : event.end.withTimeZone(timeZone);
@@ -546,7 +542,6 @@ function rangesOverlap(a: { start: number; end: number }, b: { start: number; en
   return a.start < b.end && b.start < a.end;
 }
 
-// A span with no length comes before a longer one that starts with it. Then the longer span takes the left column. Touching at an endpoint is not an overlap.
 export function placeOverlaps<T extends { start: number; end: number }>(items: readonly T[]): OverlapPlacement<T>[] {
   const order = items.map((item, index) => ({ item, index }));
   order.sort(
@@ -610,7 +605,6 @@ export function hourMarks(segment: DaySegment): HourMark[] {
 
 type ZoneFace = { name: string; offset: string };
 
-/** The short zone name and the offset `locale` writes at `at`. */
 function zoneFace(timeZone: string, locale: string, at: Temporal.ZonedDateTime): ZoneFace {
   const read = (timeZoneName: 'short' | 'shortOffset') =>
     new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName })
@@ -625,7 +619,6 @@ export function zoneLabel(timeZone: string, locale: string, at: Temporal.ZonedDa
   return zoneFace(timeZone, locale, at).name;
 }
 
-/** Every distinct face the visible hours take, in the order the days meet them. */
 function zoneFaces(timeZone: string, locale: string, times: readonly Temporal.ZonedDateTime[]): ZoneFace[] {
   const faces: ZoneFace[] = [];
   for (const at of times) {
@@ -640,12 +633,10 @@ function zoneSamples(segments: readonly DaySegment[]): Temporal.ZonedDateTime[] 
   return times.length > 0 ? times : segments.map((segment) => segment.opens);
 }
 
-/** "PST / PDT" from the short names, in the order the week meets them. */
 function zoneNames(faces: readonly ZoneFace[]): string {
   return faces.map((face) => face.name).join(' / ');
 }
 
-/** "PST / PDT (GMT-8 / GMT-7)", or just the offset when the short name already is one. */
 function zonePhrase(faces: readonly ZoneFace[]): string {
   const names = zoneNames(faces);
   if (faces.every((face) => face.name === face.offset)) return names;
@@ -708,12 +699,6 @@ function offsetOrder(segments: readonly DaySegment[], zone: string): Map<string,
   return order;
 }
 
-/**
- * The other zone's time at a shared hour. One label when every visible day agrees.
- * When the week meets two offsets, the row lists each distinct time in the order the
- * corner meets those offsets. The time stays in this column. The day column's hour is
- * the grid zone, so a second time there would have no zone name beside it.
- */
 export function compareMarks(segments: readonly DaySegment[], units: readonly number[], compareZone: string): CompareMark[] {
   const compareRank = offsetOrder(segments, compareZone);
   const gridRank = offsetOrder(segments, segments[0]?.opens.timeZoneId ?? compareZone);
@@ -745,7 +730,6 @@ export function compareMarks(segments: readonly DaySegment[], units: readonly nu
   });
 }
 
-/** The offset names that begin on each visible day, for the grid zone and the compare zone. */
 function clockChanges(segments: readonly DaySegment[], zones: readonly string[], locale: string): Map<string, string[]> {
   const changes = new Map<string, string[]>();
   for (const zone of zones) {
@@ -768,7 +752,6 @@ function changeLabel(names: readonly string[], locale: string): string {
   return locale.toLowerCase().startsWith('ko') ? `${names.join(', ')} 시작` : `Clocks change to ${names.join(', ')}`;
 }
 
-// Pinned so the page shows the same week whenever it opens.
 const OPENS = Temporal.PlainTime.from('08:00');
 const CLOSES = Temporal.PlainTime.from('18:00');
 const ANCHOR = Temporal.PlainDate.from('2026-11-16');
@@ -880,7 +863,6 @@ function stripKey(id: string): string {
   return `strip:${id}`;
 }
 
-/** A strip bar's grid lines. The gutters come first, and the end never passes the last day. */
 function stripColumn(column: number, span: number, days: number, gutters: number): string {
   const start = column + gutters + 1;
   const end = Math.min(start + span, days + gutters + 1);
@@ -1343,10 +1325,6 @@ export function EventCalendarExample({
     returnFocus.current = true;
   };
 
-  // The dialog unmounts in the same commit that records the edit, so its own
-  // focus return has no button to land on yet. This runs after that commit.
-  // The heading is consumed here. A value left from a cancelled create would
-  // steal focus from a later cancelled edit.
   useLayoutEffect(() => {
     if (!returnFocus.current || session) return;
     returnFocus.current = false;
@@ -1529,7 +1507,6 @@ export function EventCalendarExample({
         <Calendar.Root
           className={styles.month}
           locale={locale}
-          // value starts the tab stop on the anchor day. Clearing it before paint leaves that day focused and not selected.
           value={pinFocus ? anchor : null}
           onValueChange={openDay}
         >
@@ -1638,7 +1615,6 @@ export function EventCalendarExample({
                 })}
               </div>
               {showCompare ? (
-                // The hours repeat the primary instants. The description names this zone, so the column stays quiet.
                 <div className={styles.gutter} aria-hidden="true" data-compare="">
                   {compared.map((mark) => (
                     <Text.Root
@@ -1837,7 +1813,6 @@ export function EventEditor({
   );
 }
 
-/** The page. Pacific time, with India Standard Time in the second column. */
 export default function EventCalendarZones({ locale = 'en-US' }: { locale?: string }) {
   return <EventCalendarExample locale={locale} timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" />;
 }
