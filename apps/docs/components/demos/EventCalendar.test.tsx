@@ -22,6 +22,9 @@ import EventCalendarExample, {
   snapToSlot,
   spanFrame,
   toUnits,
+  packWeekBars,
+  eventsOnDay,
+  showsInStrip,
   visibleSpans,
   weekOf,
   type CalendarEvent,
@@ -35,6 +38,15 @@ const at = (text: string) => Temporal.ZonedDateTime.from(text);
 const LA = 'America/Los_Angeles';
 const SPRING = date('2027-03-14');
 const FALL = date('2027-11-07');
+
+function longDate(iso: string, locale = 'en-US'): string {
+  const day = date(iso);
+  return new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(Date.UTC(day.year, day.month - 1, day.day));
+}
+
+function longRange(start: string, end: string, locale = 'en-US'): string {
+  return `${longDate(start, locale)} – ${longDate(end, locale)}`;
+}
 
 function event(id: string, start: string, end: string, extra: Partial<Pick<CalendarEvent, 'seriesId' | 'allDay' | 'title'>> = {}): CalendarEvent {
   return { id, title: id, start: at(start), end: at(end), allDay: false, ...extra };
@@ -482,7 +494,10 @@ describe('the calendar', () => {
     expect(screen.getByRole('button', { name: `Ship review, ${clock('15:00')} to ${clock('18:30')}, continues` })).toBeTruthy();
     const one = screen.getByRole('button', { name: `1:1, ${clock('11:00')} to ${clock('11:30')}` });
     expect(one.textContent).toBe('1:1');
-    expect(screen.queryByRole('button', { name: /Offsite/ })).toBeNull();
+    const offsite = screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-16')}` });
+    expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(offsite)).toBe(false);
+    expect(screen.getByRole('button', { name: `Launch watch, ${longRange('2026-11-18', '2026-11-19')}, ${clock('22:00')} to ${clock('02:00')}` })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: `Handoff, ${longRange('2026-11-16', '2026-11-17')}` })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Day' }));
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1);
@@ -499,6 +514,12 @@ describe('the calendar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(screen.queryByRole('button', { name: /Design review/ })).toBeNull();
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(7);
+  });
+
+  it('names a strip bar with the title and the full date range in Korean', () => {
+    render(<EventCalendarExample locale="ko" />);
+    expect(screen.getByRole('button', { name: `Retreat, ${longRange('2026-11-20', '2026-11-22', 'ko')}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-16', 'ko')}` })).toBeTruthy();
   });
 
   it('keeps a fall-back week’s hours on the day they belong to', () => {
@@ -755,6 +776,66 @@ function spokenText(node: Node): string {
   return [...node.childNodes].map((child) => spokenText(child)).join('');
 }
 
+describe('packWeekBars', () => {
+  const week = weekOf(date('2026-11-16'), 'en-US');
+  const next = weekOf(date('2026-11-22'), 'en-US');
+  const span = (id: string, start: string, end: string, allDay = false) => event(id, start, end, { allDay, title: id });
+
+  it('gives an earlier start the earlier row, and the longer span the earlier row when the starts match', () => {
+    const early = span('early', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-18T00:00:00-08:00[America/Los_Angeles]', true);
+    const later = span('later', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', '2026-11-20T00:00:00-08:00[America/Los_Angeles]', true);
+    const placed = packWeekBars([later, early], week, LA);
+    expect(placed.find((item) => item.event.id === 'early')).toMatchObject({ row: 0, column: 1, span: 2, continuesFrom: false, continuesTo: false });
+    expect(placed.find((item) => item.event.id === 'later')).toMatchObject({ row: 1, column: 2, span: 3 });
+
+    const long = span('long', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-19T00:00:00-08:00[America/Los_Angeles]', true);
+    const short = span('short', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', true);
+    const ties = packWeekBars([short, long], week, LA);
+    expect(ties.find((item) => item.event.id === 'long')).toMatchObject({ row: 0, span: 3 });
+    expect(ties.find((item) => item.event.id === 'short')).toMatchObject({ row: 1, span: 1 });
+  });
+
+  it('shares a row when bars meet at a day boundary, and stacks bars that share a day', () => {
+    const monday = span('monday', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', true);
+    const tuesday = span('tuesday', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', '2026-11-18T00:00:00-08:00[America/Los_Angeles]', true);
+    expect(packWeekBars([monday, tuesday], week, LA).map((item) => item.row)).toEqual([0, 0]);
+
+    const overlap = span('overlap', '2026-11-16T12:00:00-08:00[America/Los_Angeles]', '2026-11-17T12:00:00-08:00[America/Los_Angeles]');
+    const stacked = packWeekBars([monday, overlap], week, LA);
+    expect(stacked.find((item) => item.event.id === 'monday')?.row).toBe(0);
+    expect(stacked.find((item) => item.event.id === 'overlap')?.row).toBe(1);
+  });
+
+  it('splits a bar on the week boundary and flags each cut', () => {
+    const retreat = span('retreat', '2026-11-20T00:00:00-08:00[America/Los_Angeles]', '2026-11-23T00:00:00-08:00[America/Los_Angeles]', true);
+    expect(packWeekBars([retreat], week, LA)[0]).toMatchObject({ column: 5, span: 2, row: 0, continuesFrom: false, continuesTo: true });
+    expect(packWeekBars([retreat], next, LA)[0]).toMatchObject({ column: 0, span: 1, row: 0, continuesFrom: true, continuesTo: false });
+  });
+
+  it('leaves a single-day timed event unpacked, including one that ends at the next midnight', () => {
+    const talk = span('talk', '2026-11-16T09:00:00-08:00[America/Los_Angeles]', '2026-11-16T10:00:00-08:00[America/Los_Angeles]');
+    const untilMidnight = span('until', '2026-11-16T10:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]');
+    expect(packWeekBars([talk, untilMidnight], week, LA)).toEqual([]);
+    const day = span('day', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', true);
+    expect(packWeekBars([day], week, LA)[0]).toMatchObject({ column: 1, span: 1, continuesFrom: false, continuesTo: false });
+  });
+
+  it('keeps an overnight event that misses the open hours off the lanes', () => {
+    const launch = span('launch', '2026-11-18T22:00:00-08:00[America/Los_Angeles]', '2026-11-19T02:00:00-08:00[America/Los_Angeles]');
+    const handoff = span('handoff', '2026-11-16T17:00:00-08:00[America/Los_Angeles]', '2026-11-17T09:30:00-08:00[America/Los_Angeles]');
+    expect(showsInStrip(launch, LA, time('08:00'), time('18:00'))).toBe(true);
+    expect(showsInStrip(handoff, LA, time('08:00'), time('18:00'))).toBe(false);
+    expect(packWeekBars([launch], week, LA)[0]).toMatchObject({ column: 3, span: 2, continuesFrom: false, continuesTo: false });
+  });
+
+  it('keeps an all-day event on the date in its own zone', () => {
+    const tokyo = span('tokyo', '2026-11-18T00:00:00+09:00[Asia/Tokyo]', '2026-11-19T00:00:00+09:00[Asia/Tokyo]', true);
+    expect(packWeekBars([tokyo], week, LA)[0]).toMatchObject({ column: 3, span: 1, continuesFrom: false, continuesTo: false });
+    expect(eventsOnDay(date('2026-11-18'), [tokyo], LA, 'en-US').map((item) => item.id)).toEqual(['tokyo']);
+    expect(eventsOnDay(date('2026-11-17'), [tokyo], LA, 'en-US')).toEqual([]);
+  });
+});
+
 describe('the month', () => {
   afterEach(cleanup);
 
@@ -767,17 +848,29 @@ describe('the month', () => {
     openMonth();
     expect(screen.getByText('November 2026')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Monday, November 16, 2026' }).getAttribute('aria-label')).toBe('Monday, November 16, 2026');
-    expect(describedBy('Monday, November 16, 2026')).toBe('Offsite, Design review, +2 more');
-    expect(describedBy('Tuesday, November 17, 2026')).toBe('Handoff, Interview');
-    expect(describedBy('Wednesday, November 18, 2026')).toBe('Early sync, Workshop');
-    expect(describedBy('Thursday, November 19, 2026')).toBe('Planning, 1:1, +4 more');
-    expect(describedBy('Friday, November 20, 2026')).toBe('Demo');
-    expect(describedBy('Saturday, November 21, 2026')).toBe('Office hours');
+    expect(describedBy('Monday, November 16, 2026')).toBe(`Offsite, ${longDate('2026-11-16')}, Handoff, ${longRange('2026-11-16', '2026-11-17')}, +2 more`);
+    expect(describedBy('Tuesday, November 17, 2026')).toBe(`Handoff, ${longRange('2026-11-16', '2026-11-17')}, Interview`);
+    expect(describedBy('Wednesday, November 18, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Early sync, +1 more`);
+    expect(describedBy('Thursday, November 19, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Planning, +5 more`);
+    expect(describedBy('Friday, November 20, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Demo`);
+    expect(describedBy('Saturday, November 21, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Office hours`);
+    const saturday = screen.getByRole('button', { name: 'Saturday, November 21, 2026' });
+    expect(saturday.querySelectorAll('[class*="cue"]')).toHaveLength(1);
+    expect(saturday.querySelector('[data-bar="retreat"]')?.hasAttribute('data-cut-start')).toBe(false);
+    expect(screen.getByRole('button', { name: 'Friday, November 20, 2026' }).querySelectorAll('[class*="cue"]')).toHaveLength(0);
     expect(describedBy('Sunday, November 15, 2026')).toBe('');
     const anchorDay = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
     expect(anchorDay.hasAttribute('data-selected')).toBe(false);
     expect(anchorDay.closest('td')?.getAttribute('aria-selected')).toBeNull();
     expect(screen.getByRole('button', { name: 'Tuesday, December 1, 2026' })).toBeTruthy();
+  });
+
+  it('reads the upper bar first when a lower row is listed earlier', () => {
+    const low = event('low', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', '2026-11-18T00:00:00-08:00[America/Los_Angeles]', { title: 'Low', allDay: true });
+    const high = event('high', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-19T00:00:00-08:00[America/Los_Angeles]', { title: 'High', allDay: true });
+    render(<EventCalendarExample locale="en-US" events={[low, high]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Tuesday, November 17, 2026')).toBe(`High, ${longRange('2026-11-16', '2026-11-18')}, Low, ${longDate('2026-11-17')}`);
   });
 
   it('puts a multi-day event on each day it covers, and keeps an event that ends at midnight on the earlier day', () => {
@@ -788,9 +881,9 @@ describe('the month', () => {
     ];
     render(<EventCalendarExample locale="en-US" timeZone={zone} events={events} />);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe('Edge, Span');
-    expect(describedBy('Tuesday, November 17, 2026')).toBe('Span');
-    expect(describedBy('Wednesday, November 18, 2026')).toBe('Span');
+    expect(describedBy('Monday, November 16, 2026')).toBe(`Edge, ${longDate('2026-11-16')}, Span, ${longRange('2026-11-16', '2026-11-18')}`);
+    expect(describedBy('Tuesday, November 17, 2026')).toBe(`Span, ${longRange('2026-11-16', '2026-11-18')}`);
+    expect(describedBy('Wednesday, November 18, 2026')).toBe(`Span, ${longRange('2026-11-16', '2026-11-18')}`);
     expect(describedBy('Thursday, November 19, 2026')).toBe('');
   });
 
@@ -873,6 +966,18 @@ describe('the month', () => {
     expect(screen.queryByRole('grid', { name: '2026년 11월' })).toBeNull();
   });
 
+  it('counts a bar that does not fit together with the titles that do not fit', () => {
+    const events = [
+      event('a', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-19T00:00:00-08:00[America/Los_Angeles]', { title: 'Alpha', allDay: true }),
+      event('b', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-18T00:00:00-08:00[America/Los_Angeles]', { title: 'Beta', allDay: true }),
+      event('c', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', { title: 'Gamma', allDay: true }),
+      event('d', '2026-11-16T10:00:00-08:00[America/Los_Angeles]', '2026-11-16T11:00:00-08:00[America/Los_Angeles]', { title: 'Delta' }),
+    ];
+    render(<EventCalendarExample locale="en-US" events={events} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Monday, November 16, 2026')).toBe(`Alpha, ${longRange('2026-11-16', '2026-11-18')}, Beta, ${longRange('2026-11-16', '2026-11-17')}, +2 more`);
+  });
+
   it('lists an all-day event before a timed event that starts at the same time', () => {
     const events = [
       event('alpha', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-16T01:00:00-08:00[America/Los_Angeles]', { title: 'Alpha' }),
@@ -880,7 +985,7 @@ describe('the month', () => {
     ];
     render(<EventCalendarExample locale="en-US" events={events} />);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe('Zebra, Alpha');
+    expect(describedBy('Monday, November 16, 2026')).toBe(`Zebra, ${longDate('2026-11-16')}, Alpha`);
   });
 
   it('opens the week that contains the pressed Sunday, in English and Korean', () => {
@@ -947,7 +1052,7 @@ describe('the month', () => {
   it('renders the month in Korean', () => {
     openMonth('ko');
     expect(screen.getByText('2026년 11월')).toBeTruthy();
-    expect(describedBy('2026년 11월 16일 월요일')).toBe('Offsite, Design review, +2 more');
+    expect(describedBy('2026년 11월 16일 월요일')).toBe(`Offsite, ${longDate('2026-11-16', 'ko')}, Handoff, ${longRange('2026-11-16', '2026-11-17', 'ko')}, +2 more`);
     expect(screen.getByRole('button', { name: '2026년 12월 1일 화요일' })).toBeTruthy();
   });
 });
@@ -1115,15 +1220,24 @@ describe('moving and resizing a timed event', () => {
     expect(saved.value.title).toBe('Design review');
     expect(saved.value.start.toString()).toBe('2026-11-16T09:00:00-08:00[America/Los_Angeles]');
     expect(saved.value.end.toString()).toBe('2026-11-16T11:00:00-08:00[America/Los_Angeles]');
-    const allDay = eventFromDraft(
-      { title: 'Offsite', date: date('2026-11-16'), endDate: null, start: null, end: null, allDay: true },
+    const missingEnd = eventFromDraft({ title: 'Offsite', date: date('2026-11-16'), endDate: null, start: null, end: null, allDay: true }, zone);
+    expect(missingEnd).toEqual({ ok: false, issue: { field: 'endDate', message: 'Choose an end.' } });
+    const backwards = eventFromDraft(
+      { title: 'Retreat', date: date('2026-11-20'), endDate: date('2026-11-19'), start: null, end: null, allDay: true },
       zone,
     );
+    expect(backwards).toEqual({ ok: false, issue: { field: 'endDate', message: 'End must be after the start.' } });
+    const allDay = eventFromDraft({ title: 'Offsite', date: date('2026-11-16'), endDate: date('2026-11-16'), start: null, end: null, allDay: true }, zone);
     expect(allDay.ok).toBe(true);
     if (!allDay.ok) throw new Error('expected an all-day draft');
     expect(allDay.value.allDay).toBe(true);
     expect(allDay.value.start.toString()).toBe('2026-11-16T00:00:00-08:00[America/Los_Angeles]');
     expect(allDay.value.end.toString()).toBe('2026-11-17T00:00:00-08:00[America/Los_Angeles]');
+    const retreat = eventFromDraft({ title: 'Retreat', date: date('2026-11-20'), endDate: date('2026-11-22'), start: null, end: null, allDay: true }, zone);
+    expect(retreat.ok).toBe(true);
+    if (!retreat.ok) throw new Error('expected a retreat draft');
+    expect(retreat.value.start.toString()).toBe('2026-11-20T00:00:00-08:00[America/Los_Angeles]');
+    expect(retreat.value.end.toString()).toBe('2026-11-23T00:00:00-08:00[America/Los_Angeles]');
   });
 });
 
@@ -1177,8 +1291,8 @@ describe('the event menu and dialog', () => {
     await choose(review().getAttribute('aria-label')!, 'Move to next day');
     expect(screen.getByRole('list', { name: 'Tue, Nov 17' }).contains(review())).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe('Offsite, Standup, +1 more');
-    expect(describedBy('Tuesday, November 17, 2026')).toBe('Handoff, Design review, +1 more');
+    expect(describedBy('Monday, November 16, 2026')).toBe(`Offsite, ${longDate('2026-11-16')}, Handoff, ${longRange('2026-11-16', '2026-11-17')}, +1 more`);
+    expect(describedBy('Tuesday, November 17, 2026')).toBe(`Handoff, ${longRange('2026-11-16', '2026-11-17')}, Design review, +1 more`);
   });
 
   it('hides day moves on the day view, and disables a step that would leave the lane', async () => {
@@ -1250,7 +1364,35 @@ describe('the event menu and dialog', () => {
     expect(document.activeElement).toBe(saved);
   });
 
-  it('focuses the day heading when Save takes the event off the lanes', async () => {
+  it('keeps Retreat on Friday through Sunday when Save changes nothing', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Retreat' });
+    expect((within(dialog).getByRole('textbox', { name: 'End date' }) as HTMLInputElement).value).toContain('22');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByRole('button', { name: `Retreat, ${longRange('2026-11-20', '2026-11-22')}` })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Friday, November 20, 2026')).toContain(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`);
+    expect(describedBy('Sunday, November 22, 2026')).toContain('Retreat');
+    expect(describedBy('Monday, November 23, 2026')).not.toContain('Retreat');
+  });
+
+  it('moves an all-day bar by a day, and turns it into the opening slot', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    await choose(`Offsite, ${longDate('2026-11-16')}`, 'Move to next day');
+    const moved = screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-17')}` });
+    expect(screen.queryByRole('button', { name: `Offsite, ${longDate('2026-11-16')}` })).toBeNull();
+    await choose(moved.getAttribute('aria-label')!, 'Edit…');
+    const dialog = await screen.findByRole('dialog', { name: 'Edit Offsite' });
+    fireEvent.click(within(dialog).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const timed = screen.getByRole('button', { name: `Offsite, ${clock('08:00')} to ${clock('08:15')}` });
+    expect(screen.getByRole('list', { name: 'Tue, Nov 17' }).contains(timed)).toBe(true);
+  });
+
+  it('focuses the strip bar when Save makes an event all-day, and the day heading when it leaves the lanes and the strip', async () => {
     render(<EventCalendarExample locale="en-US" />);
     const name = `Design review, ${clock('09:00')} to ${clock('10:30')}`;
     await choose(name, 'Edit…');
@@ -1258,8 +1400,9 @@ describe('the event menu and dialog', () => {
     fireEvent.click(within(dialog).getByRole('switch', { name: 'All day' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.queryByRole('button', { name: /^Design review,/ })).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Mon, Nov 16' }));
+    const strip = screen.getByRole('button', { name: `Design review, ${longDate('2026-11-16')}` });
+    expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(strip)).toBe(false);
+    expect(document.activeElement).toBe(strip);
     cleanup();
 
     render(<EventCalendarExample locale="en-US" />);
