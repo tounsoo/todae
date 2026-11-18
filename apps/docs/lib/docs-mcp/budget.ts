@@ -123,19 +123,13 @@ function continuationNote(field: string, nextOffset: number): string {
 
 /**
  * The longest prefix of `record[field]` that fits once the note and cursor are in the JSON.
- * `record.offset` is where the current text starts in the original field. A recursive
- * shrink must not read that as the start: the text is already a prefix, and the cursor
- * names its end, so the start is `cursor.offset - text.length`.
+ * `record.offset` is where this text starts in the original field. `resumeBuild` has already
+ * sliced a continuation, so the offset on the record is that start.
  */
 function shrinkField(record: Record<string, unknown>, field: string): Record<string, unknown> | null {
   const text = record[field];
   if (typeof text !== 'string' || text.length < 2) return null;
-  const cursor = record.cursor;
-  // A cursor means this text is already a window. Its end is the cursor, so the start is
-  // that end minus the text. The record's own offset is not read again.
-  const cursorEnd =
-    cursor && typeof cursor === 'object' && 'offset' in cursor && typeof cursor.offset === 'number' ? cursor.offset : null;
-  const start = cursorEnd != null ? cursorEnd - text.length : typeof record.offset === 'number' ? record.offset : 0;
+  const start = typeof record.offset === 'number' ? record.offset : 0;
   if (start < 0) return null;
   const packed = (chunk: string): Record<string, unknown> | null => {
     if (chunk.length < 1 || chunk.length >= text.length) return null;

@@ -104,6 +104,8 @@ describe('route regressions', () => {
     const drafted = await scaffoldDesignSystem(options);
     const tokenFiles: Record<string, string> = {};
     const otherFiles: { path: string; contents: string }[] = [];
+    let buildError = '';
+    let continuedInFile = false;
     let fileOffset = 0;
     let char = 0;
     for (let step = 0; step < 80; step += 1) {
@@ -117,7 +119,9 @@ describe('route regressions', () => {
         if (existing) existing.contents += file.contents;
         else otherFiles.push({ path: file.path, contents: file.contents });
       }
+      if (file?.group === 'build' && file.path === 'build-error' && typeof file.contents === 'string') buildError += file.contents;
       const cursor = body?.cursor as { offset?: number; char?: number } | undefined;
+      if (cursor && typeof cursor.char === 'number' && cursor.offset === fileOffset) continuedInFile = true;
       if (!cursor) break;
       const next = cursor.offset ?? fileOffset;
       const nextChar = cursor.char ?? 0;
@@ -127,7 +131,52 @@ describe('route regressions', () => {
     }
     expect(tokenFiles).toEqual(drafted.tokenFiles);
     expect(otherFiles).toEqual(drafted.otherFiles);
+    expect(drafted.build.ok).toBe(false);
+    if (!drafted.build.ok) {
+      expect(continuedInFile).toBe(true);
+      expect(buildError).toBe(drafted.build.error);
+    }
   }, 120_000);
+
+  it('returns a small scaffold in the library shape', async () => {
+    const drafted = await scaffoldDesignSystem({ name: 'acme' });
+    const { error, body } = await tool('scaffold_design_system', { name: 'acme' });
+    expect(error).toBeNull();
+    if (!body) throw new Error('expected a scaffold');
+    const { nav, ...rest } = body;
+    expect(nav).toBeTruthy();
+    expect(rest).toEqual(drafted);
+  }, 60_000);
+
+  it('pages list_tokens with no arguments and walks every catalog row', async () => {
+    const capped = await tool('list_tokens', { limit: 500 });
+    expect(capped.error).toBeNull();
+    expect(Array.isArray(capped.body?.tokens)).toBe(true);
+    expect((capped.body?.tokens as unknown[] | undefined)?.length).toBeGreaterThan(0);
+    expect(capped.raw.length).toBeLessThanOrEqual(MAX_RESPONSE_CHARS);
+
+    const rows: unknown[] = [];
+    let offset = 0;
+    for (let step = 0; step < 40; step += 1) {
+      const { error, body, raw } = await tool('list_tokens', offset === 0 ? {} : { offset });
+      expect(error).toBeNull();
+      expect(raw.length).toBeLessThanOrEqual(MAX_RESPONSE_CHARS);
+      if (!body || !Array.isArray(body.tokens)) throw new Error('expected tokens');
+      expect(body.tokens.length).toBeGreaterThan(0);
+      rows.push(...body.tokens);
+      const next = body.cursor as { offset?: number } | undefined;
+      const navNext = (body.nav as { next?: { tool?: string; arguments?: { offset?: number } }[] } | undefined)?.next?.[0];
+      if (next?.offset === undefined) {
+        expect(navNext?.tool).toBe('get_token');
+        break;
+      }
+      expect(navNext?.tool).toBe('list_tokens');
+      expect(navNext?.arguments?.offset).toBe(next.offset);
+      expect(next.offset).toBeGreaterThan(offset);
+      offset = next.offset;
+    }
+    expect(rows).toEqual([...catalogTokens()]);
+  });
 
   it('walks a build of 4,000 short CSS lines back to the original, and refuses to skip the budget', async () => {
     const outline = JSON.parse(readFileSync(join(process.cwd(), '..', '..', 'packages', 'design-system', 'scripts', '__fixtures__', 'acme', 'button.outline.json'), 'utf8')) as {
@@ -237,9 +286,20 @@ describe('route regressions', () => {
     expect(next?.arguments?.locale).toBe('ko');
   });
 
+  it('keeps the MCP manual off a product question and opens it when the question names it', async () => {
+    const product = await tool('search_docs', { query: '세션을 다른 무대로 끌기', locale: 'ko' });
+    expect(product.error).toBeNull();
+    const hits = (product.body?.hits ?? []) as { ref?: string }[];
+    expect(hits.some((hit) => (hit.ref ?? '') === 'mcp' || (hit.ref ?? '').startsWith('mcp#'))).toBe(false);
+    expect(hits[0]?.ref).toBe('recipes/scheduler#끌기');
+    const manual = await tool('search_docs', { query: 'mcp' });
+    expect(manual.error).toBeNull();
+    expect(((manual.body?.hits ?? []) as { ref?: string }[])[0]?.ref).toBe('mcp');
+  });
+
   it('lands the first call on the scheduler, the wizard and held-out queries', async () => {
     const tasks = [
-      { query: '세션을 다른 무대로 끌기', locale: 'ko', want: 'recipes/scheduler' },
+      { query: '세션을 다른 무대로 끌기', locale: 'ko', want: 'recipes/scheduler#끌기' },
       { query: 'multi-step wizard', want: 'recipes/wizard' },
       { query: 'holiday the calendar refuses to pick', want: 'Calendar' },
       { query: 'carry a session from one stage to another', want: 'recipes/scheduler' },

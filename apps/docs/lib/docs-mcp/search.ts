@@ -178,7 +178,9 @@ function wordHits(word: string, keys: string[]): boolean {
 }
 
 function headingLeads(title: string, keys: string[]): boolean {
-  const lead = normalizeSlug(title).split('-').find((word) => word.length > 2);
+  const words = normalizeSlug(title).split('-').filter((word) => word.length > 1);
+  // A two-syllable Korean heading such as 끌기 is the lead. A two-letter English word is not.
+  const lead = words.find((word) => word.length > 2) ?? words.find((word) => /^\p{Script=Hangul}+$/u.test(word));
   return lead != null && wordHits(lead, keys);
 }
 
@@ -229,7 +231,7 @@ export function searchDocs(query: string, options?: { locale?: LocaleId; limit?:
     if (doc.kind === 'recipe' && wants.has('recipe')) score += 1;
     // English questions prefer the English docs, and a Korean question prefers Korean.
     if (hangul ? doc.locale === 'ko' : doc.locale === 'en') score += 2.5;
-    // A heading that is the query's word ("Dragging") should beat a longer heading that only contains it.
+    // A heading that is the query's word ("Dragging", or a two-syllable Korean heading) should beat a longer heading that only contains it.
     if (doc.kind === 'section' && headingLeads(doc.title, keys)) score += 8;
     const pageSlug = doc.ref.split('#')[0] ?? doc.ref;
     // The server manual mentions every tool, so it should not win a question about the product.

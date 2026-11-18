@@ -1,10 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import type { Heading, Node, Root } from 'mdast';
 import { DOCS_ORIGIN } from '../origin';
 import { exampleOf } from '../exampleCode';
 import { parseMdx } from '../mdxAst';
 import { pageSummary } from '../pageSummary.mjs';
-import { defaultImports, exampleBlocks, exampleFile, EXAMPLES_DIR } from '../remarkExamples.mjs';
+import { defaultImports, exampleBlocks, exampleFile, exampleLocalModules, exampleStylesheets, EXAMPLES_DIR } from '../remarkExamples.mjs';
 import { absolutize, loadPages } from './mdx';
 import { headingAnchor, tokensOf } from './units';
 
@@ -103,18 +104,30 @@ function stubText(slug: string, files: ExampleFile[]): string {
     .join('\n\n');
 }
 
-function filesFor(file: string, id: string, demonstrates: string, anchor: string, shown: Set<string>): ExampleFile[] {
-  return exampleBlocks(file, shown).map((block) => ({
+function exampleRow(path: string, lang: string, value: string, id: string, demonstrates: string, anchor: string): ExampleFile {
+  return {
     id,
-    file: basename(block.path),
-    path: block.path.slice(EXAMPLES_DIR.length),
-    lang: block.lang,
+    file: basename(path),
+    path: path.slice(EXAMPLES_DIR.length),
+    lang,
     demonstrates,
     anchor,
-    lines: block.value.split('\n').length,
-    tokens: tokensOf(block.value.length),
-    text: block.value,
-  }));
+    lines: value.split('\n').length,
+    tokens: tokensOf(value.length),
+    text: value,
+  };
+}
+
+function filesFor(file: string, id: string, demonstrates: string, anchor: string, shown: Set<string>): ExampleFile[] {
+  const text = readFileSync(file, 'utf8');
+  // The page renders the tsx and the stylesheets only. A sibling module is listed for get_example.
+  const sheetPaths = exampleStylesheets(file, text).filter((path) => !shown.has(path));
+  const [tsx, ...sheets] = exampleBlocks(file, shown);
+  return [
+    exampleRow(file, tsx?.lang ?? 'tsx', tsx?.value ?? '', id, demonstrates, anchor),
+    ...exampleLocalModules(file, text).map((path) => exampleRow(path, 'ts', readFileSync(path, 'utf8').trimEnd(), id, demonstrates, anchor)),
+    ...sheetPaths.map((path, index) => exampleRow(path, 'css', sheets[index]?.value ?? '', id, demonstrates, anchor)),
+  ];
 }
 
 function compile(locale: LocaleId, slug: string, raw: string, file = join(APP[locale], slug, 'page.mdx')): PageRecord {

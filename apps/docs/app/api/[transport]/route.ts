@@ -186,7 +186,7 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'list_tokens',
-    "List Todae's tokens from its token catalog: path, type, layer, context, the set or modifier that declares it (with the context for a button variant), CSS custom property, CSS value and description. Filter by a path prefix such as \"color.accent\" or by layer. Returns 200 rows from offset 0 unless limit and offset say otherwise; hasMore says whether more match.",
+    "List Todae's tokens from its token catalog: path, type, layer, context, the set or modifier that declares it (with the context for a button variant), CSS custom property, CSS value and description. Filter by a path prefix such as \"color.accent\" or by layer. limit is the most rows in one page (default 200, at most 500). A long list comes back with cursor.offset. Pass that offset to list_tokens for the next page. Walking the pages returns every matching row.",
     {
       prefix: tokenPath.optional(),
       layer: z.enum(LAYERS).optional(),
@@ -239,7 +239,7 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'scaffold_design_system',
-    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. Returns one file at a time, with a cursor. Pass cursor.offset for the next file. The first page also reports whether tokenFiles build. Save the files yourself; nothing is written to your machine.',
+    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. When the draft fits, returns tokenFiles and otherFiles, the shape build_tokens takes, plus whether those files build. A draft over the 40000 character budget comes back one file at a time. Pass cursor.offset for the next file, and cursor.char when a file continues. Save the files yourself; nothing is written to your machine.',
     {
       name: contextName,
       colors: z.object({ light: colorMap, dark: colorMap }).optional(),

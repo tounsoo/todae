@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { DOCS_ORIGIN } from '../origin';
 import { resolveEntries } from '@tounsoo/todae/tokens-builder';
 import { buildTokenFiles, todaeTokensDir, type BuildResult } from './build';
+import { MAX_RESPONSE_CHARS } from './budget';
 import { catalogTokens } from './tokens';
 
 const SOURCE = 'todae-docs' as const;
@@ -196,8 +197,12 @@ export type ScaffoldDraft = Awaited<ReturnType<typeof scaffoldDesignSystem>>;
 
 const SCAFFOLD_SLICE = 24_000;
 
-/** One drafted file per response, so a scaffold at its limits is not one over-budget blob. A file that is still too long continues at `cursor.char`. */
+/**
+ * The draft itself when it fits the response budget, which is the shape `build_tokens` takes.
+ * A draft over the budget comes back one file at a time. A file that is still too long continues at `cursor.char`.
+ */
 export function presentScaffold(result: ScaffoldDraft, offset = 0, char = 0) {
+  if (offset === 0 && char === 0 && JSON.stringify(result).length <= MAX_RESPONSE_CHARS - 800) return result;
   const files = [
     ...Object.entries(result.tokenFiles).map(([path, contents]) => ({ group: 'tokenFiles' as const, path, contents })),
     ...result.otherFiles.map((file) => ({ group: 'otherFiles' as const, path: file.path, contents: file.contents })),

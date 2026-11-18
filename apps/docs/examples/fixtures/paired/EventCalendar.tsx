@@ -1,4 +1,4 @@
-import { recurrence } from './recurrence.ts';
+import { recurrence } from './recurrence';
 import styles from './EventCalendar.module.css';
 
 export function EventCalendar() {
