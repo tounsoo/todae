@@ -944,12 +944,15 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
             <Text.Root as="span" weight="medium" lines={1}>
               {span.event.title}
             </Text.Root>
-            {span.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
+            {short && span.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
           </span>
           {short ? null : (
-            <Text.Root as="span" variant="label" tone="muted" lines={1}>
-              {timeText}
-            </Text.Root>
+            <span className={styles.eventLine}>
+              <Text.Root as="span" variant="label" tone="muted" lines={1}>
+                {timeText}
+              </Text.Root>
+              {span.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
+            </span>
           )}
         </Menu.Trigger>
         <Menu.Content>
