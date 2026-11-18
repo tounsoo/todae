@@ -308,6 +308,16 @@ it('still moves an item when creating is on, and a finger can create too', () =>
   expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
 });
 
+it('drags a new place on an inline lane that runs right to left', () => {
+  const onCreate = vi.fn();
+  render(<Board onCreate={onCreate} dir="rtl" />);
+  const lane = pressCreate(along('a', 40), along('a', 55));
+  expect(screen.getByTestId('preview-a').textContent).toBe('40-55');
+  const end = along('a', 55);
+  pointer('pointerup', lane, end.x, end.y);
+  expect(onCreate).toHaveBeenCalledWith({ lane: 'a', start: 40, end: 55 });
+});
+
 it('places a minSpan slot on a click and does nothing when minSpan is 0', () => {
   const onCreate = vi.fn();
   const { rerender } = render(<Board onCreate={onCreate} minSpan={15} />);
