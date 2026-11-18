@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { StrictMode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { formatTime } from '@tounsoo/todae';
@@ -426,17 +427,18 @@ describe('placing events on the lanes', () => {
     ]);
   });
 
-  it('returns the Monday-to-Sunday week that contains a day', () => {
-    expect(weekOf(date('2026-11-17')).map((day) => day.toString())).toEqual([
+  it('starts the week on the locale’s first day', () => {
+    expect(weekOf(date('2026-11-17'), 'en-US').map((day) => day.toString())).toEqual([
+      '2026-11-15',
       '2026-11-16',
       '2026-11-17',
       '2026-11-18',
       '2026-11-19',
       '2026-11-20',
       '2026-11-21',
-      '2026-11-22',
     ]);
-    expect(weekOf(date('2026-11-22')).map((day) => day.toString())[0]).toBe('2026-11-16');
+    expect(weekOf(date('2026-11-15'), 'ko-KR')[0]?.toString()).toBe('2026-11-15');
+    expect(weekOf(date('2026-11-15'), 'de-DE')[0]?.toString()).toBe('2026-11-09');
   });
 });
 
@@ -492,7 +494,7 @@ describe('the calendar', () => {
 
   it('keeps a fall-back week’s hours on the day they belong to', () => {
     const zone = 'America/Los_Angeles';
-    const monday = Temporal.PlainDate.from('2026-10-26');
+    const monday = Temporal.PlainDate.from('2026-11-02');
     render(
       <EventCalendarExample
         locale="en-US"
@@ -504,15 +506,15 @@ describe('the calendar', () => {
           {
             id: 'three',
             title: 'Night check',
-            start: Temporal.PlainDateTime.from('2026-10-26T03:00').toZonedDateTime(zone),
-            end: Temporal.PlainDateTime.from('2026-10-26T03:30').toZonedDateTime(zone),
+            start: Temporal.PlainDateTime.from('2026-11-02T03:00').toZonedDateTime(zone),
+            end: Temporal.PlainDateTime.from('2026-11-02T03:30').toZonedDateTime(zone),
             allDay: false,
           },
         ]}
       />,
     );
 
-    const mondayColumn = screen.getByRole('list', { name: 'Mon, Oct 26' }).parentElement;
+    const mondayColumn = screen.getByRole('list', { name: 'Mon, Nov 2' }).parentElement;
     const three = [...(mondayColumn?.querySelectorAll('span') ?? [])].find((node) => node.textContent === '3:00 AM');
     const event = screen.getByRole('button', { name: /Night check/ });
     expect(three).toBeTruthy();
@@ -542,12 +544,21 @@ describe('the calendar', () => {
     }
   });
 
+  it('lists Month, then Week, then Day', () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const month = screen.getByRole('button', { name: 'Month' });
+    const week = screen.getByRole('button', { name: 'Week' });
+    const day = screen.getByRole('button', { name: 'Day' });
+    expect(month.compareDocumentPosition(week) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(week.compareDocumentPosition(day) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('names a week in the page locale with one dash', () => {
     render(<EventCalendarExample locale="en-US" />);
-    expect(screen.getByText('Nov 16 – Nov 22, 2026')).toBeTruthy();
+    expect(screen.getByText('Nov 15 – Nov 21, 2026')).toBeTruthy();
     cleanup();
     render(<EventCalendarExample locale="ko-KR" />);
-    expect(screen.getByText('11월 16일 – 2026년 11월 22일')).toBeTruthy();
+    expect(screen.getByText('11월 15일 – 2026년 11월 21일')).toBeTruthy();
   });
 
   it('names an event in the calendar zone and places it on that day', () => {
@@ -606,11 +617,11 @@ describe('the calendar', () => {
     const frame = head.parentElement as HTMLElement;
     const tracks = frame.style.getPropertyValue('--tracks').match(/minmax\(max\(5\.5rem, \d+ \* 4rem\), 1fr\)/g);
     expect(tracks).toEqual([
+      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
       'minmax(max(5.5rem, 2 * 4rem), 1fr)',
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
       'minmax(max(5.5rem, 3 * 4rem), 1fr)',
-      'minmax(max(5.5rem, 1 * 4rem), 1fr)',
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
       'minmax(max(5.5rem, 1 * 4rem), 1fr)',
     ]);
@@ -716,5 +727,218 @@ describe('the calendar', () => {
     expect(document.activeElement).toBe(early);
     second.focus();
     expect(document.activeElement).toBe(second);
+  });
+});
+
+function describedBy(name: string): string | null {
+  const button = screen.getByRole('button', { name });
+  const id = button.getAttribute('aria-describedby');
+  if (!id) return null;
+  const node = document.getElementById(id);
+  if (!node) return null;
+  const text = spokenText(node);
+  return text.length === 0 ? '' : text;
+}
+
+function spokenText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+  if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true') return '';
+  return [...node.childNodes].map((child) => spokenText(child)).join('');
+}
+
+describe('the month', () => {
+  afterEach(cleanup);
+
+  function openMonth(locale = 'en-US') {
+    render(<EventCalendarExample locale={locale} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+  }
+
+  it('describes each day with two titles and the count of the rest, and draws the trailing days', () => {
+    openMonth();
+    expect(screen.getByText('November 2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Monday, November 16, 2026' }).getAttribute('aria-label')).toBe('Monday, November 16, 2026');
+    expect(describedBy('Monday, November 16, 2026')).toBe('Offsite, Design review, +2 more');
+    expect(describedBy('Tuesday, November 17, 2026')).toBe('Handoff, Interview');
+    expect(describedBy('Wednesday, November 18, 2026')).toBe('Early sync, Workshop');
+    expect(describedBy('Thursday, November 19, 2026')).toBe('Planning, 1:1, +4 more');
+    expect(describedBy('Friday, November 20, 2026')).toBe('Demo');
+    expect(describedBy('Saturday, November 21, 2026')).toBe('Office hours');
+    expect(describedBy('Sunday, November 15, 2026')).toBe('');
+    const anchorDay = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    expect(anchorDay.hasAttribute('data-selected')).toBe(false);
+    expect(anchorDay.closest('td')?.getAttribute('aria-selected')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Tuesday, December 1, 2026' })).toBeTruthy();
+  });
+
+  it('puts a multi-day event on each day it covers, and keeps an event that ends at midnight on the earlier day', () => {
+    const zone = 'America/Los_Angeles';
+    const events = [
+      event('span', '2026-11-16T17:00:00-08:00[America/Los_Angeles]', '2026-11-18T09:00:00-08:00[America/Los_Angeles]', { title: 'Span' }),
+      event('edge', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', { title: 'Edge', allDay: true }),
+    ];
+    render(<EventCalendarExample locale="en-US" timeZone={zone} events={events} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Monday, November 16, 2026')).toBe('Edge, Span');
+    expect(describedBy('Tuesday, November 17, 2026')).toBe('Span');
+    expect(describedBy('Wednesday, November 18, 2026')).toBe('Span');
+    expect(describedBy('Thursday, November 19, 2026')).toBe('');
+  });
+
+  it('opens the pressed day and focuses its first event', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Thursday, November 19, 2026' }));
+    expect(screen.getByRole('heading', { name: 'Thu, Nov 19' })).toBeTruthy();
+    expect(screen.queryByRole('grid')).toBeNull();
+    const planning = screen.getByRole('button', { name: `Planning, ${clock('10:00')} to ${clock('12:00')}` });
+    expect(document.activeElement).toBe(planning);
+  });
+
+  it('focuses the day heading when the pressed day has no event', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Sunday, November 15, 2026' }));
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Sun, Nov 15' }));
+    expect(screen.queryByRole('button', { name: /Design review|Planning|Offsite/ })).toBeNull();
+  });
+
+  it('moves the month from the header and leaves focus on that button', () => {
+    openMonth();
+    const next = screen.getByRole('button', { name: 'Next month' });
+    next.focus();
+    fireEvent.click(next);
+    expect(screen.getByText('December 2026')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Wednesday, December 16, 2026' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Monday, November 16, 2026' })).toBeNull();
+    expect(document.activeElement).toBe(next);
+  });
+
+  it('moves a month from Page Down and focuses that month’s same day', () => {
+    openMonth();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown' });
+    expect(screen.getByText('December 2026')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Wednesday, December 16, 2026' }));
+  });
+
+  it('cancels Page Up and Page Down so the page does not scroll', () => {
+    openMonth();
+    const day = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    for (const key of ['PageUp', 'PageDown']) {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      day.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    }
+  });
+
+  it('moves a year from Shift and Page Down', () => {
+    openMonth();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown', shiftKey: true });
+    expect(screen.getByRole('grid', { name: 'November 2027' })).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, November 16, 2027' }));
+  });
+
+  it('names the focused month when arrowing across the month boundary', () => {
+    openMonth();
+    let current: HTMLElement = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    current.focus();
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.keyDown(current, { key: 'ArrowDown' });
+      current = document.activeElement as HTMLElement;
+    }
+    expect(screen.getByRole('grid', { name: 'December 2026' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'December 2026' })).toBeTruthy();
+    expect(current).toBe(screen.getByRole('button', { name: 'Monday, December 14, 2026' }));
+    expect(screen.queryByRole('grid', { name: 'November 2026' })).toBeNull();
+  });
+
+  it('names the focused month in Korean when arrowing across the month boundary', () => {
+    openMonth('ko');
+    let current: HTMLElement = screen.getByRole('button', { name: '2026년 11월 16일 월요일' });
+    current.focus();
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.keyDown(current, { key: 'ArrowDown' });
+      current = document.activeElement as HTMLElement;
+    }
+    expect(screen.getByRole('grid', { name: '2026년 12월' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '2026년 12월' })).toBeTruthy();
+    expect(current).toBe(screen.getByRole('button', { name: '2026년 12월 14일 월요일' }));
+    expect(screen.queryByRole('grid', { name: '2026년 11월' })).toBeNull();
+  });
+
+  it('lists an all-day event before a timed event that starts at the same time', () => {
+    const events = [
+      event('alpha', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-16T01:00:00-08:00[America/Los_Angeles]', { title: 'Alpha' }),
+      event('zebra', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-17T00:00:00-08:00[America/Los_Angeles]', { title: 'Zebra', allDay: true }),
+    ];
+    render(<EventCalendarExample locale="en-US" events={events} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(describedBy('Monday, November 16, 2026')).toBe('Zebra, Alpha');
+  });
+
+  it('opens the week that contains the pressed Sunday, in English and Korean', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Sunday, November 15, 2026' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText('Nov 15 – Nov 21, 2026')).toBeTruthy();
+    cleanup();
+    openMonth('ko');
+    fireEvent.click(screen.getByRole('button', { name: '2026년 11월 15일 일요일' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText('11월 15일 – 2026년 11월 21일')).toBeTruthy();
+  });
+
+  const reachedWeek = 'Dec 13 – Dec 19, 2026';
+
+  it('opens the week of the day Next month reaches', () => {
+    openMonth();
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText(reachedWeek)).toBeTruthy();
+  });
+
+  it('opens the week of the day Arrow Down reaches', () => {
+    openMonth();
+    let current: HTMLElement = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    current.focus();
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.keyDown(current, { key: 'ArrowDown' });
+      current = document.activeElement as HTMLElement;
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText(reachedWeek)).toBeTruthy();
+  });
+
+  it('opens the week and the day Page Down reaches', () => {
+    openMonth();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown' });
+    fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+    expect(screen.getByText(reachedWeek)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    expect(screen.getByRole('heading', { name: 'Wed, Dec 16' })).toBeTruthy();
+  });
+
+  it('keeps a far anchor focused and unselected through StrictMode remounts', () => {
+    const anchor = Temporal.PlainDate.from('2027-03-10');
+    render(
+      <StrictMode>
+        <EventCalendarExample locale="en-US" anchor={anchor} />
+      </StrictMode>,
+    );
+    for (let turn = 0; turn < 3; turn += 1) {
+      fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Week' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    }
+    const day = screen.getByRole('button', { name: 'Wednesday, March 10, 2027' });
+    expect(day.tabIndex).toBe(0);
+    expect(day.hasAttribute('data-selected')).toBe(false);
+    expect(day.closest('td')?.getAttribute('aria-selected')).toBeNull();
+    expect(screen.getByRole('grid', { name: 'March 2027' })).toBeTruthy();
+  });
+
+  it('renders the month in Korean', () => {
+    openMonth('ko');
+    expect(screen.getByText('2026년 11월')).toBeTruthy();
+    expect(describedBy('2026년 11월 16일 월요일')).toBe('Offsite, Design review, +2 more');
+    expect(screen.getByRole('button', { name: '2026년 12월 1일 화요일' })).toBeTruthy();
   });
 });
