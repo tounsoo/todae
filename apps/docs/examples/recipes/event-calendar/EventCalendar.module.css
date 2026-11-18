@@ -65,19 +65,10 @@
 
 .day {
   margin: 0;
+  min-inline-size: 0;
   padding: var(--todae-space-2);
   text-align: center;
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-subtle);
-}
-
-.changeMark {
-  display: inline-block;
-  inline-size: var(--todae-space-2);
-  block-size: var(--todae-space-2);
-  margin-inline-start: var(--todae-space-1);
-  border-radius: var(--todae-radius-full);
-  background: var(--todae-color-accent-default);
-  vertical-align: middle;
 }
 
 .strip {
@@ -152,6 +143,10 @@
   inset-inline-start: var(--todae-space-1);
   white-space: normal;
   text-align: end;
+}
+
+.markPiece {
+  white-space: nowrap;
 }
 
 .mark {

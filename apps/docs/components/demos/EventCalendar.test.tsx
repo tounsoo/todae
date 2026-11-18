@@ -556,7 +556,7 @@ describe('the calendar', () => {
     const board = event.closest('[aria-label="Calendar"]');
     const oneAm = [...(board?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
     expect(oneAm).toHaveLength(2);
-    const sundayColumn = screen.getByRole('list', { name: 'Sun, Nov 1' }).parentElement;
+    const sundayColumn = screen.getByRole('list', { name: 'Sun, Nov 1 · PST begins' }).parentElement;
     const sundayOne = [...(sundayColumn?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
     expect(sundayOne).toHaveLength(1);
 
@@ -1560,7 +1560,7 @@ describe('the time zone', () => {
     const labels = [...primary!.querySelectorAll<HTMLElement>('span')].map((node) => node.textContent);
     expect(labels).toEqual([clock('00:00'), clock('01:00'), clock('03:00')]);
     expect(labels).not.toContain(clock('02:00'));
-    const other = [...compare!.querySelectorAll<HTMLElement>('span')];
+    const other = [...compare!.children] as HTMLElement[];
     expect(other.map((node) => node.textContent)).toEqual([clock('08:00'), clock('09:00'), clock('10:00')]);
     expect(other.map((node) => node.style.top)).toEqual([...primary!.querySelectorAll<HTMLElement>('span')].map((node) => node.style.top));
     const gap = screen.getByRole('button', { name: `Once, ${clock('03:00')} to ${clock('03:30')}` });
@@ -1577,7 +1577,7 @@ describe('the time zone', () => {
     const ones = fallLabels.filter((node) => node.textContent === clock('01:00'));
     expect(ones).toHaveLength(2);
     expect(ones[0]!.style.top).not.toBe(ones[1]!.style.top);
-    const paired = [...fallCompare!.querySelectorAll<HTMLElement>('span')];
+    const paired = [...fallCompare!.children] as HTMLElement[];
     expect(paired.map((node) => node.style.top)).toEqual(fallLabels.map((node) => node.style.top));
     expect(paired.find((node) => node.style.top === ones[0]!.style.top)?.textContent).toBe(clock('08:00'));
     expect(paired.find((node) => node.style.top === ones[1]!.style.top)?.textContent).toBe(clock('09:00'));
@@ -1630,16 +1630,21 @@ describe('the time zone', () => {
       expect(page).toContain('Asia/Kolkata');
       expect(page).toContain('Asia/Kathmandu');
     }
+    expect(en).toContain('zone name');
     expect(en).toContain('PST / PDT');
     expect(en).toContain('5:00 PM / 6:00 PM');
-    expect(en).toContain('later offset begins');
+    expect(en).toContain('first visible day that uses the later offset');
+    expect(en).toContain('leaves out the time difference');
+    expect(en).not.toContain('every offset the visible days use');
     expect(en).not.toContain('names every zone name');
     expect(en).not.toContain('keeps a row only');
     expect(en).toContain('server-rendered app passes `timeZone` explicitly');
     expect(en).toContain('+1 day');
     expect(ko).toContain('PST / PDT');
-    expect(ko).toContain('5:00 PM / 6:00 PM');
-    expect(ko).toContain('나중 오프셋이 시작되는 날');
+    expect(ko).toContain('오후 5:00 / 오후 6:00');
+    expect(ko).not.toContain('5:00 PM / 6:00 PM');
+    expect(ko).toContain('첫 보이는 날');
+    expect(ko).toContain('시차를 적지 않습니다');
     expect(ko).not.toContain('같은 규칙일 때만');
     expect(ko).toContain('서버에서 그리는 앱은 `timeZone`을 직접 넘깁니다');
     expect(ko).toContain('+1일');
@@ -1658,7 +1663,7 @@ function weekDays(anchor: string): Temporal.PlainDate[] {
 }
 
 function compareLabel(grid: string, compare: string, days: readonly Temporal.PlainDate[], wall: string, locale: string): string {
-  const seen = new Map<string, string>();
+  const seen = new Map<string, { time: string; shift: number }>();
   for (const day of days) {
     const at = day.toZonedDateTime({ timeZone: grid, plainTime: Temporal.PlainTime.from(wall) });
     const there = at.withTimeZone(compare);
@@ -1666,13 +1671,23 @@ function compareLabel(grid: string, compare: string, days: readonly Temporal.Pla
       .formatToParts(at.epochMilliseconds)
       .find((part) => part.type === 'timeZoneName')?.value;
     if (!offset || seen.has(offset)) continue;
-    const shift = at.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days;
-    const count = shift === 0 ? '' : ` ${new Intl.NumberFormat(locale, { signDisplay: 'always', maximumFractionDigits: 0 }).format(shift)}`;
-    const unit = shift === 0 ? '' : new Intl.DisplayNames(locale, { type: 'dateTimeField', style: 'narrow' }).of('day') ?? 'day';
-    const space = unit && !/\p{Script=Hangul}/u.test(unit) ? ' ' : '';
-    seen.set(offset, `${formatTime(there.toPlainTime(), { locale })}${count}${space}${unit}`);
+    seen.set(offset, { time: formatTime(there.toPlainTime(), { locale }), shift: at.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days });
   }
-  return [...seen.values()].join(' / ');
+  const parts = [...seen.values()];
+  const shiftLabel = (days: number) => {
+    if (days === 0) return '';
+    const count = new Intl.NumberFormat(locale, { signDisplay: 'always', maximumFractionDigits: 0 }).format(days);
+    const unit = new Intl.DisplayNames(locale, { type: 'dateTimeField', style: 'narrow' }).of('day') ?? 'day';
+    const space = /\p{Script=Hangul}/u.test(unit) ? '' : ' ';
+    return `${count}${space}${unit}`;
+  };
+  const shared = parts.every((part) => part.shift === parts[0]?.shift);
+  if (shared) {
+    const clocks = parts.map((part) => part.time).join(' / ');
+    const shift = shiftLabel(parts[0]?.shift ?? 0);
+    return shift ? `${clocks} ${shift}` : clocks;
+  }
+  return parts.map((part) => (part.shift === 0 ? part.time : `${part.time} ${shiftLabel(part.shift)}`)).join(' / ');
 }
 
 describe('a zone whose offset changes inside the visible week', () => {
@@ -1685,8 +1700,16 @@ describe('a zone whose offset changes inside the visible week', () => {
     expect(compareRow(eight.style.top)).toBe('5:00 PM / 6:00 PM');
     expect(compareRow(eight.style.top)).toBe(compareLabel(LA, 'Asia/Jerusalem', days, '08:00', 'en-US'));
     expect(screen.getByText('GMT+2 / GMT+3')).toBeTruthy();
-    const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26' });
-    expect(document.getElementById(thursday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to GMT+3');
+    const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26 · Second column GMT+3 begins' });
+    expect(thursday.getAttribute('aria-describedby')).toBeNull();
+    expect(thursday.querySelector('[aria-hidden]')).toBeNull();
+    const head = thursday.parentElement!;
+    for (const child of head.children) {
+      if (child.tagName === 'H3') continue;
+      expect(child.textContent ?? '').not.toContain('begins');
+    }
+    const marked = [...head.querySelectorAll('h3')].filter((heading) => (heading.textContent ?? '').includes('begins'));
+    expect(marked.map((heading) => heading.textContent)).toEqual(['Thu, Mar 26 · Second column GMT+3 begins']);
   });
 
   it('lists both second-zone times when the grid zone changes and the second zone does not', () => {
@@ -1704,8 +1727,9 @@ describe('a zone whose offset changes inside the visible week', () => {
     const primary = hourColumns()[0];
     const midnight = [...primary!.children].find((node) => node.textContent === '12:00 AM') as HTMLElement;
     expect(compareRow(midnight.style.top)).toBe('8:00 AM / 7:00 AM');
-    const sunday = screen.getByRole('heading', { name: 'Sun, Mar 14' });
-    expect(document.getElementById(sunday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to PDT');
+    const sunday = screen.getByRole('heading', { name: 'Sun, Mar 14 · PDT begins' });
+    expect(sunday.textContent).toBe('Sun, Mar 14 · PDT begins');
+    expect(sunday.getAttribute('aria-describedby')).toBeNull();
   });
 
   it('keeps every hour of a Sydney week beside Los Angeles, and each time matches the days that use it', () => {
@@ -1721,8 +1745,16 @@ describe('a zone whose offset changes inside the visible week', () => {
       expect(wall).toBeTruthy();
       expect(row.textContent).toBe(compareLabel('Australia/Sydney', LA, days, wall!, 'en-US'));
     }
-    const monday = screen.getByRole('heading', { name: 'Mon, Mar 9' });
-    expect(document.getElementById(monday.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Clocks change to PDT');
+    const monday = screen.getByRole('heading', { name: 'Mon, Mar 9 · Second column PDT begins' });
+    expect(monday.textContent).toBe('Mon, Mar 9 · Second column PDT begins');
+    const head = monday.parentElement!;
+    for (const child of head.children) {
+      if (child.tagName === 'H3') continue;
+      expect(child.textContent ?? '').not.toContain('begins');
+      expect(child.textContent ?? '').not.toContain('Second column');
+    }
+    const marked = [...head.querySelectorAll('h3')].filter((heading) => (heading.textContent ?? '').includes('begins'));
+    expect(marked.map((heading) => heading.textContent)).toEqual(['Mon, Mar 9 · Second column PDT begins']);
   });
 
   it('does not describe a midweek change as one lead, in English or Korean', () => {
@@ -1731,8 +1763,10 @@ describe('a zone whose offset changes inside the visible week', () => {
     cleanup();
     render(<EventCalendarExample locale="ko" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
     expect(described()).toEqual(['시각은 GMT-7입니다. 둘째 열은 GMT+2 / GMT+3입니다.']);
-    const changed = screen.getAllByRole('heading', { level: 3 }).find((heading) => document.getElementById(heading.getAttribute('aria-describedby') ?? '')?.textContent === 'GMT+3 시작');
-    expect(changed?.textContent).toContain('3월 26일');
+    const changed = screen.getByRole('heading', { name: /둘째 열 GMT\+3 시작/ });
+    expect(changed.textContent).toContain('3월 26일');
+    expect(changed.textContent).toContain('둘째 열 GMT+3 시작');
+    expect(changed.getAttribute('aria-describedby')).toBeNull();
   });
 
   it('names every offset the week shows, not only Sunday’s', () => {

@@ -1560,6 +1560,18 @@ describe('creating an event from empty lane space', () => {
       const gutterBox = compare!.getBoundingClientRect();
       expect(rowBox.left).toBeGreaterThanOrEqual(gutterBox.left - 1);
       expect(rowBox.right).toBeLessThanOrEqual(gutterBox.right + 1);
+      if (locale === 'en-US') {
+        expect(row?.textContent).toBe('1:00 PM / 2:00 PM -1 day');
+        const pieces = [...row!.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+        expect(pieces.length).toBeGreaterThan(1);
+        const tops = pieces.map((piece) => {
+          expect(piece.getClientRects().length).toBe(1);
+          return piece.getBoundingClientRect().top;
+        });
+        expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+      }
+      const marked = screen.getByRole('heading', { name: locale === 'ko' ? /둘째 열 GMT-7 시작/ : 'Mon, Mar 9 · Second column PDT begins' });
+      expect(marked.getBoundingClientRect().height).toBeGreaterThan(0);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
       cleanup();
 
@@ -1576,6 +1588,27 @@ describe('creating an event from empty lane space', () => {
         </Providers>,
       );
       await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+      expect(document.body.textContent ?? '').not.toContain(locale === 'ko' ? '둘째 열 GMT-7 시작' : 'Second column PDT begins');
+      cleanup();
+    }
+
+    for (const locale of ['en-US', 'ko'] as const) {
+      await page.viewport(375, 800);
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2027-03-14')}
+            opens={Temporal.PlainTime.from('00:00')}
+            closes={Temporal.PlainTime.from('04:00')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      const marked = screen.getByRole('heading', { name: locale === 'ko' ? /GMT-7 시작/ : 'Sun, Mar 14 · PDT begins' });
+      expect(marked.getBoundingClientRect().width).toBeGreaterThan(0);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
       cleanup();
     }

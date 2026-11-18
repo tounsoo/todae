@@ -101,6 +101,8 @@ export function daySegments({
   };
 }
 
+// The close of one day and the open of the next can be one instant. A start
+// belongs to the later day, and an end to the earlier one.
 function holds(length: number, units: number, edge: Edge): boolean {
   return edge === 'start' ? units >= 0 && units < length : units > 0 && units <= length;
 }
@@ -730,17 +732,24 @@ export function compareMarks(segments: readonly DaySegment[], units: readonly nu
   });
 }
 
-function clockChanges(segments: readonly DaySegment[], zones: readonly string[], locale: string): Map<string, string[]> {
-  const changes = new Map<string, string[]>();
+type ClockColumn = 'grid' | 'second';
+
+type ClockStart = { column: ClockColumn; name: string };
+
+function clockChanges(segments: readonly DaySegment[], zones: readonly { id: string; column: ClockColumn }[], locale: string): Map<string, ClockStart[]> {
+  const changes = new Map<string, ClockStart[]>();
   for (const zone of zones) {
     let previous: string | null = null;
     for (const segment of segments) {
-      const names = zoneFaces(zone, locale, hourMarks(segment).map((mark) => mark.time)).map((face) => face.name);
+      const names = zoneFaces(zone.id, locale, hourMarks(segment).map((mark) => mark.time)).map((face) => face.name);
       const started = names.length > 1 ? names.slice(1) : previous && names[0] && names[0] !== previous ? [names[0]] : [];
       if (started.length > 0) {
         const key = segment.day.toString();
         const prior = changes.get(key) ?? [];
-        changes.set(key, [...prior, ...started.filter((name) => !prior.includes(name))]);
+        const next = started
+          .filter((name) => !prior.some((item) => item.column === zone.column && item.name === name))
+          .map((name) => ({ column: zone.column, name }));
+        changes.set(key, [...prior, ...next]);
       }
       previous = names[names.length - 1] ?? previous;
     }
@@ -748,8 +757,30 @@ function clockChanges(segments: readonly DaySegment[], zones: readonly string[],
   return changes;
 }
 
-function changeLabel(names: readonly string[], locale: string): string {
-  return locale.toLowerCase().startsWith('ko') ? `${names.join(', ')} 시작` : `Clocks change to ${names.join(', ')}`;
+function changePhrase(starts: readonly ClockStart[], locale: string): string {
+  const ko = locale.toLowerCase().startsWith('ko');
+  const columns: ClockColumn[] = [];
+  for (const start of starts) if (!columns.includes(start.column)) columns.push(start.column);
+  return columns
+    .map((column) => {
+      const names = starts
+        .filter((start) => start.column === column)
+        .map((start) => start.name)
+        .join(', ');
+      if (ko) return column === 'second' ? `둘째 열 ${names} 시작` : `${names} 시작`;
+      return column === 'second' ? `Second column ${names} begins` : `${names} begins`;
+    })
+    .join(' · ');
+}
+
+function markPieces(times: readonly CompareTime[], locale: string): string[] {
+  const labels = times.map((part) => ({ time: formatTime(part.time.toPlainTime(), { locale }), shift: dayShiftLabel(part.dayShift, locale) }));
+  const shared = labels.every((label) => label.shift === labels[0]?.shift);
+  if (shared) {
+    const last = labels.length - 1;
+    return labels.map((label, index) => (index === last && label.shift ? `${label.time} ${label.shift}` : label.time));
+  }
+  return labels.map((label) => (label.shift ? `${label.time} ${label.shift}` : label.time));
 }
 
 const OPENS = Temporal.PlainTime.from('08:00');
@@ -1280,9 +1311,9 @@ export function EventCalendarExample({
   const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
   const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
   const gutters = showCompare ? 2 : 1;
-  const tracks = `${showCompare ? '4.5rem 11rem' : '4.5rem'} ${dayTracks}`;
+  const tracks = `${showCompare ? '4.5rem 14rem' : '4.5rem'} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
-  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), showCompare ? 15.5 : 4.5)}rem`;
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), showCompare ? 18.5 : 4.5)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
   const compared = showCompare && compareZone ? compareMarks(axis.segments, gutterMarks, compareZone) : [];
@@ -1290,7 +1321,7 @@ export function EventCalendarExample({
   const primaryName = zoneNames(zoneFaces(timeZone, locale, samples));
   const compareName = showCompare && compareZone ? zoneNames(zoneFaces(compareZone, locale, samples)) : null;
   const description = zoneDescription(timeZone, compareName && compareZone ? compareZone : null, locale, axis.segments);
-  const changes = clockChanges(axis.segments, showCompare && compareZone ? [timeZone, compareZone] : [timeZone], locale);
+  const changes = clockChanges(axis.segments, showCompare && compareZone ? [{ id: timeZone, column: 'grid' }, { id: compareZone, column: 'second' }] : [{ id: timeZone, column: 'grid' }], locale);
   const step = view === 'week' ? 7 : 1;
   const move = view === 'week' ? 'week' : 'day';
   const grid = [...new Set(axis.segments.flatMap((segment) => snapGrid(segment, SLOT_MINUTES)))].sort((a, b) => a - b);
@@ -1325,6 +1356,10 @@ export function EventCalendarExample({
     returnFocus.current = true;
   };
 
+  // The dialog unmounts in the same commit that records the edit, so its own
+  // focus return has no button to land on yet. This runs after that commit.
+  // The heading is consumed here. A value left from a cancelled create would
+  // steal focus from a later cancelled edit.
   useLayoutEffect(() => {
     if (!returnFocus.current || session) return;
     returnFocus.current = false;
@@ -1546,15 +1581,6 @@ export function EventCalendarExample({
                 <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
                   {primaryName}
                 </Text.Root>
-                {axis.segments.map((segment) => {
-                  const started = changes.get(segment.day.toString());
-                  if (!started || started.length === 0) return null;
-                  return (
-                    <VisuallyHidden.Root key={segment.day.toString()} id={`${heading}-change-${segment.day.toString()}`}>
-                      {changeLabel(started, locale)}
-                    </VisuallyHidden.Root>
-                  );
-                })}
               </div>
               {compareName ? (
                 <div className={styles.corner}>
@@ -1564,20 +1590,11 @@ export function EventCalendarExample({
                 </div>
               ) : null}
               {axis.segments.map((segment) => {
-                const started = changes.get(segment.day.toString());
-                const changeId = started && started.length > 0 ? `${heading}-change-${segment.day.toString()}` : undefined;
+                const phrase = changePhrase(changes.get(segment.day.toString()) ?? [], locale);
+                const title = phrase ? `${dayHeading(segment.day, locale)} · ${phrase}` : dayHeading(segment.day, locale);
                 return (
-                  <Text.Root
-                    as="h3"
-                    variant="label"
-                    tabIndex={-1}
-                    id={`${heading}-${segment.day.toString()}`}
-                    key={segment.day.toString()}
-                    className={styles.day}
-                    aria-describedby={changeId}
-                  >
-                    {dayHeading(segment.day, locale)}
-                    {changeId ? <span aria-hidden="true" className={styles.changeMark} /> : null}
+                  <Text.Root as="h3" variant="label" tabIndex={-1} id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
+                    {title}
                   </Text.Root>
                 );
               })}
@@ -1626,12 +1643,12 @@ export function EventCalendarExample({
                       data-first={mark.units === 0 ? '' : undefined}
                       style={{ top: percent(mark.units / scale) }}
                     >
-                      {mark.times
-                        .map((part) => {
-                          const shift = dayShiftLabel(part.dayShift, locale);
-                          return `${formatTime(part.time.toPlainTime(), { locale })}${shift ? ` ${shift}` : ''}`;
-                        })
-                        .join(' / ')}
+                      {markPieces(mark.times, locale).map((piece, index) => (
+                        <span key={`${mark.units}-${index}`}>
+                          {index > 0 ? <span className={styles.markSep}> / </span> : null}
+                          <span className={styles.markPiece}>{piece}</span>
+                        </span>
+                      ))}
                     </Text.Root>
                   ))}
                 </div>
