@@ -732,15 +732,16 @@
     "(section order)": "c1f728c5db97"
   },
   "recipes/event-calendar": {
-    "(top)": "ea49fce3875e",
+    "(top)": "12f267b918b4",
     "# Event calendar": "2ebcf97d590c",
     "## The time lanes": "16126cb44b52",
-    "## The event block": "928fa27628e4",
+    "## The event block": "f34c1f7abc02",
     "## The month": "6ea32620a27d",
-    "## Dragging": "d759e06aa32d",
-    "## Accessible composition": "388662d90425",
+    "## Dragging": "02345c9f1938",
+    "## Editing": "73da8621c179",
+    "## Accessible composition": "245dee1aea4b",
     "## When to use": "d504fd453481",
-    "(section order)": "f277a6d3d4fa"
+    "(section order)": "9989e7e8864c"
   },
   "recipes/file-upload": {
     "(top)": "8b01f1fb714b",
@@ -835,10 +836,10 @@
     "(top)": "a19d294efb1e",
     "# Scheduler": "515351c560f5",
     "## The time axis": "9a2d242cb763",
-    "## Stages and talks": "36efb6394752",
+    "## Stages and talks": "0c9d817d794f",
     "## The rules": "30c66bc94469",
     "## Moving without dragging": "ef83b5f6f9fc",
-    "## Dragging": "c39fe10c47e7",
+    "## Dragging": "64a3050f4d4e",
     "## Undo and saving": "a3b619f56583",
     "## Accessible composition": "e39b59e6519d",
     "## When to use": "238b83521806",
