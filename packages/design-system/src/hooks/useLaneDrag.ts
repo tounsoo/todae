@@ -11,8 +11,8 @@ export type LanePlace = {
   end: number;
 };
 
-/** What a drag does: place an item from the queue, move a placed one, resize one of its ends, take it back to the queue, or drag out a new place. */
-export type LaneDragKind = 'assign' | 'move' | 'resize-start' | 'resize-end' | 'unassign' | 'create';
+/** What a drag of an existing item does. A new place is a `LaneCreateDrag`, and `onDrop` never receives one. */
+export type LaneDragKind = 'assign' | 'move' | 'resize-start' | 'resize-end' | 'unassign';
 
 /** What `check` says about a place. A `blocked` place takes no drop; a `warning` one does. */
 export type LaneVerdict = {
@@ -23,12 +23,12 @@ export type LaneVerdict = {
   with?: readonly string[];
 };
 
-/** A drag under way, or a drop: the item, what the drag does, where the item was and where it would go. */
+/** A drag of an existing item, or the drop `onDrop` receives. */
 export type LaneDragChange = {
-  /** The item's id, or `''` for a create, which has no item yet. */
+  /** The item's id. */
   id: string;
   kind: LaneDragKind;
-  /** The item's place when the drag started, or null for an item from the queue or a create. */
+  /** The item's place when the drag started, or null for an item from the queue. */
   from: LanePlace | null;
   /** Where the item would go, or null over the queue, outside the lanes, or when the item can't fit in `range`. */
   to: LanePlace | null;
@@ -36,9 +36,20 @@ export type LaneDragChange = {
   verdict: LaneVerdict | null;
 };
 
-/** The drag under way, read with `useLaneDragState`. */
+/** A create under way, read from `drag`. It is not a drop. */
+export type LaneCreateDrag = {
+  kind: 'create';
+  /** There is no item yet. */
+  id: null;
+  from: null;
+  /** The place being drawn, or null when it can't fit in `range`. */
+  to: LanePlace | null;
+  verdict: null;
+};
+
+/** The drag under way, read with `useLaneDragState`. A create is a `LaneCreateDrag`. A drop is not. */
 export type LaneDragStore = {
-  get: () => LaneDragChange | null;
+  get: () => LaneDragChange | LaneCreateDrag | null;
   subscribe: (listener: () => void) => () => void;
 };
 
@@ -50,8 +61,8 @@ export type UseLaneDragOptions = {
   /** The points a start or end snaps to, in ascending order. Without it, places don't snap. */
   grid?: readonly number[];
   /**
-   * The shortest span a resize leaves, and the span a click on empty lane space creates. Default 0, so that click
-   * does nothing.
+   * The shortest span a resize leaves, and the span a click on empty lane space creates, from the grid cell that
+   * contains the press. Default 0, so that click does nothing.
    */
   minSpan?: number;
   /** Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop. */
@@ -60,8 +71,9 @@ export type UseLaneDragOptions = {
   onDrop: (change: LaneDragChange) => void;
   /**
    * Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing.
-   * A drag sets the span between the press and the pointer. A press that stays inside the drag threshold creates
-   * a slot `minSpan` long, and does nothing when `minSpan` is 0.
+   * A drag sets the span between the press and the pointer. The press floors to the grid cell that contains it,
+   * and the end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold
+   * creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0.
    */
   onCreate?: (place: LanePlace) => void;
   /** Turn dragging off. While `disabled` is true, a drag under way can't be dropped. */
@@ -97,7 +109,7 @@ export type UseLaneDragResult = {
     props?: P,
   ) => Omit<P, 'onPointerDown'> &
     Attributes & {
-      onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+      onPointerDown: (event: PointerEvent<Element>) => void;
     };
   /** Props for the element that holds unplaced items, where a placed item can be dropped to take it off the board. */
   getQueueProps: <P extends object>(props?: P) => P & Attributes;
@@ -129,7 +141,8 @@ const EDGE = 40;
 const STEP = 16;
 // How long after a drop a click is the drop's own, which lands on the handle it started from.
 const QUIET = 400;
-const INTERACTIVE = 'button, a[href], input, select, textarea, [contenteditable]:not([contenteditable="false"])';
+const INTERACTIVE =
+  'button, a[href], input, select, textarea, [contenteditable]:not([contenteditable="false"]), [role="button"], [tabindex]:not([tabindex="-1"])';
 
 type Part = 'move' | 'start' | 'end' | 'create';
 
@@ -152,8 +165,8 @@ type Session = {
   id: string;
   part: Part;
   /** The item's element, the handle the press started on, and the lane that holds the item. */
-  node: HTMLElement;
-  handle: HTMLElement;
+  node: Element;
+  handle: Element;
   lane: Element | null;
   /** The board, found when the drag starts. */
   board: HTMLElement | null;
@@ -204,10 +217,12 @@ const below = (grid: readonly number[], max: number, ceiling: number): number | 
 
 /**
  * The span a create gesture draws from the press value `anchor` to `pointer`.
- * Both ends snap into `range` the way a resize does. The span runs forward, so a
- * press below the anchor still has `start < end`, and it is at least `minSpan`
- * long. A press with no direction (`pointer === anchor`, a click) grows forward
- * by `minSpan`. It returns null when that length is 0 or no such span fits.
+ * The press floors to the grid cell that contains it. The end under the pointer
+ * snaps to the nearest grid point, the way a resize does. The span runs forward,
+ * so a press below the anchor still has `start < end`, and it is at least
+ * `minSpan` long. A click (`pointer === anchor`) grows forward by `minSpan` from
+ * that cell, so the slot contains the press. It returns null when that length
+ * is 0 or no such span fits.
  */
 function spanFromCreate(
   anchor: number,
@@ -220,19 +235,32 @@ function spanFromCreate(
   const need = minSpan;
   if (!(hi > lo) || need > hi - lo) return null;
   const clamp = (value: number) => Math.min(hi, Math.max(lo, value));
-  // The same snap as `onGrid`: the nearest grid point, held to the points that sit inside the range.
-  const snap = (value: number) => {
-    const clamped = clamp(value);
-    if (!grid?.length) return clamped;
+  const heldGrid = () => {
+    if (!grid?.length) return null;
     const low = above(grid, lo, -Infinity);
     const high = below(grid, hi, Infinity);
-    if (low === undefined || high === undefined || low > high) return clamped;
-    return Math.min(Math.max(nearest(grid, clamped), low), high);
+    if (low === undefined || high === undefined || low > high) return null;
+    return { low, high };
+  };
+  const nearestSnap = (value: number) => {
+    const clamped = clamp(value);
+    const held = heldGrid();
+    if (held === null || grid === undefined) return clamped;
+    return Math.min(Math.max(nearest(grid, clamped), held.low), held.high);
+  };
+  // The largest in-range grid point at or below the press. With no grid, the clamped value.
+  const floorSnap = (value: number) => {
+    const clamped = clamp(value);
+    const held = heldGrid();
+    if (held === null || grid === undefined) return clamped;
+    const point = below(grid, clamped, Infinity);
+    if (point === undefined || point < held.low) return held.low;
+    return Math.min(point, held.high);
   };
   const forward = pointer >= anchor;
   if (forward) {
-    let start = snap(anchor);
-    let end = snap(pointer);
+    let start = floorSnap(anchor);
+    let end = pointer === anchor ? start : nearestSnap(pointer);
     if (end < start) end = start;
     if (!(end > start) && need === 0) return null;
     if (end - start < need) {
@@ -248,8 +276,8 @@ function spanFromCreate(
     }
     return end > start && end - start >= need && start >= lo && end <= hi ? { start, end } : null;
   }
-  let end = snap(anchor);
-  let start = snap(pointer);
+  let end = floorSnap(anchor);
+  let start = nearestSnap(pointer);
   if (start > end) start = end;
   if (!(end > start) && need === 0) return null;
   if (end - start < need) {
@@ -298,8 +326,8 @@ function readPlace(node: Element): { from: LanePlace | null; span: number } | nu
   return Number.isFinite(span) && span > 0 ? { from: null, span } : null;
 }
 
-function createStore(): LaneDragStore & { set: (next: LaneDragChange | null) => void } {
-  let state: LaneDragChange | null = null;
+function createStore(): LaneDragStore & { set: (next: LaneDragChange | LaneCreateDrag | null) => void } {
+  let state: LaneDragChange | LaneCreateDrag | null = null;
   const listeners = new Set<() => void>();
   return {
     get: () => state,
@@ -317,7 +345,8 @@ function createStore(): LaneDragStore & { set: (next: LaneDragChange | null) => 
   };
 }
 
-type Target = { change: Omit<LaneDragChange, 'verdict'>; element: Element | null };
+type Pending = Omit<LaneDragChange, 'verdict'> | Omit<LaneCreateDrag, 'verdict'>;
+type Target = { change: Pending; element: Element | null };
 
 /**
  * The drag engine for one board, made once per hook. It reads the hook's latest options through
@@ -329,7 +358,7 @@ function createLaneDrag(
   id: string,
   options: () => UseLaneDragOptions,
   store: ReturnType<typeof createStore>,
-  onActive: (node: HTMLElement | null) => void,
+  onActive: (node: Element | null) => void,
 ) {
   let session: Session | null = null;
   let disarmQuiet: (() => void) | null = null;
@@ -421,9 +450,9 @@ function createLaneDrag(
   const locate = (current: Session, x: number, y: number, held: Sides | null): Target | undefined => {
     if (current.part === 'create') {
       const lane = current.lane;
-      if (lane === null) return { change: { id: '', kind: 'create', from: null, to: null }, element: null };
+      if (lane === null) return { change: { id: null, kind: 'create', from: null, to: null }, element: null };
       const to = createPlace(current, valueAt(current, lane, x, y));
-      return { change: { id: '', kind: 'create', from: null, to }, element: to === null ? null : lane };
+      return { change: { id: null, kind: 'create', from: null, to }, element: to === null ? null : lane };
     }
     const { range, minSpan = 0 } = options();
     const { id: item, from } = current;
@@ -479,7 +508,7 @@ function createLaneDrag(
   };
 
   /** Marks the element `change` would drop on, and the other items its verdict names. */
-  const paint = (current: Session, change: LaneDragChange, element: Element | null) => {
+  const paint = (current: Session, change: LaneDragChange | LaneCreateDrag, element: Element | null) => {
     clear(current, false);
     if (element !== null && (change.to !== null || change.kind === 'unassign')) {
       mark(current, element, 'data-drop-target', '');
@@ -494,6 +523,10 @@ function createLaneDrag(
     }
   };
 
+  /** The published drag. A create carries no verdict, because `check` looks up an item. */
+  const settle = (current: Session, pending: Pending): LaneDragChange | LaneCreateDrag =>
+    pending.kind === 'create' ? { ...pending, verdict: null } : { ...pending, verdict: judge(current, pending.to) };
+
   /** Shows the drop at x, y, calling `check` when the place changes, and with `fresh` even when it doesn't. Returns the board as it measured it. */
   const update = (current: Session, x: number, y: number, fresh = false): View | null => {
     current.last = { x, y };
@@ -503,11 +536,11 @@ function createLaneDrag(
     const last = store.get();
     if (next === undefined) {
       // A resize past what it allows keeps the place shown, which a drop still checks again.
-      if (fresh && last !== null) store.set({ ...last, verdict: judge(current, last.to) });
+      if (fresh && last !== null && last.kind !== 'create') store.set({ ...last, verdict: judge(current, last.to) });
       return shown;
     }
     if (!fresh && last !== null && last.kind === next.change.kind && samePlace(last.to, next.change.to)) return shown;
-    const change = { ...next.change, verdict: judge(current, next.change.to) };
+    const change = settle(current, next.change);
     paint(current, change, next.element);
     store.set(change);
     return shown;
@@ -742,7 +775,7 @@ function createLaneDrag(
       }
       return;
     }
-    let change: LaneDragChange | null;
+    let change: LaneDragChange | LaneCreateDrag | null;
     try {
       // `check` again, since what it reads may have changed while the pointer stayed on one place.
       update(ended, event.clientX, event.clientY, true);
@@ -823,7 +856,7 @@ function createLaneDrag(
      * Starts a create from a press on empty space in `laneKey`. An item, its handles, and a control in the
      * lane keep their own press. With no `onCreate`, empty space starts nothing.
      */
-    pressEmpty(event: PointerEvent<HTMLElement>, laneKey: string) {
+    pressEmpty(event: PointerEvent<Element>, laneKey: string) {
       if (options().onCreate === undefined || options().disabled) return;
       if (event.button !== 0 || (event.pointerType === 'touch' && !event.isPrimary)) return;
       const lane = event.currentTarget;
@@ -883,11 +916,11 @@ const serverState = () => null;
  */
 export function useLaneDragState<T>(
   drag: LaneDragStore,
-  select: (state: LaneDragChange | null) => T,
+  select: (state: LaneDragChange | LaneCreateDrag | null) => T,
   isEqual: (a: T, b: T) => boolean = Object.is,
 ): T {
-  const cache = useRef<{ state: LaneDragChange | null; select: typeof select; value: T } | null>(null);
-  const read = (state: LaneDragChange | null): T => {
+  const cache = useRef<{ state: LaneDragChange | LaneCreateDrag | null; select: typeof select; value: T } | null>(null);
+  const read = (state: LaneDragChange | LaneCreateDrag | null): T => {
     const last = cache.current;
     if (last !== null && last.state === state && last.select === select) return last.value;
     const value = select(state);
@@ -921,7 +954,7 @@ export function useLaneDrag(options: UseLaneDragOptions): UseLaneDragResult {
   // Whether a drag is under way, so Escape reaches it, and the dragged item's element for the
   // Escape layer. The owner renders at a drag's start and end only.
   const [active, setActive] = useState(false);
-  const nodeRef = useRef<HTMLElement | null>(null);
+  const nodeRef = useRef<Element | null>(null);
   const [store] = useState(createStore);
   // What callers get: the store without its setter.
   const [drag] = useState<LaneDragStore>(() => ({ get: store.get, subscribe: store.subscribe }));
@@ -951,11 +984,11 @@ export function useLaneDrag(options: UseLaneDragOptions): UseLaneDragResult {
   return {
     getBoardProps: (props) => withParts(props, { [BOARD]: '' }),
     getLaneProps: <P extends object>(lane: string, props?: P) => {
-      const user = (props ?? {}) as P & { onPointerDown?: (event: PointerEvent<HTMLElement>) => void };
+      const user = (props ?? {}) as P & { onPointerDown?: (event: PointerEvent<Element>) => void };
       const { onPointerDown, ...rest } = user;
       return {
         ...withParts(rest as Omit<P, 'onPointerDown'>, { [LANE]: lane }),
-        onPointerDown: composeHandlers(onPointerDown, (event: PointerEvent<HTMLElement>) => engine.pressEmpty(event, lane)),
+        onPointerDown: composeHandlers(onPointerDown, (event: PointerEvent<Element>) => engine.pressEmpty(event, lane)),
       };
     },
     getQueueProps: (props) => withParts(props, { [QUEUE]: '' }),

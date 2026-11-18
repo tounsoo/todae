@@ -35,7 +35,8 @@ export const meta = {
       type: 'number',
       required: false,
       default: '0',
-      description: 'The shortest span a resize leaves, and the span a click on empty lane space creates. Default 0, so that click does nothing.',
+      description:
+        'The shortest span a resize leaves, and the span a click on empty lane space creates, from the grid cell that contains the press. Default 0, so that click does nothing.',
     },
     {
       name: 'check',
@@ -48,7 +49,7 @@ export const meta = {
       type: '(place: LanePlace) => void',
       required: false,
       description:
-        'Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. A press that stays inside the drag threshold creates a slot `minSpan` long, and does nothing when `minSpan` is 0.',
+        'Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. The press floors to the grid cell that contains it, and the end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane\'s click, and does nothing when `minSpan` is 0.',
     },
     {
       name: 'disabled',
