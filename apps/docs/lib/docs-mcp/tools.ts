@@ -1,9 +1,8 @@
 import { DOCS_ORIGIN } from '../origin';
-import { docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
+import { docsUrlFor, EN_WHEN, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
 import { envelope, fitSlice, type NextCall } from './budget';
-import { allPages, type LocaleId } from './catalog';
-import { readPage, whenLabels, type ReadOptions } from './read';
+import { readPage, type ReadOptions } from './read';
 import { formatSuggestions, searchDocs } from './search';
 import { closeNames } from './units';
 
@@ -110,9 +109,8 @@ export function getComponent(name: string) {
   ]);
 }
 
-export function whenToUse(name: string, options?: { locale?: LocaleId }) {
-  const locale = options?.locale ?? 'en';
-  const labels = whenLabels(locale);
+export function whenToUse(name: string) {
+  const labels = EN_WHEN;
   let resolved;
   try {
     resolved = resolveName(name);
@@ -122,51 +120,48 @@ export function whenToUse(name: string, options?: { locale?: LocaleId }) {
     throw unknownComponent(name, error);
   }
   const canonical = resolved.kind === 'namespace' ? resolved.name : resolved.component.name;
-  const english = pageFor(canonical);
-  const localized = english ? allPages().find((item) => item.locale === locale && item.slug === english.slug) : undefined;
-  // English reads the shared page cache, so a page that fails to parse reports missing without dropping the others.
-  const page = locale === 'en' ? english : localized;
-  if (!english || !page) {
+  const page = pageFor(canonical);
+  if (!page) {
     return envelope(
       {
         status: 'no-docs-page' as const,
-        locale,
+        locale: 'en' as const,
         whenToUse: null,
         whenNotToUse: null,
         docsUrl: null,
         source: SOURCE,
       },
       'when-to-use',
-      [{ tool: 'search_docs', arguments: { query: name, ...(locale === 'ko' ? { locale } : {}) }, why: 'The name did not match a docs page.' }],
-      { locale },
+      [{ tool: 'search_docs', arguments: { query: name }, why: 'The name did not match a docs page.' }],
+      { locale: 'en' },
     );
   }
   const copy = parseWhen(page.markdown, canonical, labels);
-  const scope = copy?.shared && !ownsPage(english, canonical) ? ('page' as const) : undefined;
-  const docsUrl = 'docsUrl' in page && typeof page.docsUrl === 'string' ? page.docsUrl : `${DOCS_ORIGIN}/${page.slug}`;
+  const scope = copy?.shared && !ownsPage(page, canonical) ? ('page' as const) : undefined;
+  const docsUrl = `${DOCS_ORIGIN}/${page.slug}`;
   const next: { tool: string; arguments: Record<string, string>; why: string }[] = [
-    { tool: 'get_docs_page', arguments: { name: `${page.slug}#${labels.heading}`, ...(locale === 'ko' ? { locale } : {}) }, why: 'The section this copy came from.' },
+    { tool: 'get_docs_page', arguments: { name: `${page.slug}#${labels.heading}` }, why: 'The section this copy came from.' },
   ];
   if (!copy) {
     return envelope(
       {
         status: 'missing' as const,
-        locale,
+        locale: 'en' as const,
         whenToUse: null,
         whenNotToUse: null,
         docsUrl,
-        note: locale === 'en' ? missingWhenNote(page.markdown, page.slug) : `No '${labels.heading}' section on /${locale}/${page.slug}. Not inferred.`,
+        note: missingWhenNote(page.markdown, page.slug),
         source: SOURCE,
       },
       'when-to-use',
       next,
-      { locale, slug: page.slug },
+      { locale: 'en', slug: page.slug },
     );
   }
   return envelope(
     {
       status: 'present' as const,
-      locale,
+      locale: 'en' as const,
       whenToUse: copy.whenToUse,
       whenNotToUse: copy.whenNotToUse,
       docsUrl,
@@ -176,13 +171,13 @@ export function whenToUse(name: string, options?: { locale?: LocaleId }) {
     },
     'when-to-use',
     next,
-    { locale, slug: page.slug, section: labels.heading },
+    { locale: 'en', slug: page.slug, section: labels.heading },
   );
 }
 
 /**
  * A docs page by slug, docs URL, or component name. A `#anchor` or `section` reads that section.
- * `ko/…` or `locale: "ko"` reads the Korean page. Example source is a stub unless `includeCode` is set.
+ * A `ko/` prefix reads the English page at the rest of the path. Example source is a stub unless `includeCode` is set.
  * A stubbed page over the large-page threshold returns an outline and the intro.
  */
 export function getDocsPage(query: string, options?: ReadOptions) {

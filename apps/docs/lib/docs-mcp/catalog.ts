@@ -51,10 +51,7 @@ export type PageRecord = {
 
 type HeadingMark = { anchor: string; text: string; depth: 2 | 3; from: number };
 
-const APP: Record<LocaleId, string> = {
-  en: join(process.cwd(), 'app', '(en)'),
-  ko: join(process.cwd(), 'app', 'ko'),
-};
+const APP_EN = join(process.cwd(), 'app', '(en)');
 
 function plain(node: Node): string {
   if ((node.type === 'text' || node.type === 'inlineCode') && 'value' in node && typeof node.value === 'string') return node.value;
@@ -131,7 +128,7 @@ function filesFor(file: string, id: string, demonstrates: string, anchor: string
   ];
 }
 
-function compile(locale: LocaleId, slug: string, raw: string, file = join(APP[locale], slug, 'page.mdx')): PageRecord {
+function compile(slug: string, raw: string, file = join(APP_EN, slug, 'page.mdx')): PageRecord {
   const tree = parseMdx(raw);
   const title = raw.split('\n').find((line) => line.startsWith('# '))?.slice(2) ?? slug;
   const props = [...raw.matchAll(/<PropsTable\s+name="([^"]+)"\s*\/>/g)].map((hit) => hit[1] ?? '');
@@ -165,11 +162,11 @@ function compile(locale: LocaleId, slug: string, raw: string, file = join(APP[lo
   const { intro, sections } = splitSections(raw, marks, examples, replacements);
   const description = pageSummary(tree, Infinity)?.description || null;
   return {
-    locale,
+    locale: 'en',
     slug,
     title,
     file,
-    docsUrl: locale === 'ko' ? `${DOCS_ORIGIN}/ko/${slug}` : `${DOCS_ORIGIN}/${slug}`,
+    docsUrl: `${DOCS_ORIGIN}/${slug}`,
     props,
     intro,
     markdown,
@@ -239,15 +236,13 @@ const FIXTURE_PAGES = join(process.cwd(), 'lib', 'docs-mcp', 'fixtures', 'pages'
 
 function build(): PageRecord[] {
   const pages: PageRecord[] = [];
-  for (const locale of ['en', 'ko'] as const) {
-    for (const page of loadPages(APP[locale], { inlineExamples: false })) {
-      pages.push(compile(locale, page.slug, page.markdown));
-    }
+  for (const page of loadPages(APP_EN, { inlineExamples: false })) {
+    pages.push(compile(page.slug, page.markdown));
   }
   // A route test sets this so a page that is not part of the site can be fetched.
   if (process.env.TODAE_DOCS_MCP_FIXTURE === '1') {
     for (const page of loadPages(FIXTURE_PAGES, { inlineExamples: false })) {
-      pages.push(compile('en', page.slug, page.markdown, join(FIXTURE_PAGES, page.slug, 'page.mdx')));
+      pages.push(compile(page.slug, page.markdown, join(FIXTURE_PAGES, page.slug, 'page.mdx')));
     }
   }
   return pages;

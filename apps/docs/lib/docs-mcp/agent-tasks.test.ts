@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { deliver, LARGE_PAGE_TOKENS, MAX_RESPONSE_CHARS } from './budget';
 import { getComponent, getDocsPage, listComponents, whenToUse } from './tools';
 import { getRecipe } from './recipes';
-import { getGuide } from './guides';
 import { readExample } from './read';
 import { presentSearch, searchDocs, type SearchHit } from './search';
 import { getToken } from './tokens';
@@ -18,7 +17,6 @@ function cost(value: unknown): number {
 type Task = {
   id: string;
   query: string;
-  locale?: 'en' | 'ko';
   /** A hit in the top 3 whose ref, title, path or component contains this. */
   match: string;
   /** The page or name the first suggested call must open. Defaults to the match without its anchor. */
@@ -74,27 +72,11 @@ const tasks: Task[] = [
     follow: (hit) => getComponent(hit.component ?? 'useTooltip'),
   },
   {
-    id: 'korean-scheduler-drag',
-    query: '세션을 다른 무대로 끌기',
-    locale: 'ko',
-    match: 'recipes/scheduler#끌기',
-    phrase: 'useLaneDrag',
-    follow: (hit) => getDocsPage(hit.ref, { locale: 'ko' }),
-  },
-  {
-    id: 'korean-calendar-holiday',
-    query: '공휴일처럼 날짜를 제외',
-    locale: 'ko',
-    match: 'calendar#',
-    phrase: '공휴일',
-    follow: (hit) => getDocsPage(hit.ref, { locale: 'ko' }),
-  },
-  {
     id: 'form-error',
     query: 'show a form error on a field',
     match: 'errormessage#in-a-form',
     phrase: 'aria-describedby',
-    follow: (hit) => getDocsPage(hit.ref, hit.locale === 'ko' ? { locale: 'ko' } : {}),
+    follow: (hit) => getDocsPage(hit.ref),
   },
   {
     id: 'wizard-recipe',
@@ -127,7 +109,7 @@ const tasks: Task[] = [
 ];
 
 function top(task: Task): SearchHit {
-  const hits = searchDocs(task.query, { ...(task.locale ? { locale: task.locale } : {}), limit: 8 });
+  const hits = searchDocs(task.query, { limit: 8 });
   const found = hits.slice(0, 3).find((hit) => `${hit.ref} ${hit.title} ${hit.path ?? ''} ${hit.component ?? ''}`.includes(task.match));
   expect(found, `${task.id} top 8: ${hits.map((hit) => `${hit.kind}:${hit.ref}:${hit.title}`).join(' | ')}`).toBeTruthy();
   return found!;
@@ -135,7 +117,7 @@ function top(task: Task): SearchHit {
 
 describe('agent tasks', () => {
   it.each(tasks)('$id finds the section in the top 3 and stays under the token budget', (task) => {
-    const search = presentSearch(task.query, { ...(task.locale ? { locale: task.locale } : {}), limit: 8 });
+    const search = presentSearch(task.query, { limit: 8 });
     const first = search.hits[0];
     const next = search.nav.next[0];
     const landed = `${first?.ref ?? ''} ${first?.title ?? ''} ${first?.path ?? ''} ${first?.component ?? ''} ${JSON.stringify(next?.arguments ?? {})}`;
@@ -168,8 +150,9 @@ describe('search', () => {
       expect(hit.snippet.length).toBeGreaterThan(0);
       expect(hit.tokens).toBeGreaterThan(0);
     }
-    const korean = searchDocs('끌기', { locale: 'ko', limit: 5 });
-    expect(korean.some((hit) => hit.locale === 'ko' && hit.ref.includes('#'))).toBe(true);
+    const hangul = searchDocs('캘린더에서 공휴일 비활성화', { limit: 5 });
+    expect(hangul.every((hit) => hit.locale !== 'ko')).toBe(true);
+    expect(hangul.every((hit) => !/\p{Script=Hangul}/u.test(`${hit.title} ${hit.snippet}`))).toBe(true);
   });
 });
 
@@ -182,11 +165,11 @@ describe('section reads', () => {
     expect(byHeading.markdown).toBe(byAnchor.markdown);
     expect(byAnchor.markdown).toContain('getHandleProps');
     expect(byAnchor.markdown).not.toContain('## Undo and saving');
-    const korean = getDocsPage('ko/recipes/scheduler#끌기');
-    expect(korean).toMatchObject({ kind: 'section', locale: 'ko', slug: 'recipes/scheduler' });
-    if (korean.kind !== 'section') throw new Error('expected a section');
-    expect(korean.markdown).toContain('useLaneDrag');
-    expect(korean.markdown).not.toContain('## 되돌리기와 저장');
+    const prefixed = getDocsPage('ko/recipes/scheduler#dragging');
+    expect(prefixed).toMatchObject({ kind: 'section', locale: 'en', slug: 'recipes/scheduler', anchor: 'dragging' });
+    if (prefixed.kind !== 'section') throw new Error('expected a section');
+    expect(prefixed.markdown).toBe(byAnchor.markdown);
+    expect(prefixed.markdown).not.toContain('## 되돌리기와 저장');
   });
 
   it('returns an outline for a page over the large-page threshold', () => {
@@ -241,13 +224,20 @@ describe('response budget', () => {
 });
 
 describe('forgiving lookup', () => {
-  it('matches case, spaces and dashes, and serves Korean by prefix or locale', () => {
+  it('matches case, spaces and dashes, and reads the English page from a ko/ path', () => {
     expect(getDocsPage('use lane drag').slug).toBe('utilities/use-lane-drag');
     expect(getDocsPage('RECIPES/SCHEDULER').slug).toBe('recipes/scheduler');
-    expect(getDocsPage('ko/calendar')).toMatchObject({ locale: 'ko', slug: 'calendar' });
-    expect(getDocsPage('calendar', { locale: 'ko' }).locale).toBe('ko');
-    expect(getGuide('tokens', { locale: 'ko', section: '대비' }).locale).toBe('ko');
-    expect(whenToUse('Calendar', { locale: 'ko' }).whenToUse).toContain('날짜');
+    const english = getDocsPage('calendar');
+    const prefixed = getDocsPage('ko/calendar');
+    const linked = getDocsPage('https://todae.dev/ko/calendar');
+    expect(prefixed).toMatchObject({ locale: 'en', slug: 'calendar' });
+    expect(linked).toMatchObject({ locale: 'en', slug: 'calendar' });
+    expect(JSON.stringify(prefixed)).toBe(JSON.stringify(english));
+    expect(JSON.stringify(linked)).toBe(JSON.stringify(english));
+    expect(JSON.stringify(english)).toContain('isDateDisabled');
+    expect(JSON.stringify(english)).not.toContain('공휴일');
+    expect(whenToUse('Calendar').whenToUse).toContain('Pick one date');
+    expect(whenToUse('Calendar').whenToUse).not.toMatch(/\p{Script=Hangul}/u);
   });
 });
 
@@ -273,8 +263,12 @@ describe('docs page', () => {
       expect(page).toContain('get_example');
       expect(page).toContain('get_docs_page');
       expect(page).toMatch(/40,?000/);
-      expect(page).toContain('1.18');
-      expect(page).toContain('1.76');
+      expect(page).toContain('1.00');
+      expect(page).toContain('1.12');
+      expect(page.toLowerCase()).not.toContain('korean');
+      expect(page).not.toContain('locale');
+      expect(page).not.toContain('1.18');
+      expect(page).not.toContain('1.76');
     }
   });
 });

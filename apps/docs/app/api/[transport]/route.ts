@@ -35,11 +35,10 @@ const name = z.string().trim().min(1).max(80);
 /** The longest file name build_tokens takes. */
 const MAX_FILE_NAME = 200;
 const pageQuery = z.string().trim().min(1).max(300);
-const locale = z.enum(['en', 'ko']).optional();
 const sectionName = z.string().trim().min(1).max(160).optional();
 const includeCode = z.boolean().optional();
 const offset = z.number().int().min(0).optional();
-const pageRead = { section: sectionName, locale, includeCode, offset };
+const pageRead = { section: sectionName, includeCode, offset };
 const tokenPath = z.string().trim().min(1).max(120);
 const contextName = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
 const oklch = z.tuple([z.number().min(0).max(1), z.number().min(0).max(0.5), z.number().min(0).max(360)]);
@@ -85,11 +84,11 @@ const serverInfo = { name: 'todae-docs', version: RELEASE.version };
 function registerTools(server: McpServer) {
   server.tool(
     'search_docs',
-    'Start here when you do not know a slug. Ranked hits across pages, sections, components, props, hooks, recipes, examples and tokens, in English and Korean. Each hit has title, kind, ref (a slug or slug#anchor), a short snippet and tokens, the chars/4 cost of fetching it. Then get_docs_page with that ref, get_component for a prop or component, get_token for a token path, or get_example for a file. locale limits pages to en or ko. limit defaults to 8.',
-    { query: pageQuery, locale, limit: z.number().int().min(1).max(20).optional() },
-    async ({ query, locale: lang, limit }) => {
+    'Start here when you do not know a slug. Ranked hits across the English pages, sections, components, props, hooks, recipes, examples and tokens. Each hit has title, kind, ref (a slug or slug#anchor), a short snippet and tokens, the chars/4 cost of fetching it. Then get_docs_page with that ref, get_component for a prop or component, get_token for a token path, or get_example for a file. limit defaults to 8.',
+    { query: pageQuery, limit: z.number().int().min(1).max(20).optional() },
+    async ({ query, limit }) => {
       try {
-        return ok(presentSearch(query, { ...(lang ? { locale: lang } : {}), ...(limit ? { limit } : {}) }));
+        return ok(presentSearch(query, limit ? { limit } : {}));
       } catch (error) {
         return fail(error);
       }
@@ -121,11 +120,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'when_to_use',
-    'The When to use and When not to use copy as fields. Does not infer missing copy. locale "ko" reads the Korean page (언제 쓰나요). For the rest of the page, get_docs_page.',
-    { name, locale },
-    async ({ name: componentName, locale: lang }) => {
+    'The When to use and When not to use copy as fields. Does not infer missing copy. For the rest of the page, get_docs_page.',
+    { name },
+    async ({ name: componentName }) => {
       try {
-        return ok(whenToUse(componentName, lang ? { locale: lang } : {}));
+        return ok(whenToUse(componentName));
       } catch (error) {
         return fail(error);
       }
@@ -133,11 +132,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_docs_page',
-    'Read one docs page or one section. Pass a slug, a slug#anchor, a docs URL, or a component name such as useTooltip. section is an anchor or a heading. locale "ko", or a ko/ prefix, reads the Korean page. Names are matched ignoring case, spaces and dashes. A page over 4000 tokens (chars/4) returns an outline, the intro, and a token count per section instead of the whole page. Each example is a stub (file, what it shows, lines, tokens); call get_example for the source. includeCode inlines that source when you really want it, still under the 40000 character response budget. An unknown name returns search hits, not a bare error.',
+    'Read one English docs page or one section. Pass a slug, a slug#anchor, a docs URL, or a component name such as useTooltip. section is an anchor or a heading. A path that starts with ko/ returns the English page at the rest of that path. Names are matched ignoring case, spaces and dashes. A page over 4000 tokens (chars/4) returns an outline, the intro, and a token count per section instead of the whole page. Each example is a stub (file, what it shows, lines, tokens); call get_example for the source. includeCode inlines that source when you really want it, still under the 40000 character response budget. An unknown name returns search hits, not a bare error.',
     { name: pageQuery, ...pageRead },
-    async ({ name: query, section, locale: lang, includeCode: code, offset: from }) => {
+    async ({ name: query, section, includeCode: code, offset: from }) => {
       try {
-        return ok(getDocsPage(query, { ...(section ? { section } : {}), ...(lang ? { locale: lang } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
+        return ok(getDocsPage(query, { ...(section ? { section } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
       } catch (error) {
         return fail(error);
       }
@@ -151,11 +150,10 @@ function registerTools(server: McpServer) {
       file: z.string().trim().min(1).max(200),
       startLine: z.number().int().min(1).optional(),
       endLine: z.number().int().min(1).optional(),
-      locale,
     },
-    async ({ page, file, startLine, endLine, locale: lang }) => {
+    async ({ page, file, startLine, endLine }) => {
       try {
-        return ok(readExample(page, file, { ...(lang ? { locale: lang } : {}), ...(startLine ? { startLine } : {}), ...(endLine ? { endLine } : {}) }));
+        return ok(readExample(page, file, { ...(startLine ? { startLine } : {}), ...(endLine ? { endLine } : {}) }));
       } catch (error) {
         return fail(error);
       }
@@ -174,11 +172,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_recipe',
-    'One recipe by name (data-table) or title (Data table). Same shape as get_docs_page: section, locale, example stubs, and an outline when the page is over 4000 tokens. includeCode inlines the example. Unknown names return search hits. Call list_recipes only to see every recipe.',
+    'One recipe by name (data-table) or title (Data table). Same shape as get_docs_page: section, example stubs, and an outline when the page is over 4000 tokens. includeCode inlines the example. Unknown names return search hits. Call list_recipes only to see every recipe.',
     { name, ...pageRead },
-    async ({ name: recipe, section, locale: lang, includeCode: code, offset: from }) => {
+    async ({ name: recipe, section, includeCode: code, offset: from }) => {
       try {
-        return ok(getRecipe(recipe, { ...(section ? { section } : {}), ...(lang ? { locale: lang } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
+        return ok(getRecipe(recipe, { ...(section ? { section } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
       } catch (error) {
         return fail(error);
       }
@@ -258,11 +256,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_guide',
-    'A guide page: get-started, build-on-todae, tokens, css-layers, composition, platform or mcp. Same reads as get_docs_page (section, locale, stubs). Prefer search_docs when you do not know the topic.',
+    'A guide page: get-started, build-on-todae, tokens, css-layers, composition, platform or mcp. Same reads as get_docs_page (section, stubs). Prefer search_docs when you do not know the topic.',
     { topic: z.enum(GUIDE_TOPICS), ...pageRead },
-    async ({ topic, section, locale: lang, includeCode: code, offset: from }) => {
+    async ({ topic, section, includeCode: code, offset: from }) => {
       try {
-        return ok(getGuide(topic, { ...(section ? { section } : {}), ...(lang ? { locale: lang } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
+        return ok(getGuide(topic, { ...(section ? { section } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
       } catch (error) {
         return fail(error);
       }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { withExampleCode } from '../exampleCode';
-import { absolutize, EN_WHEN, KO_WHEN, pageFor, parseWhen, type WhenLabels } from './mdx';
+import { absolutize, EN_WHEN, pageFor, parseWhen } from './mdx';
 import { resolveName } from './meta';
 import { allPages, type ExampleFile, type LocaleId, type PageRecord, type SectionRecord } from './catalog';
 import { envelope, LARGE_PAGE_TOKENS, MAX_RESPONSE_CHARS, withFallback, type NextCall } from './budget';
@@ -9,7 +9,6 @@ import { closeNames, normalizeSlug, SOURCE, tokensOf } from './units';
 
 export type ReadOptions = {
   section?: string;
-  locale?: LocaleId;
   /** Inline example source. The response budget still applies. */
   includeCode?: boolean;
   /** Continuation offset into a section or an inlined page, in characters. */
@@ -26,8 +25,8 @@ function decodeAnchor(value: string): string {
   }
 }
 
-/** Pulls a locale prefix and a #anchor out of a slug, path or docs URL. */
-export function parseTarget(query: string, locale?: LocaleId): { locale: LocaleId; slug: string; anchor?: string } {
+/** Pulls a #anchor out of a slug, path or docs URL. A `ko/` prefix names the English page. */
+export function parseTarget(query: string): { locale: LocaleId; slug: string; anchor?: string } {
   let path = query.trim();
   // A docs URL from any origin, including a preview deploy, names the same page.
   if (/^https?:\/\//i.test(path)) {
@@ -43,12 +42,8 @@ export function parseTarget(query: string, locale?: LocaleId): { locale: LocaleI
   const anchor = hash >= 0 ? decodeAnchor(path.slice(hash + 1).split('?')[0] ?? '') : undefined;
   path = (hash >= 0 ? path.slice(0, hash) : path).split('?')[0] ?? '';
   path = path.replace(/\/+$/, '');
-  let picked = locale;
-  if (path === 'ko' || path.startsWith('ko/')) {
-    picked = 'ko';
-    path = path.startsWith('ko/') ? path.slice(3) : '';
-  }
-  return { locale: picked ?? 'en', slug: path, ...(anchor ? { anchor } : {}) };
+  if (path === 'ko' || path.startsWith('ko/')) path = path.startsWith('ko/') ? path.slice(3) : '';
+  return { locale: 'en', slug: path, ...(anchor ? { anchor } : {}) };
 }
 
 function pagesOf(locale: LocaleId): PageRecord[] {
@@ -90,10 +85,10 @@ function matchSection(page: PageRecord, query: string): SectionRecord | null {
   );
 }
 
-function pageMiss(query: string, locale?: LocaleId): Error {
-  const pages = allPages().filter((page) => !locale || page.locale === locale);
+function pageMiss(query: string): Error {
+  const pages = allPages();
   const near = closeNames(query, pages.map((page) => page.slug));
-  const hits = searchDocs(query, { ...(locale ? { locale } : {}), limit: 5 });
+  const hits = searchDocs(query, { limit: 5 });
   const lines = [
     ...near.map((slug) => `- ${slug}`),
     ...hits
@@ -110,14 +105,14 @@ function sectionMiss(page: PageRecord, section: string): Error {
   return new Error(`No section "${section}" on ${page.locale}/${page.slug}. Did you mean:\n${lines.join('\n')}\nPass section as that anchor or heading.`);
 }
 
-export function resolvePage(query: string, options?: Pick<ReadOptions, 'locale' | 'section'>): { page: PageRecord; section?: SectionRecord } {
-  const target = parseTarget(query, options?.locale);
+export function resolvePage(query: string, options?: Pick<ReadOptions, 'section'>): { page: PageRecord; section?: SectionRecord } {
+  const target = parseTarget(query);
   const asked = options?.section?.trim() || target.anchor;
   const page = matchSlug(target.slug, target.locale) ?? matchSlug(normalizeSlug(query), target.locale) ?? (() => {
     const slug = slugForName(target.slug) ?? slugForName(query);
-    return slug ? (allPages().find((item) => item.locale === target.locale && item.slug === slug) ?? null) : null;
+    return slug ? (allPages().find((item) => item.slug === slug) ?? null) : null;
   })();
-  if (!page) throw pageMiss(query, options?.locale);
+  if (!page) throw pageMiss(query);
   if (!asked) return { page };
   const section = matchSection(page, asked);
   if (!section) throw sectionMiss(page, asked);
@@ -133,7 +128,7 @@ function callsFor(page: PageRecord, section?: SectionRecord): NextCall[] {
     seen.add(file.file);
     next.push({
       tool: 'get_example',
-      arguments: { page: page.slug, file: file.file, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+      arguments: { page: page.slug, file: file.file },
       why: `${file.file} demonstrates ${file.demonstrates} (${file.lines} lines, ${file.tokens} tokens).`,
     });
   }
@@ -144,7 +139,7 @@ function callsFor(page: PageRecord, section?: SectionRecord): NextCall[] {
     for (const item of page.sections.filter((item) => item.depth === 2).slice(0, 4)) {
       next.push({
         tool: 'get_docs_page',
-        arguments: { name: `${page.slug}#${item.anchor}`, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+        arguments: { name: `${page.slug}#${item.anchor}` },
         why: `Section "${item.heading}" is about ${item.tokens} tokens.`,
       });
     }
@@ -154,7 +149,7 @@ function callsFor(page: PageRecord, section?: SectionRecord): NextCall[] {
     for (const item of [siblings[index - 1], siblings[index + 1]].filter((item): item is SectionRecord => item != null)) {
       next.push({
         tool: 'get_docs_page',
-        arguments: { name: `${page.slug}#${item.anchor}`, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+        arguments: { name: `${page.slug}#${item.anchor}` },
         why: `Neighboring section "${item.heading}".`,
       });
     }
@@ -299,8 +294,8 @@ function findExample(page: PageRecord, file: string): ExampleFile | null {
 }
 
 /** Numbered source for one example file. A long file returns a window and a cursor. */
-export function readExample(pageQuery: string, file: string, options: Pick<ReadOptions, 'locale' | 'startLine' | 'endLine'> = {}) {
-  const { page } = resolvePage(pageQuery, options);
+export function readExample(pageQuery: string, file: string, options: Pick<ReadOptions, 'startLine' | 'endLine'> = {}) {
+  const { page } = resolvePage(pageQuery);
   const example = findExample(page, file);
   if (!example) {
     const names = [...new Set(page.examples.map((item) => item.file))];
@@ -340,13 +335,13 @@ export function readExample(pageQuery: string, file: string, options: Pick<ReadO
       ...(cursor
         ? [{
             tool: 'get_example',
-            arguments: { page: page.slug, file: example.file, startLine: cursor.startLine, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+            arguments: { page: page.slug, file: example.file, startLine: cursor.startLine },
             why: 'The next lines of this file.',
           }]
         : []),
       {
         tool: 'get_docs_page',
-        arguments: { name: example.anchor ? `${page.slug}#${example.anchor}` : page.slug, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+        arguments: { name: example.anchor ? `${page.slug}#${example.anchor}` : page.slug },
         why: 'The section that shows this example.',
       },
     ],
@@ -354,16 +349,8 @@ export function readExample(pageQuery: string, file: string, options: Pick<ReadO
   );
 }
 
-export function suggest(query: string, locale?: LocaleId): SearchHit[] {
-  return searchDocs(query, { ...(locale ? { locale } : {}), limit: 5 });
-}
-
-export function whenLabels(locale: LocaleId): WhenLabels {
-  return locale === 'ko' ? KO_WHEN : EN_WHEN;
-}
-
-export function whenSectionName(locale: LocaleId): string {
-  return locale === 'ko' ? KO_WHEN.heading : EN_WHEN.heading;
+export function suggest(query: string): SearchHit[] {
+  return searchDocs(query, { limit: 5 });
 }
 
 export { EN_WHEN, parseWhen, SOURCE };

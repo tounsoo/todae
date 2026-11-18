@@ -4,8 +4,7 @@ export const SOURCE = 'todae-docs' as const;
 
 /**
  * chars/4. The same unit the page-size audit used. A real o200k tokenizer is
- * about 1.00 to 1.12 times this for English and about 1.18 to 1.76 times this
- * for Korean, so the same character count costs more in Korean.
+ * about 1.00 to 1.12 times this for the English text these tools return.
  */
 export function tokensOf(chars: number): number {
   return Math.ceil(chars / 4);
@@ -49,29 +48,13 @@ function termKeys(word: string): string[] {
   return [...keys];
 }
 
-const HANGUL = /^\p{Script=Hangul}+$/u;
-
-/** Character pairs inside a Hangul word, so a particle glued on still meets the stem. */
-function hangulGrams(word: string): string[] {
-  const chars = [...word];
-  if (chars.length < 3 || !HANGUL.test(word)) return [];
-  const grams: string[] = [];
-  for (let i = 0; i < chars.length - 1; i += 1) grams.push(`${chars[i]}${chars[i + 1]}`);
-  return grams;
-}
-
 /** Search terms for `text`, with a light stem so "dragging" and "drag" meet. */
 export function tokenize(text: string): string[] {
   const words = splitIdent(text)
     .toLowerCase()
     .split(/[^\p{L}\p{N}]+/u)
     .filter((word) => word.length > 1 && !STOP.has(word));
-  const out: string[] = [];
-  for (const word of words) {
-    out.push(...termKeys(word));
-    out.push(...hangulGrams(word));
-  }
-  return out;
+  return words.flatMap(termKeys);
 }
 
 /** Insertions, deletions and substitutions. Used for a miss, not for ranking. */

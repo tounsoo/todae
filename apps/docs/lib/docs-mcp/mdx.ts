@@ -28,13 +28,6 @@ export const EN_WHEN: WhenLabels = {
   whenNot: '**When not:**',
 };
 
-export const KO_WHEN: WhenLabels = {
-  heading: '언제 쓰나요',
-  separate: '쓰지 않을 때',
-  when: '**언제:**',
-  whenNot: '**쓰지 않을 때:**',
-};
-
 /** Names with no props table of their own, whose copy is only a `### Name` block on another page. */
 const PART_PAGE: Record<string, string> = {
   ThemeProvider: 'tokens',

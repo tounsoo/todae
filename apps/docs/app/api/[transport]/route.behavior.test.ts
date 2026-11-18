@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { withExampleCode } from '../../../lib/exampleCode';
 import { buildTokenFiles } from '../../../lib/docs-mcp/build';
 import { getChanges } from '../../../lib/docs-mcp/changes';
-import { pageRecord, resetPagesForTests } from '../../../lib/docs-mcp/catalog';
+import { resetPagesForTests } from '../../../lib/docs-mcp/catalog';
 import { absolutize } from '../../../lib/docs-mcp/mdx';
 import { scaffoldDesignSystem, type Oklch, type ScaffoldOptions } from '../../../lib/docs-mcp/scaffold';
 import { listComponents } from '../../../lib/docs-mcp/tools';
@@ -272,56 +272,20 @@ describe('route regressions', () => {
     }
   });
 
-  it('finds Korean phrasing a particle is attached to, and keeps the locale filter', async () => {
-    for (const query of ['캘린더에서 공휴일 비활성화', '캘린더 휴일']) {
-      const { error, body } = await tool('search_docs', { query, locale: 'ko' });
-      expect(error).toBeNull();
-      const hits = body?.hits as { ref?: string; locale?: string; kind?: string }[] | undefined;
-      expect(hits?.some((hit) => hit.locale === 'ko' && (hit.ref ?? '').includes('calendar'))).toBe(true);
-    }
-    const { body } = await tool('search_docs', { query: 'useLaneDrag', locale: 'ko' });
-    const hits = (body?.hits ?? []) as { locale?: string; kind?: string }[];
-    expect(hits.some((hit) => hit.kind === 'section' || hit.kind === 'page' || hit.kind === 'recipe' || hit.kind === 'example')).toBe(true);
-    expect(hits.filter((hit) => hit.kind === 'section' || hit.kind === 'page' || hit.kind === 'recipe' || hit.kind === 'example').every((hit) => hit.locale === 'ko')).toBe(true);
-
-    const example = await tool('search_docs', { query: 'SchedulerExample.tsx', locale: 'ko' });
-    const next = (example.body?.nav as { next?: { tool?: string; arguments?: { locale?: string; file?: string } }[] } | undefined)?.next?.[0];
-    expect(next?.tool).toBe('get_example');
-    expect(next?.arguments?.file).toBe('SchedulerExample.tsx');
-    expect(next?.arguments?.locale).toBe('ko');
-  });
-
-  it('keeps locale on the next lines of a long Korean example', async () => {
-    const page = pageRecord('ko', 'recipes/scheduler');
-    const example = page?.examples.find((item) => item.file === 'SchedulerExample.tsx');
-    if (!example) throw new Error('expected the Korean scheduler example');
-    const lines = example.text.split('\n');
-    const first = await tool('get_example', { page: 'recipes/scheduler', file: 'SchedulerExample.tsx', locale: 'ko' });
-    expect(first.error).toBeNull();
-    const cursor = first.body?.cursor as { startLine?: number } | undefined;
-    expect(typeof cursor?.startLine).toBe('number');
-    const next = (first.body?.nav as { next?: { tool?: string; arguments?: Record<string, unknown> }[] } | undefined)?.next?.[0];
-    expect(next?.tool).toBe('get_example');
-    expect(next?.arguments).toMatchObject({ locale: 'ko', startLine: cursor?.startLine, file: 'SchedulerExample.tsx' });
-    const followed = await tool('get_example', next?.arguments ?? {});
-    expect(followed.error).toBeNull();
-    expect(followed.body?.locale).toBe('ko');
-    const start = followed.body?.startLine;
-    const end = followed.body?.endLine;
-    if (typeof start !== 'number' || typeof end !== 'number') throw new Error('expected a line window');
-    const source = String(followed.body?.code ?? '')
-      .split('\n')
-      .map((line) => line.replace(/^\s*\d+ \| /, ''))
-      .join('\n');
-    expect(source).toBe(lines.slice(start - 1, end).join('\n'));
+  it('returns no Korean page for a Hangul query', async () => {
+    const { error, body } = await tool('search_docs', { query: '캘린더에서 공휴일 비활성화' });
+    expect(error).toBeNull();
+    const hits = (body?.hits ?? []) as { locale?: string; title?: string; snippet?: string }[];
+    expect(hits.every((hit) => hit.locale !== 'ko')).toBe(true);
+    expect(hits.every((hit) => !/\p{Script=Hangul}/u.test(`${hit.title ?? ''} ${hit.snippet ?? ''}`))).toBe(true);
   });
 
   it('keeps the MCP manual off a product question and opens it when the question names it', async () => {
-    const product = await tool('search_docs', { query: '세션을 다른 무대로 끌기', locale: 'ko' });
+    const product = await tool('search_docs', { query: 'drag a talk to another stage on the scheduler' });
     expect(product.error).toBeNull();
     const hits = (product.body?.hits ?? []) as { ref?: string }[];
     expect(hits.some((hit) => (hit.ref ?? '') === 'mcp' || (hit.ref ?? '').startsWith('mcp#'))).toBe(false);
-    expect(hits[0]?.ref).toBe('recipes/scheduler#끌기');
+    expect(hits[0]?.ref ?? '').toContain('scheduler');
     const manual = await tool('search_docs', { query: 'mcp' });
     expect(manual.error).toBeNull();
     expect(((manual.body?.hits ?? []) as { ref?: string }[])[0]?.ref).toBe('mcp');
@@ -329,14 +293,13 @@ describe('route regressions', () => {
 
   it('lands the first call on the scheduler, the wizard and held-out queries', async () => {
     const tasks = [
-      { query: '세션을 다른 무대로 끌기', locale: 'ko', want: 'recipes/scheduler#끌기' },
       { query: 'multi-step wizard', want: 'recipes/wizard' },
       { query: 'holiday the calendar refuses to pick', want: 'Calendar' },
       { query: 'carry a session from one stage to another', want: 'recipes/scheduler' },
       { query: 'wizard recipe for a multi page flow', want: 'recipes/wizard' },
     ];
     for (const task of tasks) {
-      const { error, body } = await tool('search_docs', { query: task.query, ...(task.locale ? { locale: task.locale } : {}) });
+      const { error, body } = await tool('search_docs', { query: task.query });
       expect(error).toBeNull();
       const nav = body?.nav as { next?: { arguments?: Record<string, unknown> }[] } | undefined;
       const landed = JSON.stringify(nav?.next?.[0]?.arguments ?? {});
@@ -345,12 +308,15 @@ describe('route regressions', () => {
   });
 
   it('reads the !important section, a preview URL, and a page without its import lines', async () => {
-    for (const locale of [undefined, 'ko'] as const) {
-      const { error, body } = await tool('get_docs_page', { name: 'guides/css-layers', section: 'important', ...(locale ? { locale } : {}) });
-      expect(error).toBeNull();
+    for (const name of ['guides/css-layers', 'ko/guides/css-layers', 'https://preview.example/ko/guides/css-layers']) {
+      const { error, body } = await tool('get_docs_page', { name, section: 'important' });
+      expect(error, name).toBeNull();
       expect(body?.kind).toBe('section');
+      expect(body?.locale).toBe('en');
+      expect(body?.slug).toBe('guides/css-layers');
       const markdown = String(body?.markdown ?? '');
-      expect(markdown).toContain(locale === 'ko' ? '레이어 순서를 뒤집습니다' : 'reverses the layer order');
+      expect(markdown).toContain('reverses the layer order');
+      expect(markdown).not.toContain('레이어 순서를 뒤집습니다');
     }
     const preview = await tool('get_docs_page', { name: 'https://preview.example/tooltip' });
     expect(preview.error).toBeNull();

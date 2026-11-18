@@ -261,6 +261,9 @@ describe('docs MCP route', () => {
     expect(text).toContain('search_docs');
     expect(text).toMatch(/search_docs first/i);
     expect(text).toMatch(/get_example/);
+    expect(text.toLowerCase()).not.toContain('korean');
+    expect(text).not.toContain('한국어');
+    expect(text).not.toMatch(/"locale"/);
   });
 
   it('keeps an inlined scheduler page inside the response budget', async () => {

@@ -2,7 +2,7 @@ import { envelope, type NextCall } from './budget';
 import { allPages, type ExampleFile, type LocaleId, type PageRecord, type SectionRecord } from './catalog';
 import { listComponentMeta } from './meta';
 import { catalogTokens } from './tokens';
-import { normalizeSlug, snippet, tokenize, tokensOf } from './units';
+import { normalizeSlug, snippet, splitIdent, tokenize, tokensOf } from './units';
 
 export type HitKind = 'page' | 'section' | 'component' | 'prop' | 'hook' | 'recipe' | 'example' | 'token';
 
@@ -20,8 +20,6 @@ export type SearchHit = {
 };
 
 type Doc = SearchHit & { titleTerms: string[]; bodyTerms: string[]; length: number };
-
-const NEUTRAL: HitKind[] = ['component', 'prop', 'hook', 'token'];
 
 function cost(chars: number): number {
   return tokensOf(chars + 800);
@@ -179,8 +177,8 @@ function wordHits(word: string, keys: string[]): boolean {
 
 function headingLeads(title: string, keys: string[]): boolean {
   const words = normalizeSlug(title).split('-').filter((word) => word.length > 1);
-  // A two-syllable Korean heading such as 끌기 is the lead. A two-letter English word is not.
-  const lead = words.find((word) => word.length > 2) ?? words.find((word) => /^\p{Script=Hangul}+$/u.test(word));
+  // A two-letter English word is not the lead, so "form" does not steal a heading from ErrorMessage.
+  const lead = words.find((word) => word.length > 2);
   return lead != null && wordHits(lead, keys);
 }
 
@@ -198,24 +196,17 @@ const KIND_WORD: Partial<Record<HitKind, string>> = {
   example: 'example',
 };
 
-/**
- * Ranked hits for a natural-language query. `locale` limits pages, sections,
- * recipes and examples. Components, props, hooks and tokens stay, because their
- * names are the same in both docs languages.
- */
-export function searchDocs(query: string, options?: { locale?: LocaleId; limit?: number }): SearchHit[] {
+/** Ranked hits for a natural-language query. The index is the English docs. */
+export function searchDocs(query: string, options?: { limit?: number }): SearchHit[] {
   const limit = Math.min(20, Math.max(1, options?.limit ?? 8));
   const keys = [...new Set(tokenize(query))];
   if (keys.length === 0) return [];
   const { docs, avg, titleDf, bodyDf } = ready();
-  const locale = options?.locale;
   const folded = query.trim().toLowerCase();
   const norm = normalizeSlug(query);
   const wants = new Set(keys);
-  const hangul = /\p{Script=Hangul}/u.test(query);
   const scored: { hit: SearchHit; score: number }[] = [];
   for (const doc of docs) {
-    if (locale && !NEUTRAL.includes(doc.kind) && doc.locale !== locale) continue;
     let score = 0;
     for (const key of keys) {
       score += bm25(tfOf(doc.bodyTerms, key), bodyDf.get(key) ?? 0, doc.length, avg, docs.length);
@@ -229,15 +220,20 @@ export function searchDocs(query: string, options?: { locale?: LocaleId; limit?:
     const kindWord = KIND_WORD[doc.kind];
     if (kindWord && wants.has(kindWord)) score += 2;
     if (doc.kind === 'recipe' && wants.has('recipe')) score += 1;
-    // English questions prefer the English docs, and a Korean question prefers Korean.
-    if (hangul ? doc.locale === 'ko' : doc.locale === 'en') score += 2.5;
-    // A heading that is the query's word ("Dragging", or a two-syllable Korean heading) should beat a longer heading that only contains it.
+    // A heading that is the query's word ("Dragging") should beat a longer heading that only contains it.
     if (doc.kind === 'section' && headingLeads(doc.title, keys)) score += 8;
     const pageSlug = doc.ref.split('#')[0] ?? doc.ref;
     // The server manual mentions every tool, so it should not win a question about the product.
     if (pageSlug === 'mcp' && !wants.has('mcp')) score -= 8;
     const slugWords = pageSlug.split(/[/-]/);
     if (slugWords.some((word) => word.length > 3 && wants.has(word))) score += 6;
+    // A name that is a query word ("Calendar") beats a prop that only shares a short word ("pick").
+    if ((doc.kind === 'prop' || doc.kind === 'component' || doc.kind === 'hook') && doc.component) {
+      const nameWords = splitIdent(doc.component).toLowerCase().split(/[^\p{L}\p{N}]+/u);
+      if (nameWords.some((word) => word.length > 4 && wants.has(word))) score += 2;
+    }
+    // A heading that is only "Props" is the props table. A question that did not ask for props should not land under it.
+    if (doc.kind === 'section' && normalizeSlug(doc.title) === 'props' && !wants.has('prop')) score -= 2;
     // A how-to asks for the page. An example wins when the query asks for one.
     if (doc.kind === 'example' && !wants.has('example')) score -= 2;
     scored.push({
@@ -285,26 +281,21 @@ function nextFor(hit: SearchHit | undefined): NextCall[] {
     const page = hit.ref.split('#')[0] ?? hit.ref;
     return [{
       tool: 'get_example',
-      arguments: { page, file: hit.title, ...(hit.locale === 'ko' ? { locale: 'ko' } : {}) },
+      arguments: { page, file: hit.title },
       why: `${hit.title} on ${page}, about ${hit.tokens} tokens.`,
     }];
   }
   return [{
     tool: 'get_docs_page',
-    arguments: { name: hit.ref, ...(hit.locale === 'ko' ? { locale: 'ko' } : {}) },
+    arguments: { name: hit.ref },
     why: `${hit.title} (${hit.kind}), about ${hit.tokens} tokens.`,
   }];
 }
 
 /** The search_docs payload: hits plus the one call an agent should make next. */
-export function presentSearch(query: string, options?: { locale?: LocaleId; limit?: number }) {
+export function presentSearch(query: string, options?: { limit?: number }) {
   const hits = searchDocs(query, options);
-  return envelope(
-    { kind: 'search' as const, query, locale: options?.locale ?? 'any', hits },
-    'search',
-    nextFor(hits[0]),
-    options?.locale ? { locale: options.locale } : {},
-  );
+  return envelope({ kind: 'search' as const, query, hits }, 'search', nextFor(hits[0]));
 }
 
 export function formatSuggestions(hits: SearchHit[]): string {
