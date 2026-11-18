@@ -1513,7 +1513,7 @@ describe('repeating events', () => {
     const onDay = (day: string) => within(screen.getByRole('list', { name: day })).getByRole('button', { name: reading });
     expect(onDay('Mon, Nov 16').textContent).toMatch(/Repeats/);
     expect(onDay('Wed, Nov 18')).toBeTruthy();
-    await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Created /));
+    await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Added /));
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(screen.queryByRole('button', { name: reading })).toBeNull();
   });

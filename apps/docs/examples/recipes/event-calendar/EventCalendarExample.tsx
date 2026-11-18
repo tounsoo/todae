@@ -302,6 +302,14 @@ export function eventFromLane(event: CalendarEvent, drop: LaneDrop, axis: DayAxi
   return { ...event, start };
 }
 
+/** A new event for a snapped place on `segment`. The title is empty until the dialog saves it. */
+export function eventFromPlace(segment: DaySegment, start: number, end: number): CalendarEvent | null {
+  const startAt = fromUnits(segment, start, 'start');
+  const endAt = fromUnits(segment, end, 'end');
+  if (!startAt || !endAt || Temporal.ZonedDateTime.compare(endAt, startAt) <= 0) return null;
+  return { id: crypto.randomUUID(), title: '', start: startAt, end: endAt, allDay: false };
+}
+
 export type EventDraft = {
   title: string;
   date: Temporal.PlainDate | null;
@@ -700,15 +708,14 @@ function freshSeriesId(): SeriesId {
   return seriesId(`event-${(values[0] ?? 0).toString(36)}-${(values[1] ?? 0).toString(36)}`);
 }
 
-function blankEvent(day: Temporal.PlainDate, open: Temporal.PlainTime, timeZone: string): CalendarEvent {
-  const start = zoned(day, open, timeZone);
-  return { id: 'draft', title: '', start, end: start.add({ minutes: SLOT_MINUTES }), allDay: false };
-}
-
 function firstOf(item: EventSeries): CalendarEvent | null {
   const occurrence = expandSeries(item, { start: item.start.subtract({ days: 1 }), end: item.end.add({ days: 1 }) })[0];
   return occurrence ? occurrenceEvent(occurrence) : null;
 }
+
+type CreatePlace = { day: Temporal.PlainDate; start: number; end: number };
+
+type EditorSession = { intent: 'edit'; event: CalendarEvent } | { intent: 'create'; event: CalendarEvent; place: CreatePlace };
 
 const MONTH_TITLES = 2;
 
@@ -841,6 +848,7 @@ type ColumnShared = {
   onAdjust: (event: CalendarEvent, segment: DaySegment, change: SlotChange) => void;
   onEdit: (event: CalendarEvent, day: Temporal.PlainDate) => void;
   onDelete: (event: CalendarEvent, day: Temporal.PlainDate) => void;
+  pendingCreate: { day: Temporal.PlainDate; start: number; end: number } | null;
 };
 
 function eventName(event: CalendarEvent, segment: DaySegment, locale: string, timeZone: string): { name: string; timeText: string; short: boolean } {
@@ -954,15 +962,36 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
   );
 }
 
-const DragPreview = memo(function DragPreview({ drag, segment, scale, locale }: { drag: UseLaneDragResult['drag']; segment: DaySegment; scale: number; locale: string }) {
+const DragPreview = memo(function DragPreview({
+  drag,
+  segment,
+  scale,
+  locale,
+  pending,
+}: {
+  drag: UseLaneDragResult['drag'];
+  segment: DaySegment;
+  scale: number;
+  locale: string;
+  pending: { start: number; end: number } | null;
+}) {
   const change = useLaneDragState(drag, (state) => (state?.to?.lane === segment.day.toString() ? state : null));
-  if (change?.to == null || scale <= 0) return null;
-  const box = spanFrame({ start: change.to.start, end: change.to.end }, scale);
-  const start = fromUnits(segment, change.to.start, 'start');
-  const end = fromUnits(segment, change.to.end, 'end');
+  const live = change?.to ?? null;
+  const place = live ?? pending;
+  if (place == null || scale <= 0) return null;
+  const creating = change?.kind === 'create' || (live == null && pending != null);
+  const box = spanFrame({ start: place.start, end: place.end }, scale);
+  const start = fromUnits(segment, place.start, 'start');
+  const end = fromUnits(segment, place.end, 'end');
   const label = start && end ? `${formatTime(start.toPlainTime(), { locale })} to ${formatTime(end.toPlainTime(), { locale })}` : null;
   return (
-    <div className={styles.preview} data-level={change.verdict?.level} style={{ top: percent(box.top), height: percent(box.height) }}>
+    <div
+      aria-hidden="true"
+      className={styles.preview}
+      data-create={creating ? '' : undefined}
+      data-level={change?.verdict?.level}
+      style={{ top: percent(box.top), height: percent(box.height) }}
+    >
       {label ? <span className={styles.previewTime}>{label}</span> : null}
     </div>
   );
@@ -1043,7 +1072,13 @@ function EventColumn({
           );
         })}
       </div>
-      <DragPreview drag={shared.lanes.drag} segment={segment} scale={shared.scale} locale={shared.locale} />
+      <DragPreview
+        drag={shared.lanes.drag}
+        segment={segment}
+        scale={shared.scale}
+        locale={shared.locale}
+        pending={shared.pendingCreate?.day.equals(segment.day) ? shared.pendingCreate : null}
+      />
       <ol className={styles.events} aria-labelledby={headingId}>
         {placed.map(({ item, left, width }) => (
           <EventBlock key={blockKey(item.event.id, segment.day)} span={{ ...item, left, width }} segment={segment} shared={shared} />
@@ -1166,8 +1201,10 @@ export default function EventCalendarExample({
   const [anchor, setAnchor] = useState(initialAnchor);
   const [seriesList, setSeriesList] = useState<EventSeries[]>(() => initialSeries(events));
   const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
-  const [editing, setEditing] = useState<{ event: CalendarEvent; mode: 'create' | 'edit' } | null>(null);
+  const [session, setSession] = useState<EditorSession | null>(null);
   const [deleting, setDeleting] = useState<CalendarEvent | null>(null);
+  const notedDay = useRef(initialAnchor);
+  const notedUnits = useRef(0);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
   const pendingFocus = useRef<'day' | null>(null);
@@ -1178,7 +1215,7 @@ export default function EventCalendarExample({
   const announce = useAnnouncer();
   const bounds = visibleBounds(view, anchor, locale, timeZone);
   const items = seriesList.flatMap((item) => expandSeries(item, viewWindow(item, bounds)).map(occurrenceEvent));
-  const editingSeries = editing ? (seriesList.find((item) => item.id === (editing.event.seriesId ?? editing.event.id)) ?? null) : null;
+  const editingSeries = session?.intent === 'edit' ? (seriesList.find((item) => item.id === (session.event.seriesId ?? session.event.id)) ?? null) : null;
   const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
   const week = weekOf(anchor, locale);
   const axis = daySegments({ days, opens, closes, timeZone });
@@ -1219,34 +1256,52 @@ export default function EventCalendarExample({
     const laneHome = strip ? null : shownDay(settled, day);
     setFocusKey(strip ? stripKey(settled.id) : laneHome ? blockKey(settled.id, laneHome) : null);
     focusHeading.current = strip || laneHome ? null : day;
-    setSeriesList((list) =>
-      list.map((item) => {
-        if (item.id !== (settled.seriesId ?? settled.id)) return item;
+    setSeriesList((list) => {
+      const id = settled.seriesId ?? settled.id;
+      if (!list.some((item) => item.id === id)) {
+        return [...list, seriesFromDraft(seriesId(settled.id), { title: settled.title, start: settled.start, end: settled.end, allDay: settled.allDay, rule: null })];
+      }
+      return list.map((item) => {
+        if (item.id !== id) return item;
         if (settled.repeats && settled.originalStart) {
           return overrideOccurrence(item, settled.originalStart, { title: settled.title, start: settled.start, end: settled.end, allDay: settled.allDay });
         }
         return replaceSeries(item, { title: settled.title, start: settled.start, end: settled.end, allDay: settled.allDay, rule: item.rule });
-      }),
-    );
+      });
+    });
     const start = settled.start.withTimeZone(timeZone);
     const end = settled.end.withTimeZone(timeZone);
     const spansDays = !start.toPlainDate().equals(end.toPlainDate());
-    announce(strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`);
+    const detail = strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`;
+    const created = !items.some((each) => each.id === settled.id);
+    announce(created ? `Added ${detail}` : detail);
     returnFocus.current = true;
   };
 
   // The dialog unmounts in the same commit that records the edit, so its own
   // focus return has no button to land on yet. This runs after that commit.
+  // The heading is consumed here. A value left from a cancelled create would
+  // steal focus from a later cancelled edit.
   useLayoutEffect(() => {
-    if (!returnFocus.current || editing || deleting) return;
+    if (!returnFocus.current || session || deleting) return;
     returnFocus.current = false;
     const day = focusHeading.current;
+    focusHeading.current = null;
     if (day) {
       document.getElementById(`${heading}-${day.toString()}`)?.focus();
       return;
     }
     if (landing.current?.isConnected) landing.current.focus();
-  }, [anchor, deleting, editing, focusKey, heading, seriesList]);
+  }, [anchor, deleting, session, focusKey, heading, seriesList]);
+
+  const beginCreate = (segment: DaySegment, start: number, end: number) => {
+    const event = eventFromPlace(segment, start, end);
+    if (!event) return;
+    returnFocus.current = false;
+    focusHeading.current = segment.day;
+    setFocusKey(null);
+    setSession({ intent: 'create', event, place: { day: segment.day, start, end } });
+  };
 
   const board = useLaneDrag({
     range: { start: 0, end: Math.max(scale, SLOT_MINUTES) },
@@ -1271,6 +1326,11 @@ export default function EventCalendarExample({
       const settled = finishGesture(event, next, 'drop');
       if (settled !== event) commit(settled, toDay);
     },
+    onCreate: (place) => {
+      const segment = axis.segments.find((each) => each.day.toString() === place.lane);
+      if (!segment) return;
+      beginCreate(segment, place.start, place.end);
+    },
   });
 
   const onAdjust = (event: CalendarEvent, segment: DaySegment, change: SlotChange) => {
@@ -1287,7 +1347,7 @@ export default function EventCalendarExample({
 
   const onEdit = (event: CalendarEvent, day: Temporal.PlainDate) => {
     setFocusKey(showsInStrip(event, timeZone, opens, closes) ? stripKey(event.id) : blockKey(event.id, day));
-    setEditing({ event, mode: 'edit' });
+    setSession({ intent: 'edit', event });
   };
 
   const onDelete = (event: CalendarEvent, day: Temporal.PlainDate) => {
@@ -1324,6 +1384,31 @@ export default function EventCalendarExample({
     setDeleting(null);
   };
 
+  const openNewEvent = () => {
+    const noted = axis.segments.find((segment) => segment.day.equals(notedDay.current));
+    const segment = noted ?? axis.segments.find((each) => each.day.equals(anchor)) ?? axis.segments[0];
+    if (!segment || segment.length < SLOT_MINUTES) return;
+    const start = noted && Number.isFinite(notedUnits.current) ? Math.min(Math.max(0, notedUnits.current), segment.length - SLOT_MINUTES) : 0;
+    beginCreate(segment, start, start + SLOT_MINUTES);
+  };
+
+  const noteFocus = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return;
+    const head = target.closest('h3');
+    const prefix = `${heading}-`;
+    if (head?.id.startsWith(prefix)) {
+      notedDay.current = Temporal.PlainDate.from(head.id.slice(prefix.length));
+      notedUnits.current = 0;
+      return;
+    }
+    const lane = target.closest('[data-todae-lane]');
+    const iso = lane?.getAttribute('data-todae-lane');
+    if (!iso) return;
+    notedDay.current = Temporal.PlainDate.from(iso);
+    const end = target.closest('[data-todae-lane-item]')?.getAttribute('data-todae-lane-end');
+    notedUnits.current = end ? Number(end) : 0;
+  };
+
   const columnShared: ColumnShared = {
     locale,
     timeZone,
@@ -1337,6 +1422,7 @@ export default function EventCalendarExample({
     onAdjust,
     onEdit,
     onDelete,
+    pendingCreate: session?.intent === 'create' ? session.place : null,
   };
 
   useLayoutEffect(() => {
@@ -1367,7 +1453,7 @@ export default function EventCalendarExample({
   };
 
   return (
-    <div className={styles.calendar}>
+    <div className={styles.calendar} onFocusCapture={(event) => noteFocus(event.target)}>
       <div className={styles.toolbar}>
         <ToggleGroup.Root
           aria-label="Calendar view"
@@ -1380,11 +1466,11 @@ export default function EventCalendarExample({
           <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
           <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
         </ToggleGroup.Root>
-        <Button.Root variant="secondary" onClick={() => setEditing({ mode: 'create', event: blankEvent(anchor, opens, timeZone) })}>
-          New event
-        </Button.Root>
         {view === 'month' ? null : (
           <>
+            <Button.Root variant="secondary" onClick={openNewEvent}>
+              New event
+            </Button.Root>
             <Button.Root variant="secondary" onClick={() => setAnchor((day) => day.add({ days: -step }))}>
               {`Previous ${move}`}
             </Button.Root>
@@ -1485,27 +1571,28 @@ export default function EventCalendarExample({
           </div>
         </ScrollArea.Root>
       )}
-      {editing ? (
+      {session ? (
         <EventEditor
-          event={editing.event}
-          mode={editing.mode}
+          event={session.event}
+          intent={session.intent}
           locale={locale}
           timeZone={timeZone}
           opens={opens}
-          prior={timedBefore.current.get(editing.event.id) ?? null}
+          prior={timedBefore.current.get(session.event.id) ?? null}
           rule={editingSeries?.rule ?? null}
           template={
             editingSeries
               ? { id: editingSeries.id, seriesId: editingSeries.id, title: editingSeries.title, start: editingSeries.start, end: editingSeries.end, allDay: editingSeries.allDay, repeats: editingSeries.rule !== null, originalStart: editingSeries.start }
               : null
           }
-          chooseScope={editing.mode === 'edit' && editing.event.repeats === true}
+          chooseScope={session.intent === 'edit' && session.event.repeats === true}
           restoreFocusRef={landing}
           onCancel={() => {
             returnFocus.current = true;
-            setEditing(null);
+            setSession(null);
           }}
           onSave={(next, detail) => {
+            const editing = session.event;
             const day = next.start.withTimeZone(timeZone).toPlainDate();
             const labelOf = (saved: CalendarEvent) => {
               const strip = showsInStrip(saved, timeZone, opens, closes);
@@ -1517,9 +1604,9 @@ export default function EventCalendarExample({
             const reveal = (saved: CalendarEvent, message?: string) => {
               const home = shownDay(saved, day);
               setAnchor(home ?? day);
-              if (saved.allDay && !editing.event.allDay) {
-                const start = editing.event.start.withTimeZone(timeZone);
-                const end = editing.event.end.withTimeZone(timeZone);
+              if (saved.allDay && !editing.allDay) {
+                const start = editing.start.withTimeZone(timeZone);
+                const end = editing.end.withTimeZone(timeZone);
                 timedBefore.current.set(saved.id, { start: start.toPlainTime(), end: end.toPlainTime(), daySpan: start.toPlainDate().until(end.toPlainDate(), { largestUnit: 'day' }).days });
               }
               if (!saved.allDay) timedBefore.current.delete(saved.id);
@@ -1530,23 +1617,23 @@ export default function EventCalendarExample({
               announce(message ?? labelOf(saved));
               returnFocus.current = true;
             };
-            if (editing.mode === 'create') {
-              const created = seriesFromDraft(freshSeriesId(), { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
+            if (session.intent === 'create') {
+              const created = seriesFromDraft(seriesId(next.id), { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
               setSeriesList((list) => [...list, created]);
               const saved = firstOf(created) ?? { ...next, id: created.id, seriesId: created.id, repeats: detail.rule !== null, originalStart: next.start };
-              reveal(saved, `Created ${labelOf(saved)}.`);
-              setEditing(null);
+              reveal(saved, `Added ${labelOf(saved)}`);
+              setSession(null);
               return;
             }
-            const current = seriesList.find((item) => item.id === (editing.event.seriesId ?? editing.event.id));
+            const current = seriesList.find((item) => item.id === (editing.seriesId ?? editing.id));
             if (!current) return;
-            if (detail.scope === 'occurrence' && editing.event.originalStart) {
-              setSeriesList((list) => list.map((item) => (item.id === current.id ? overrideOccurrence(item, editing.event.originalStart!, { title: next.title, start: next.start, end: next.end, allDay: next.allDay }) : item)));
-              const saved = { ...editing.event, ...next, id: editing.event.id, seriesId: current.id, repeats: true, originalStart: editing.event.originalStart };
+            if (detail.scope === 'occurrence' && editing.originalStart) {
+              setSeriesList((list) => list.map((item) => (item.id === current.id ? overrideOccurrence(item, editing.originalStart!, { title: next.title, start: next.start, end: next.end, allDay: next.allDay }) : item)));
+              const saved = { ...editing, ...next, id: editing.id, seriesId: current.id, repeats: true, originalStart: editing.originalStart };
               reveal(saved, `Changed this event. ${labelOf(saved)}.`);
-            } else if (detail.scope === 'following' && editing.event.originalStart) {
+            } else if (detail.scope === 'following' && editing.originalStart) {
               const created = seriesFromDraft(freshSeriesId(), { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
-              const previous = truncateBefore(current, editing.event.originalStart);
+              const previous = truncateBefore(current, editing.originalStart);
               setSeriesList((list) => list.flatMap((item) => (item.id === current.id ? (previous ? [previous, created] : [created]) : [item])));
               const saved = firstOf(created) ?? { ...next, id: created.id, seriesId: created.id, repeats: detail.rule !== null, originalStart: next.start };
               reveal(saved, `Changed this and following events. ${labelOf(saved)}.`);
@@ -1554,9 +1641,9 @@ export default function EventCalendarExample({
               const replaced = replaceSeries(current, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
               setSeriesList((list) => list.map((item) => (item.id === current.id ? replaced : item)));
               const saved = firstOf(replaced) ?? { ...next, id: replaced.id, seriesId: replaced.id, repeats: detail.rule !== null, originalStart: next.start };
-              reveal(saved, editing.event.repeats ? `Changed all events. ${labelOf(saved)}.` : undefined);
+              reveal(saved, editing.repeats ? `Changed all events. ${labelOf(saved)}.` : undefined);
             }
-            setEditing(null);
+            setSession(null);
           }}
         />
       ) : null}
@@ -1677,11 +1764,12 @@ function ScopeChoice({
 }
 
 /**
- * Edits one event's title and time, and, for a new event or a whole series, how it repeats.
- * Drag-to-create can open it with the event a drag sketched and read the saved event from `onSave`.
+ * Edits one event, or fills in a new one, including how a new event or a whole series repeats.
+ * Drag-to-create opens it with the event a drag sketched.
  */
 export function EventEditor({
   event,
+  intent = 'edit',
   locale,
   timeZone,
   opens = OPENS,
@@ -1695,6 +1783,7 @@ export function EventEditor({
   restoreFocusRef,
 }: {
   event: CalendarEvent;
+  intent?: 'edit' | 'create';
   locale: string;
   timeZone: string;
   opens?: Temporal.PlainTime;
@@ -1770,7 +1859,8 @@ export function EventEditor({
     onSave({ ...event, ...result.value }, { rule: parsed, scope: scope ?? 'series' });
   };
 
-  const dialogTitle = mode === 'create' ? 'New event' : asking ? 'Edit repeating event' : `Edit ${fields.title || event.title}`;
+  const creating = intent === 'create' || mode === 'create';
+  const dialogTitle = creating ? 'New event' : asking ? 'Edit repeating event' : `Edit ${fields.title || event.title}`;
   const days = orderedDays(locale);
 
   return (
