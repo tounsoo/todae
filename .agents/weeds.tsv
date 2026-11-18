@@ -26,3 +26,6 @@ date	class	ref	caught_by	note
 2026-11-17	dialog-unmount-drops-focus	#485	review	Unmounting the edit dialog while it was still open skipped focus restore, so Save left focus on the body.
 2026-11-17	calendar-shift-own-zone	#485	review	A day move added the day in the event's zone, so a Tokyo event shown at 10:00 LA on Oct 31 landed at 9:00 on Nov 1.
 2026-11-17	calendar-shift-mixed-sign	#485	review	A day and the minutes went into one duration, so a drag to the next day at an earlier time threw and dropped nothing.
+2026-11-18	strip-test-lane	#486	self	The browser helper took the header's next sibling as the time grid, so after the all-day strip landed there every lane lookup failed.
+2026-11-18	menu-role-closed	#486	self	findByRole('menu') matched every closed Menu popover. The open menu is the one that contains a menuitem.
+2026-11-18	chip-class-substring	#486	self	A selector for the month chip class also matched the chips wrapper, so a day with one chip counted as two.
