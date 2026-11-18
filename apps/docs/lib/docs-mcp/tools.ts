@@ -1,10 +1,11 @@
 import { DOCS_ORIGIN } from '../origin';
 import { docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
-import { envelope } from './budget';
+import { envelope, fitSlice, type NextCall } from './budget';
 import { allPages, type LocaleId } from './catalog';
 import { readPage, whenLabels, type ReadOptions } from './read';
 import { formatSuggestions, searchDocs } from './search';
+import { closeNames } from './units';
 
 const SOURCE = 'todae-docs' as const;
 
@@ -28,8 +29,8 @@ function componentBody(component: ComponentMeta) {
   };
 }
 
-export function listComponents() {
-  const components = listComponentMeta().map((component) => {
+function componentRows() {
+  return listComponentMeta().map((component) => {
     const page = pageFor(component.name);
     const copy = page ? parseWhen(page.markdown, component.name) : null;
     const inherited = page != null && copy?.shared === true && !ownsPage(page, component.name);
@@ -42,14 +43,43 @@ export function listComponents() {
       ...(inherited ? { scope: 'page' as const } : {}),
     };
   });
-  return envelope(
-    { components, count: components.length, source: SOURCE },
-    'component-list',
-    [
-      { tool: 'search_docs', arguments: { query: 'button' }, why: 'Find a component, prop or page without knowing its slug.' },
-      { tool: 'get_component', arguments: { name: 'Button' }, why: 'Read one component. This list does not include props.' },
-    ],
+}
+
+const COMPONENT_NEXT: NextCall[] = [
+  { tool: 'search_docs', arguments: { query: 'button' }, why: 'Find a component, prop or page without knowing its slug.' },
+  { tool: 'get_component', arguments: { name: 'Button' }, why: 'Read one component. This list does not include props.' },
+];
+
+export function listComponents(options?: { offset?: number }) {
+  const components = componentRows();
+  if (options?.offset === undefined) {
+    return envelope({ components, count: components.length, source: SOURCE }, 'component-list', COMPONENT_NEXT);
+  }
+  const start = options.offset;
+  return fitSlice(components, start, (slice, cursor) =>
+    envelope(
+      { components: slice, count: components.length, offset: start, ...(cursor ? { cursor } : {}), source: SOURCE },
+      'component-list',
+      cursor
+        ? [{ tool: 'list_components', arguments: { offset: cursor.offset }, why: 'The next components in this list.' }, ...COMPONENT_NEXT]
+        : COMPONENT_NEXT,
+    ),
   );
+}
+
+function unknownComponent(name: string, error: unknown): Error {
+  const message = error instanceof Error ? error.message : 'Unknown component';
+  const near = closeNames(name, listComponentMeta().map((item) => item.name));
+  const hits = searchDocs(name, { limit: 5 });
+  const lines = [
+    ...near.map((item) => `- ${item}`),
+    ...hits
+      .filter((hit) => !near.includes(hit.component ?? hit.title))
+      .slice(0, 5)
+      .map((hit) => `- ${hit.ref} (${hit.kind}, ${hit.locale}, ${hit.tokens} tokens): ${hit.title}`),
+  ];
+  const hint = lines.length > 0 ? `Did you mean:\n${lines.join('\n')}\nCall search_docs.` : formatSuggestions(hits);
+  return new Error(`${message} ${hint}`, { cause: error });
 }
 
 export function getComponent(name: string) {
@@ -59,7 +89,7 @@ export function getComponent(name: string) {
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     if (!message.startsWith('Unknown component')) throw error;
-    throw new Error(`${message} ${formatSuggestions(searchDocs(name, { limit: 5 }))}`, { cause: error });
+    throw unknownComponent(name, error);
   }
   const body =
     resolved.kind === 'namespace'
@@ -83,7 +113,14 @@ export function getComponent(name: string) {
 export function whenToUse(name: string, options?: { locale?: LocaleId }) {
   const locale = options?.locale ?? 'en';
   const labels = whenLabels(locale);
-  const resolved = resolveName(name);
+  let resolved;
+  try {
+    resolved = resolveName(name);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (!message.startsWith('Unknown component')) throw error;
+    throw unknownComponent(name, error);
+  }
   const canonical = resolved.kind === 'namespace' ? resolved.name : resolved.component.name;
   const english = pageFor(canonical);
   const localized = english ? allPages().find((item) => item.locale === locale && item.slug === english.slug) : undefined;

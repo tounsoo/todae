@@ -1,12 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import type { Heading, Node, Root } from 'mdast';
 import { DOCS_ORIGIN } from '../origin';
 import { exampleOf } from '../exampleCode';
 import { parseMdx } from '../mdxAst';
 import { pageSummary } from '../pageSummary.mjs';
-import { defaultImports, exampleBlocks, exampleFile, exampleStylesheets, EXAMPLES_DIR } from '../remarkExamples.mjs';
-import { exampleSource } from '../exampleSource.mjs';
+import { defaultImports, exampleBlocks, exampleFile, EXAMPLES_DIR } from '../remarkExamples.mjs';
 import { absolutize, loadPages } from './mdx';
 import { headingAnchor, tokensOf } from './units';
 
@@ -106,43 +104,20 @@ function stubText(slug: string, files: ExampleFile[]): string {
 }
 
 function filesFor(file: string, id: string, demonstrates: string, anchor: string, shown: Set<string>): ExampleFile[] {
-  const source = readFileSync(file, 'utf8');
-  const before = new Set(shown);
-  const blocks = exampleBlocks(file, shown);
-  const sheets = exampleStylesheets(file, source).filter((path) => !before.has(path));
-  const tsx = exampleSource(source);
-  const made: ExampleFile[] = [
-    {
-      id,
-      file: basename(file),
-      path: file.slice(EXAMPLES_DIR.length),
-      lang: 'tsx',
-      demonstrates,
-      anchor,
-      lines: tsx.split('\n').length,
-      tokens: tokensOf(tsx.length),
-      text: tsx,
-    },
-  ];
-  sheets.forEach((path, index) => {
-    const text = blocks[index + 1]?.value ?? '';
-    made.push({
-      id,
-      file: basename(path),
-      path: path.slice(EXAMPLES_DIR.length),
-      lang: 'css',
-      demonstrates,
-      anchor,
-      lines: text.split('\n').length,
-      tokens: tokensOf(text.length),
-      text,
-    });
-  });
-  return made;
+  return exampleBlocks(file, shown).map((block) => ({
+    id,
+    file: basename(block.path),
+    path: block.path.slice(EXAMPLES_DIR.length),
+    lang: block.lang,
+    demonstrates,
+    anchor,
+    lines: block.value.split('\n').length,
+    tokens: tokensOf(block.value.length),
+    text: block.value,
+  }));
 }
 
-function compile(locale: LocaleId, slug: string, raw: string): PageRecord {
-  const file = join(APP[locale], slug, 'page.mdx');
+function compile(locale: LocaleId, slug: string, raw: string, file = join(APP[locale], slug, 'page.mdx')): PageRecord {
   const tree = parseMdx(raw);
   const title = raw.split('\n').find((line) => line.startsWith('# '))?.slice(2) ?? slug;
   const props = [...raw.matchAll(/<PropsTable\s+name="([^"]+)"\s*\/>/g)].map((hit) => hit[1] ?? '');
@@ -172,12 +147,8 @@ function compile(locale: LocaleId, slug: string, raw: string): PageRecord {
       text: stubText(slug, files),
     });
   }
-  let markdown = raw;
-  for (const replacement of replacements.sort((a, b) => b.from - a.from)) {
-    markdown = markdown.slice(0, replacement.from) + replacement.text + markdown.slice(replacement.to);
-  }
-  markdown = absolutize(markdown);
-  const { intro, sections } = splitSections(markdown, marks, examples);
+  const markdown = applySlice(raw, 0, raw.length, replacements);
+  const { intro, sections } = splitSections(raw, marks, examples, replacements);
   const description = pageSummary(tree, Infinity)?.description || null;
   return {
     locale,
@@ -196,48 +167,61 @@ function compile(locale: LocaleId, slug: string, raw: string): PageRecord {
   };
 }
 
-function findHeading(markdown: string, mark: HeadingMark, from: number): number {
-  const line = `${'#'.repeat(mark.depth)} ${mark.text}`;
-  let index = markdown.indexOf(line, from);
-  while (index >= 0) {
-    const after = markdown[index + line.length];
-    if (after === undefined || after === '\n' || after === '\r' || after === ' ') return index;
-    index = markdown.indexOf(line, index + line.length);
-  }
-  return -1;
+/** Drops top-level import and export lines. Lines inside a fence stay, since those are the example. */
+function stripModuleLines(markdown: string): string {
+  let fence = false;
+  return markdown
+    .split('\n')
+    .filter((line) => {
+      if (line.startsWith('```')) {
+        fence = !fence;
+        return true;
+      }
+      if (fence) return true;
+      return !/^\s*(import|export)\b/.test(line);
+    })
+    .join('\n');
+}
+
+type Replacement = { from: number; to: number; text: string };
+
+/** A slice of the raw page, with example stubs and absolute links, bounded by a heading node's offset. */
+function applySlice(raw: string, start: number, end: number, replacements: Replacement[]): string {
+  let text = raw.slice(start, end);
+  const local = replacements
+    .filter((item) => item.from >= start && item.to <= end)
+    .map((item) => ({ from: item.from - start, to: item.to - start, text: item.text }))
+    .sort((a, b) => b.from - a.from);
+  for (const item of local) text = text.slice(0, item.from) + item.text + text.slice(item.to);
+  return stripModuleLines(absolutize(text));
 }
 
 function splitSections(
-  markdown: string,
+  raw: string,
   marks: HeadingMark[],
   examples: ExampleFile[],
+  replacements: Replacement[],
 ): { intro: string; sections: SectionRecord[] } {
-  const found: { index: number; mark: HeadingMark }[] = [];
-  let from = 0;
-  for (const mark of marks) {
-    const index = findHeading(markdown, mark, from);
-    if (index < 0) continue;
-    found.push({ index, mark });
-    from = index + 1;
-  }
-  const firstH2 = found.find((item) => item.mark.depth === 2);
-  const intro = markdown.slice(0, firstH2?.index ?? markdown.length).trim();
-  const sections = found.map((item, index) => {
-    const next = found.slice(index + 1).find((other) => other.mark.depth <= item.mark.depth);
-    const body = markdown.slice(item.index, next?.index ?? markdown.length).trim();
+  const firstH2 = marks.find((mark) => mark.depth === 2);
+  const intro = applySlice(raw, 0, firstH2?.from ?? raw.length, replacements).trim();
+  const sections = marks.map((mark, index) => {
+    const next = marks.slice(index + 1).find((other) => other.depth <= mark.depth);
+    const body = applySlice(raw, mark.from, next?.from ?? raw.length, replacements).trim();
     return {
-      anchor: item.mark.anchor,
-      heading: item.mark.text,
-      depth: item.mark.depth,
+      anchor: mark.anchor,
+      heading: mark.text,
+      depth: mark.depth,
       markdown: body,
       tokens: tokensOf(body.length),
-      examples: examples.filter((example) => example.anchor === item.mark.anchor),
+      examples: examples.filter((example) => example.anchor === mark.anchor),
     };
   });
   return { intro, sections };
 }
 
 let cached: PageRecord[] | null = null;
+
+const FIXTURE_PAGES = join(process.cwd(), 'lib', 'docs-mcp', 'fixtures', 'pages');
 
 function build(): PageRecord[] {
   const pages: PageRecord[] = [];
@@ -246,12 +230,23 @@ function build(): PageRecord[] {
       pages.push(compile(locale, page.slug, page.markdown));
     }
   }
+  // A route test sets this so a page that is not part of the site can be fetched.
+  if (process.env.TODAE_DOCS_MCP_FIXTURE === '1') {
+    for (const page of loadPages(FIXTURE_PAGES, { inlineExamples: false })) {
+      pages.push(compile('en', page.slug, page.markdown, join(FIXTURE_PAGES, page.slug, 'page.mdx')));
+    }
+  }
   return pages;
 }
 
 export function allPages(): readonly PageRecord[] {
   cached ??= build();
   return cached;
+}
+
+/** Drops the cached pages so a test can load the fixture directory. */
+export function resetPagesForTests(): void {
+  cached = null;
 }
 
 export function pageRecord(locale: LocaleId, slug: string): PageRecord | null {

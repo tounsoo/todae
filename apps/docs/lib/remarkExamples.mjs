@@ -56,17 +56,30 @@ export function exampleStylesheets(file, text) {
   });
 }
 
+/** Sibling `.ts` modules an example imports from its own folder, such as `import { recurrence } from './recurrence';`. */
+export function exampleScripts(file, text) {
+  return [...text.matchAll(/^[ \t]*import\b[^;]*?['"](\.\/[^'"]+\.ts)['"][^\n]*$/gm)].map((match) => {
+    const path = resolve(dirname(file), match[1]);
+    if (!existsSync(path)) throw new Error(`${file} imports ${match[1]}, but no such file exists in its folder`);
+    return path;
+  });
+}
+
 /**
- * The code blocks a page shows for an example file: its code, then each stylesheet it imports from its
- * folder that the page has not shown yet. `shown` holds the stylesheets already shown on the page.
+ * The code blocks a page shows for an example file: its code, then each sibling `.ts` module,
+ * then each stylesheet it imports from its folder that the page has not shown yet.
+ * Every block carries the file it was read from, so a later stylesheet is not paired by position.
+ * `shown` holds the stylesheets already shown on the page.
  */
 export function exampleBlocks(file, shown = new Set()) {
   const text = readFileSync(file, 'utf8');
+  const scripts = exampleScripts(file, text);
   const sheets = exampleStylesheets(file, text).filter((path) => !shown.has(path));
   for (const path of sheets) shown.add(path);
   return [
-    { lang: 'tsx', value: exampleSource(text) },
-    ...sheets.map((path) => ({ lang: 'css', value: readFileSync(path, 'utf8').trimEnd() })),
+    { lang: 'tsx', path: file, value: exampleSource(text) },
+    ...scripts.map((path) => ({ lang: 'ts', path, value: readFileSync(path, 'utf8').trimEnd() })),
+    ...sheets.map((path) => ({ lang: 'css', path, value: readFileSync(path, 'utf8').trimEnd() })),
   ];
 }
 

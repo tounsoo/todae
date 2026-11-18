@@ -3,8 +3,9 @@ import { slugOf } from '../headingSlug.mjs';
 export const SOURCE = 'todae-docs' as const;
 
 /**
- * chars/4. The same unit the page-size audit used. A model tokenizer lands a
- * little higher, so a budget written in this unit stays under the client's.
+ * chars/4. The same unit the page-size audit used. A real o200k tokenizer is
+ * about 1.00 to 1.12 times this for English and about 1.18 to 1.76 times this
+ * for Korean, so the same character count costs more in Korean.
  */
 export function tokensOf(chars: number): number {
   return Math.ceil(chars / 4);
@@ -48,6 +49,17 @@ function termKeys(word: string): string[] {
   return [...keys];
 }
 
+const HANGUL = /^\p{Script=Hangul}+$/u;
+
+/** Character pairs inside a Hangul word, so a particle glued on still meets the stem. */
+function hangulGrams(word: string): string[] {
+  const chars = [...word];
+  if (chars.length < 3 || !HANGUL.test(word)) return [];
+  const grams: string[] = [];
+  for (let i = 0; i < chars.length - 1; i += 1) grams.push(`${chars[i]}${chars[i + 1]}`);
+  return grams;
+}
+
 /** Search terms for `text`, with a light stem so "dragging" and "drag" meet. */
 export function tokenize(text: string): string[] {
   const words = splitIdent(text)
@@ -55,8 +67,48 @@ export function tokenize(text: string): string[] {
     .split(/[^\p{L}\p{N}]+/u)
     .filter((word) => word.length > 1 && !STOP.has(word));
   const out: string[] = [];
-  for (const word of words) out.push(...termKeys(word));
+  for (const word of words) {
+    out.push(...termKeys(word));
+    out.push(...hangulGrams(word));
+  }
   return out;
+}
+
+/** Insertions, deletions and substitutions. Used for a miss, not for ranking. */
+export function editDistance(left: string, right: string): number {
+  if (left === right) return 0;
+  const gap = Math.abs(left.length - right.length);
+  if (gap > 3) return gap;
+  const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let diagonal = row[0]!;
+    row[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const next = left[i - 1] === right[j - 1] ? diagonal : Math.min(diagonal, row[j]!, row[j - 1]!) + 1;
+      diagonal = row[j]!;
+      row[j] = next;
+    }
+  }
+  return row[right.length] ?? gap;
+}
+
+function nameForms(name: string): string[] {
+  const norm = normalizeSlug(name);
+  return [...new Set([norm, norm.replace(/\./g, ''), ...name.split('.').map((part) => normalizeSlug(part))])];
+}
+
+/** Names within two edits of `query`, closest first. `Calendar.Root` for `calender`. */
+export function closeNames(query: string, names: readonly string[], limit = 5): string[] {
+  const norm = normalizeSlug(query);
+  if (norm.length < 3) return [];
+  const seen = new Set<string>();
+  return names
+    .map((name) => ({ name, distance: Math.min(...nameForms(name).map((form) => editDistance(norm, form))) }))
+    .filter((row) => row.distance > 0 && row.distance <= 2)
+    .sort((a, b) => a.distance - b.distance || a.name.localeCompare(b.name))
+    .filter((row) => (seen.has(row.name) ? false : (seen.add(row.name), true)))
+    .slice(0, limit)
+    .map((row) => row.name);
 }
 
 /** The heading id the docs page uses, so a slug#anchor from the site opens the same section. */

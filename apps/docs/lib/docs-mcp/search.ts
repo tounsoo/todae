@@ -171,7 +171,10 @@ function bm25(tf: number, df: number, docLen: number, avg: number, n: number): n
 }
 
 function wordHits(word: string, keys: string[]): boolean {
-  return keys.some((key) => key.length > 3 && (word === key || (word.startsWith(key) && word.length - key.length > 0 && word.length - key.length <= 4)));
+  return keys.some((key) => {
+    if (word === key && key.length > 1) return true;
+    return key.length > 3 && word.startsWith(key) && word.length - key.length > 0 && word.length - key.length <= 4;
+  });
 }
 
 function headingLeads(title: string, keys: string[]): boolean {
@@ -228,6 +231,13 @@ export function searchDocs(query: string, options?: { locale?: LocaleId; limit?:
     if (hangul ? doc.locale === 'ko' : doc.locale === 'en') score += 2.5;
     // A heading that is the query's word ("Dragging") should beat a longer heading that only contains it.
     if (doc.kind === 'section' && headingLeads(doc.title, keys)) score += 8;
+    const pageSlug = doc.ref.split('#')[0] ?? doc.ref;
+    // The server manual mentions every tool, so it should not win a question about the product.
+    if (pageSlug === 'mcp' && !wants.has('mcp')) score -= 8;
+    const slugWords = pageSlug.split(/[/-]/);
+    if (slugWords.some((word) => word.length > 3 && wants.has(word))) score += 6;
+    // A how-to asks for the page. An example wins when the query asks for one.
+    if (doc.kind === 'example' && !wants.has('example')) score -= 2;
     scored.push({
       score,
       hit: {
@@ -268,6 +278,14 @@ function nextFor(hit: SearchHit | undefined): NextCall[] {
   }
   if ((hit.kind === 'prop' || hit.kind === 'component' || hit.kind === 'hook') && hit.component) {
     return [{ tool: 'get_component', arguments: { name: hit.component }, why: `${hit.component} props, about ${hit.tokens} tokens.` }];
+  }
+  if (hit.kind === 'example') {
+    const page = hit.ref.split('#')[0] ?? hit.ref;
+    return [{
+      tool: 'get_example',
+      arguments: { page, file: hit.title, ...(hit.locale === 'ko' ? { locale: 'ko' } : {}) },
+      why: `${hit.title} on ${page}, about ${hit.tokens} tokens.`,
+    }];
   }
   return [{
     tool: 'get_docs_page',

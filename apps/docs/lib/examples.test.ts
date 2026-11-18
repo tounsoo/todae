@@ -155,7 +155,7 @@ describe('docs examples', () => {
         shown.set(file, (shown.get(file) ?? new Set()).add(relative(APP, page).split('/')[0]!));
       }
     }
-    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx') && !file.startsWith('fixtures/'));
     expect(files.length).toBeGreaterThan(100);
     expect(files.filter((file) => !shown.get(file)?.has('(en)') || !shown.get(file)?.has('ko'))).toEqual([]);
   });
@@ -196,7 +196,7 @@ describe('docs examples', () => {
 
   it('uses no class name that only the docs stylesheet defines', () => {
     const docsCss = readFileSync(join(APP, 'globals.css'), 'utf8');
-    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx') && !file.startsWith('fixtures/'));
     const docsOnly = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/className=["']([^"']+)["']/g)]
         .flatMap((match) => match[1]!.split(/\s+/))
@@ -208,7 +208,7 @@ describe('docs examples', () => {
 
   it('imports only what a product has: the package, React, icon libraries and a stylesheet of its own', () => {
     const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react|\.\/[\w-]+\.module\.css)$/;
-    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx') && !file.startsWith('fixtures/'));
     const outside = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/from '([^']+)'/g)]
         .map((match) => match[1]!)

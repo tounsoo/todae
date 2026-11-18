@@ -191,3 +191,45 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     source: SOURCE,
   };
 }
+
+export type ScaffoldDraft = Awaited<ReturnType<typeof scaffoldDesignSystem>>;
+
+const SCAFFOLD_SLICE = 24_000;
+
+/** One drafted file per response, so a scaffold at its limits is not one over-budget blob. A file that is still too long continues at `cursor.char`. */
+export function presentScaffold(result: ScaffoldDraft, offset = 0, char = 0) {
+  const files = [
+    ...Object.entries(result.tokenFiles).map(([path, contents]) => ({ group: 'tokenFiles' as const, path, contents })),
+    ...result.otherFiles.map((file) => ({ group: 'otherFiles' as const, path: file.path, contents: file.contents })),
+    ...(!result.build.ok ? [{ group: 'build' as const, path: 'build-error', contents: result.build.error }] : []),
+  ];
+  const index = Math.max(0, Math.trunc(offset));
+  const current = files[index];
+  const start = Math.max(0, Math.trunc(char));
+  const rest = current ? current.contents.slice(start) : '';
+  let take = rest.length;
+  if (take > SCAFFOLD_SLICE) {
+    const cut = rest.slice(0, SCAFFOLD_SLICE);
+    const newline = cut.lastIndexOf('\n');
+    take = newline > 0 ? newline : SCAFFOLD_SLICE;
+  }
+  const nextChar = start + take;
+  const fileDone = !current || nextChar >= current.contents.length;
+  const cursor = !current
+    ? undefined
+    : fileDone
+      ? index + 1 < files.length
+        ? { offset: index + 1 }
+        : undefined
+      : { offset: index, char: nextChar };
+  return {
+    tokensFolder: result.tokensFolder,
+    index,
+    total: files.length,
+    ...(current ? { file: { group: current.group, path: current.path, contents: rest.slice(0, take) } } : {}),
+    ...(index === 0 && start === 0 ? { build: { ok: result.build.ok }, command: result.command } : {}),
+    ...(cursor ? { cursor } : {}),
+    docsUrl: result.docsUrl,
+    source: result.source,
+  };
+}

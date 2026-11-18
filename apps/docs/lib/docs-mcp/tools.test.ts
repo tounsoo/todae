@@ -608,8 +608,9 @@ describe('get_docs_page', () => {
   });
 
   it('refuses unknown names and paths outside the docs pages', () => {
-    for (const query of ['Nope', '../tooltip', 'tooltip/..', '/etc/passwd', 'https://example.com/tooltip', `${DOCS_ORIGIN}`, '']) {
+    for (const query of ['Nope', '../tooltip', 'tooltip/..', '/etc/passwd', 'https://example.com/not-a-docs-page', `${DOCS_ORIGIN}`, '']) {
       expect(() => getDocsPage(query)).toThrow(`No docs page for "${query}".`);
     }
+    expect(getDocsPage('https://example.com/tooltip').slug).toBe('tooltip');
   });
 });

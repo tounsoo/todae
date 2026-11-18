@@ -1,12 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { DOCS_ORIGIN } from '../origin';
 import { withExampleCode } from '../exampleCode';
 import { absolutize, EN_WHEN, KO_WHEN, pageFor, parseWhen, type WhenLabels } from './mdx';
 import { resolveName } from './meta';
 import { allPages, type ExampleFile, type LocaleId, type PageRecord, type SectionRecord } from './catalog';
 import { envelope, LARGE_PAGE_TOKENS, MAX_RESPONSE_CHARS, withFallback, type NextCall } from './budget';
-import { formatSuggestions, searchDocs, type SearchHit } from './search';
-import { normalizeSlug, SOURCE, tokensOf } from './units';
+import { searchDocs, type SearchHit } from './search';
+import { closeNames, normalizeSlug, SOURCE, tokensOf } from './units';
 
 export type ReadOptions = {
   section?: string;
@@ -30,8 +29,15 @@ function decodeAnchor(value: string): string {
 /** Pulls a locale prefix and a #anchor out of a slug, path or docs URL. */
 export function parseTarget(query: string, locale?: LocaleId): { locale: LocaleId; slug: string; anchor?: string } {
   let path = query.trim();
-  if (path.startsWith(`${DOCS_ORIGIN}/`)) path = path.slice(DOCS_ORIGIN.length + 1);
-  else if (path.startsWith(DOCS_ORIGIN)) path = path.slice(DOCS_ORIGIN.length);
+  // A docs URL from any origin, including a preview deploy, names the same page.
+  if (/^https?:\/\//i.test(path)) {
+    try {
+      const url = new URL(path);
+      path = `${url.pathname}${url.hash}`;
+    } catch {
+      // A string that only starts like a URL stays as written.
+    }
+  }
   path = path.replace(/^[\\/]+/, '');
   const hash = path.indexOf('#');
   const anchor = hash >= 0 ? decodeAnchor(path.slice(hash + 1).split('?')[0] ?? '') : undefined;
@@ -85,8 +91,18 @@ function matchSection(page: PageRecord, query: string): SectionRecord | null {
 }
 
 function pageMiss(query: string, locale?: LocaleId): Error {
+  const pages = allPages().filter((page) => !locale || page.locale === locale);
+  const near = closeNames(query, pages.map((page) => page.slug));
   const hits = searchDocs(query, { ...(locale ? { locale } : {}), limit: 5 });
-  return new Error(`No docs page for "${query}". ${formatSuggestions(hits)}`);
+  const lines = [
+    ...near.map((slug) => `- ${slug}`),
+    ...hits
+      .filter((hit) => !near.includes(hit.ref.split('#')[0] ?? hit.ref))
+      .slice(0, 5)
+      .map((hit) => `- ${hit.ref} (${hit.kind}, ${hit.locale}, ${hit.tokens} tokens): ${hit.title}`),
+  ];
+  const hint = lines.length > 0 ? `Did you mean:\n${lines.join('\n')}\nCall search_docs.` : 'Call search_docs.';
+  return new Error(`No docs page for "${query}". ${hint}`);
 }
 
 function sectionMiss(page: PageRecord, section: string): Error {
@@ -199,8 +215,8 @@ function stubs(files: ExampleFile[]) {
   }));
 }
 
-function pageBody(page: PageRecord, markdown: string, note?: string) {
-  const windowed = windowText(markdown, 0);
+function pageBody(page: PageRecord, markdown: string, note?: string, offset = 0) {
+  const windowed = windowText(markdown, offset);
   return envelope(
     {
       kind: 'page' as const,
@@ -250,11 +266,16 @@ export function readPage(query: string, options: ReadOptions = {}) {
   if (section) return sectionBody(page, section, options.offset ?? 0);
   if (options.includeCode) {
     const inlined = absolutize(withExampleCode(page.file, readFileSync(page.file, 'utf8')));
-    const full = pageBody(page, inlined, 'Example source is inlined. A result over the response budget comes back as the outline instead.');
+    const full = pageBody(
+      page,
+      inlined,
+      'Example source is inlined. A result over the response budget comes back as the outline instead.',
+      options.offset ?? 0,
+    );
     return withFallback(full, outlineOf(page, 'The page with example code inline does not fit in the response budget, so this is the outline. Fetch a file with get_example.'));
   }
-  const stubbed = pageBody(page, options.offset ? page.markdown.slice(options.offset) : page.markdown);
-  if (stubbed.tokens > LARGE_PAGE_TOKENS && !options.offset) {
+  const stubbed = pageBody(page, page.markdown, undefined, options.offset ?? 0);
+  if (stubbed.nav.tokens > LARGE_PAGE_TOKENS && !options.offset) {
     return outlineOf(
       page,
       `This page is over ${LARGE_PAGE_TOKENS} tokens, so this is the outline and the intro. Read a section by its anchor, or pass includeCode when you need the example source inline.`,
@@ -317,9 +338,17 @@ export function readExample(pageQuery: string, file: string, options: Pick<ReadO
     'example',
     [
       ...(cursor
-        ? [{ tool: 'get_example', arguments: { page: page.slug, file: example.file, startLine: cursor.startLine }, why: 'The next lines of this file.' }]
+        ? [{
+            tool: 'get_example',
+            arguments: { page: page.slug, file: example.file, startLine: cursor.startLine, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+            why: 'The next lines of this file.',
+          }]
         : []),
-      { tool: 'get_docs_page', arguments: { name: example.anchor ? `${page.slug}#${example.anchor}` : page.slug }, why: 'The section that shows this example.' },
+      {
+        tool: 'get_docs_page',
+        arguments: { name: example.anchor ? `${page.slug}#${example.anchor}` : page.slug, ...(page.locale === 'ko' ? { locale: 'ko' } : {}) },
+        why: 'The section that shows this example.',
+      },
     ],
     { locale: page.locale, slug: page.slug, ...(example.anchor ? { section: example.anchor } : {}) },
   );

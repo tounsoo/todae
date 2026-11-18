@@ -21,6 +21,8 @@ type Task = {
   locale?: 'en' | 'ko';
   /** A hit in the top 3 whose ref, title, path or component contains this. */
   match: string;
+  /** The page or name the first suggested call must open. Defaults to the match without its anchor. */
+  lands?: string;
   /** A phrase that belongs to that hit and not to a neighboring section. */
   phrase: string;
   follow: (hit: SearchHit) => unknown;
@@ -31,6 +33,7 @@ const tasks: Task[] = [
     id: 'calendar-holiday-prop',
     query: 'Calendar prop for a holiday that cannot be picked',
     match: 'isDateDisabled',
+    lands: 'calendar',
     phrase: 'cannot be picked',
     follow: (hit) => getComponent(hit.component ?? 'Calendar.Root'),
   },
@@ -45,6 +48,7 @@ const tasks: Task[] = [
     id: 'lane-drag-check',
     query: 'useLaneDrag check refuses a blocked drop',
     match: 'utilities/use-lane-drag#checking-a-place',
+    lands: 'useLaneDrag',
     phrase: 'takes no drop',
     follow: (hit) => getDocsPage(hit.ref),
   },
@@ -131,8 +135,13 @@ function top(task: Task): SearchHit {
 
 describe('agent tasks', () => {
   it.each(tasks)('$id finds the section in the top 3 and stays under the token budget', (task) => {
-    const hit = top(task);
     const search = presentSearch(task.query, { ...(task.locale ? { locale: task.locale } : {}), limit: 8 });
+    const first = search.hits[0];
+    const next = search.nav.next[0];
+    const landed = `${first?.ref ?? ''} ${first?.title ?? ''} ${first?.path ?? ''} ${first?.component ?? ''} ${JSON.stringify(next?.arguments ?? {})}`;
+    const page = task.lands ?? task.match.split('#')[0] ?? task.match;
+    expect(landed, `${task.id} first call ${landed}`).toContain(page);
+    const hit = top(task);
     const follow = task.follow(hit);
     expect(JSON.stringify(follow)).toContain(task.phrase);
     const spent = cost(search) + cost(follow);
@@ -184,7 +193,7 @@ describe('section reads', () => {
     const page = getDocsPage('utilities/strings-provider');
     expect(page.kind).toBe('outline');
     if (page.kind !== 'outline') throw new Error('expected an outline');
-    expect(page.tokens).toBeLessThanOrEqual(LARGE_PAGE_TOKENS);
+    expect(page.nav.tokens).toBeLessThanOrEqual(LARGE_PAGE_TOKENS);
     expect(page.intro).toContain('StringsProvider');
     expect(page.sections.some((section) => section.anchor === 'accessible-composition' && section.tokens > 0)).toBe(true);
     expect(JSON.stringify(page)).not.toContain('An empty string. Unlike');
@@ -264,6 +273,8 @@ describe('docs page', () => {
       expect(page).toContain('get_example');
       expect(page).toContain('get_docs_page');
       expect(page).toMatch(/40,?000/);
+      expect(page).toContain('1.18');
+      expect(page).toContain('1.76');
     }
   });
 });

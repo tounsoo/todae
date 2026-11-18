@@ -30,21 +30,21 @@ export type Nav = {
   next: NextCall[];
 };
 
-type Sized = { chars: number; tokens: number; nav?: Nav };
+type WithNav = { nav?: Nav };
 
-/** Writes the JSON size onto the body and its nav. Two passes, so the digits settle. */
-export function seal<T extends Sized>(body: T): T {
+/**
+ * Writes the JSON size onto `nav` only. A result often has its own `tokens`
+ * list (the catalog) or `chars` field, and a size written on the body would replace it.
+ */
+export function seal<T extends WithNav>(body: T): T {
+  const nav = body.nav;
+  if (!nav) return body;
   for (let pass = 0; pass < 4; pass += 1) {
     const chars = JSON.stringify(body).length;
     const tokens = tokensOf(chars);
-    const nav = body.nav;
-    if (body.chars === chars && body.tokens === tokens && (!nav || (nav.chars === chars && nav.tokens === tokens))) return body;
-    body.chars = chars;
-    body.tokens = tokens;
-    if (nav) {
-      nav.chars = chars;
-      nav.tokens = tokens;
-    }
+    if (nav.chars === chars && nav.tokens === tokens) return body;
+    nav.chars = chars;
+    nav.tokens = tokens;
   }
   return body;
 }
@@ -54,9 +54,41 @@ export function envelope<T extends Record<string, unknown>>(
   what: string,
   next: NextCall[],
   extra?: Partial<Pick<Nav, 'locale' | 'slug' | 'section'>>,
-): T & Sized {
+): T & { nav: Nav } {
   const nav: Nav = { what, tokens: 0, chars: 0, next, ...extra };
-  return seal({ ...data, chars: 0, tokens: 0, nav });
+  return seal({ ...data, nav });
+}
+
+/**
+ * The longest leading slice of `items` whose projected JSON fits the budget,
+ * leaving room for the nav `ok` adds. `cursor.offset` is the next index.
+ */
+export function fitSlice<T, R extends object>(
+  items: readonly T[],
+  offset: number,
+  project: (slice: readonly T[], cursor: { offset: number } | null) => R,
+): R {
+  const start = Math.max(0, Math.trunc(offset));
+  const rest = items.slice(start);
+  const room = MAX_RESPONSE_CHARS - 800;
+  const build = (count: number): R => {
+    const cursor = start + count < items.length ? { offset: start + count } : null;
+    return project(rest.slice(0, count), cursor);
+  };
+  if (rest.length === 0 || JSON.stringify(build(rest.length)).length <= room) return build(rest.length);
+  let lo = 1;
+  let hi = rest.length - 1;
+  let best = 1;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (JSON.stringify(build(mid)).length <= room) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return build(best);
 }
 
 /** A smaller body `deliver` returns when `body` does not fit. Hidden from JSON. */
@@ -70,56 +102,70 @@ function fallbackOf(body: unknown): unknown {
   return (body as Record<symbol, unknown>)[FALLBACK];
 }
 
-function overBudget(chars: number): Sized {
+function overBudget(chars: number): { nav: Nav } {
   return seal({
     kind: 'over-budget',
     budget: MAX_RESPONSE_CHARS,
     over: chars,
     note: `The result is ${chars} characters, over the ${MAX_RESPONSE_CHARS} character response budget. Nothing was cut. Read a section, or pass a line range to get_example.`,
-    chars: 0,
-    tokens: 0,
     nav: {
       what: 'over-budget',
       tokens: 0,
       chars: 0,
-      next: [{ tool: 'search_docs', arguments: { query: ' ' }, why: 'Find the section instead of reading everything.' }],
+      next: [{ tool: 'search_docs', arguments: { query: 'todae' }, why: 'Find the section instead of reading everything.' }],
     },
   });
 }
 
+function continuationNote(field: string, nextOffset: number): string {
+  return `Continued at ${field} offset ${nextOffset}. Pass that offset to read the rest. Nothing was dropped without this cursor.`;
+}
+
+/**
+ * The longest prefix of `record[field]` that fits once the note and cursor are in the JSON.
+ * `record.offset` is where the current text starts in the original field. A recursive
+ * shrink must not read that as the start: the text is already a prefix, and the cursor
+ * names its end, so the start is `cursor.offset - text.length`.
+ */
 function shrinkField(record: Record<string, unknown>, field: string): Record<string, unknown> | null {
   const text = record[field];
   if (typeof text !== 'string' || text.length < 2) return null;
-  const offset = typeof record.offset === 'number' ? record.offset : 0;
+  const cursor = record.cursor;
+  // A cursor means this text is already a window. Its end is the cursor, so the start is
+  // that end minus the text. The record's own offset is not read again.
+  const cursorEnd =
+    cursor && typeof cursor === 'object' && 'offset' in cursor && typeof cursor.offset === 'number' ? cursor.offset : null;
+  const start = cursorEnd != null ? cursorEnd - text.length : typeof record.offset === 'number' ? record.offset : 0;
+  if (start < 0) return null;
+  const packed = (chunk: string): Record<string, unknown> | null => {
+    if (chunk.length < 1 || chunk.length >= text.length) return null;
+    const nextOffset = start + chunk.length;
+    const next: Record<string, unknown> = {
+      ...record,
+      [field]: chunk,
+      offset: start,
+      cursor: { field, offset: nextOffset },
+      note: continuationNote(field, nextOffset),
+    };
+    return JSON.stringify(next).length <= MAX_RESPONSE_CHARS ? next : null;
+  };
   let lo = 1;
-  let hi = text.length;
-  let best = 0;
+  let hi = text.length - 1;
+  let best: Record<string, unknown> | null = null;
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
     const cut = text.slice(0, mid);
     const newline = cut.lastIndexOf('\n');
     const chunk = newline > 0 ? cut.slice(0, newline) : cut;
-    const cursor = offset + chunk.length < offset + text.length ? { field, offset: offset + chunk.length } : null;
-    const next = { ...record, [field]: chunk, cursor, offset: cursor ? cursor.offset : offset };
-    if (JSON.stringify(next).length <= MAX_RESPONSE_CHARS) {
-      best = chunk.length;
+    const fit = packed(chunk);
+    if (fit) {
+      best = fit;
       lo = mid + 1;
     } else {
       hi = mid - 1;
     }
   }
-  if (best === 0 || best >= text.length) return null;
-  const chunk = text.slice(0, best);
-  const newline = chunk.lastIndexOf('\n');
-  const kept = newline > 0 ? chunk.slice(0, newline) : chunk;
-  const nextOffset = offset + kept.length;
-  return {
-    ...record,
-    [field]: kept,
-    offset: nextOffset,
-    cursor: { field, offset: nextOffset },
-    note: `Continued at ${field} offset ${nextOffset}. Pass that offset to read the rest. Nothing was dropped without this cursor.`,
-  };
+  return best;
 }
 
 function shrinkCode(record: Record<string, unknown>): Record<string, unknown> | null {
@@ -128,27 +174,30 @@ function shrinkCode(record: Record<string, unknown>): Record<string, unknown> | 
   if (typeof code !== 'string' || typeof start !== 'number') return null;
   const lines = code.split('\n');
   if (lines.length <= 1) return null;
+  const packed = (count: number): Record<string, unknown> | null => {
+    const next: Record<string, unknown> = {
+      ...record,
+      code: lines.slice(0, count).join('\n'),
+      endLine: start + count - 1,
+      cursor: { startLine: start + count },
+      note: `Lines continue at startLine ${start + count}. Nothing past that line was dropped without this cursor.`,
+    };
+    return JSON.stringify(next).length <= MAX_RESPONSE_CHARS ? next : null;
+  };
   let lo = 1;
   let hi = lines.length - 1;
-  let best = 0;
+  let best: Record<string, unknown> | null = null;
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
-    const next = { ...record, code: lines.slice(0, mid).join('\n'), endLine: start + mid - 1, cursor: { startLine: start + mid } };
-    if (JSON.stringify(next).length <= MAX_RESPONSE_CHARS) {
-      best = mid;
+    const fit = packed(mid);
+    if (fit) {
+      best = fit;
       lo = mid + 1;
     } else {
       hi = mid - 1;
     }
   }
-  if (best < 1) return null;
-  return {
-    ...record,
-    code: lines.slice(0, best).join('\n'),
-    endLine: start + best - 1,
-    cursor: { startLine: start + best },
-    note: `Lines continue at startLine ${start + best}. Nothing past that line was dropped without this cursor.`,
-  };
+  return best;
 }
 
 function shrink(body: unknown): unknown {
@@ -173,7 +222,7 @@ function shrink(body: unknown): unknown {
  * whole result.
  */
 export function deliver(body: unknown): string {
-  const ready = body && typeof body === 'object' && 'chars' in body && 'tokens' in body ? seal(body as Sized) : body;
+  const ready = body && typeof body === 'object' && 'nav' in body ? seal(body as WithNav) : body;
   const text = JSON.stringify(ready);
   if (text.length <= MAX_RESPONSE_CHARS) return text;
   const fallback = fallbackOf(ready);

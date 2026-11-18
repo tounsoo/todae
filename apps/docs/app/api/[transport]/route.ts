@@ -5,7 +5,7 @@ import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles, 
 import { VERSION_RE, getChanges } from '../../../lib/docs-mcp/changes';
 import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { getRecipe, listRecipes } from '../../../lib/docs-mcp/recipes';
-import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
+import { presentScaffold, scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import {
   BUILD_TOOL,
   BUILD_TOOL_INPUT_ELEMENTS,
@@ -47,11 +47,10 @@ const colorMap = z.record(tokenPath, oklch);
 const version = z.string().trim().regex(VERSION_RE, 'Use a version such as 0.2.0');
 
 function ok(data: unknown) {
-  // One budget for every tool. A result that already names its next calls keeps them.
+  // One budget for every tool. Size stays on nav, so a field named tokens (the catalog) is left alone.
+  // A result that already names its next calls keeps them.
   if (data && typeof data === 'object' && !('nav' in data)) {
     Object.assign(data, {
-      chars: 0,
-      tokens: 0,
       nav: {
         what: 'result',
         tokens: 0,
@@ -96,13 +95,18 @@ function registerTools(server: McpServer) {
       }
     },
   );
-  server.tool('list_components', 'List Todae components from the published docs schema. Cheap catalog. For a task in ordinary words, call search_docs first.', async () => {
-    try {
-      return ok(listComponents());
-    } catch (error) {
-      return fail(error);
-    }
-  });
+  server.tool(
+    'list_components',
+    'List Todae components from the published docs schema. For a task in ordinary words, call search_docs first. A long list comes back with a cursor. Pass cursor.offset for the next page. Walking the pages returns the whole catalog.',
+    { offset },
+    async ({ offset: from }) => {
+      try {
+        return ok(listComponents({ offset: from ?? 0 }));
+      } catch (error) {
+        return fail(error);
+      }
+    },
+  );
   server.tool(
     'get_component',
     'Props and parts for one component, part or hook. Cheap: usually a few hundred tokens. Call this for "what props does X take", not get_docs_page. An unknown name returns close search hits. For how the parts fit together, get_docs_page then get_example.',
@@ -235,16 +239,18 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'scaffold_design_system',
-    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. Returns tokenFiles by path inside tokensFolder ("tokens"), in the shape build_tokens takes, and otherFiles by path from the project root, with the result of building tokenFiles. Save the files yourself; nothing is written to your machine.',
+    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. Returns one file at a time, with a cursor. Pass cursor.offset for the next file. The first page also reports whether tokenFiles build. Save the files yourself; nothing is written to your machine.',
     {
       name: contextName,
       colors: z.object({ light: colorMap, dark: colorMap }).optional(),
       buttonVariants: z.array(contextName).max(8).optional(),
       densities: z.array(contextName).max(8).optional(),
+      offset,
+      char: z.number().int().min(0).optional(),
     },
-    async (options) => {
+    async ({ offset: from, char, ...options }) => {
       try {
-        return ok(await scaffoldDesignSystem(options));
+        return ok(presentScaffold(await scaffoldDesignSystem(options), from ?? 0, char ?? 0));
       } catch (error) {
         return fail(error);
       }
@@ -264,11 +270,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_changes',
-    "What changed in @tounsoo/todae's released versions after `from` (the installed version, such as 0.2.0, not a range such as ^0.2.0), up to `to` (default: the latest release), from the package's changelog. Returns each release oldest first, with its breaking changes apart from the rest, so an agent upgrading a project can apply each break in order. Before 1.0 a minor release is the breaking one.",
-    { from: version, to: version.optional() },
-    async (options) => {
+    "What changed in @tounsoo/todae's released versions after `from` (the installed version, such as 0.2.0, not a range such as ^0.2.0), up to `to` (default: the latest release), from the package's changelog. Returns each release oldest first, with its breaking changes apart from the rest, so an agent upgrading a project can apply each break in order. A long range comes back with a cursor. Pass cursor.offset for the next releases. Walking them returns the whole range. Before 1.0 a minor release is the breaking one.",
+    { from: version, to: version.optional(), offset },
+    async ({ offset: from, ...options }) => {
       try {
-        return ok(getChanges(options));
+        return ok(getChanges({ ...options, offset: from ?? 0 }));
       } catch (error) {
         return fail(error);
       }
