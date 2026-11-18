@@ -4,6 +4,7 @@
   gap: var(--todae-space-3);
   inline-size: 100%;
   min-inline-size: 0;
+  container: calendar / inline-size;
 }
 
 .toolbar {
@@ -54,6 +55,63 @@
   padding: var(--todae-space-2);
   text-align: center;
   border-inline-start: var(--todae-border-width) solid var(--todae-color-border-subtle);
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: var(--tracks, 4.5rem repeat(var(--days), minmax(5.5rem, 1fr)));
+  background: var(--todae-color-bg-canvas);
+  border-block-end: var(--todae-border-width) solid var(--todae-color-border-subtle);
+}
+
+.stripBars {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: var(--day-tracks, repeat(var(--days), minmax(0, 1fr)));
+  gap: var(--todae-space-1);
+  padding: var(--todae-space-1);
+  min-inline-size: 0;
+}
+
+.stripSlot {
+  display: flex;
+  min-inline-size: 0;
+}
+
+.stripSlot > * {
+  display: flex;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.stripBar {
+  flex: 1;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--todae-space-1);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  padding-block: 0;
+  padding-inline: var(--todae-space-1);
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  border-inline-start-width: calc(4 * var(--todae-border-width));
+  border-inline-start-color: var(--todae-color-accent-default);
+  border-radius: var(--todae-radius-sm);
+  background: var(--todae-color-bg-surface);
+  color: var(--todae-color-fg-default);
+  text-align: start;
+}
+
+.stripBar[data-cut-start] {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.stripBar[data-cut-end] {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
 }
 
 .body {
@@ -230,7 +288,7 @@
 
 .month :global(td) {
   max-inline-size: 0;
-  overflow: hidden;
+  overflow: visible;
   vertical-align: top;
 }
 
@@ -246,7 +304,7 @@
   min-inline-size: 0;
   padding-block: var(--todae-space-1);
   padding-inline: var(--todae-space-1);
-  overflow: hidden;
+  overflow: visible;
   text-align: center;
 }
 
@@ -291,6 +349,61 @@
   white-space: nowrap;
 }
 
+.barRows {
+  display: grid;
+  grid-template-rows: repeat(var(--bar-rows), auto);
+  align-self: stretch;
+  inline-size: calc(100% + 2 * var(--todae-space-1));
+  margin-inline: calc(-1 * var(--todae-space-1));
+}
+
+.monthBar {
+  display: flex;
+  align-items: center;
+  gap: var(--todae-space-1);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  overflow: hidden;
+  padding-inline: var(--todae-space-1);
+  border-block: var(--todae-border-width) solid var(--todae-color-border-default);
+  background: var(--todae-color-bg-surface);
+  color: var(--todae-color-fg-default);
+  font-size: var(--todae-text-label-font-size);
+  line-height: var(--todae-text-leading-tight);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.barLabel {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.monthBar:not([data-cut-start]) {
+  border-inline-start: calc(4 * var(--todae-border-width)) solid var(--todae-color-accent-default);
+  border-start-start-radius: var(--todae-radius-sm);
+  border-end-start-radius: var(--todae-radius-sm);
+}
+
+.monthBar:not([data-cut-end]) {
+  border-inline-end: var(--todae-border-width) solid var(--todae-color-border-default);
+  border-start-end-radius: var(--todae-radius-sm);
+  border-end-end-radius: var(--todae-radius-sm);
+}
+
+.monthBar[data-cut-start] {
+  margin-inline-start: calc(-1 * var(--todae-calendar-day-border-width));
+}
+
+.monthBar[data-cut-end] {
+  margin-inline-end: calc(-1 * var(--todae-calendar-day-border-width));
+}
+
+.cue {
+  flex: none;
+}
+
 .dot {
   inline-size: var(--todae-space-2);
   block-size: var(--todae-space-2);
@@ -300,6 +413,18 @@
 
 .count {
   display: none;
+}
+
+@container calendar (max-inline-size: 30rem) {
+  .stripBar {
+    min-block-size: var(--todae-space-2);
+    padding-block: 0;
+  }
+
+  .monthBar {
+    min-block-size: var(--todae-space-2);
+    padding-block: 0;
+  }
 }
 
 @container month (max-inline-size: 30rem) {

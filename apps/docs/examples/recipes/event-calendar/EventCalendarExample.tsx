@@ -373,6 +373,89 @@ export function eventsOnDay(day: Temporal.PlainDate, events: readonly CalendarEv
     });
 }
 
+/** The calendar days an event occupies. An end at midnight stays on the earlier day. */
+function coveredDays(event: CalendarEvent, timeZone: string): { first: Temporal.PlainDate; last: Temporal.PlainDate } | null {
+  const start = event.start.withTimeZone(timeZone);
+  const end = event.end.withTimeZone(timeZone);
+  if (Temporal.ZonedDateTime.compare(end, start) <= 0) return null;
+  const first = start.toPlainDate();
+  const last = end.toPlainTime().equals(MIDNIGHT) ? end.toPlainDate().subtract({ days: 1 }) : end.toPlainDate();
+  if (Temporal.PlainDate.compare(last, first) < 0) return null;
+  return { first, last };
+}
+
+function coversSeveralDays(event: CalendarEvent, timeZone: string): boolean {
+  const covered = coveredDays(event, timeZone);
+  return covered !== null && Temporal.PlainDate.compare(covered.last, covered.first) > 0;
+}
+
+export type WeekBar = {
+  event: CalendarEvent;
+  column: number;
+  span: number;
+  row: number;
+  continuesFrom: boolean;
+  continuesTo: boolean;
+};
+
+/**
+ * Places each all-day event, and each event that covers more than one calendar
+ * day, on a row of this week. Earlier starts take an earlier row. When two
+ * start together, the longer span in this week takes the earlier row. A bar
+ * that runs past either end of the week is split here and flagged.
+ */
+export function packWeekBars(events: readonly CalendarEvent[], days: readonly Temporal.PlainDate[], timeZone: string): WeekBar[] {
+  if (days.length !== 7) throw new RangeError('a week has 7 days');
+  const weekStart = days[0];
+  const weekEnd = days[6];
+  if (!weekStart || !weekEnd) throw new RangeError('a week has 7 days');
+
+  const segments = events.flatMap((event, index) => {
+    if (!event.allDay && !coversSeveralDays(event, timeZone)) return [];
+    const covered = coveredDays(event, timeZone);
+    if (!covered) return [];
+    if (Temporal.PlainDate.compare(covered.last, weekStart) < 0 || Temporal.PlainDate.compare(covered.first, weekEnd) > 0) return [];
+    const first = Temporal.PlainDate.compare(covered.first, weekStart) < 0 ? weekStart : covered.first;
+    const last = Temporal.PlainDate.compare(covered.last, weekEnd) > 0 ? weekEnd : covered.last;
+    const column = days.findIndex((day) => day.equals(first));
+    const endColumn = days.findIndex((day) => day.equals(last));
+    if (column < 0 || endColumn < column) return [];
+    return [
+      {
+        event,
+        column,
+        span: endColumn - column + 1,
+        continuesFrom: Temporal.PlainDate.compare(covered.first, weekStart) < 0,
+        continuesTo: Temporal.PlainDate.compare(covered.last, weekEnd) > 0,
+        index,
+        start: event.start.withTimeZone(timeZone),
+      },
+    ];
+  });
+
+  segments.sort((a, b) => Temporal.ZonedDateTime.compare(a.start, b.start) || b.span - a.span || a.index - b.index);
+
+  const rowEnds: number[] = [];
+  return segments.map((segment) => {
+    const end = segment.column + segment.span;
+    let row = rowEnds.findIndex((used) => used <= segment.column);
+    if (row < 0) {
+      row = rowEnds.length;
+      rowEnds.push(end);
+    } else {
+      rowEnds[row] = end;
+    }
+    return {
+      event: segment.event,
+      column: segment.column,
+      span: segment.span,
+      row,
+      continuesFrom: segment.continuesFrom,
+      continuesTo: segment.continuesTo,
+    };
+  });
+}
+
 export function laneScale(axis: DayAxis): number {
   return axis.segments.reduce((longest, segment) => Math.max(longest, segment.length), 0);
 }
@@ -383,6 +466,20 @@ export type VisibleSpan = {
   start: number;
   end: number;
 };
+
+/**
+ * All-day events, and multi-day timed events the open hours never draw.
+ * A 10 PM to 2 AM event misses 8:00–18:00, so the strip carries it. A timed
+ * event the lanes can draw stays there, split across the days it meets.
+ */
+export function showsInStrip(event: CalendarEvent, timeZone: string, opens: Temporal.PlainTime, closes: Temporal.PlainTime): boolean {
+  if (event.allDay) return true;
+  const covered = coveredDays(event, timeZone);
+  if (!covered || Temporal.PlainDate.compare(covered.last, covered.first) <= 0) return false;
+  const days: Temporal.PlainDate[] = [];
+  for (let day = covered.first; Temporal.PlainDate.compare(day, covered.last) <= 0; day = day.add({ days: 1 })) days.push(day);
+  return visibleSpans(daySegments({ days, opens, closes, timeZone }), [event]).length === 0;
+}
 
 export function visibleSpans(axis: DayAxis, events: readonly CalendarEvent[]): VisibleSpan[] {
   const spans: VisibleSpan[] = [];
@@ -511,6 +608,8 @@ const EVENTS: readonly CalendarEvent[] = [
   timed('demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00'),
   timed('offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true),
   timed('hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00'),
+  timed('retreat', 'Retreat', '2026-11-20', '00:00', '2026-11-23', '00:00', true),
+  timed('launch', 'Launch watch', '2026-11-18', '22:00', '2026-11-19', '02:00'),
 ];
 
 type CalendarView = 'month' | 'week' | 'day';
@@ -580,6 +679,40 @@ function dayTrack(columns: number): string {
 
 function blockKey(id: string, day: Temporal.PlainDate): string {
   return `${id}@${day.toString()}`;
+}
+
+function stripKey(id: string): string {
+  return `strip:${id}`;
+}
+
+function eventRangeLabel(event: CalendarEvent, locale: string, timeZone: string): string {
+  const covered = coveredDays(event, timeZone);
+  if (!covered) return '';
+  const format = new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  const stamp = (day: Temporal.PlainDate) => Date.UTC(day.year, day.month - 1, day.day);
+  const start = format.format(stamp(covered.first));
+  if (covered.first.equals(covered.last)) return start;
+  return `${start} – ${format.format(stamp(covered.last))}`;
+}
+
+function barLabel(event: CalendarEvent, locale: string, timeZone: string): string {
+  return `${event.title}, ${eventRangeLabel(event, locale, timeZone)}`;
+}
+
+type DrawnBar = WeekBar & { cutStart: boolean; cutEnd: boolean };
+
+function barsOnBoard(events: readonly CalendarEvent[], week: readonly Temporal.PlainDate[], timeZone: string, opens: Temporal.PlainTime, closes: Temporal.PlainTime, day: Temporal.PlainDate | null): DrawnBar[] {
+  const packed = packWeekBars(
+    events.filter((event) => showsInStrip(event, timeZone, opens, closes)),
+    week,
+    timeZone,
+  );
+  if (!day) return packed.map((bar) => ({ ...bar, cutStart: bar.continuesFrom, cutEnd: bar.continuesTo }));
+  const index = week.findIndex((item) => item.equals(day));
+  return packed.flatMap((bar) => {
+    if (index < bar.column || index >= bar.column + bar.span) return [];
+    return [{ ...bar, column: 0, span: 1, cutStart: bar.continuesFrom || index > bar.column, cutEnd: bar.continuesTo || index < bar.column + bar.span - 1 }];
+  });
 }
 
 function parseBlockKey(key: string): { id: string; day: string } {
@@ -708,6 +841,44 @@ const DragPreview = memo(function DragPreview({ drag, segment, scale, locale }: 
   );
 });
 
+function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment; shared: ColumnShared }) {
+  const handoff = useFocusHandoff({ to: shared.landing });
+  const key = stripKey(bar.event.id);
+  return (
+    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: `${bar.column + 1} / span ${bar.span}`, gridRow: bar.row + 1 }}>
+      <Menu.Root>
+        <Menu.Trigger
+          ref={key === shared.focusKey ? shared.landing : undefined}
+          variant="ghost"
+          className={styles.stripBar}
+          aria-label={barLabel(bar.event, shared.locale, shared.timeZone)}
+          data-bar={bar.event.id}
+          data-cut-start={bar.cutStart ? '' : undefined}
+          data-cut-end={bar.cutEnd ? '' : undefined}
+          tooltip={false}
+        >
+          {bar.cutStart ? (
+            <span aria-hidden="true" className={styles.cue}>
+              …
+            </span>
+          ) : null}
+          <Text.Root as="span" weight="medium" lines={1}>
+            {bar.event.title}
+          </Text.Root>
+          {bar.cutEnd ? (
+            <span aria-hidden="true" className={styles.cue}>
+              …
+            </span>
+          ) : null}
+        </Menu.Trigger>
+        <Menu.Content>
+          <EventMoves event={bar.event} segment={segment} axis={shared.axis} week={shared.week} onAdjust={shared.onAdjust} onEdit={shared.onEdit} />
+        </Menu.Content>
+      </Menu.Root>
+    </div>
+  );
+}
+
 function EventColumn({
   segment,
   placed,
@@ -750,6 +921,83 @@ function EventColumn({
   );
 }
 
+function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; events: readonly CalendarEvent[]; timeZone: string; locale: string }) {
+  const list = eventsOnDay(day, events, timeZone, locale);
+  if (list.length === 0) return null;
+  const week = weekOf(day, locale);
+  const bars = packWeekBars(events, week, timeZone);
+  const index = week.findIndex((item) => item.equals(day));
+  const covering = bars.filter((bar) => index >= bar.column && index < bar.column + bar.span);
+  const visible = covering.filter((bar) => bar.row < MONTH_TITLES).sort((a, b) => a.row - b.row);
+  const hidden = covering.length - visible.length;
+  const barRows = bars.reduce((max, bar) => (bar.row < MONTH_TITLES ? Math.max(max, bar.row + 1) : max), 0);
+  const placed = new Set(bars.map((bar) => bar.event.id));
+  const chips = list.filter((event) => !placed.has(event.id));
+  const shown = chips.slice(0, Math.max(0, MONTH_TITLES - visible.length));
+  const extra = hidden + chips.length - shown.length;
+  let spoken = 0;
+  return (
+    <>
+      <span className={styles.detail} style={{ ['--bar-rows' as string]: barRows }}>
+        {barRows > 0 ? (
+          <span className={styles.barRows}>
+            {visible.map((bar) => {
+              const cutStart = bar.continuesFrom || index > bar.column;
+              const cutEnd = bar.continuesTo || index < bar.column + bar.span - 1;
+              const comma = spoken > 0;
+              spoken += 1;
+              return (
+                <span
+                  key={bar.event.id}
+                  className={styles.monthBar}
+                  data-bar={bar.event.id}
+                  data-cut-start={cutStart ? '' : undefined}
+                  data-cut-end={cutEnd ? '' : undefined}
+                  style={{ gridRow: bar.row + 1 }}
+                >
+                  {comma ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
+                  {cutStart ? (
+                    <span aria-hidden="true" className={styles.cue}>
+                      …
+                    </span>
+                  ) : null}
+                  {index === bar.column ? <span className={styles.barLabel}>{bar.event.title}</span> : <VisuallyHidden.Root>{bar.event.title}</VisuallyHidden.Root>}
+                  <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
+                  {cutEnd ? (
+                    <span aria-hidden="true" className={styles.cue}>
+                      …
+                    </span>
+                  ) : null}
+                </span>
+              );
+            })}
+          </span>
+        ) : null}
+        {shown.map((event) => {
+          const comma = spoken > 0;
+          spoken += 1;
+          return (
+            <span key={event.id} className={styles.chip}>
+              {comma ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
+              {event.title}
+            </span>
+          );
+        })}
+        {extra > 0 ? (
+          <span className={styles.more}>
+            <VisuallyHidden.Root>, </VisuallyHidden.Root>
+            {`+${extra} more`}
+          </span>
+        ) : null}
+      </span>
+      <span className={styles.count} aria-hidden="true">
+        <span className={styles.dot} />
+        {list.length}
+      </span>
+    </>
+  );
+}
+
 export default function EventCalendarExample({
   locale = 'en-US',
   timeZone = ZONE,
@@ -778,6 +1026,7 @@ export default function EventCalendarExample({
   const [pinFocus, setPinFocus] = useState(true);
   const announce = useAnnouncer();
   const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
+  const week = weekOf(anchor, locale);
   const axis = daySegments({ days, opens, closes, timeZone });
   const scale = laneScale(axis);
   const spans = visibleSpans(axis, items);
@@ -786,7 +1035,9 @@ export default function EventCalendarExample({
     const columns = placed.reduce((count, place) => Math.max(count, place.columns), 1);
     return { segment, placed, columns };
   });
-  const tracks = `4.5rem ${lanes.map((lane) => dayTrack(lane.columns)).join(' ')}`;
+  const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
+  const tracks = `4.5rem ${dayTracks}`;
+  const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
   const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), 4.5)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
@@ -801,17 +1052,18 @@ export default function EventCalendarExample({
     return next.segments.find((segment) => clippedUnits(segment, event))?.day ?? null;
   };
 
-  const commit = (next: CalendarEvent, day: Temporal.PlainDate, where: 'event' | 'heading' = 'event') => {
+  const commit = (next: CalendarEvent, day: Temporal.PlainDate) => {
     const current = items.find((each) => each.id === next.id) ?? next;
     const settled = finishGesture(current, next, 'drop');
-    const onLane = where === 'event' && !settled.allDay;
-    setFocusKey(onLane ? blockKey(settled.id, day) : null);
-    focusHeading.current = onLane ? null : day;
+    const strip = showsInStrip(settled, timeZone, opens, closes);
+    const laneHome = strip ? null : shownDay(settled, day);
+    setFocusKey(strip ? stripKey(settled.id) : laneHome ? blockKey(settled.id, laneHome) : null);
+    focusHeading.current = strip || laneHome ? null : day;
     setItems((list) => list.map((each) => (each.id === settled.id ? settled : each)));
     const start = settled.start.withTimeZone(timeZone);
     const end = settled.end.withTimeZone(timeZone);
     const spansDays = !start.toPlainDate().equals(end.toPlainDate());
-    announce(`${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`);
+    announce(strip ? barLabel(settled, locale, timeZone) : `${settled.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`);
     returnFocus.current = true;
   };
 
@@ -861,7 +1113,7 @@ export default function EventCalendarExample({
   };
 
   const onEdit = (event: CalendarEvent, day: Temporal.PlainDate) => {
-    setFocusKey(blockKey(event.id, day));
+    setFocusKey(showsInStrip(event, timeZone, opens, closes) ? stripKey(event.id) : blockKey(event.id, day));
     setEditing(event);
   };
 
@@ -942,45 +1194,25 @@ export default function EventCalendarExample({
           <Calendar.Header />
           <Calendar.Grid
             showOutsideDays
-            renderDay={(day) => {
-              const list = eventsOnDay(day.date, items, timeZone, locale);
-              const shown = list.slice(0, MONTH_TITLES);
-              const extra = list.length - shown.length;
-              return (
-                <span className={styles.chips} data-date={day.date.toString()}>
-                  {day.date.day === 1 && !day.outside ? <SyncTabStop onDay={keepAnchor} /> : null}
-                  {list.length === 0 ? null : (
-                    <>
-                      <span className={styles.detail}>
-                        {shown.map((event, index) => (
-                          <span key={event.id} className={styles.chip}>
-                            {index > 0 ? <VisuallyHidden.Root>, </VisuallyHidden.Root> : null}
-                            {event.title}
-                          </span>
-                        ))}
-                        {extra > 0 ? (
-                          <span className={styles.more}>
-                            <VisuallyHidden.Root>, </VisuallyHidden.Root>
-                            {`+${extra} more`}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className={styles.count} aria-hidden="true">
-                        <span className={styles.dot} />
-                        {list.length}
-                      </span>
-                    </>
-                  )}
-                </span>
-              );
-            }}
+            renderDay={(day) => (
+              <span className={styles.chips} data-date={day.date.toString()}>
+                {day.date.day === 1 && !day.outside ? <SyncTabStop onDay={keepAnchor} /> : null}
+                <MonthDay day={day.date} events={items} timeZone={timeZone} locale={locale} />
+              </span>
+            )}
           />
         </Calendar.Root>
       ) : (
         <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" className={styles.board}>
           <div
             className={styles.frame}
-            style={{ ['--days' as string]: days.length, ['--minutes' as string]: scale, ['--min-inline' as string]: minInline, ['--tracks' as string]: tracks }}
+            style={{
+              ['--days' as string]: days.length,
+              ['--minutes' as string]: scale,
+              ['--min-inline' as string]: minInline,
+              ['--tracks' as string]: tracks,
+              ['--day-tracks' as string]: dayTracks,
+            }}
           >
             <div className={styles.head}>
               <div className={styles.corner} />
@@ -990,6 +1222,18 @@ export default function EventCalendarExample({
                 </Text.Root>
               ))}
             </div>
+            {stripBars.length === 0 ? null : (
+              <div className={styles.strip}>
+                <div className={styles.corner} />
+                <div className={styles.stripBars}>
+                  {stripBars.map((bar) => {
+                    const segment = axis.segments[view === 'day' ? 0 : bar.column] ?? axis.segments[0];
+                    if (!segment) return null;
+                    return <StripBar key={bar.event.id} bar={bar} segment={segment} shared={columnShared} />;
+                  })}
+                </div>
+              </div>
+            )}
             <div className={styles.body}>
               <div className={styles.gutter} aria-hidden="true">
                 {gutterMarks.map((units) => {
@@ -1038,7 +1282,7 @@ export default function EventCalendarExample({
             const day = next.start.withTimeZone(timeZone).toPlainDate();
             const home = shownDay(next, day);
             setAnchor(home ?? day);
-            commit(next, home ?? day, home ? 'event' : 'heading');
+            commit(next, home ?? day);
             setEditing(null);
           }}
         />
