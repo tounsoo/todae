@@ -63,6 +63,10 @@
   white-space: normal;
 }
 
+.zoneName {
+  white-space: nowrap;
+}
+
 .day {
   margin: 0;
   min-inline-size: 0;
@@ -143,6 +147,10 @@
   inset-inline-start: var(--todae-space-1);
   white-space: normal;
   text-align: end;
+}
+
+.gutter[data-compare] .mark[data-stack] {
+  transform: none;
 }
 
 .markPiece {

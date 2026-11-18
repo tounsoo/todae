@@ -1602,7 +1602,10 @@ describe('creating an event from empty lane space', () => {
           }
           const lines = inkLines(row);
           for (const line of lines) expect(line.startsWith('/')).toBe(false);
-          if (pieces.length > 1) expect(lines.some((line) => line.includes('/'))).toBe(true);
+          if (pieces.length > 1) {
+            expect(row.textContent ?? '').toContain(' / ');
+            expect(lines.some((line) => line.includes('/'))).toBe(true);
+          }
         }
         const ordered = [...rows].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
         for (let index = 1; index < ordered.length; index += 1) {
@@ -1611,10 +1614,12 @@ describe('creating an event from empty lane space', () => {
           expect(above.bottom).toBeLessThanOrEqual(below.top + 1);
         }
         for (const zone of document.querySelectorAll<HTMLElement>('[class*="zone"]')) {
+          if (![...zone.classList].some((name) => name.includes('_zone_'))) continue;
           const names = (zone.textContent ?? '').split(' / ').map((name) => name.trim()).filter(Boolean);
           expect(names.length).toBeGreaterThan(0);
           for (const line of inkLines(zone)) {
-            const cleaned = line.replace(/(?:\s*\/\s*)+$/u, '').replace(/^(?:\s*\/\s*)+/u, '').trim();
+            expect(line.startsWith('/')).toBe(false);
+            const cleaned = line.replace(/(?:\s*\/\s*)+$/u, '').trim();
             const tokens = cleaned.split(/\s*\/\s*/u).filter(Boolean);
             expect(tokens.length).toBeGreaterThan(0);
             for (const token of tokens) expect(names).toContain(token);

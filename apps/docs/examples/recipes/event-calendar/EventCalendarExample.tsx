@@ -642,6 +642,19 @@ function zoneNames(faces: readonly ZoneFace[]): string {
   return faces.map((face) => face.name).join(' / ');
 }
 
+function ZoneLabel({ name }: { name: string }) {
+  const parts = name.split(' / ');
+  return parts.map((part, index) => (
+    <span key={`${part}-${index}`}>
+      <span className={styles.zoneName}>
+        {part}
+        {index < parts.length - 1 ? <span className={styles.markSep}> /</span> : null}
+      </span>
+      {index < parts.length - 1 ? ' ' : null}
+    </span>
+  ));
+}
+
 /** "PST / PDT (GMT-8 / GMT-7)", or just the offset when the short name already is one. */
 function zonePhrase(faces: readonly ZoneFace[]): string {
   const names = zoneNames(faces);
@@ -776,6 +789,19 @@ function changePhrase(starts: readonly ClockStart[], locale: string): string {
       return column === 'second' ? `Second column ${names} begins` : `${names} begins`;
     })
     .join(' · ');
+}
+
+function ComparePieces({ units, times, locale }: { units: number; times: readonly CompareTime[]; locale: string }) {
+  const pieces = markPieces(times, locale);
+  return pieces.map((piece, index) => (
+    <span key={`${units}-${index}`}>
+      <span className={styles.markPiece}>
+        {piece}
+        {index < pieces.length - 1 ? <span className={styles.markSep}> /</span> : null}
+      </span>
+      {index < pieces.length - 1 ? ' ' : null}
+    </span>
+  ));
 }
 
 function markPieces(times: readonly CompareTime[], locale: string): string[] {
@@ -1289,6 +1315,7 @@ export function EventCalendarExample({
   const [anchor, setAnchor] = useState(initialAnchor);
   const [items, setItems] = useState<CalendarEvent[]>(() => (events ?? sampleEvents(timeZone)).map((event) => projectEvent(event, timeZone)));
   const rootRef = useRef<HTMLDivElement>(null);
+  const [comparePx, setComparePx] = useState(0);
   const [narrow, setNarrow] = useState(false);
   const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
   const [session, setSession] = useState<EditorSession | null>(null);
@@ -1316,15 +1343,18 @@ export function EventCalendarExample({
   const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
   const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
   const gutters = showCompare ? 2 : 1;
-  const tracks = `${showCompare ? '4.5rem 5.5rem' : '4.5rem'} ${dayTracks}`;
+  const compareTrack = comparePx > 0 ? `${comparePx}px` : 'max-content';
+  const tracks = `${showCompare ? `4.5rem ${compareTrack}` : '4.5rem'} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
-  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), showCompare ? 10 : 4.5)}rem`;
+  const gutterMin = showCompare ? 4.5 + (comparePx > 0 ? comparePx / 16 : 0) : 4.5;
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), gutterMin)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
   const compared = showCompare && compareZone ? compareMarks(axis.segments, gutterMarks, compareZone) : [];
   const samples = zoneSamples(axis.segments);
   const primaryName = zoneNames(zoneFaces(timeZone, locale, samples));
   const compareName = showCompare && compareZone ? zoneNames(zoneFaces(compareZone, locale, samples)) : null;
+  const pieceKey = [...compared.flatMap((item) => markPieces(item.times, locale)), primaryName, compareName ?? ''].join('\n');
   const description = zoneDescription(timeZone, compareName && compareZone ? compareZone : null, locale, axis.segments);
   const changes = clockChanges(axis.segments, showCompare && compareZone ? [{ id: timeZone, column: 'grid' }, { id: compareZone, column: 'second' }] : [{ id: timeZone, column: 'grid' }], locale);
   const step = view === 'week' ? 7 : 1;
@@ -1492,6 +1522,21 @@ export function EventCalendarExample({
   }, [view]);
 
   useLayoutEffect(() => {
+    if (!showCompare) return;
+    const root = rootRef.current;
+    const mark = root?.querySelector<HTMLElement>('[data-compare] > span');
+    if (!root || !mark) return;
+    const nodes = [...root.querySelectorAll<HTMLElement>(`.${styles.markPiece}, .${styles.zoneName}`)];
+    const piece = nodes.reduce((widest, node) => Math.max(widest, node.getBoundingClientRect().width), 0);
+    if (piece < 1) return;
+    const markStyle = getComputedStyle(mark);
+    const pad = Number.parseFloat(markStyle.insetInlineStart) + Number.parseFloat(markStyle.insetInlineEnd);
+    const border = mark.parentElement ? Number.parseFloat(getComputedStyle(mark.parentElement).borderInlineEndWidth) : 0;
+    const next = Math.ceil(piece + pad + border);
+    setComparePx((current) => (current === next ? current : next));
+  }, [showCompare, pieceKey]);
+
+  useLayoutEffect(() => {
     if (pendingFocus.current !== 'day' || view !== 'day') return;
     pendingFocus.current = null;
     const id = `${heading}-${anchor.toString()}`;
@@ -1585,13 +1630,13 @@ export function EventCalendarExample({
             <div className={styles.head}>
               <div className={styles.corner}>
                 <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
-                  {primaryName}
+                  <ZoneLabel name={primaryName} />
                 </Text.Root>
               </div>
               {compareName ? (
                 <div className={styles.corner}>
                   <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
-                    {compareName}
+                    <ZoneLabel name={compareName} />
                   </Text.Root>
                 </div>
               ) : null}
@@ -1648,17 +1693,10 @@ export function EventCalendarExample({
                       tone="muted"
                       className={styles.mark}
                       data-first={mark.units === 0 ? '' : undefined}
+                      data-stack={mark.times.length > 1 ? '' : undefined}
                       style={{ top: percent(mark.units / scale) }}
                     >
-                      {markPieces(mark.times, locale).map((piece, index, pieces) => (
-                        <span key={`${mark.units}-${index}`}>
-                          <span className={styles.markPiece}>
-                            {piece}
-                            {index < pieces.length - 1 ? <span className={styles.markSep}> /</span> : null}
-                          </span>
-                          {index < pieces.length - 1 ? ' ' : null}
-                        </span>
-                      ))}
+                      <ComparePieces units={mark.units} times={mark.times} locale={locale} />
                     </Text.Root>
                   ))}
                 </div>

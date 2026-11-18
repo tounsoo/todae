@@ -1462,6 +1462,10 @@ function described(): string[] {
     .map((id) => document.getElementById(id)?.textContent ?? '');
 }
 
+function cornerText(value: string) {
+  return (_content: string, node: Element | null) => node?.textContent === value && [...(node.classList ?? [])].some((name) => name.includes('_zone_'));
+}
+
 function hourColumns(): HTMLElement[] {
   return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => [...el.children].some((child) => (child as HTMLElement).style?.top));
 }
@@ -1537,7 +1541,7 @@ describe('the time zone', () => {
     cleanup();
 
     render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kathmandu" anchor={date('2026-11-16')} events={[]} />);
-    expect(screen.getByText('GMT+5:45')).toBeTruthy();
+    expect(screen.getByText(cornerText('GMT+5:45'))).toBeTruthy();
     const kathmandu = hourColumns()[1];
     const eight = hourColumns()[0]?.querySelector<HTMLElement>('span')?.style.top;
     expect([...kathmandu!.querySelectorAll<HTMLElement>('span')].find((node) => node.style.top === eight)?.textContent).toBe(clock('21:45'));
@@ -1697,7 +1701,7 @@ describe('a zone whose offset changes inside the visible week', () => {
     const two = [...primary!.children].find((node) => node.textContent === '2:00 PM') as HTMLElement;
     expect(compareRow(two.style.top)).toBe('11:00 PM / 12:00 AM +1 day');
     expect(compareRow(eight.style.top)).toBe(compareLabel(LA, 'Asia/Jerusalem', days, '08:00', 'en-US'));
-    expect(screen.getByText('GMT+2 / GMT+3')).toBeTruthy();
+    expect(screen.getByText(cornerText('GMT+2 / GMT+3'))).toBeTruthy();
     const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26 · Second column GMT+3 begins' });
     expect(thursday.getAttribute('aria-describedby')).toBeNull();
     expect(thursday.querySelector('[aria-hidden]')).toBeNull();
@@ -1781,7 +1785,7 @@ describe('a zone whose offset changes inside the visible week', () => {
       />,
     );
     expect(described().join(' ')).toContain('PDT');
-    expect(screen.getByText('PST / PDT')).toBeTruthy();
+    expect(screen.getByText(cornerText('PST / PDT'))).toBeTruthy();
   });
 
   it('shows one second-zone time on every row when that zone keeps one offset', () => {
