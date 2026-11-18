@@ -290,7 +290,7 @@
 .month :global(td) {
   max-inline-size: 0;
   block-size: 100%;
-  overflow: hidden;
+  overflow: visible;
   vertical-align: top;
   border: var(--todae-border-width) solid var(--todae-color-border-default);
   background: var(--todae-color-bg-canvas);
@@ -325,7 +325,28 @@
 }
 
 .month :global(td button[type='button'][aria-current='date']) {
-  border-color: var(--todae-color-accent-default);
+  border-color: transparent;
+  color: transparent;
+}
+
+.month :global(td button[type='button'][aria-current='date'] > span) {
+  color: var(--todae-color-fg-default);
+}
+
+.dateMark {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: var(--todae-space-1);
+  inset-inline-start: var(--todae-space-1);
+  display: grid;
+  place-items: center;
+  inline-size: calc(var(--todae-font-size-2) * 2);
+  block-size: calc(var(--todae-font-size-2) * 2);
+  border-radius: var(--todae-radius-full);
+  background: var(--todae-color-accent-default);
+  color: var(--todae-color-on-accent);
+  font-size: var(--todae-calendar-font-size);
+  line-height: 1;
 }
 
 .month :global(td button[type='button']:focus-visible) {
@@ -384,6 +405,8 @@
 }
 
 .monthBar {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: var(--todae-space-1);
@@ -392,9 +415,9 @@
   block-size: 100%;
   overflow: hidden;
   padding-inline: var(--todae-space-1);
-  border-block: var(--todae-border-width) solid var(--todae-color-border-default);
-  background: var(--todae-color-bg-surface);
-  color: var(--todae-color-fg-default);
+  border-block: var(--todae-border-width) solid var(--todae-color-accent-default);
+  background: var(--todae-color-accent-default);
+  color: var(--todae-color-on-accent);
   font-size: var(--todae-text-label-font-size);
   line-height: var(--todae-text-leading-tight);
   text-align: start;
@@ -414,19 +437,25 @@
 }
 
 .monthBar:not([data-cut-end]):not([data-join-end]) {
-  border-inline-end: var(--todae-border-width) solid var(--todae-color-border-default);
+  border-inline-end: var(--todae-border-width) solid var(--todae-color-accent-default);
   border-start-end-radius: var(--todae-radius-sm);
   border-end-end-radius: var(--todae-radius-sm);
 }
 
-.monthBar[data-cut-start],
-.monthBar[data-join-start] {
+.monthBar[data-cut-start] {
   margin-inline-start: calc(-1 * var(--todae-calendar-day-border-width));
 }
 
-.monthBar[data-cut-end],
-.monthBar[data-join-end] {
+.monthBar[data-cut-end] {
   margin-inline-end: calc(-1 * var(--todae-calendar-day-border-width));
+}
+
+.monthBar[data-join-start] {
+  margin-inline-start: calc(-1 * (var(--todae-calendar-day-border-width) + 2 * var(--todae-border-width)));
+}
+
+.monthBar[data-join-end] {
+  margin-inline-end: calc(-1 * (var(--todae-calendar-day-border-width) + 2 * var(--todae-border-width)));
 }
 
 .cue {
@@ -472,6 +501,7 @@
 
   .barLabel,
   .cue,
+  .cueEnd,
   .chip,
   .more {
     position: absolute;

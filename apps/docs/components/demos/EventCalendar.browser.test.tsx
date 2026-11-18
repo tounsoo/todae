@@ -2,7 +2,7 @@ import { act } from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatTime } from '@tounsoo/todae';
 import '@tounsoo/todae/todae.css';
 import '../../app/globals.css';
@@ -441,7 +441,7 @@ describe('multi-day bars', () => {
     const saturdayBox = saturday.getBoundingClientRect();
     expect(Math.abs(fridayBox.top - saturdayBox.top)).toBeLessThan(2);
     expect(saturdayBox.left - fridayBox.right).toBeLessThan(8);
-    expect(saturdayBox.left).toBeGreaterThan(fridayBox.right - 2);
+    expect(saturdayBox.left).toBeGreaterThan(fridayBox.right - 6);
     expect(friday.querySelector('[class*="barLabel"]')?.textContent).toBe('Retreat');
     expect(saturday.querySelector('[class*="barLabel"]')).toBeNull();
     expect(friday.querySelectorAll('[class*="cue"]')).toHaveLength(0);
@@ -685,15 +685,18 @@ describe('month day cells', () => {
           for (const event of paintedMonthEvents(cell)) {
             const box = event.getBoundingClientRect();
             const name = `${label} ${event.getAttribute('data-bar') ?? event.textContent}`;
-            expect(box.left, name).toBeGreaterThanOrEqual(cellBox.left - 1);
-            expect(box.right, name).toBeLessThanOrEqual(cellBox.right + 1);
+            const joinStart = event.hasAttribute('data-join-start');
+            const joinEnd = event.hasAttribute('data-join-end');
+            const overlap = 4;
+            expect(box.left, name).toBeGreaterThanOrEqual(cellBox.left - (joinStart ? overlap : 1));
+            expect(box.right, name).toBeLessThanOrEqual(cellBox.right + (joinEnd ? overlap : 1));
             expect(box.top, name).toBeGreaterThanOrEqual(cellBox.top - 1);
             expect(box.bottom, name).toBeLessThanOrEqual(cellBox.bottom + 1);
             expect(box.left, name).toBeGreaterThanOrEqual(gridBox.left - 0.5);
             expect(box.right, name).toBeLessThanOrEqual(gridBox.right + 0.5);
             if (event.hasAttribute('data-bar')) {
-              expect(Math.abs(box.left - cellBox.left), name).toBeLessThan(3);
-              expect(Math.abs(box.right - cellBox.right), name).toBeLessThan(3);
+              if (!joinStart) expect(Math.abs(box.left - cellBox.left), name).toBeLessThan(3);
+              if (!joinEnd) expect(Math.abs(box.right - cellBox.right), name).toBeLessThan(3);
             }
           }
         }
@@ -736,6 +739,196 @@ describe('month day cells', () => {
     } finally {
       await page.viewport(1280, 800);
     }
+  });
+});
+
+function contrastRatio(foreground: string, background: string): number {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ink = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ink) throw new Error('no canvas');
+  const sample = (color: string) => {
+    const paint = (start: string) => {
+      ink.fillStyle = start;
+      ink.fillStyle = color;
+      ink.fillRect(0, 0, 1, 1);
+      return ink.getImageData(0, 0, 1, 1).data;
+    };
+    const [r, g, b] = paint('#000');
+    const [r2, g2, b2] = paint('#fff');
+    if (r !== r2 || g !== g2 || b !== b2) throw new Error(`canvas can't read ${color}`);
+    return [r! / 255, g! / 255, b! / 255];
+  };
+  const channel = (value: number) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  const luminance = (rgb: number[]) => 0.2126 * channel(rgb[0]!) + 0.7152 * channel(rgb[1]!) + 0.0722 * channel(rgb[2]!);
+  const lighter = Math.max(luminance(sample(foreground)), luminance(sample(background)));
+  const darker = Math.min(luminance(sample(foreground)), luminance(sample(background)));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+describe('month bar polish', () => {
+  afterEach(() => {
+    window.localStorage.removeItem(APPEARANCE_KEY);
+    document.documentElement.removeAttribute('data-appearance');
+  });
+
+  it('keeps a multi-day bar at least 3:1 against its cell and its text at least 4.5:1', async () => {
+    for (const appearance of ['light', 'dark'] as const) {
+      window.localStorage.setItem(APPEARANCE_KEY, appearance);
+      const view = render(
+        <Providers>
+          <main>
+            <EventCalendarExample locale="en-US" />
+          </main>
+        </Providers>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+      await settle();
+      const friday = screen.getByRole('button', { name: 'Friday, November 20, 2026' });
+      const bar = friday.querySelector<HTMLElement>('[data-bar="retreat"]');
+      const label = bar?.querySelector<HTMLElement>('[class*="barLabel"]');
+      if (!bar || !label) throw new Error(`${appearance}: Retreat is missing`);
+      const barStyle = getComputedStyle(bar);
+      const cellStyle = getComputedStyle(friday.closest('td')!);
+      expect(contrastRatio(barStyle.backgroundColor, cellStyle.backgroundColor), `${appearance} fill`).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(barStyle.borderTopColor, cellStyle.backgroundColor), `${appearance} border`).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(getComputedStyle(label).color, barStyle.backgroundColor), `${appearance} text`).toBeGreaterThanOrEqual(4.5);
+      view.unmount();
+    }
+  });
+
+  it('circles today on the number and leaves the cell border alone', async () => {
+    const clock = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(Temporal.PlainDate.from('2026-11-18'));
+    try {
+    for (const appearance of ['light', 'dark'] as const) {
+      window.localStorage.setItem(APPEARANCE_KEY, appearance);
+      const view = render(
+        <Providers>
+          <main>
+            <EventCalendarExample locale="en-US" />
+          </main>
+        </Providers>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+      await settle();
+      const today = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
+      const other = screen.getByRole('button', { name: 'Thursday, November 19, 2026' });
+      const todayCell = getComputedStyle(today.closest('td')!);
+      const otherCell = getComputedStyle(other.closest('td')!);
+      expect(todayCell.borderTopColor, appearance).toBe(otherCell.borderTopColor);
+      expect(parseFloat(todayCell.borderTopWidth), appearance).toBeGreaterThan(0);
+      expect(getComputedStyle(today).borderTopColor, appearance).toBe(getComputedStyle(other).borderTopColor);
+      const mark = today.querySelector<HTMLElement>('[class*="dateMark"]');
+      if (!mark) throw new Error(`${appearance}: today has no number mark`);
+      const markBox = mark.getBoundingClientRect();
+      const number = dayNumberBox(today);
+      const cellBox = today.getBoundingClientRect();
+      expect(mark.textContent?.trim(), appearance).toBe('18');
+      expect(markBox.width, appearance).toBeGreaterThan(number.width);
+      expect(markBox.height, appearance).toBeGreaterThan(number.height);
+      expect(markBox.width, appearance).toBeLessThan(cellBox.width / 2);
+      expect(markBox.left, appearance).toBeLessThanOrEqual(number.left + 1);
+      expect(markBox.right, appearance).toBeGreaterThanOrEqual(number.right - 1);
+      expect(markBox.top, appearance).toBeLessThanOrEqual(number.top + 1);
+      expect(markBox.bottom, appearance).toBeGreaterThanOrEqual(number.bottom - 1);
+      const radius = parseFloat(getComputedStyle(mark).borderTopLeftRadius);
+      expect(radius, appearance).toBeGreaterThanOrEqual(markBox.width / 2 - 1);
+      expect(contrastRatio(getComputedStyle(mark).backgroundColor, todayCell.backgroundColor), appearance).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(getComputedStyle(mark).color, getComputedStyle(mark).backgroundColor), appearance).toBeGreaterThanOrEqual(4.5);
+      expect(getComputedStyle(today).outlineStyle, appearance).toBe('none');
+      today.focus({ focusVisible: true } as FocusOptions);
+      const focus = getComputedStyle(today);
+      expect(focus.outlineStyle, appearance).not.toBe('none');
+      expect(today.getBoundingClientRect().width, appearance).toBeGreaterThan(markBox.width * 2);
+      expect(mark.getBoundingClientRect().width, appearance).toBeLessThan(cellBox.width / 2);
+      view.unmount();
+    }
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it('runs a multi-day bar across the grid line without a gap', async () => {
+    for (const appearance of ['light', 'dark'] as const) {
+      for (const width of [1280, 1024, 375]) {
+        await page.viewport(width, 900);
+        window.localStorage.setItem(APPEARANCE_KEY, appearance);
+        const view = render(
+          <Providers>
+            <main>
+              <EventCalendarExample locale="en-US" />
+            </main>
+          </Providers>,
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+        await settle();
+        const label = `${appearance} ${width}`;
+        const pairs = [
+          ['Friday, November 20, 2026', 'Saturday, November 21, 2026'],
+          ['Monday, November 16, 2026', 'Tuesday, November 17, 2026'],
+          ['Wednesday, November 18, 2026', 'Thursday, November 19, 2026'],
+        ];
+        for (const [leftName, rightName] of pairs) {
+          const leftDay = screen.getByRole('button', { name: leftName });
+          const rightDay = screen.getByRole('button', { name: rightName });
+          const leftBar = [...leftDay.querySelectorAll<HTMLElement>('[data-bar]')].find((bar) => bar.hasAttribute('data-join-end'));
+          const rightBar = [...rightDay.querySelectorAll<HTMLElement>('[data-bar]')].find(
+            (bar) => bar.hasAttribute('data-join-start') && bar.getAttribute('data-bar') === leftBar?.getAttribute('data-bar'),
+          );
+          if (!leftBar || !rightBar) throw new Error(`${label}: ${leftName} does not continue`);
+          const leftBox = leftBar.getBoundingClientRect();
+          const rightBox = rightBar.getBoundingClientRect();
+          const name = `${label} ${leftBar.getAttribute('data-bar')}`;
+          expect(rightBox.left, name).toBeLessThanOrEqual(leftBox.right + 0.5);
+          expect(Math.abs(leftBox.top - rightBox.top), name).toBeLessThan(1);
+          expect(Math.abs(leftBox.bottom - rightBox.bottom), name).toBeLessThan(1);
+          const leftCell = leftDay.closest('td')!.getBoundingClientRect();
+          const rightCell = rightDay.closest('td')!.getBoundingClientRect();
+          const boundary = (leftCell.right + rightCell.left) / 2;
+          expect(leftBox.right, name).toBeGreaterThan(boundary);
+          expect(rightBox.left, name).toBeLessThan(boundary);
+          const hit = document.elementFromPoint(boundary, (leftBox.top + leftBox.bottom) / 2);
+          expect(hit?.closest('[data-bar]')?.getAttribute('data-bar'), name).toBe(leftBar.getAttribute('data-bar'));
+        }
+        const grid = screen.getByRole('grid').getBoundingClientRect();
+        for (const bar of document.querySelectorAll<HTMLElement>('[data-bar]')) {
+          const box = bar.getBoundingClientRect();
+          if (box.width < 1) continue;
+          expect(box.left, `${label} grid`).toBeGreaterThanOrEqual(grid.left - 0.5);
+          expect(box.right, `${label} grid`).toBeLessThanOrEqual(grid.right + 0.5);
+        }
+        view.unmount();
+      }
+    }
+    await page.viewport(1280, 800);
+  });
+
+  it('hides the end cue below 30rem and shows it when the month is wider', async () => {
+    const view = render(
+      <Providers>
+        <main>
+          <EventCalendarExample locale="en-US" />
+        </main>
+      </Providers>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+    const saturday = () => screen.getByRole('button', { name: 'Saturday, November 21, 2026' });
+    const cue = () => saturday().querySelector<HTMLElement>('[class*="cueEnd"]');
+    await page.viewport(375, 800);
+    await settle();
+    const narrow = cue();
+    if (!narrow) throw new Error('Saturday is missing its end cue');
+    const narrowBox = narrow.getBoundingClientRect();
+    expect(Math.max(narrowBox.width, narrowBox.height)).toBeLessThanOrEqual(1);
+    await page.viewport(1280, 800);
+    await settle();
+    const wide = cue();
+    if (!wide) throw new Error('Saturday is missing its end cue');
+    expect(wide.getBoundingClientRect().width).toBeGreaterThan(1);
+    expect(wide.textContent).toContain('…');
+    view.unmount();
+    await page.viewport(1280, 800);
   });
 });
 

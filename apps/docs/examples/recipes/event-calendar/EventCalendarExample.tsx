@@ -1238,6 +1238,11 @@ export default function EventCalendarExample({
             showOutsideDays
             renderDay={(day) => (
               <span className={styles.chips} data-date={day.date.toString()}>
+                {day.today ? (
+                  <span className={styles.dateMark} aria-hidden="true">
+                    {day.date.day}
+                  </span>
+                ) : null}
                 {day.date.day === 1 && !day.outside ? <SyncTabStop onDay={keepAnchor} /> : null}
                 <MonthDay day={day.date} events={items} timeZone={timeZone} locale={locale} />
               </span>
