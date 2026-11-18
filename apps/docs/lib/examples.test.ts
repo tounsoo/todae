@@ -1,12 +1,12 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, matchesGlob, relative } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, matchesGlob, relative } from 'node:path';
 import type { Root } from 'mdast';
 import { describe, expect, it } from 'vitest';
 import { exampleOf, withExampleCode } from './exampleCode';
 import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
-import remarkExamples, { defaultImports, exampleFile, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
+import remarkExamples, { defaultImports, exampleFile, exampleLocalModules, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
 import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
@@ -187,11 +187,33 @@ describe('docs examples', () => {
         const name = exampleOf(node);
         if (!name) return [];
         const file = exampleFile(page, imports, name);
-        return [file, ...exampleStylesheets(file, readFileSync(file, 'utf8'))];
+        const source = readFileSync(file, 'utf8');
+        return [file, ...exampleLocalModules(file, source), ...exampleStylesheets(file, source)];
       });
     });
     expect(read.some((file) => file.endsWith('.css'))).toBe(true);
     expect(read.filter((file) => !globs.some((glob) => matchesGlob(file, glob))).map((file) => relative(EXAMPLES, file))).toEqual([]);
+    const seriesFile = join(EXAMPLES, 'recipes/event-calendar/recurrence.ts');
+    const seriesTest = join(EXAMPLES, 'recipes/event-calendar/recurrence.test.ts');
+    expect(globs.some((glob) => matchesGlob(seriesFile, glob))).toBe(true);
+    expect(globs.some((glob) => matchesGlob(seriesTest, glob))).toBe(false);
+  });
+
+  it('does not paste a sibling module into the event calendar pages', () => {
+    const marker = 'export function expandSeries';
+    expect(readFileSync(join(EXAMPLES, 'recipes/event-calendar/recurrence.ts'), 'utf8')).toContain(marker);
+    for (const folder of ['(en)', 'ko']) {
+      const page = join(APP, folder, 'recipes', 'event-calendar', 'page.mdx');
+      const tree = parseMdx(readFileSync(page, 'utf8'));
+      for (const plugin of remarkPlugins) (plugin as () => (tree: Root, file: { path: string }) => void)()(tree, { path: page });
+      const pasted: string[] = [];
+      const visit = (node: Root | Root['children'][number]) => {
+        if (node.type === 'code' && node.value.includes(marker)) pasted.push(relative(APP, page));
+        if ('children' in node) for (const child of node.children) visit(child as Root['children'][number]);
+      };
+      visit(tree);
+      expect(pasted).toEqual([]);
+    }
   });
 
   it('uses no class name that only the docs stylesheet defines', () => {
@@ -206,13 +228,17 @@ describe('docs examples', () => {
     expect(docsOnly).toEqual([]);
   });
 
-  it('imports only what a product has: the package, React, icon libraries and a stylesheet of its own', () => {
+  it('imports only what a product has: the package, React, icon libraries, a stylesheet of its own, or a sibling module the page shows', () => {
     const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react|\.\/[\w-]+\.module\.css)$/;
+    const local = /^\.\/[\w-]+$/;
     const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
     const outside = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/from '([^']+)'/g)]
         .map((match) => match[1]!)
-        .filter((from) => !allowed.test(from))
+        .filter((from) => {
+          if (allowed.test(from)) return false;
+          return !(local.test(from) && existsSync(join(EXAMPLES, dirname(file), `${from.slice(2)}.ts`)));
+        })
         .map((from) => `${file}: ${from}`),
     );
     expect(outside).toEqual([]);

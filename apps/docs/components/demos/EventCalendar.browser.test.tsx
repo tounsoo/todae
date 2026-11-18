@@ -1674,3 +1674,100 @@ describe('creating an event from empty lane space', () => {
     await page.viewport(1280, 800);
   });
 });
+
+describe('a repeating event from the keyboard', () => {
+  const bookClubName = `Book club, ${clock('15:00')} to ${clock('16:00')}, repeats`;
+
+  it('moves through the choice with Tab and applies the one that Enter activates', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const club = screen.getByRole('button', { name: bookClubName });
+    club.focus();
+    await userEvent.keyboard('{Enter}');
+    const menu = await openMenu();
+    const edit = within(menu).getAllByRole('menuitem').findIndex((item) => item.textContent === 'Edit…');
+    await userEvent.keyboard('{ArrowDown}'.repeat(edit));
+    await userEvent.keyboard('{Enter}');
+    const choice = await screen.findByRole('dialog', { name: 'Edit repeating event' });
+    const thisEvent = within(choice).getByRole('button', { name: 'This event' });
+    await expect.poll(() => document.activeElement).toBe(thisEvent);
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole('button', { name: bookClubName }));
+
+    screen.getByRole('button', { name: bookClubName }).focus();
+    await userEvent.keyboard('{Enter}');
+    const again = await openMenu();
+    const editAgain = within(again).getAllByRole('menuitem').findIndex((item) => item.textContent === 'Edit…');
+    await userEvent.keyboard('{ArrowDown}'.repeat(editAgain));
+    await userEvent.keyboard('{Enter}');
+    const reopened = await screen.findByRole('dialog', { name: 'Edit repeating event' });
+    await expect.poll(() => document.activeElement).toBe(within(reopened).getByRole('button', { name: 'This event' }));
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(within(reopened).getByRole('button', { name: 'This and following' }));
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(within(reopened).getByRole('button', { name: 'All events' }));
+    await userEvent.keyboard('{Enter}');
+    const form = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    const title = within(form).getByRole('textbox', { name: 'Title' });
+    await expect.poll(() => document.activeElement).toBe(title);
+    await userEvent.clear(title);
+    await userEvent.type(title, 'Readers');
+    await userEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    const readers = `Readers, ${clock('15:00')} to ${clock('16:00')}, repeats`;
+    const saved = screen.getByRole('button', { name: readers });
+    expect(saved.querySelector('[title="Repeats"]')?.textContent).toBe('↻');
+    expect(saved.querySelector('[title="Repeats"]')).toBeVisible();
+    await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toMatch(/^Changed all events\./);
+    await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByRole('button', { name: readers })).toBeTruthy();
+  });
+
+  it('drags one occurrence and leaves the later ones where the series put them', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const club = screen.getByRole('button', { name: bookClubName });
+    dragBlock(club, atUnits('Sun, Nov 15', 480)).drop();
+    const moved = `Book club, ${clock('16:00')} to ${clock('17:00')}, repeats`;
+    const movedBlock = await screen.findByRole('button', { name: moved });
+    expect(movedBlock.querySelector('[title="Repeats"]')?.textContent).toBe('↻');
+    expect(movedBlock.querySelector('[title="Repeats"]')).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByRole('button', { name: bookClubName })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: moved })).toBeNull();
+  });
+
+  it('shows the repeat mark, the all-day Repeats cue, and the Days and Ends labels', async () => {
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" />
+      </Providers>,
+    );
+    const mark = screen.getByRole('button', { name: bookClubName }).querySelector('[title="Repeats"]');
+    expect(mark?.textContent).toBe('↻');
+    expect(mark).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'New event' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New event' });
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Holiday');
+    await userEvent.click(within(dialog).getByRole('switch', { name: 'All day' }));
+    await userEvent.selectOptions(within(dialog).getByLabelText('Repeat'), 'WEEKLY');
+    const days = within(dialog).getByLabelText('Days');
+    const ends = within(dialog).getByLabelText('Ends');
+    const daysLabel = document.getElementById(days.getAttribute('aria-labelledby') ?? '');
+    const endsLabel = document.getElementById(ends.getAttribute('aria-labelledby') ?? '');
+    expect(daysLabel?.textContent).toBe('Days');
+    expect(endsLabel?.textContent).toBe('Ends');
+    expect(daysLabel).toBeVisible();
+    expect(endsLabel).toBeVisible();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    const holiday = await screen.findByRole('button', { name: 'Holiday, November 16, 2026, repeats' });
+    expect(within(holiday).getByText('Repeats')).toBeVisible();
+  });
+});
