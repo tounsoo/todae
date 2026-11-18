@@ -1631,6 +1631,7 @@ describe('creating an event from empty lane space', () => {
       { timeZone: 'Asia/Tokyo', compareZone: 'America/New_York', anchor: '2026-03-08' },
       { timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata', anchor: '2026-11-16' },
       { timeZone: 'Australia/Lord_Howe', compareZone: 'UTC', anchor: '2026-10-04', opens: '00:00', closes: '06:00' },
+      { timeZone: 'Australia/Sydney', compareZone: 'Australia/Lord_Howe', anchor: '2026-10-04', opens: '00:00', closes: '06:00' },
     ];
     for (const locale of ['en-US', 'ko'] as const) {
       await page.viewport(1280, 900);
@@ -1678,6 +1679,11 @@ describe('creating an event from empty lane space', () => {
           expect(above.bottom).toBeLessThanOrEqual(below.top + 1);
         }
         zoneNamesFit();
+        if (week.compareZone === 'Australia/Lord_Howe') {
+          const second = document.querySelectorAll<HTMLElement>('[class*="corner"]')[1];
+          expect(second?.textContent ?? '').toContain('GMT+10:30');
+          expect(second?.textContent ?? '').toContain('GMT+11');
+        }
         for (const zone of document.querySelectorAll<HTMLElement>('[class*="zone"]')) {
           if (![...zone.classList].some((name) => name.includes('_zone_'))) continue;
           const names = (zone.textContent ?? '').split(' / ').map((name) => name.trim()).filter(Boolean);

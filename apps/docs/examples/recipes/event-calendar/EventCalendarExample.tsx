@@ -1470,7 +1470,7 @@ export function EventCalendarExample({
   const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
   const gutters = showCompare ? 2 : 1;
   const primaryTrack = primaryPx > 0 ? `${primaryPx}px` : '4.5rem';
-  const compareTrack = comparePx > 0 ? `${comparePx}px` : 'max-content';
+  const compareTrack = comparePx > 0 ? `${comparePx}px` : '4.5rem';
   const tracks = `${showCompare ? `${primaryTrack} ${compareTrack}` : primaryTrack} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
   const gutterMin = (primaryPx > 0 ? primaryPx : 4.5 * 16) / 16 + (showCompare && comparePx > 0 ? comparePx / 16 : 0);
