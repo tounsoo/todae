@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatTime } from '@tounsoo/todae';
-import EventCalendarExample, {
+import EventCalendarZones, {
+  EventCalendarExample,
   EventEditor,
   SLOT_MINUTES,
   adjustEvent,
@@ -553,7 +556,7 @@ describe('the calendar', () => {
     const board = event.closest('[aria-label="Calendar"]');
     const oneAm = [...(board?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
     expect(oneAm).toHaveLength(2);
-    const sundayColumn = screen.getByRole('list', { name: 'Sun, Nov 1' }).parentElement;
+    const sundayColumn = screen.getByRole('list', { name: 'Sun, Nov 1 · PST begins' }).parentElement;
     const sundayOne = [...(sundayColumn?.querySelectorAll('span') ?? [])].filter((node) => node.textContent === '1:00 AM');
     expect(sundayOne).toHaveLength(1);
 
@@ -595,6 +598,7 @@ describe('the calendar', () => {
     render(
       <EventCalendarExample
         locale="en-US"
+        timeZone={LA}
         events={[
           {
             id: 'tokyo',
@@ -1316,7 +1320,7 @@ describe('the event menu and dialog', () => {
 
   it('disables a day move onto a shorter day', async () => {
     const sync = event('sync', '2026-03-09T01:00:00-07:00[America/Los_Angeles]', '2026-03-09T03:30:00-07:00[America/Los_Angeles]', { title: 'Sync' });
-    render(<EventCalendarExample locale="en-US" anchor={date('2026-03-09')} opens={time('01:00')} closes={time('04:00')} events={[sync]} />);
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-03-09')} opens={time('01:00')} closes={time('04:00')} events={[sync]} />);
     const button = screen.getByRole('button', { name: `Sync, ${clock('01:00')} to ${clock('03:30')}` });
     await act(async () => {
       fireEvent.pointerDown(button, { button: 0, pointerType: 'mouse', isPrimary: true, pointerId: 1 });
@@ -1437,8 +1441,392 @@ describe('the event menu and dialog', () => {
   });
 });
 
+function shortZone(timeZone: string, locale: string): string {
+  return (
+    new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName: 'short' })
+      .formatToParts(Date.UTC(2026, 10, 16, 16))
+      .find((part) => part.type === 'timeZoneName')?.value ?? ''
+  );
+}
+
+function calendarBoard(): HTMLElement {
+  const board = document.querySelector<HTMLElement>('[aria-label="Calendar"]');
+  if (!board) throw new Error('missing calendar');
+  return board;
+}
+
+function described(): string[] {
+  return (calendarBoard().getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .map((id) => document.getElementById(id)?.textContent ?? '');
+}
+
+function cornerText(value: string) {
+  return (_content: string, node: Element | null) => node?.textContent === value && [...(node.classList ?? [])].some((name) => name.includes('_zone_'));
+}
+
+function hourColumns(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => [...el.children].some((child) => (child as HTMLElement).style?.top));
+}
+
+const once = (start: Temporal.Instant | Temporal.ZonedDateTime, end: Temporal.Instant | Temporal.ZonedDateTime) => ({
+  id: 'once',
+  title: 'Once',
+  start,
+  end,
+  allDay: false as const,
+});
+
+describe('the time zone', () => {
+  it('names the grid zone in English and Korean', () => {
+    const zone = Temporal.Now.timeZoneId();
+    render(<EventCalendarExample locale="en-US" events={[]} />);
+    expect(screen.getByText(shortZone(zone, 'en-US'))).toBeTruthy();
+    expect(described()[0]?.startsWith('Times in')).toBe(true);
+    expect(described()[0]).toContain(shortZone(zone, 'en-US'));
+    expect(described()[0] && screen.getByText(described()[0]!).closest('[aria-hidden="true"]')).toBeNull();
+    cleanup();
+
+    render(<EventCalendarExample locale="ko" events={[]} />);
+    expect(screen.getByText(shortZone(zone, 'ko'))).toBeTruthy();
+    expect(described()[0]?.startsWith('시각은')).toBe(true);
+    expect(described()[0]).toContain(shortZone(zone, 'ko'));
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone={LA} events={[]} />);
+    expect(screen.getByText('PST')).toBeTruthy();
+    expect(described()).toEqual(['Times in PST (GMT-8).']);
+    cleanup();
+
+    render(<EventCalendarExample locale="ko" timeZone={LA} events={[]} />);
+    expect(screen.getByText('GMT-8')).toBeTruthy();
+    expect(described()).toEqual(['시각은 GMT-8입니다.']);
+  });
+
+  it('places one instant in a different hour for a different zone', () => {
+    const start = Temporal.Instant.from('2026-11-16T17:00:00Z');
+    const end = Temporal.Instant.from('2026-11-16T18:00:00Z');
+    const zoned = once(start.toZonedDateTimeISO('Asia/Tokyo'), end.toZonedDateTimeISO('Asia/Tokyo'));
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-11-16')} events={[once(start, end)]} />);
+    const pacific = screen.getByRole('button', { name: `Once, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(pacific)).toBe(true);
+    expect(pacific.parentElement?.style.top).toBe('10%');
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone="UTC" anchor={date('2026-11-16')} events={[once(start, end)]} />);
+    const utc = screen.getByRole('button', { name: `Once, ${clock('17:00')} to ${clock('18:00')}` });
+    expect(utc.parentElement?.style.top).toBe('90%');
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-11-16')} events={[zoned]} />);
+    const same = screen.getByRole('button', { name: `Once, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(same)).toBe(true);
+    expect(same.parentElement?.style.top).toBe('10%');
+  });
+
+  it('shows the second zone’s hour, including a partial offset and a day shift', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    expect(described()).toEqual(['Times in PST (GMT-8). Second column GMT+5:30, 13 h 30 min ahead.']);
+    const columns = hourColumns();
+    expect(columns).toHaveLength(2);
+    const primary = [...columns[0]!.querySelectorAll<HTMLElement>('span')];
+    const compare = [...columns[1]!.querySelectorAll<HTMLElement>('span')];
+    const open = primary.find((node) => node.textContent === clock('08:00'));
+    const late = primary.find((node) => node.textContent === clock('17:00'));
+    expect(open).toBeTruthy();
+    expect(late).toBeTruthy();
+    expect(compare.find((node) => node.style.top === open!.style.top)?.textContent).toBe(clock('21:30'));
+    expect(compare.find((node) => node.style.top === late!.style.top)?.textContent).toBe(`${clock('06:30')} +1 day`);
+    cleanup();
+
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kathmandu" anchor={date('2026-11-16')} events={[]} />);
+    expect(screen.getByText(cornerText('GMT+5:45'))).toBeTruthy();
+    const kathmandu = hourColumns()[1];
+    const eight = hourColumns()[0]?.querySelector<HTMLElement>('span')?.style.top;
+    expect([...kathmandu!.querySelectorAll<HTMLElement>('span')].find((node) => node.style.top === eight)?.textContent).toBe(clock('21:45'));
+    cleanup();
+
+    render(<EventCalendarExample locale="ko" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    const koTime = (text: string) => formatTime(Temporal.PlainTime.from(text), { locale: 'ko' });
+    const koColumns = hourColumns();
+    const koLate = [...koColumns[0]!.querySelectorAll<HTMLElement>('span')].find((node) => node.textContent === koTime('17:00'));
+    expect([...koColumns[1]!.querySelectorAll<HTMLElement>('span')].find((node) => node.style.top === koLate?.style.top)?.textContent).toBe(`${koTime('06:30')} +1일`);
+  });
+
+  it('keeps spring-forward and fall-back hours and lines the second zone up with them', () => {
+    const spring = once(Temporal.Instant.from('2027-03-14T10:00:00Z'), Temporal.Instant.from('2027-03-14T10:30:00Z'));
+    render(
+      <EventCalendarExample locale="en-US" timeZone={LA} compareZone="UTC" anchor={SPRING} opens={time('00:00')} closes={time('04:00')} events={[spring]} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    const [primary, compare] = hourColumns();
+    const labels = [...primary!.querySelectorAll<HTMLElement>('span')].map((node) => node.textContent);
+    expect(labels).toEqual([clock('00:00'), clock('01:00'), clock('03:00')]);
+    expect(labels).not.toContain(clock('02:00'));
+    const other = [...compare!.children] as HTMLElement[];
+    expect(other.map((node) => node.textContent)).toEqual([clock('08:00'), clock('09:00'), clock('10:00')]);
+    expect(other.map((node) => node.style.top)).toEqual([...primary!.querySelectorAll<HTMLElement>('span')].map((node) => node.style.top));
+    const gap = screen.getByRole('button', { name: `Once, ${clock('03:00')} to ${clock('03:30')}` });
+    expect(gap.parentElement?.style.top).toBe('66.6667%');
+    cleanup();
+
+    const repeated = once(Temporal.Instant.from('2027-11-07T09:00:00Z'), Temporal.Instant.from('2027-11-07T09:30:00Z'));
+    render(
+      <EventCalendarExample locale="en-US" timeZone={LA} compareZone="UTC" anchor={FALL} opens={time('00:00')} closes={time('04:00')} events={[repeated]} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    const [fallPrimary, fallCompare] = hourColumns();
+    const fallLabels = [...fallPrimary!.querySelectorAll<HTMLElement>('span')];
+    const ones = fallLabels.filter((node) => node.textContent === clock('01:00'));
+    expect(ones).toHaveLength(2);
+    expect(ones[0]!.style.top).not.toBe(ones[1]!.style.top);
+    const paired = [...fallCompare!.children] as HTMLElement[];
+    expect(paired.map((node) => node.style.top)).toEqual(fallLabels.map((node) => node.style.top));
+    expect(paired.find((node) => node.style.top === ones[0]!.style.top)?.textContent).toBe(clock('08:00'));
+    expect(paired.find((node) => node.style.top === ones[1]!.style.top)?.textContent).toBe(clock('09:00'));
+    const second = screen.getByRole('button', { name: `Once, ${clock('01:00')} to ${clock('01:30')}` });
+    expect(second.parentElement?.style.top).toBe(ones[1]!.style.top);
+    expect(second.parentElement?.style.top).toBe('40%');
+  });
+
+  it('describes the grid by its zone and keeps the hour columns out of the announcement', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    const region = calendarBoard();
+    expect(described()).toEqual(['Times in PST (GMT-8). Second column GMT+5:30, 13 h 30 min ahead.']);
+    for (const id of (region.getAttribute('aria-describedby') ?? '').split(' ')) {
+      const label = document.getElementById(id);
+      expect(label?.closest('[aria-hidden="true"]')).toBeNull();
+    }
+    const columns = hourColumns();
+    expect(columns).toHaveLength(2);
+    for (const column of columns) expect(column.getAttribute('aria-hidden')).toBe('true');
+    const announced = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+      if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true') return '';
+      return [...node.childNodes].map((child) => announced(child)).join('');
+    };
+    const heard = announced(region);
+    expect(heard).toContain('Times in PST (GMT-8)');
+    expect(heard).toContain('13 h 30 min ahead');
+    expect(heard).not.toContain(clock('08:00'));
+    expect(heard).not.toContain('+1 day');
+  });
+
+  it('explains the zone and shows a second zone on the English and Korean pages', () => {
+    render(<EventCalendarZones locale="en-US" />);
+    expect(described()).toEqual(['Times in PST (GMT-8). Second column GMT+5:30, 13 h 30 min ahead.']);
+    expect(hourColumns()[1]?.textContent).toContain('+1 day');
+    expect(screen.getByRole('button', { name: `Design review, ${clock('09:00')} to ${clock('10:30')}` })).toBeTruthy();
+    cleanup();
+
+    render(<EventCalendarZones locale="ko" />);
+    expect(described()).toEqual(['시각은 GMT-8입니다. 둘째 열은 GMT+5:30이며, 13시간 30분 빠릅니다.']);
+    expect(hourColumns()[1]?.textContent).toContain('+1일');
+    cleanup();
+
+    const en = readFileSync(join(process.cwd(), 'app/(en)/recipes/event-calendar/page.mdx'), 'utf8');
+    const ko = readFileSync(join(process.cwd(), 'app/ko/recipes/event-calendar/page.mdx'), 'utf8');
+    for (const page of [en, ko]) {
+      expect(page).toContain('<Example of={EventCalendarZones} />');
+      expect(page).toContain('timeZone');
+      expect(page).toContain('compareZone');
+      expect(page).toContain('Asia/Kolkata');
+      expect(page).toContain('Asia/Kathmandu');
+    }
+    expect(en).toContain('zone name');
+    expect(en).toContain('PST / PDT');
+    expect(en).toContain('5:00 PM / 6:00 PM');
+    expect(en).toContain('A day shift belongs to the time it follows');
+    expect(en).toContain('first visible day that uses the later offset');
+    expect(en).toContain('leaves out the time difference');
+    expect(en).not.toContain('every offset the visible days use');
+    expect(en).not.toContain('names every zone name');
+    expect(en).not.toContain('keeps a row only');
+    expect(en).toContain('server-rendered app passes `timeZone` explicitly');
+    expect(en).toContain('+1 day');
+    expect(ko).toContain('PST / PDT');
+    expect(ko).toContain('오후 5:00 / 오후 6:00');
+    expect(ko).toContain('날짜 차이는 바로 앞의 시각에 속합니다');
+    expect(ko).not.toContain('5:00 PM / 6:00 PM');
+    expect(ko).toContain('첫 보이는 날');
+    expect(ko).toContain('시차를 적지 않습니다');
+    expect(ko).not.toContain('같은 규칙일 때만');
+    expect(ko).toContain('서버에서 그리는 앱은 `timeZone`을 직접 넘깁니다');
+    expect(ko).toContain('+1일');
+  });
+});
+
+function compareRow(top: string): string | undefined {
+  const column = document.querySelector<HTMLElement>('[data-compare]');
+  return ([...(column?.children ?? [])] as HTMLElement[]).find((node) => node.style.top === top)?.textContent;
+}
+
+function weekDays(anchor: string): Temporal.PlainDate[] {
+  const day = Temporal.PlainDate.from(anchor);
+  const sunday = day.subtract({ days: day.dayOfWeek % 7 });
+  return Array.from({ length: 7 }, (_, index) => sunday.add({ days: index }));
+}
+
+function compareLabel(grid: string, compare: string, days: readonly Temporal.PlainDate[], wall: string, locale: string): string {
+  const seen = new Map<string, { time: string; shift: number }>();
+  for (const day of days) {
+    const at = day.toZonedDateTime({ timeZone: grid, plainTime: Temporal.PlainTime.from(wall) });
+    const there = at.withTimeZone(compare);
+    const offset = new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone: compare, timeZoneName: 'shortOffset' })
+      .formatToParts(at.epochMilliseconds)
+      .find((part) => part.type === 'timeZoneName')?.value;
+    if (!offset || seen.has(offset)) continue;
+    seen.set(offset, { time: formatTime(there.toPlainTime(), { locale }), shift: at.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days });
+  }
+  const parts = [...seen.values()];
+  const shiftLabel = (days: number) => {
+    if (days === 0) return '';
+    const count = new Intl.NumberFormat(locale, { signDisplay: 'always', maximumFractionDigits: 0 }).format(days);
+    const unit = new Intl.DisplayNames(locale, { type: 'dateTimeField', style: 'narrow' }).of('day') ?? 'day';
+    const space = /\p{Script=Hangul}/u.test(unit) ? '' : ' ';
+    return `${count}${space}${unit}`;
+  };
+  return parts.map((part) => (part.shift === 0 ? part.time : `${part.time} ${shiftLabel(part.shift)}`)).join(' / ');
+}
+
+describe('a zone whose offset changes inside the visible week', () => {
+  it('lists both second-zone times when the compare zone changes midweek', () => {
+    // Israel springs forward Fri 27 Mar 2026. 8:00 PDT is 17:00 Jerusalem Sun-Thu, 18:00 Fri-Sat.
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    const days = weekDays('2026-03-22');
+    const primary = hourColumns()[0];
+    const eight = [...primary!.children].find((node) => node.textContent === '8:00 AM') as HTMLElement;
+    expect(compareRow(eight.style.top)).toBe('5:00 PM / 6:00 PM');
+    const two = [...primary!.children].find((node) => node.textContent === '2:00 PM') as HTMLElement;
+    expect(compareRow(two.style.top)).toBe('11:00 PM / 12:00 AM +1 day');
+    expect(compareRow(eight.style.top)).toBe(compareLabel(LA, 'Asia/Jerusalem', days, '08:00', 'en-US'));
+    expect(screen.getByText(cornerText('GMT+2 / GMT+3'))).toBeTruthy();
+    const thursday = screen.getByRole('heading', { name: 'Thu, Mar 26 · Second column GMT+3 begins' });
+    expect(thursday.getAttribute('aria-describedby')).toBeNull();
+    expect(thursday.querySelector('[aria-hidden]')).toBeNull();
+    const head = thursday.parentElement!;
+    for (const child of head.children) {
+      if (child.tagName === 'H3') continue;
+      expect(child.textContent ?? '').not.toContain('begins');
+    }
+    const marked = [...head.querySelectorAll('h3')].filter((heading) => (heading.textContent ?? '').includes('begins'));
+    expect(marked.map((heading) => heading.textContent)).toEqual(['Thu, Mar 26 · Second column GMT+3 begins']);
+  });
+
+  it('lists both second-zone times when the grid zone changes and the second zone does not', () => {
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={LA}
+        compareZone="UTC"
+        anchor={Temporal.PlainDate.from('2027-03-14')}
+        opens={Temporal.PlainTime.from('00:00')}
+        closes={Temporal.PlainTime.from('04:00')}
+        events={[]}
+      />,
+    );
+    const primary = hourColumns()[0];
+    const midnight = [...primary!.children].find((node) => node.textContent === '12:00 AM') as HTMLElement;
+    expect(compareRow(midnight.style.top)).toBe('8:00 AM / 7:00 AM');
+    const sunday = screen.getByRole('heading', { name: 'Sun, Mar 14 · PDT begins' });
+    expect(sunday.textContent).toBe('Sun, Mar 14 · PDT begins');
+    expect(sunday.getAttribute('aria-describedby')).toBeNull();
+  });
+
+  it('keeps every hour of a Sydney week beside Los Angeles, and each time matches the days that use it', () => {
+    render(<EventCalendarExample locale="en-US" timeZone="Australia/Sydney" compareZone={LA} anchor={Temporal.PlainDate.from('2026-03-08')} events={[]} />);
+    const days = weekDays('2026-03-08');
+    const [primary, compare] = hourColumns();
+    const rows = [...compare!.children] as HTMLElement[];
+    expect(rows).toHaveLength(10);
+    const walls = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+    for (const row of rows) {
+      const hour = ([...primary!.children] as HTMLElement[]).find((node) => node.style.top === row.style.top);
+      const wall = walls.find((value) => clock(value) === hour?.textContent);
+      expect(wall).toBeTruthy();
+      expect(row.textContent).toBe(compareLabel('Australia/Sydney', LA, days, wall!, 'en-US'));
+    }
+    const eight = ([...primary!.children] as HTMLElement[]).find((node) => node.textContent === '8:00 AM') as HTMLElement;
+    expect(compareRow(eight.style.top)).toBe('1:00 PM -1 day / 2:00 PM -1 day');
+    const monday = screen.getByRole('heading', { name: 'Mon, Mar 9 · Second column PDT begins' });
+    expect(monday.textContent).toBe('Mon, Mar 9 · Second column PDT begins');
+    const head = monday.parentElement!;
+    for (const child of head.children) {
+      if (child.tagName === 'H3') continue;
+      expect(child.textContent ?? '').not.toContain('begins');
+      expect(child.textContent ?? '').not.toContain('Second column');
+    }
+    const marked = [...head.querySelectorAll('h3')].filter((heading) => (heading.textContent ?? '').includes('begins'));
+    expect(marked.map((heading) => heading.textContent)).toEqual(['Mon, Mar 9 · Second column PDT begins']);
+  });
+
+  it('does not describe a midweek change as one lead, in English or Korean', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    expect(described()).toEqual(['Times in PDT (GMT-7). Second column GMT+2 / GMT+3.']);
+    cleanup();
+    render(<EventCalendarExample locale="ko" timeZone={LA} compareZone="Asia/Jerusalem" anchor={Temporal.PlainDate.from('2026-03-22')} events={[]} />);
+    expect(described()).toEqual(['시각은 GMT-7입니다. 둘째 열은 GMT+2 / GMT+3입니다.']);
+    const changed = screen.getByRole('heading', { name: /둘째 열 GMT\+3 시작/ });
+    expect(changed.textContent).toContain('3월 26일');
+    expect(changed.textContent).toContain('둘째 열 GMT+3 시작');
+    expect(changed.getAttribute('aria-describedby')).toBeNull();
+  });
+
+  it('names every offset the week shows, not only Sunday’s', () => {
+    render(
+      <EventCalendarExample
+        locale="en-US"
+        timeZone={LA}
+        anchor={Temporal.PlainDate.from('2027-03-14')}
+        opens={Temporal.PlainTime.from('00:00')}
+        closes={Temporal.PlainTime.from('04:00')}
+        events={[]}
+      />,
+    );
+    expect(described().join(' ')).toContain('PDT');
+    expect(screen.getByText(cornerText('PST / PDT'))).toBeTruthy();
+  });
+
+  it('shows one second-zone time on every row when that zone keeps one offset', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} events={[]} />);
+    const [primary, compare] = hourColumns();
+    const days = Array.from({ length: 7 }, (_, index) => Temporal.PlainDate.from('2026-11-15').add({ days: index }));
+    const rows = [...compare!.children] as HTMLElement[];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const hour = ([...primary!.children] as HTMLElement[]).find((node) => node.style.top === row.style.top);
+      const wall = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].find((value) => clock(value) === hour?.textContent);
+      expect(wall).toBeTruthy();
+      const texts = days.map((day) => {
+        const at = day.toZonedDateTime({ timeZone: LA, plainTime: Temporal.PlainTime.from(wall!) });
+        const there = at.withTimeZone('Asia/Kolkata');
+        const shift = at.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days;
+        const label = formatTime(there.toPlainTime(), { locale: 'en-US' });
+        return shift === 0 ? label : `${label} ${shift > 0 ? '+' : ''}${shift} day`;
+      });
+      expect(new Set(texts).size).toBe(1);
+      expect(row.textContent).toBe(texts[0]);
+    }
+  });
+});
+
 describe('repeating events', () => {
   afterEach(cleanup);
+
+  it('places Book club on the Sunday hour beside the second zone', () => {
+    render(<EventCalendarExample locale="en-US" timeZone={LA} compareZone="Asia/Kolkata" anchor={date('2026-11-16')} />);
+    const club = screen.getByRole('button', { name: `Book club, ${clock('15:00')} to ${clock('16:00')}, repeats` });
+    const sunday = screen.getByRole('list', { name: 'Sun, Nov 15' });
+    expect(sunday.contains(club)).toBe(true);
+    expect(document.querySelector('[data-compare]')?.contains(club)).toBe(false);
+    const [primary, compare] = hourColumns();
+    const three = [...primary!.children].find((node) => node.textContent === clock('15:00')) as HTMLElement;
+    expect(three).toBeTruthy();
+    expect(club.parentElement?.style.top).toBe(three.style.top);
+    const row = [...compare!.children].find((node) => (node as HTMLElement).style.top === three.style.top);
+    expect(row?.textContent).toBe('4:30 AM +1 day');
+  });
 
   const polite = () => document.querySelector('[data-todae-announcer] > [aria-live="polite"]');
   const bookClubName = `Book club, ${clock('15:00')} to ${clock('16:00')}, repeats`;
@@ -1567,6 +1955,73 @@ describe('repeating events', () => {
     await vi.waitFor(() => expect(polite()?.textContent).toMatch(/^Changed this event\./));
     fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
     expect(screen.getByRole('list', { name: 'Sun, Nov 22' }).contains(screen.getByRole('button', { name: bookClubName }))).toBe(true);
+  });
+
+  it('stays on the later week when all events are saved from there', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    await choose(bookClubName, 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    const form = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    fireEvent.change(within(form).getByRole('textbox', { name: 'Title' }), { target: { value: 'Readers' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    const readers = `Readers, ${clock('15:00')} to ${clock('16:00')}, repeats`;
+    expect(within(screen.getByRole('list', { name: 'Sun, Nov 22' })).getByRole('button', { name: readers })).toBeTruthy();
+  });
+
+  async function editAllFromNextWeek() {
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(bookClubName, 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    return screen.findByRole('dialog', { name: 'Edit Book club' });
+  }
+
+  it('returns focus to the Nov 22 strip bar when all events become all day, and restores 3:00 PM when they are timed again', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const form = await editAllFromNextWeek();
+    fireEvent.click(within(form).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const bar = screen.getByRole('button', { name: 'Book club, November 22, 2026, repeats' });
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    await vi.waitFor(() => expect(document.activeElement).toBe(bar));
+
+    await choose('Book club, November 22, 2026, repeats', 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    const again = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    fireEvent.click(within(again).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(again).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Sun, Nov 22' })).getByRole('button', { name: bookClubName })).toBeTruthy();
+  });
+
+  it('keeps Nov 22 and focuses the 5:00 PM block when all events start then', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const form = await editAllFromNextWeek();
+    fireEvent.change(within(form).getByRole('textbox', { name: 'Start' }), { target: { value: '5:00 PM' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const moved = `Book club, ${clock('17:00')} to ${clock('18:00')}, repeats`;
+    const block = within(screen.getByRole('list', { name: 'Sun, Nov 22' })).getByRole('button', { name: moved });
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    await vi.waitFor(() => expect(document.activeElement).toBe(block));
+  });
+
+  it('moves to the week of the new date when all events leave the week on screen', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const form = await editAllFromNextWeek();
+    const date = within(form).getByRole('textbox', { name: 'Date' });
+    fireEvent.change(date, { target: { value: '11/29/2026' } });
+    fireEvent.blur(date);
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByText('Nov 29 – Dec 5, 2026')).toBeTruthy();
+    const block = within(screen.getByRole('list', { name: 'Sun, Nov 29' })).getByRole('button', { name: bookClubName });
+    await vi.waitFor(() => expect(document.activeElement).toBe(block));
   });
 
   it('changes every occurrence when the edit applies to all events', async () => {

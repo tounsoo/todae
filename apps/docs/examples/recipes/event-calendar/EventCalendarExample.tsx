@@ -57,6 +57,25 @@ export type CalendarEvent = {
   originalStart?: Temporal.ZonedDateTime;
 };
 
+/** An absolute instant, or a zoned value whose instant is what the grid places. */
+export type CalendarPoint = Temporal.ZonedDateTime | Temporal.Instant;
+
+/** A value the grid can be given. An all-day event keeps the zone it was written in. */
+export type CalendarEventInput = Omit<CalendarEvent, 'start' | 'end'> & {
+  start: CalendarPoint;
+  end: CalendarPoint;
+};
+
+/** The instant as a zoned value in `timeZone`. A zoned value keeps that instant. */
+export function inZone(value: CalendarPoint, timeZone: string): Temporal.ZonedDateTime {
+  return value instanceof Temporal.Instant ? value.toZonedDateTimeISO(timeZone) : value.withTimeZone(timeZone);
+}
+
+function projectEvent(event: CalendarEventInput, timeZone: string): CalendarEvent {
+  const keep = (value: CalendarPoint) => (event.allDay && value instanceof Temporal.ZonedDateTime ? value : inZone(value, timeZone));
+  return { ...event, start: keep(event.start), end: keep(event.end) };
+}
+
 export type EditScope = 'occurrence' | 'following' | 'series';
 
 export type DaySegment = {
@@ -614,63 +633,271 @@ export function hourMarks(segment: DaySegment): HourMark[] {
   return marks;
 }
 
+type ZoneFace = { name: string; offset: string };
+
+function zoneFace(timeZone: string, locale: string, at: Temporal.ZonedDateTime): ZoneFace {
+  const read = (timeZoneName: 'short' | 'shortOffset') =>
+    new Intl.DateTimeFormat(locale, { hour: 'numeric', timeZone, timeZoneName })
+      .formatToParts(at.epochMilliseconds)
+      .find((part) => part.type === 'timeZoneName')
+      ?.value?.trim() || timeZone;
+  return { name: read('short'), offset: read('shortOffset') };
+}
+
+/** The short zone name `locale` writes at `at`, such as PST in English or GMT-8 in Korean. */
+export function zoneLabel(timeZone: string, locale: string, at: Temporal.ZonedDateTime): string {
+  return zoneFace(timeZone, locale, at).name;
+}
+
+function zoneFaces(timeZone: string, locale: string, times: readonly Temporal.ZonedDateTime[]): ZoneFace[] {
+  const faces: ZoneFace[] = [];
+  for (const at of times) {
+    const face = zoneFace(timeZone, locale, at);
+    if (!faces.some((item) => item.name === face.name && item.offset === face.offset)) faces.push(face);
+  }
+  return faces;
+}
+
+function zoneSamples(segments: readonly DaySegment[]): Temporal.ZonedDateTime[] {
+  const times = segments.flatMap((segment) => hourMarks(segment).map((mark) => mark.time));
+  return times.length > 0 ? times : segments.map((segment) => segment.opens);
+}
+
+function zoneNames(faces: readonly ZoneFace[]): string {
+  return faces.map((face) => face.name).join(' / ');
+}
+
+function ZoneLabel({ name }: { name: string }) {
+  const parts = name.split(' / ');
+  return parts.map((part, index) => (
+    <span key={`${part}-${index}`}>
+      <span className={styles.zoneName}>
+        {part}
+        {index < parts.length - 1 ? <span className={styles.markSep}> /</span> : null}
+      </span>
+      {index < parts.length - 1 ? ' ' : null}
+    </span>
+  ));
+}
+
+/** "PST / PDT (GMT-8 / GMT-7)", or just the offset when the short name already is one. */
+function zonePhrase(faces: readonly ZoneFace[]): string {
+  const names = zoneNames(faces);
+  if (faces.every((face) => face.name === face.offset)) return names;
+  return `${names} (${faces.map((face) => face.offset).join(' / ')})`;
+}
+
+function durationText(minutes: number, locale: string): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (locale.toLowerCase().startsWith('ko')) {
+    if (hours > 0 && rest > 0) return `${hours}시간 ${rest}분`;
+    return hours > 0 ? `${hours}시간` : `${rest}분`;
+  }
+  const parts = [];
+  if (hours > 0) parts.push(`${hours} h`);
+  if (rest > 0) parts.push(`${rest} min`);
+  return parts.join(' ');
+}
+
+/**
+ * A sentence for the grid's description. The second column's lead is included only when
+ * every visible hour has that same lead, so a midweek change is not described as one number.
+ */
+export function zoneDescription(timeZone: string, compareZone: string | null, locale: string, segments: readonly DaySegment[]): string {
+  const samples = zoneSamples(segments);
+  const ko = locale.toLowerCase().startsWith('ko');
+  const primary = zonePhrase(zoneFaces(timeZone, locale, samples));
+  const times = ko ? `시각은 ${primary}입니다.` : `Times in ${primary}.`;
+  if (!compareZone) return times;
+  const gaps = samples.map((at) => Math.round((at.withTimeZone(compareZone).offsetNanoseconds - at.offsetNanoseconds) / 60_000_000_000));
+  const gap = gaps.length > 0 && gaps.every((value) => value === gaps[0]) ? gaps[0]! : null;
+  const compare = zonePhrase(zoneFaces(compareZone, locale, samples));
+  if (gap === null || gap === 0) return ko ? `${times} 둘째 열은 ${compare}입니다.` : `${times} Second column ${compare}.`;
+  const duration = durationText(Math.abs(gap), locale);
+  if (ko) return `${times} 둘째 열은 ${compare}이며, ${duration} ${gap > 0 ? '빠릅니다' : '느립니다'}.`;
+  return `${times} Second column ${compare}, ${duration} ${gap > 0 ? 'ahead' : 'behind'}.`;
+}
+
+/** A signed day count in `locale`, such as "+1 day" or "+1일". Nothing when the dates match. */
+export function dayShiftLabel(days: number, locale: string): string | null {
+  if (days === 0) return null;
+  const count = new Intl.NumberFormat(locale, { signDisplay: 'always', maximumFractionDigits: 0 }).format(days);
+  const unit = new Intl.DisplayNames(locale, { type: 'dateTimeField', style: 'narrow' }).of('day') ?? 'day';
+  const space = /\p{Script=Hangul}/u.test(unit) ? '' : ' ';
+  return `${count}${space}${unit}`;
+}
+
+export type CompareTime = { time: Temporal.ZonedDateTime; dayShift: number };
+
+export type CompareMark = { units: number; times: CompareTime[] };
+
+function offsetOrder(segments: readonly DaySegment[], zone: string): Map<string, number> {
+  const order = new Map<string, number>();
+  for (const segment of segments) {
+    for (const mark of hourMarks(segment)) {
+      const key = String(mark.time.withTimeZone(zone).offsetNanoseconds);
+      if (!order.has(key)) order.set(key, order.size);
+    }
+  }
+  return order;
+}
+
+// The time stays in this column. The day column's hour is the grid zone, so a second time there would have no zone name beside it.
+export function compareMarks(segments: readonly DaySegment[], units: readonly number[], compareZone: string): CompareMark[] {
+  const compareRank = offsetOrder(segments, compareZone);
+  const gridRank = offsetOrder(segments, segments[0]?.opens.timeZoneId ?? compareZone);
+  return units.flatMap((at) => {
+    const rows = segments.flatMap((segment) => {
+      const time = fromUnits(segment, at, 'start');
+      if (!time) return [];
+      const there = time.withTimeZone(compareZone);
+      return [{
+        time: there,
+        dayShift: time.toPlainDate().until(there.toPlainDate(), { largestUnit: 'day' }).days,
+        compareKey: String(there.offsetNanoseconds),
+        gridKey: String(time.offsetNanoseconds),
+      }];
+    });
+    if (rows.length !== segments.length || rows.length === 0) return [];
+    const seen = new Map<string, (typeof rows)[number]>();
+    for (const row of rows) {
+      const id = `${row.time.toPlainTime().toString()}/${row.dayShift}`;
+      if (!seen.has(id)) seen.set(id, row);
+    }
+    const times = [...seen.values()]
+      .sort((a, b) => {
+        const byCompare = (compareRank.get(a.compareKey) ?? 0) - (compareRank.get(b.compareKey) ?? 0);
+        return byCompare !== 0 ? byCompare : (gridRank.get(a.gridKey) ?? 0) - (gridRank.get(b.gridKey) ?? 0);
+      })
+      .map(({ time, dayShift }) => ({ time, dayShift }));
+    return [{ units: at, times }];
+  });
+}
+
+type ClockColumn = 'grid' | 'second';
+
+type ClockStart = { column: ClockColumn; name: string };
+
+function clockChanges(segments: readonly DaySegment[], zones: readonly { id: string; column: ClockColumn }[], locale: string): Map<string, ClockStart[]> {
+  const changes = new Map<string, ClockStart[]>();
+  for (const zone of zones) {
+    let previous: string | null = null;
+    for (const segment of segments) {
+      const names = zoneFaces(zone.id, locale, hourMarks(segment).map((mark) => mark.time)).map((face) => face.name);
+      const started = names.length > 1 ? names.slice(1) : previous && names[0] && names[0] !== previous ? [names[0]] : [];
+      if (started.length > 0) {
+        const key = segment.day.toString();
+        const prior = changes.get(key) ?? [];
+        const next = started
+          .filter((name) => !prior.some((item) => item.column === zone.column && item.name === name))
+          .map((name) => ({ column: zone.column, name }));
+        changes.set(key, [...prior, ...next]);
+      }
+      previous = names[names.length - 1] ?? previous;
+    }
+  }
+  return changes;
+}
+
+function changePhrase(starts: readonly ClockStart[], locale: string): string {
+  const ko = locale.toLowerCase().startsWith('ko');
+  const columns: ClockColumn[] = [];
+  for (const start of starts) if (!columns.includes(start.column)) columns.push(start.column);
+  return columns
+    .map((column) => {
+      const names = starts
+        .filter((start) => start.column === column)
+        .map((start) => start.name)
+        .join(', ');
+      if (ko) return column === 'second' ? `둘째 열 ${names} 시작` : `${names} 시작`;
+      return column === 'second' ? `Second column ${names} begins` : `${names} begins`;
+    })
+    .join(' · ');
+}
+
+function ComparePieces({ units, times, locale }: { units: number; times: readonly CompareTime[]; locale: string }) {
+  const pieces = markPieces(times, locale);
+  return pieces.map((piece, index) => (
+    <span key={`${units}-${index}`}>
+      <span className={styles.markPiece}>
+        {piece}
+        {index < pieces.length - 1 ? <span className={styles.markSep}> /</span> : null}
+      </span>
+      {index < pieces.length - 1 ? ' ' : null}
+    </span>
+  ));
+}
+
+function markPieces(times: readonly CompareTime[], locale: string): string[] {
+  return times.map((part) => {
+    const time = formatTime(part.time.toPlainTime(), { locale });
+    const shift = dayShiftLabel(part.dayShift, locale);
+    return shift ? `${time} ${shift}` : time;
+  });
+}
+
 // Pinned so the page shows the same week whenever it opens.
-const ZONE = 'America/Los_Angeles';
 const OPENS = Temporal.PlainTime.from('08:00');
 const CLOSES = Temporal.PlainTime.from('18:00');
 const ANCHOR = Temporal.PlainDate.from('2026-11-16');
 
-function at(day: string, clock: string): Temporal.ZonedDateTime {
-  return Temporal.PlainDateTime.from(`${day}T${clock}`).toZonedDateTime(ZONE);
+const SAMPLE = [
+  ['review', 'Design review', '2026-11-16', '09:00', '2026-11-16', '10:30', false],
+  ['standup', 'Standup', '2026-11-16', '09:00', '2026-11-16', '09:30', false],
+  ['handoff', 'Handoff', '2026-11-16', '17:00', '2026-11-17', '09:30', false],
+  ['interview', 'Interview', '2026-11-17', '10:00', '2026-11-17', '11:00', false],
+  ['early', 'Early sync', '2026-11-18', '07:00', '2026-11-18', '09:00', false],
+  ['workshop', 'Workshop', '2026-11-18', '14:00', '2026-11-18', '16:30', false],
+  ['planning', 'Planning', '2026-11-19', '10:00', '2026-11-19', '12:00', false],
+  ['one', '1:1', '2026-11-19', '11:00', '2026-11-19', '11:30', false],
+  ['crit', 'Crit', '2026-11-19', '11:00', '2026-11-19', '12:30', false],
+  ['ship', 'Ship review', '2026-11-19', '15:00', '2026-11-19', '18:30', false],
+  ['hiring', 'Hiring loop', '2026-11-19', '15:30', '2026-11-19', '16:30', false],
+  ['sync', 'Staff sync', '2026-11-19', '16:00', '2026-11-19', '17:00', false],
+  ['demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00', false],
+  ['offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true],
+  ['hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00', false],
+  ['retreat', 'Retreat', '2026-11-20', '00:00', '2026-11-23', '00:00', true],
+  ['launch', 'Launch watch', '2026-11-18', '22:00', '2026-11-19', '02:00', false],
+] as const;
+
+function sampleEvents(timeZone: string): CalendarEvent[] {
+  return SAMPLE.map(([id, title, startDay, start, endDay, end, allDay]) => ({
+    id,
+    title,
+    allDay,
+    start: Temporal.PlainDateTime.from(`${startDay}T${start}`).toZonedDateTime(timeZone),
+    end: Temporal.PlainDateTime.from(`${endDay}T${end}`).toZonedDateTime(timeZone),
+  }));
 }
 
-function timed(id: string, title: string, startDay: string, start: string, endDay: string, end: string, allDay = false): CalendarEvent {
-  return { id, title, start: at(startDay, start), end: at(endDay, end), allDay };
+function bookClub(timeZone: string): EventSeries {
+  return {
+    id: seriesId('book-club'),
+    title: 'Book club',
+    timeZone,
+    start: Temporal.PlainDateTime.from('2026-11-15T15:00').toZonedDateTime(timeZone),
+    end: Temporal.PlainDateTime.from('2026-11-15T16:00').toZonedDateTime(timeZone),
+    allDay: false,
+    rule: { freq: 'WEEKLY', interval: 1, byDay: ['SU'], end: { kind: 'never' } },
+    exdates: [],
+    overrides: [],
+  };
 }
 
-const EVENTS: readonly CalendarEvent[] = [
-  timed('review', 'Design review', '2026-11-16', '09:00', '2026-11-16', '10:30'),
-  timed('standup', 'Standup', '2026-11-16', '09:00', '2026-11-16', '09:30'),
-  timed('handoff', 'Handoff', '2026-11-16', '17:00', '2026-11-17', '09:30'),
-  timed('interview', 'Interview', '2026-11-17', '10:00', '2026-11-17', '11:00'),
-  timed('early', 'Early sync', '2026-11-18', '07:00', '2026-11-18', '09:00'),
-  timed('workshop', 'Workshop', '2026-11-18', '14:00', '2026-11-18', '16:30'),
-  timed('planning', 'Planning', '2026-11-19', '10:00', '2026-11-19', '12:00'),
-  timed('one', '1:1', '2026-11-19', '11:00', '2026-11-19', '11:30'),
-  timed('crit', 'Crit', '2026-11-19', '11:00', '2026-11-19', '12:30'),
-  timed('ship', 'Ship review', '2026-11-19', '15:00', '2026-11-19', '18:30'),
-  timed('hiring', 'Hiring loop', '2026-11-19', '15:30', '2026-11-19', '16:30'),
-  timed('sync', 'Staff sync', '2026-11-19', '16:00', '2026-11-19', '17:00'),
-  timed('demo', 'Demo', '2026-11-20', '13:00', '2026-11-20', '14:00'),
-  timed('offsite', 'Offsite', '2026-11-16', '00:00', '2026-11-17', '00:00', true),
-  timed('hours', 'Office hours', '2026-11-21', '11:00', '2026-11-21', '12:00'),
-  timed('retreat', 'Retreat', '2026-11-20', '00:00', '2026-11-23', '00:00', true),
-  timed('launch', 'Launch watch', '2026-11-18', '22:00', '2026-11-19', '02:00'),
-];
-
-const BOOK_CLUB: EventSeries = {
-  id: seriesId('book-club'),
-  title: 'Book club',
-  timeZone: ZONE,
-  start: at('2026-11-15', '15:00'),
-  end: at('2026-11-15', '16:00'),
-  allDay: false,
-  rule: { freq: 'WEEKLY', interval: 1, byDay: ['SU'], end: { kind: 'never' } },
-  exdates: [],
-  overrides: [],
-};
-
-function initialSeries(source: readonly CalendarEvent[]): EventSeries[] {
-  const list = source.map((event) =>
-    seriesFromDraft(seriesId(event.seriesId ?? event.id), {
-      title: event.title,
-      start: event.start,
-      end: event.end,
-      allDay: event.allDay,
+function initialSeries(source: readonly CalendarEventInput[], timeZone: string, includeClub: boolean): EventSeries[] {
+  const list = source.map((event) => {
+    const projected = projectEvent(event, timeZone);
+    return seriesFromDraft(seriesId(projected.seriesId ?? projected.id), {
+      title: projected.title,
+      start: projected.start,
+      end: projected.end,
+      allDay: projected.allDay,
       rule: null,
-    }),
-  );
-  if (source === EVENTS) list.push(BOOK_CLUB);
+    });
+  });
+  if (includeClub) list.push(bookClub(timeZone));
   return list;
 }
 
@@ -790,10 +1017,10 @@ function stripKey(id: string): string {
   return `strip:${id}`;
 }
 
-/** A strip bar's grid lines. Column 1 is the gutter, and the end never passes the last day. */
-function stripColumn(column: number, span: number, days: number): string {
-  const start = column + 2;
-  const end = Math.min(start + span, days + 2);
+/** A strip bar's grid lines. The gutters come first, and the end never passes the last day. */
+function stripColumn(column: number, span: number, days: number, gutters: number): string {
+  const start = column + gutters + 1;
+  const end = Math.min(start + span, days + gutters + 1);
   return `${start} / ${end}`;
 }
 
@@ -851,6 +1078,7 @@ type ColumnShared = {
   onEdit: (event: CalendarEvent, day: Temporal.PlainDate) => void;
   onDelete: (event: CalendarEvent, day: Temporal.PlainDate) => void;
   pendingCreate: { day: Temporal.PlainDate; start: number; end: number } | null;
+  gutters: number;
 };
 
 function eventName(event: CalendarEvent, segment: DaySegment, locale: string, timeZone: string): { name: string; timeText: string; short: boolean } {
@@ -1006,7 +1234,7 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
   const handoff = useFocusHandoff({ to: shared.landing });
   const key = stripKey(bar.event.id);
   return (
-    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: stripColumn(bar.column, bar.span, shared.days), gridRow: bar.row + 1 }}>
+    <div ref={handoff} className={styles.stripSlot} style={{ gridColumn: stripColumn(bar.column, bar.span, shared.days, shared.gutters), gridRow: bar.row + 1 }}>
       <Menu.Root>
         <Menu.Trigger
           ref={key === shared.focusKey ? shared.landing : undefined}
@@ -1185,24 +1413,32 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
   );
 }
 
-export default function EventCalendarExample({
+export function EventCalendarExample({
   locale = 'en-US',
-  timeZone = ZONE,
+  timeZone = Temporal.Now.timeZoneId(),
+  compareZone,
   opens = OPENS,
   closes = CLOSES,
   anchor: initialAnchor = ANCHOR,
-  events = EVENTS,
+  events,
 }: {
   locale?: string;
+  /** IANA time zone the grid renders in. The viewer's zone when omitted. */
   timeZone?: string;
+  /** A second IANA zone. Each primary hour then shows that zone's time. */
+  compareZone?: string;
   opens?: Temporal.PlainTime;
   closes?: Temporal.PlainTime;
   anchor?: Temporal.PlainDate;
-  events?: readonly CalendarEvent[];
+  events?: readonly CalendarEventInput[];
 }) {
   const [view, setView] = useState<CalendarView>('week');
   const [anchor, setAnchor] = useState(initialAnchor);
-  const [seriesList, setSeriesList] = useState<EventSeries[]>(() => initialSeries(events));
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [primaryPx, setPrimaryPx] = useState(0);
+  const [comparePx, setComparePx] = useState(0);
+  const [narrow, setNarrow] = useState(false);
+  const [seriesList, setSeriesList] = useState<EventSeries[]>(() => initialSeries(events ?? sampleEvents(timeZone), timeZone, events === undefined));
   const timedBefore = useRef(new Map<string, { start: Temporal.PlainTime; end: Temporal.PlainTime; daySpan: number }>());
   const [session, setSession] = useState<EditorSession | null>(null);
   const [deleting, setDeleting] = useState<CalendarEvent | null>(null);
@@ -1210,6 +1446,7 @@ export default function EventCalendarExample({
   const notedUnits = useRef(0);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const heading = useId();
+  const descriptionId = useId();
   const pendingFocus = useRef<'day' | null>(null);
   const landing = useRef<HTMLButtonElement | null>(null);
   const returnFocus = useRef(false);
@@ -1230,11 +1467,23 @@ export default function EventCalendarExample({
     return { segment, placed, columns };
   });
   const dayTracks = lanes.map((lane) => dayTrack(lane.columns)).join(' ');
-  const tracks = `4.5rem ${dayTracks}`;
+  const showCompare = compareZone !== undefined && compareZone !== timeZone && !narrow;
+  const gutters = showCompare ? 2 : 1;
+  const primaryTrack = primaryPx > 0 ? `${primaryPx}px` : '4.5rem';
+  const compareTrack = comparePx > 0 ? `${comparePx}px` : '4.5rem';
+  const tracks = `${showCompare ? `${primaryTrack} ${compareTrack}` : primaryTrack} ${dayTracks}`;
   const stripBars = view === 'month' ? [] : barsOnBoard(items, week, timeZone, opens, closes, view === 'day' ? anchor : null);
-  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), 4.5)}rem`;
+  const gutterMin = (primaryPx > 0 ? primaryPx : 4.5 * 16) / 16 + (showCompare && comparePx > 0 ? comparePx / 16 : 0);
+  const minInline = `${lanes.reduce((sum, lane) => sum + Math.max(5.5, lane.columns * 4), gutterMin)}rem`;
   const sharedMarks = sharedOffsets(axis.segments);
   const gutterMarks = scale > 0 ? [...sharedMarks].sort((a, b) => a - b) : [];
+  const compared = showCompare && compareZone ? compareMarks(axis.segments, gutterMarks, compareZone) : [];
+  const samples = zoneSamples(axis.segments);
+  const primaryName = zoneNames(zoneFaces(timeZone, locale, samples));
+  const compareName = showCompare && compareZone ? zoneNames(zoneFaces(compareZone, locale, samples)) : null;
+  const pieceKey = [...compared.flatMap((item) => markPieces(item.times, locale)), primaryName, compareName ?? ''].join('\n');
+  const description = zoneDescription(timeZone, compareName && compareZone ? compareZone : null, locale, axis.segments);
+  const changes = clockChanges(axis.segments, showCompare && compareZone ? [{ id: timeZone, column: 'grid' }, { id: compareZone, column: 'second' }] : [{ id: timeZone, column: 'grid' }], locale);
   const step = view === 'week' ? 7 : 1;
   const move = view === 'week' ? 'week' : 'day';
   const grid = [...new Set(axis.segments.flatMap((segment) => snapGrid(segment, SLOT_MINUTES)))].sort((a, b) => a - b);
@@ -1430,11 +1679,80 @@ export default function EventCalendarExample({
     onEdit,
     onDelete,
     pendingCreate: session?.intent === 'create' ? session.place : null,
+    gutters,
   };
+
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const read = () => {
+      const width = el.getBoundingClientRect().width;
+      setNarrow(width > 0 && Math.round(width) <= 375);
+    };
+    const watcher = new ResizeObserver(read);
+    watcher.observe(el);
+    read();
+    return () => watcher.disconnect();
+  }, []);
 
   useLayoutEffect(() => {
     setPinFocus(view !== 'month');
   }, [view]);
+
+  // The times are absolutely positioned, so they don't size the column.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const length = (value: string) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const zonePad = (node: HTMLElement) => {
+      const zone = node.closest(`.${styles.zone}`);
+      if (!(zone instanceof HTMLElement)) return 0;
+      const style = getComputedStyle(zone);
+      return length(style.paddingInlineStart) + length(style.paddingInlineEnd);
+    };
+    const widest = (nodes: HTMLElement[], extra: (node: HTMLElement) => number) =>
+      nodes.reduce((max, node) => Math.max(max, node.getBoundingClientRect().width + extra(node)), 0);
+    const measure = () => {
+      const head = root.querySelector(`.${styles.head}`);
+      const primaryNames = [...(head?.firstElementChild?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
+      const primaryMarks = [...root.querySelectorAll<HTMLElement>(`.${styles.gutter}:not([data-compare]) > .${styles.mark}`)];
+      const compareNames = [...(head?.firstElementChild?.nextElementSibling?.querySelectorAll<HTMLElement>(`.${styles.zoneName}`) ?? [])];
+      const pieces = [...root.querySelectorAll<HTMLElement>(`[data-compare] .${styles.markPiece}`)];
+      const primary = Math.max(
+        widest(primaryNames, zonePad),
+        widest(primaryMarks, (node) => {
+          const style = getComputedStyle(node);
+          const border = node.parentElement ? length(getComputedStyle(node.parentElement).borderInlineEndWidth) : 0;
+          // inset-inline-start is auto, so the computed value is the used offset. Adding it makes the column equal itself.
+          return length(style.insetInlineEnd) + border;
+        }),
+      );
+      if (primary >= 1) {
+        const next = Math.ceil(primary);
+        setPrimaryPx((current) => (current === next ? current : next));
+      }
+      if (!showCompare) return;
+      const compareMark = root.querySelector<HTMLElement>('[data-compare] > span');
+      const markStyle = compareMark ? getComputedStyle(compareMark) : null;
+      const markPad = markStyle ? length(markStyle.insetInlineStart) + length(markStyle.insetInlineEnd) : 0;
+      const markBorder = compareMark?.parentElement ? length(getComputedStyle(compareMark.parentElement).borderInlineEndWidth) : 0;
+      const compare = Math.max(widest(compareNames, zonePad), widest(pieces, () => markPad + markBorder));
+      if (compare < 1) return;
+      const next = Math.ceil(compare);
+      setComparePx((current) => (current === next ? current : next));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const watcher = new ResizeObserver(measure);
+    watcher.observe(root);
+    const head = root.querySelector(`.${styles.head}`);
+    if (head) watcher.observe(head);
+    for (const gutter of root.querySelectorAll<HTMLElement>(`.${styles.gutter}`)) watcher.observe(gutter);
+    return () => watcher.disconnect();
+  }, [showCompare, pieceKey, view, anchor]);
 
   useLayoutEffect(() => {
     if (pendingFocus.current !== 'day' || view !== 'day') return;
@@ -1460,7 +1778,7 @@ export default function EventCalendarExample({
   };
 
   return (
-    <div className={styles.calendar} onFocusCapture={(event) => noteFocus(event.target)}>
+    <div ref={rootRef} className={styles.calendar} onFocusCapture={(event) => noteFocus(event.target)}>
       <div className={styles.toolbar}>
         <ToggleGroup.Root
           aria-label="Calendar view"
@@ -1515,28 +1833,47 @@ export default function EventCalendarExample({
           />
         </Calendar.Root>
       ) : (
-        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" className={styles.board}>
+        <ScrollArea.Root {...board.getBoardProps()} axis="both" focusable aria-label="Calendar" aria-describedby={descriptionId} className={styles.board}>
+          <VisuallyHidden.Root id={descriptionId}>{description}</VisuallyHidden.Root>
           <div
             className={styles.frame}
             style={{
               ['--days' as string]: days.length,
               ['--minutes' as string]: scale,
               ['--min-inline' as string]: minInline,
+              ['--primary' as string]: primaryPx > 0 ? `${primaryPx}px` : '4.5rem',
               ['--tracks' as string]: tracks,
               ['--day-tracks' as string]: dayTracks,
             }}
           >
             <div className={styles.head}>
-              <div className={styles.corner} />
-              {axis.segments.map((segment) => (
-                <Text.Root as="h3" variant="label" tabIndex={-1} id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
-                  {dayHeading(segment.day, locale)}
+              <div className={styles.corner}>
+                <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
+                  <ZoneLabel name={primaryName} />
                 </Text.Root>
-              ))}
+              </div>
+              {compareName ? (
+                <div className={styles.corner}>
+                  <Text.Root as="span" variant="label" tone="muted" className={styles.zone}>
+                    <ZoneLabel name={compareName} />
+                  </Text.Root>
+                </div>
+              ) : null}
+              {axis.segments.map((segment) => {
+                const phrase = changePhrase(changes.get(segment.day.toString()) ?? [], locale);
+                const title = phrase ? `${dayHeading(segment.day, locale)} · ${phrase}` : dayHeading(segment.day, locale);
+                return (
+                  <Text.Root as="h3" variant="label" tabIndex={-1} id={`${heading}-${segment.day.toString()}`} key={segment.day.toString()} className={styles.day}>
+                    {title}
+                  </Text.Root>
+                );
+              })}
             </div>
             {stripBars.length === 0 ? null : (
               <div className={styles.strip}>
-                <div className={styles.corner} />
+                {Array.from({ length: gutters }, (_, index) => (
+                  <div key={index} className={styles.corner} />
+                ))}
                 {stripBars.map((bar) => {
                   const segment = axis.segments[view === 'day' ? 0 : bar.column] ?? axis.segments[0];
                   if (!segment) return null;
@@ -1564,6 +1901,25 @@ export default function EventCalendarExample({
                   );
                 })}
               </div>
+              {showCompare ? (
+                // The hours repeat the primary instants. The description names this zone, so the column stays quiet.
+                <div className={styles.gutter} aria-hidden="true" data-compare="">
+                  {compared.map((mark) => (
+                    <Text.Root
+                      as="span"
+                      key={mark.units}
+                      variant="label"
+                      tone="muted"
+                      className={styles.mark}
+                      data-first={mark.units === 0 ? '' : undefined}
+                      data-stack={mark.times.length > 1 ? '' : undefined}
+                      style={{ top: percent(mark.units / scale) }}
+                    >
+                      <ComparePieces units={mark.units} times={mark.times} locale={locale} />
+                    </Text.Root>
+                  ))}
+                </div>
+              ) : null}
               {lanes.map(({ segment, placed }) => (
                 <EventColumn
                   key={segment.day.toString()}
@@ -1608,9 +1964,9 @@ export default function EventCalendarExample({
               const spansDays = !start.toPlainDate().equals(end.toPlainDate());
               return strip ? barLabel(saved, locale, timeZone) : `${saved.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`;
             };
-            const reveal = (saved: CalendarEvent, message?: string) => {
-              const home = shownDay(saved, day);
-              setAnchor(home ?? day);
+            const reveal = (saved: CalendarEvent, message?: string, around: Temporal.PlainDate = day) => {
+              const home = shownDay(saved, around);
+              setAnchor(home ?? around);
               if (saved.allDay && !editing.allDay) {
                 const start = editing.start.withTimeZone(timeZone);
                 const end = editing.end.withTimeZone(timeZone);
@@ -1618,9 +1974,9 @@ export default function EventCalendarExample({
               }
               if (!saved.allDay) timedBefore.current.delete(saved.id);
               const strip = showsInStrip(saved, timeZone, opens, closes);
-              const laneHome = strip ? null : shownDay(saved, home ?? day);
+              const laneHome = strip ? null : shownDay(saved, home ?? around);
               setFocusKey(strip ? stripKey(saved.id) : laneHome ? blockKey(saved.id, laneHome) : null);
-              focusHeading.current = strip || laneHome ? null : (home ?? day);
+              focusHeading.current = strip || laneHome ? null : (home ?? around);
               announce(message ?? labelOf(saved));
               returnFocus.current = true;
             };
@@ -1648,7 +2004,21 @@ export default function EventCalendarExample({
               const replaced = replaceSeries(current, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
               setSeriesList((list) => list.map((item) => (item.id === current.id ? replaced : item)));
               const saved = firstOf(replaced) ?? { ...next, id: replaced.id, seriesId: replaced.id, repeats: detail.rule !== null, originalStart: next.start };
-              reveal(saved, editing.repeats ? `Changed all events. ${labelOf(saved)}.` : undefined);
+              if (editing.repeats) {
+                const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
+                const onScreen = expandSeries(replaced, visibleBounds(view, anchor, locale, timeZone)).map(occurrenceEvent).find((event) => {
+                  if (showsInStrip(event, timeZone, opens, closes)) {
+                    const covered = coveredDays(event, timeZone);
+                    return covered !== null && days.some((item) => Temporal.PlainDate.compare(item, covered.first) >= 0 && Temporal.PlainDate.compare(item, covered.last) <= 0);
+                  }
+                  return shownDay(event, anchor) !== null;
+                });
+                // The hours and the focus target belong to the occurrence still in this week. The first occurrence is the one to show when this week no longer has it.
+                const chosen = onScreen ?? saved;
+                reveal(chosen, `Changed all events. ${labelOf(chosen)}.`, onScreen ? anchor : day);
+              } else {
+                reveal(saved);
+              }
             }
             setSession(null);
           }}
@@ -2058,4 +2428,8 @@ export function EventEditor({
       )}
     </Dialog.Root>
   );
+}
+
+export default function EventCalendarZones({ locale = 'en-US' }: { locale?: string }) {
+  return <EventCalendarExample locale={locale} timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" />;
 }

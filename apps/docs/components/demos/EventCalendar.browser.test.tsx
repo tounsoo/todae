@@ -9,7 +9,7 @@ import '../../app/globals.css';
 import { paintedContrast } from '../../../../packages/design-system/src/test/paintedContrast';
 import { settle } from '../../../../packages/design-system/src/test/settle';
 import { Example } from '../Example';
-import EventCalendarExample from '../../examples/recipes/event-calendar/EventCalendarExample';
+import { EventCalendarExample } from '../../examples/recipes/event-calendar/EventCalendarExample';
 import { AXE_OPTIONS, describeViolations } from '../../test/axe';
 import { APPEARANCE_KEY } from '../appearanceScript';
 import { Providers } from '../Providers';
@@ -17,6 +17,91 @@ import { Providers } from '../Providers';
 afterEach(cleanup);
 
 const clock = (text: string) => formatTime(Temporal.PlainTime.from(text), { locale: 'en-US' });
+
+function inkLines(el: HTMLElement): string[] {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const lines = [...range.getClientRects()]
+    .filter((rect) => rect.width >= 0.5 && rect.height >= 0.5)
+    .map((rect) => ({ top: rect.top, bottom: rect.bottom, chars: [] as { x: number; ch: string }[] }))
+    .sort((a, b) => a.top - b.top);
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const text = walker.currentNode.textContent ?? '';
+    for (let index = 0; index < text.length; index += 1) {
+      range.setStart(walker.currentNode, index);
+      range.setEnd(walker.currentNode, index + 1);
+      const rect = range.getBoundingClientRect();
+      if (rect.width < 0.5 || rect.height < 0.5 || lines.length === 0) continue;
+      const mid = (rect.top + rect.bottom) / 2;
+      const inside = lines.find((item) => mid >= item.top && mid <= item.bottom);
+      const line =
+        inside ??
+        lines.reduce((nearest, item) => {
+          const distance = Math.abs((item.top + item.bottom) / 2 - mid);
+          const nearestDistance = Math.abs((nearest.top + nearest.bottom) / 2 - mid);
+          return distance < nearestDistance ? item : nearest;
+        });
+      line.chars.push({ x: rect.left, ch: text[index] ?? '' });
+    }
+  }
+  return lines
+    .map((line) => line.chars.sort((a, b) => a.x - b.x).map((item) => item.ch).join('').trim())
+    .filter((line) => line.length > 0);
+}
+
+function boxesInside(nodes: HTMLElement[], bounds: DOMRect): boolean {
+  return (
+    nodes.length > 0 &&
+    nodes.every((node) => {
+      const box = node.getBoundingClientRect();
+      return box.left >= bounds.left - 0.5 && box.right <= bounds.right + 0.5;
+    })
+  );
+}
+
+function primaryLabelsInside(): boolean {
+  const gutter = document.querySelector<HTMLElement>('[class*="gutter"]:not([data-compare])');
+  if (!gutter) return false;
+  const marks = [...gutter.querySelectorAll<HTMLElement>(':scope > [class*="mark"]')];
+  return boxesInside(marks, gutter.getBoundingClientRect());
+}
+
+function comparePiecesInside(): boolean {
+  const compare = document.querySelector<HTMLElement>('[data-compare]');
+  if (!compare) return false;
+  const pieces = [...compare.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+  return boxesInside(pieces, compare.getBoundingClientRect());
+}
+
+function compareRowsSeparated(): boolean {
+  const compare = document.querySelector<HTMLElement>('[data-compare]');
+  if (!compare) return false;
+  const rows = ([...compare.children] as HTMLElement[]).filter((row) => row.style.top);
+  if (rows.length < 2) return false;
+  const ordered = [...rows].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  return ordered.every((row, index) => {
+    if (index === 0) return true;
+    const above = ordered[index - 1]!.getBoundingClientRect();
+    return above.bottom <= row.getBoundingClientRect().top + 1;
+  });
+}
+
+function zoneNamesFit() {
+  const names = [...document.querySelectorAll<HTMLElement>('[class*="zoneName"]')];
+  expect(names.length).toBeGreaterThan(0);
+  for (const name of names) {
+    const tops = [...name.getClientRects()].map((rect) => rect.top);
+    expect(tops.length).toBeGreaterThan(0);
+    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+    const corner = name.closest('[class*="corner"]');
+    expect(corner).toBeTruthy();
+    const box = name.getBoundingClientRect();
+    const cell = (corner as HTMLElement).getBoundingClientRect();
+    expect(box.left).toBeGreaterThanOrEqual(cell.left - 0.5);
+    expect(box.right).toBeLessThanOrEqual(cell.right + 0.5);
+  }
+}
 
 function spoken(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
@@ -325,7 +410,7 @@ describe('moving, resizing, and editing', () => {
     };
     render(
       <Providers>
-        <EventCalendarExample locale="en-US" events={[talk]} />
+        <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" events={[talk]} />
       </Providers>,
     );
     const button = screen.getByRole('button', { name: `Talk, ${clock('10:07')} to ${clock('12:00')}` });
@@ -386,7 +471,7 @@ describe('moving, resizing, and editing', () => {
     };
     render(
       <Providers>
-        <EventCalendarExample locale="en-US" anchor={Temporal.PlainDate.from('2026-03-08')} opens={Temporal.PlainTime.from('01:00')} closes={Temporal.PlainTime.from('04:00')} events={[sync]} />
+        <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" anchor={Temporal.PlainDate.from('2026-03-08')} opens={Temporal.PlainTime.from('01:00')} closes={Temporal.PlainTime.from('04:00')} events={[sync]} />
       </Providers>,
     );
     const name = `Sync, ${clock('01:00')} to ${clock('01:30')}`;
@@ -1438,6 +1523,333 @@ describe('creating an event from empty lane space', () => {
       expect(document.querySelectorAll('[data-create]')).toHaveLength(1);
     } finally {
       await page.viewport(1280, 800);
+    }
+  });
+
+  it('hides the second zone column at 375px and keeps the primary label', async () => {
+    await page.viewport(800, 900);
+    render(
+      <Providers>
+        <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" events={[]} />
+      </Providers>,
+    );
+    const columns = () =>
+      [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => [...el.children].some((child) => (child as HTMLElement).style?.top));
+    await expect.poll(() => columns().length).toBeGreaterThan(1);
+    expect(screen.getByText('PST')).toBeTruthy();
+    expect(screen.getByText('GMT+5:30')).toBeTruthy();
+
+    await page.viewport(375, 800);
+    await expect.poll(() => columns().length).toBe(1);
+    expect(screen.getByText('PST')).toBeTruthy();
+    expect(screen.queryByText('GMT+5:30')).toBeNull();
+    const described = document.getElementById(document.querySelector('[aria-label="Calendar"]')?.getAttribute('aria-describedby') ?? '')?.textContent ?? '';
+    expect(described).toContain('PST');
+    expect(described).not.toContain('Second column');
+    const calendar = document.querySelector<HTMLElement>('[class*="calendar"]');
+    expect(calendar).toBeTruthy();
+    expect(calendar!.scrollWidth).toBeLessThanOrEqual(calendar!.clientWidth + 1);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+    await page.viewport(1280, 800);
+  });
+
+  it('creates and places events in a zone that is not the viewer’s', async () => {
+    const start = Temporal.Instant.from('2026-11-16T00:00:00Z');
+    const end = Temporal.Instant.from('2026-11-16T01:00:00Z');
+    render(
+      <Providers>
+        <EventCalendarExample
+          locale="en-US"
+          timeZone="Asia/Tokyo"
+          anchor={Temporal.PlainDate.from('2026-11-16')}
+          events={[{ id: 'call', title: 'Call', start, end, allDay: false }]}
+        />
+      </Providers>,
+    );
+    expect(screen.getByText('GMT+9')).toBeTruthy();
+    const call = screen.getByRole('button', { name: `Call, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(call.parentElement?.style.top).toBe('10%');
+
+    screen.getByRole('heading', { name: 'Mon, Nov 16' }).focus();
+    screen.getByRole('button', { name: 'New event' }).focus();
+    await userEvent.keyboard('{Enter}');
+    const keyed = await newEventDialog();
+    expect(within(keyed).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('08:00'));
+    expect(within(keyed).getByRole('textbox', { name: 'End' })).toHaveValue(clock('08:15'));
+    await userEvent.type(within(keyed).getByRole('textbox', { name: 'Title' }), 'Breakfast');
+    await userEvent.click(within(keyed).getByRole('button', { name: 'Save' }));
+    const breakfast = await screen.findByRole('button', { name: `Breakfast, ${clock('08:00')} to ${clock('08:15')}` });
+    expect(breakfast.parentElement?.style.top).toBe('0%');
+    await expect.poll(() => document.querySelector('[data-todae-announcer] [aria-live="polite"]')?.textContent).toBe(`Added Breakfast, ${clock('08:00')} to ${clock('08:15')}`);
+
+    dragLane('Mon, Nov 16', 60, 120).drop();
+    const dragged = await newEventDialog();
+    expect(within(dragged).getByRole('textbox', { name: 'Start' })).toHaveValue(clock('09:00'));
+    expect(within(dragged).getByRole('textbox', { name: 'End' })).toHaveValue(clock('10:00'));
+    await userEvent.type(within(dragged).getByRole('textbox', { name: 'Title' }), 'Standup');
+    await userEvent.click(within(dragged).getByRole('button', { name: 'Save' }));
+    const standup = await screen.findByRole('button', { name: `Standup, ${clock('09:00')} to ${clock('10:00')}` });
+    expect(standup.parentElement?.style.top).toBe(call.parentElement?.style.top);
+  });
+
+  it('lines an all-day bar up with its day when a second hour column is showing', async () => {
+    await page.viewport(1280, 900);
+    render(
+      <Providers>
+        <EventCalendarExample
+          locale="en-US"
+          timeZone="America/Los_Angeles"
+          compareZone="Asia/Kolkata"
+          anchor={Temporal.PlainDate.from('2026-11-16')}
+          events={[
+            {
+              id: 'offsite',
+              title: 'Offsite',
+              start: Temporal.ZonedDateTime.from('2026-11-16T00:00:00-08:00[America/Los_Angeles]'),
+              end: Temporal.ZonedDateTime.from('2026-11-17T00:00:00-08:00[America/Los_Angeles]'),
+              allDay: true,
+            },
+          ]}
+        />
+      </Providers>,
+    );
+    const bar = screen.getByRole('button', { name: /Offsite/ });
+    const heading = screen.getByRole('heading', { name: 'Mon, Nov 16' });
+    const barBox = bar.getBoundingClientRect();
+    const headBox = heading.getBoundingClientRect();
+    expect(barBox.width).toBeGreaterThan(0);
+    expect(headBox.width).toBeGreaterThan(0);
+    expect(Math.abs(barBox.left - headBox.left)).toBeLessThan(32);
+    expect(Math.abs(barBox.right - headBox.right)).toBeLessThan(32);
+  });
+
+  it('keeps both second-zone times inside the calendar, and hides that column at 375', async () => {
+    const weeks = [
+      { timeZone: 'Australia/Sydney', compareZone: 'America/Los_Angeles', anchor: '2026-03-08' },
+      { timeZone: 'America/Los_Angeles', compareZone: 'Asia/Jerusalem', anchor: '2026-03-22' },
+      { timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
+      { timeZone: 'Asia/Tokyo', compareZone: 'America/New_York', anchor: '2026-03-08' },
+      { timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata', anchor: '2026-11-16' },
+      { timeZone: 'Australia/Lord_Howe', compareZone: 'UTC', anchor: '2026-10-04', opens: '00:00', closes: '06:00' },
+      { timeZone: 'Australia/Sydney', compareZone: 'Australia/Lord_Howe', anchor: '2026-10-04', opens: '00:00', closes: '06:00' },
+    ];
+    for (const locale of ['en-US', 'ko'] as const) {
+      await page.viewport(1280, 900);
+      for (const week of weeks) {
+        render(
+          <Providers>
+            <EventCalendarExample
+              locale={locale}
+              timeZone={week.timeZone}
+              compareZone={week.compareZone}
+              anchor={Temporal.PlainDate.from(week.anchor)}
+              opens={'opens' in week && week.opens !== undefined ? Temporal.PlainTime.from(week.opens) : undefined}
+              closes={'closes' in week && week.closes !== undefined ? Temporal.PlainTime.from(week.closes) : undefined}
+              events={[]}
+            />
+          </Providers>,
+        );
+        const compare = document.querySelector<HTMLElement>('[data-compare]');
+        expect(compare).toBeTruthy();
+        const gutter = compare!.getBoundingClientRect();
+        const rows = ([...compare!.children] as HTMLElement[]).filter((row) => row.style.top);
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows) {
+          const pieces = [...row.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+          expect(pieces.length).toBeGreaterThan(0);
+          for (const piece of pieces) {
+            const box = piece.getBoundingClientRect();
+            const tops = [...piece.getClientRects()].map((rect) => rect.top);
+            expect(tops.length).toBeGreaterThan(0);
+            expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+            expect(box.left).toBeGreaterThanOrEqual(gutter.left - 0.5);
+            expect(box.right).toBeLessThanOrEqual(gutter.right + 0.5);
+          }
+          const lines = inkLines(row);
+          for (const line of lines) expect(line.startsWith('/')).toBe(false);
+          if (pieces.length > 1) {
+            expect(row.textContent ?? '').toContain(' / ');
+            expect(lines.some((line) => line.includes('/'))).toBe(true);
+          }
+        }
+        const ordered = [...rows].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+        for (let index = 1; index < ordered.length; index += 1) {
+          const above = ordered[index - 1]!.getBoundingClientRect();
+          const below = ordered[index]!.getBoundingClientRect();
+          expect(above.bottom).toBeLessThanOrEqual(below.top + 1);
+        }
+        zoneNamesFit();
+        if (week.compareZone === 'Australia/Lord_Howe') {
+          const second = document.querySelectorAll<HTMLElement>('[class*="corner"]')[1];
+          expect(second?.textContent ?? '').toContain('GMT+10:30');
+          expect(second?.textContent ?? '').toContain('GMT+11');
+        }
+        for (const zone of document.querySelectorAll<HTMLElement>('[class*="zone"]')) {
+          if (![...zone.classList].some((name) => name.includes('_zone_'))) continue;
+          const names = (zone.textContent ?? '').split(' / ').map((name) => name.trim()).filter(Boolean);
+          expect(names.length).toBeGreaterThan(0);
+          for (const line of inkLines(zone)) {
+            expect(line.startsWith('/')).toBe(false);
+            const cleaned = line.replace(/(?:\s*\/\s*)+$/u, '').trim();
+            const tokens = cleaned.split(/\s*\/\s*/u).filter(Boolean);
+            expect(tokens.length).toBeGreaterThan(0);
+            for (const token of tokens) expect(names).toContain(token);
+          }
+        }
+        if (week.timeZone === 'Australia/Sydney' && week.compareZone === 'America/Los_Angeles') {
+          if (locale === 'en-US') expect(rows.some((row) => row.textContent === '1:00 PM -1 day / 2:00 PM -1 day')).toBe(true);
+          const marked = screen.getByRole('heading', { name: locale === 'ko' ? /둘째 열 GMT-7 시작/ : 'Mon, Mar 9 · Second column PDT begins' });
+          expect(marked.getBoundingClientRect().height).toBeGreaterThan(0);
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+        }
+        cleanup();
+      }
+
+      await page.viewport(375, 800);
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="Australia/Sydney"
+            compareZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2026-03-08')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+      expect(document.body.textContent ?? '').not.toContain(locale === 'ko' ? '둘째 열 GMT-7 시작' : 'Second column PDT begins');
+      cleanup();
+
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="Australia/Lord_Howe"
+            compareZone="UTC"
+            anchor={Temporal.PlainDate.from('2026-10-04')}
+            opens={Temporal.PlainTime.from('00:00')}
+            closes={Temporal.PlainTime.from('06:00')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      zoneNamesFit();
+      cleanup();
+    }
+
+    for (const locale of ['en-US', 'ko'] as const) {
+      await page.viewport(375, 800);
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale={locale}
+            timeZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2027-03-14')}
+            opens={Temporal.PlainTime.from('00:00')}
+            closes={Temporal.PlainTime.from('04:00')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      const marked = screen.getByRole('heading', { name: locale === 'ko' ? /GMT-7 시작/ : 'Sun, Mar 14 · PDT begins' });
+      expect(marked.getBoundingClientRect().width).toBeGreaterThan(0);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth + 1);
+      cleanup();
+    }
+
+    await page.viewport(1280, 900);
+    render(
+      <Providers>
+        <EventCalendarExample
+          locale="en-US"
+          timeZone="Australia/Sydney"
+          compareZone="America/Los_Angeles"
+          anchor={Temporal.PlainDate.from('2026-03-08')}
+          events={[]}
+        />
+      </Providers>,
+    );
+    const contained = () => {
+      const compare = document.querySelector<HTMLElement>('[data-compare]');
+      if (!compare) return false;
+      const gutter = compare.getBoundingClientRect();
+      const pieces = [...compare.querySelectorAll<HTMLElement>('[class*="markPiece"]')];
+      return (
+        pieces.length > 0 &&
+        pieces.every((piece) => {
+          const box = piece.getBoundingClientRect();
+          return box.left >= gutter.left - 0.5 && box.right <= gutter.right + 0.5;
+        })
+      );
+    };
+    await expect.poll(contained).toBe(true);
+    document.documentElement.style.fontSize = '20px';
+    try {
+      await expect.poll(contained).toBe(true);
+    } finally {
+      document.documentElement.style.fontSize = '';
+      cleanup();
+    }
+    await page.viewport(1280, 800);
+  });
+
+  it('keeps the Korean hour labels inside the first column when the text grows', async () => {
+    await page.viewport(1280, 900);
+    render(
+      <Providers>
+        <EventCalendarExample locale="ko" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" />
+      </Providers>,
+    );
+    await expect.poll(primaryLabelsInside).toBe(true);
+    document.documentElement.style.fontSize = '20px';
+    try {
+      await expect.poll(primaryLabelsInside).toBe(true);
+      await page.viewport(375, 800);
+      await expect.poll(() => document.querySelector('[data-compare]')).toBeNull();
+      await expect.poll(primaryLabelsInside).toBe(true);
+    } finally {
+      document.documentElement.style.fontSize = '';
+      await page.viewport(1280, 800);
+      cleanup();
+    }
+  });
+
+  it('keeps the second-zone times inside the column after the week returns at a larger text size', async () => {
+    const cases = [
+      { locale: 'en-US' as const, timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata' },
+      { locale: 'ko' as const, timeZone: 'America/Los_Angeles', compareZone: 'Asia/Kolkata' },
+      { locale: 'en-US' as const, timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
+      { locale: 'ko' as const, timeZone: 'America/Los_Angeles', compareZone: 'Australia/Sydney', anchor: '2026-03-08' },
+      { locale: 'ko' as const, timeZone: 'Asia/Tokyo', compareZone: 'America/New_York', anchor: '2026-03-08' },
+    ];
+    await page.viewport(1280, 900);
+    try {
+      for (const item of cases) {
+        render(
+          <Providers>
+            <EventCalendarExample
+              locale={item.locale}
+              timeZone={item.timeZone}
+              compareZone={item.compareZone}
+              anchor={item.anchor ? Temporal.PlainDate.from(item.anchor) : undefined}
+              events={[]}
+            />
+          </Providers>,
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Month' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Week' }));
+        document.documentElement.style.fontSize = '20px';
+        await expect.poll(comparePiecesInside).toBe(true);
+        await expect.poll(compareRowsSeparated).toBe(true);
+        document.documentElement.style.fontSize = '';
+        cleanup();
+      }
+    } finally {
+      document.documentElement.style.fontSize = '';
+      await page.viewport(1280, 800);
+      cleanup();
     }
   });
 });
