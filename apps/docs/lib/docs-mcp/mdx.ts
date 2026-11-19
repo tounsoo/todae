@@ -19,9 +19,7 @@ export type WhenCopy = {
   shared: boolean;
 };
 
-export type WhenLabels = { heading: string; separate: string; when: string; whenNot: string };
-
-export const EN_WHEN: WhenLabels = {
+export const EN_WHEN = {
   heading: 'When to use',
   separate: 'When not to use',
   when: '**When:**',
@@ -133,9 +131,9 @@ function h3Blocks(page: Outline, range: Range): { preamble: Range; blocks: Map<s
   return { preamble: { from: range.from, to: h3s[0]?.from ?? range.to }, blocks };
 }
 
-function labeled(page: Outline, body: Range, separate: string | null, labels: WhenLabels): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
-  const when = marker(page, body, labels.when);
-  const inlineNot = marker(page, body, labels.whenNot);
+function labeled(page: Outline, body: Range, separate: string | null): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
+  const when = marker(page, body, EN_WHEN.when);
+  const inlineNot = marker(page, body, EN_WHEN.whenNot);
   if (when != null || inlineNot != null) {
     return { whenToUse: when, whenNotToUse: inlineNot ?? (separate || null) };
   }
@@ -143,20 +141,20 @@ function labeled(page: Outline, body: Range, separate: string | null, labels: Wh
 }
 
 /** Page section, or only the `### name` subsection. A dotted name or token provider with no h3 is missing. */
-export function parseWhen(markdown: string, name: string, labels: WhenLabels = EN_WHEN): WhenCopy | null {
+export function parseWhen(markdown: string, name: string): WhenCopy | null {
   const page = outline(markdown);
-  const sectionBody = section(page, labels.heading);
-  const separateRange = section(page, labels.separate);
+  const sectionBody = section(page, EN_WHEN.heading);
+  const separateRange = section(page, EN_WHEN.separate);
   if (sectionBody == null && separateRange == null) return null;
   const separate = separateRange ? text(page, separateRange) : null;
   const empty = { from: 0, to: 0 };
   const { preamble, blocks } = h3Blocks(page, sectionBody ?? empty);
   const own = blocks.get(name);
-  if (own != null) return { ...labeled(page, own, null, labels), shared: false };
+  if (own != null) return { ...labeled(page, own, null), shared: false };
   if (name in PART_PAGE || (blocks.size > 0 && name.includes('.'))) return null;
   const body = blocks.size > 0 ? preamble : (sectionBody ?? empty);
   if (!text(page, body) && !separate) return null;
-  return { ...labeled(page, body, separate, labels), shared: true };
+  return { ...labeled(page, body, separate), shared: true };
 }
 
 function staysInside(root: string, full: string): boolean {

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { withExampleCode } from '../exampleCode';
 import { absolutize, EN_WHEN, pageFor, parseWhen } from './mdx';
 import { resolveName } from './meta';
-import { allPages, type ExampleFile, type LocaleId, type PageRecord, type SectionRecord } from './catalog';
+import { allPages, koreanSectionAnchors, type ExampleFile, type PageRecord, type SectionRecord } from './catalog';
 import { envelope, LARGE_PAGE_TOKENS, MAX_RESPONSE_CHARS, withFallback, type NextCall } from './budget';
 import { searchDocs, type SearchHit } from './search';
 import { closeNames, normalizeSlug, SOURCE, tokensOf } from './units';
@@ -26,7 +26,7 @@ function decodeAnchor(value: string): string {
 }
 
 /** Pulls a #anchor out of a slug, path or docs URL. A `ko/` prefix names the English page. */
-export function parseTarget(query: string): { locale: LocaleId; slug: string; anchor?: string } {
+export function parseTarget(query: string): { slug: string; anchor?: string; fromKorean: boolean } {
   let path = query.trim();
   // A docs URL from any origin, including a preview deploy, names the same page.
   if (/^https?:\/\//i.test(path)) {
@@ -42,18 +42,15 @@ export function parseTarget(query: string): { locale: LocaleId; slug: string; an
   const anchor = hash >= 0 ? decodeAnchor(path.slice(hash + 1).split('?')[0] ?? '') : undefined;
   path = (hash >= 0 ? path.slice(0, hash) : path).split('?')[0] ?? '';
   path = path.replace(/\/+$/, '');
-  if (path === 'ko' || path.startsWith('ko/')) path = path.startsWith('ko/') ? path.slice(3) : '';
-  return { locale: 'en', slug: path, ...(anchor ? { anchor } : {}) };
+  const fromKorean = path === 'ko' || path.startsWith('ko/');
+  if (fromKorean) path = path.startsWith('ko/') ? path.slice(3) : '';
+  return { slug: path, fromKorean, ...(anchor ? { anchor } : {}) };
 }
 
-function pagesOf(locale: LocaleId): PageRecord[] {
-  return allPages().filter((page) => page.locale === locale);
-}
-
-function matchSlug(slug: string, locale: LocaleId): PageRecord | null {
+function matchSlug(slug: string): PageRecord | null {
   const norm = normalizeSlug(slug);
   if (!norm) return null;
-  const pages = pagesOf(locale);
+  const pages = allPages();
   const exact = pages.find((page) => normalizeSlug(page.slug) === norm);
   if (exact) return exact;
   const suffix = pages.filter((page) => normalizeSlug(page.slug).endsWith(`/${norm}`));
@@ -85,6 +82,10 @@ function matchSection(page: PageRecord, query: string): SectionRecord | null {
   );
 }
 
+function noHangul(text: string): string {
+  return text.replace(/\p{Script=Hangul}/gu, '');
+}
+
 function pageMiss(query: string): Error {
   const pages = allPages();
   const near = closeNames(query, pages.map((page) => page.slug));
@@ -97,26 +98,40 @@ function pageMiss(query: string): Error {
       .map((hit) => `- ${hit.ref} (${hit.kind}, ${hit.locale}, ${hit.tokens} tokens): ${hit.title}`),
   ];
   const hint = lines.length > 0 ? `Did you mean:\n${lines.join('\n')}\nCall search_docs.` : 'Call search_docs.';
-  return new Error(`No docs page for "${query}". ${hint}`);
+  return new Error(noHangul(`No docs page for "${query}". ${hint}`));
 }
 
 function sectionMiss(page: PageRecord, section: string): Error {
   const lines = page.sections.slice(0, 8).map((item) => `- ${page.slug}#${item.anchor} (${item.tokens} tokens): ${item.heading}`);
-  return new Error(`No section "${section}" on ${page.locale}/${page.slug}. Did you mean:\n${lines.join('\n')}\nPass section as that anchor or heading.`);
+  return new Error(noHangul(`No section "${section}" on ${page.locale}/${page.slug}. Did you mean:\n${lines.join('\n')}\nPass section as that anchor or heading.`));
+}
+
+/** A Korean anchor names the English section in the same position. */
+function sectionFor(page: PageRecord, asked: string, fromKorean: boolean): SectionRecord | undefined {
+  const direct = matchSection(page, asked);
+  if (direct) return direct;
+  if (!fromKorean) return undefined;
+  const korean = koreanSectionAnchors(page.slug);
+  if (!korean) return undefined;
+  const folded = asked.trim().toLowerCase();
+  const index = korean.findIndex((anchor) => anchor === asked || anchor === folded);
+  if (index < 0 || index >= page.sections.length) return undefined;
+  return page.sections[index];
 }
 
 export function resolvePage(query: string, options?: Pick<ReadOptions, 'section'>): { page: PageRecord; section?: SectionRecord } {
   const target = parseTarget(query);
   const asked = options?.section?.trim() || target.anchor;
-  const page = matchSlug(target.slug, target.locale) ?? matchSlug(normalizeSlug(query), target.locale) ?? (() => {
+  const page = matchSlug(target.slug) ?? matchSlug(normalizeSlug(query)) ?? (() => {
     const slug = slugForName(target.slug) ?? slugForName(query);
     return slug ? (allPages().find((item) => item.slug === slug) ?? null) : null;
   })();
   if (!page) throw pageMiss(query);
   if (!asked) return { page };
-  const section = matchSection(page, asked);
-  if (!section) throw sectionMiss(page, asked);
-  return { page, section };
+  const section = sectionFor(page, asked, target.fromKorean);
+  if (section) return { page, section };
+  if (target.fromKorean) return { page };
+  throw sectionMiss(page, asked);
 }
 
 function callsFor(page: PageRecord, section?: SectionRecord): NextCall[] {

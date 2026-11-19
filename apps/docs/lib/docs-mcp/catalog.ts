@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import type { Heading, Node, Root } from 'mdast';
 import { DOCS_ORIGIN } from '../origin';
@@ -9,7 +9,7 @@ import { defaultImports, exampleBlocks, exampleFile, exampleLocalModules, EXAMPL
 import { absolutize, loadPages } from './mdx';
 import { headingAnchor, tokensOf } from './units';
 
-export type LocaleId = 'en' | 'ko';
+export type LocaleId = 'en';
 
 export type ExampleFile = {
   id: string;
@@ -52,6 +52,7 @@ export type PageRecord = {
 type HeadingMark = { anchor: string; text: string; depth: 2 | 3; from: number };
 
 const APP_EN = join(process.cwd(), 'app', '(en)');
+const APP_KO = join(process.cwd(), 'app', 'ko');
 
 function plain(node: Node): string {
   if ((node.type === 'text' || node.type === 'inlineCode') && 'value' in node && typeof node.value === 'string') return node.value;
@@ -258,6 +259,17 @@ export function resetPagesForTests(): void {
   cached = null;
 }
 
-export function pageRecord(locale: LocaleId, slug: string): PageRecord | null {
-  return allPages().find((page) => page.locale === locale && page.slug === slug) ?? null;
+/**
+ * Heading anchors on the Korean twin, in the same order as the English page.
+ * Null when that file is missing or cannot be read. The search index stays English.
+ */
+export function koreanSectionAnchors(slug: string): string[] | null {
+  if (!slug || slug.split('/').some((part) => part === '' || part === '.' || part === '..')) return null;
+  const file = join(APP_KO, slug, 'page.mdx');
+  if (!existsSync(file)) return null;
+  try {
+    return headingsOf(parseMdx(readFileSync(file, 'utf8'))).map((mark) => mark.anchor);
+  } catch {
+    return null;
+  }
 }

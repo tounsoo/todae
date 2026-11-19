@@ -150,9 +150,10 @@ describe('search', () => {
       expect(hit.snippet.length).toBeGreaterThan(0);
       expect(hit.tokens).toBeGreaterThan(0);
     }
-    const hangul = searchDocs('캘린더에서 공휴일 비활성화', { limit: 5 });
-    expect(hangul.every((hit) => hit.locale !== 'ko')).toBe(true);
-    expect(hangul.every((hit) => !/\p{Script=Hangul}/u.test(`${hit.title} ${hit.snippet}`))).toBe(true);
+    for (const query of ['끌기', '버튼', '세션을 다른 무대로 끌기', '캘린더에서 공휴일 비활성화']) {
+      const hangul = searchDocs(query, { limit: 5 });
+      expect(hangul.every((hit) => !/\p{Script=Hangul}/u.test(`${hit.ref} ${hit.title} ${hit.snippet}`)), query).toBe(true);
+    }
   });
 });
 
@@ -265,8 +266,10 @@ describe('docs page', () => {
       expect(page).toMatch(/40,?000/);
       expect(page).toContain('1.00');
       expect(page).toContain('1.12');
-      expect(page.toLowerCase()).not.toContain('korean');
+      expect(page.toLowerCase()).not.toMatch(/serves korean|korean page/);
       expect(page).not.toContain('locale');
+      expect(page).toMatch(/Korean anchor|한국어 앵커/);
+      expect(page).toMatch(/same position|같은 자리/);
       expect(page).not.toContain('1.18');
       expect(page).not.toContain('1.76');
     }

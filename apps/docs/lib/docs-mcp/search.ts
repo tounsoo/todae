@@ -227,6 +227,10 @@ export function searchDocs(query: string, options?: { limit?: number }): SearchH
     if (pageSlug === 'mcp' && !wants.has('mcp')) score -= 8;
     const slugWords = pageSlug.split(/[/-]/);
     if (slugWords.some((word) => word.length > 3 && wants.has(word))) score += 6;
+    // The boolean `disabled` is the control's off switch. A holiday or a weekend names which dates can be picked.
+    if (doc.kind === 'prop' && doc.title.split(' ').at(-1)?.toLowerCase() === 'disabled' && keys.some((key) => key === 'holiday' || key === 'weekend')) {
+      score -= 2;
+    }
     // A name that is a query word ("Calendar") beats a prop that only shares a short word ("pick").
     if ((doc.kind === 'prop' || doc.kind === 'component' || doc.kind === 'hook') && doc.component) {
       const nameWords = splitIdent(doc.component).toLowerCase().split(/[^\p{L}\p{N}]+/u);
@@ -295,6 +299,13 @@ function nextFor(hit: SearchHit | undefined): NextCall[] {
 /** The search_docs payload: hits plus the one call an agent should make next. */
 export function presentSearch(query: string, options?: { limit?: number }) {
   const hits = searchDocs(query, options);
+  if (hits.length === 0 && /\p{Script=Hangul}/u.test(query)) {
+    return envelope(
+      { kind: 'search' as const, query, hits, note: 'Search in English.' },
+      'search',
+      [{ tool: 'search_docs', arguments: {}, why: 'Search in English.' }],
+    );
+  }
   return envelope({ kind: 'search' as const, query, hits }, 'search', nextFor(hits[0]));
 }
 

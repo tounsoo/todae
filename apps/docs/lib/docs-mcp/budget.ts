@@ -22,7 +22,7 @@ export type NextCall = { tool: string; arguments: Record<string, unknown>; why: 
 
 export type Nav = {
   what: string;
-  locale?: 'en' | 'ko';
+  locale?: 'en';
   slug?: string;
   section?: string;
   tokens: number;

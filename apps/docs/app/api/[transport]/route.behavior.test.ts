@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { withExampleCode } from '../../../lib/exampleCode';
+import { DOCS_ORIGIN } from '../../../lib/origin';
 import { buildTokenFiles } from '../../../lib/docs-mcp/build';
 import { getChanges } from '../../../lib/docs-mcp/changes';
 import { resetPagesForTests } from '../../../lib/docs-mcp/catalog';
@@ -273,11 +274,59 @@ describe('route regressions', () => {
   });
 
   it('returns no Korean page for a Hangul query', async () => {
-    const { error, body } = await tool('search_docs', { query: '캘린더에서 공휴일 비활성화' });
+    let empty = 0;
+    for (const query of ['끌기', '버튼', '세션을 다른 무대로 끌기', '캘린더에서 공휴일 비활성화']) {
+      const { error, body } = await tool('search_docs', { query });
+      expect(error, query).toBeNull();
+      const hits = (body?.hits ?? []) as { ref?: string; title?: string; snippet?: string }[];
+      for (const hit of hits) {
+        expect(`${hit.ref ?? ''} ${hit.title ?? ''} ${hit.snippet ?? ''}`, query).not.toMatch(/\p{Script=Hangul}/u);
+      }
+      if (hits.length === 0) {
+        empty += 1;
+        const next = (body?.nav as { next?: { tool?: string }[] } | undefined)?.next ?? [];
+        expect(next.some((call) => call.tool === 'list_components'), query).toBe(false);
+        expect(JSON.stringify(body), query).toContain('Search in English');
+      }
+    }
+    expect(empty).toBeGreaterThan(0);
+  });
+
+  it('reads the English section for a Korean anchor on a ko path', async () => {
+    const cases = [
+      { name: `${DOCS_ORIGIN}/ko/calendar#범위와-로캘`, slug: 'calendar', anchor: 'range-and-locale' },
+      { name: 'ko/recipes/scheduler#끌기', slug: 'recipes/scheduler', anchor: 'dragging' },
+    ];
+    for (const item of cases) {
+      const { error, body } = await tool('get_docs_page', { name: item.name });
+      expect(error, item.name).toBeNull();
+      expect(body?.slug, item.name).toBe(item.slug);
+      expect(body?.anchor, item.name).toBe(item.anchor);
+      expect(JSON.stringify(body), item.name).not.toMatch(/\p{Script=Hangul}/u);
+    }
+  });
+
+  it('returns the English page when a Korean anchor does not line up', async () => {
+    const { error, body } = await tool('get_docs_page', { name: 'ko/calendar#없는-섹션' });
     expect(error).toBeNull();
-    const hits = (body?.hits ?? []) as { locale?: string; title?: string; snippet?: string }[];
-    expect(hits.every((hit) => hit.locale !== 'ko')).toBe(true);
-    expect(hits.every((hit) => !/\p{Script=Hangul}/u.test(`${hit.title ?? ''} ${hit.snippet ?? ''}`))).toBe(true);
+    expect(body?.slug).toBe('calendar');
+    expect(['page', 'outline']).toContain(body?.kind);
+    expect(JSON.stringify(body)).not.toMatch(/\p{Script=Hangul}/u);
+  });
+
+  it('suggests get_example for an example file name', async () => {
+    const { error, body } = await tool('search_docs', { query: 'SchedulerExample.tsx' });
+    expect(error).toBeNull();
+    const next = (body?.nav as { next?: { tool?: string; arguments?: Record<string, unknown> }[] } | undefined)?.next?.[0];
+    expect(next?.tool).toBe('get_example');
+    expect(next?.arguments).toMatchObject({ page: 'recipes/scheduler', file: 'SchedulerExample.tsx' });
+  });
+
+  it('keeps the MCP manual out of the top 3 when the question is about reading a section', async () => {
+    const { error, body } = await tool('search_docs', { query: 'read one section of a page' });
+    expect(error).toBeNull();
+    const hits = (body?.hits ?? []) as { ref?: string }[];
+    expect(hits.slice(0, 3).some((hit) => (hit.ref ?? '') === 'mcp' || (hit.ref ?? '').startsWith('mcp#'))).toBe(false);
   });
 
   it('keeps the MCP manual off a product question and opens it when the question names it', async () => {
@@ -289,6 +338,13 @@ describe('route regressions', () => {
     const manual = await tool('search_docs', { query: 'mcp' });
     expect(manual.error).toBeNull();
     expect(((manual.body?.hits ?? []) as { ref?: string }[])[0]?.ref).toBe('mcp');
+  });
+
+  it('ranks the date predicate ahead of the disabled flag for a holiday and weekend question', async () => {
+    const { error, body } = await tool('search_docs', { query: 'disable weekends and holidays in the calendar' });
+    expect(error).toBeNull();
+    const first = (body?.hits as { title?: string }[] | undefined)?.[0];
+    expect(first?.title ?? '').toContain('isDateDisabled');
   });
 
   it('lands the first call on the scheduler, the wizard and held-out queries', async () => {

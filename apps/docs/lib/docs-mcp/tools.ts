@@ -110,7 +110,6 @@ export function getComponent(name: string) {
 }
 
 export function whenToUse(name: string) {
-  const labels = EN_WHEN;
   let resolved;
   try {
     resolved = resolveName(name);
@@ -136,11 +135,11 @@ export function whenToUse(name: string) {
       { locale: 'en' },
     );
   }
-  const copy = parseWhen(page.markdown, canonical, labels);
+  const copy = parseWhen(page.markdown, canonical);
   const scope = copy?.shared && !ownsPage(page, canonical) ? ('page' as const) : undefined;
   const docsUrl = `${DOCS_ORIGIN}/${page.slug}`;
   const next: { tool: string; arguments: Record<string, string>; why: string }[] = [
-    { tool: 'get_docs_page', arguments: { name: `${page.slug}#${labels.heading}` }, why: 'The section this copy came from.' },
+    { tool: 'get_docs_page', arguments: { name: `${page.slug}#${EN_WHEN.heading}` }, why: 'The section this copy came from.' },
   ];
   if (!copy) {
     return envelope(
@@ -165,13 +164,13 @@ export function whenToUse(name: string) {
       whenToUse: copy.whenToUse,
       whenNotToUse: copy.whenNotToUse,
       docsUrl,
-      section: labels.heading,
+      section: EN_WHEN.heading,
       ...(scope ? { scope } : {}),
       source: SOURCE,
     },
     'when-to-use',
     next,
-    { locale: 'en', slug: page.slug, section: labels.heading },
+    { locale: 'en', slug: page.slug, section: EN_WHEN.heading },
   );
 }
 
