@@ -1,5 +1,6 @@
 import catalog from '@tounsoo/todae/tokens.json';
 import { DOCS_ORIGIN } from '../origin';
+import { envelope, fitSlice, type NextCall } from './budget';
 
 export const LAYERS = ['core', 'appearance', 'density', 'contract'] as const;
 export type TokenLayer = (typeof LAYERS)[number];
@@ -63,21 +64,42 @@ export function catalogTokens(): readonly CatalogToken[] {
 
 export type ListTokensOptions = { prefix?: string; layer?: TokenLayer; limit?: number; offset?: number };
 
-/** Catalog rows whose path is `prefix` or starts with `prefix.`, in catalog order. */
+const TOKEN_NEXT: NextCall[] = [
+  { tool: 'get_token', arguments: { path: 'color.accent.default' }, why: 'Read one token from this list.' },
+  { tool: 'search_docs', arguments: { query: 'accent color' }, why: 'Find a token from the task instead of paging the catalog.' },
+];
+
+/** Catalog rows whose path is `prefix` or starts with `prefix.`, in catalog order. `limit` is the most rows in one page. */
 export function listTokens({ prefix, layer, limit = 200, offset = 0 }: ListTokensOptions = {}) {
   const matches = catalogTokens().filter(
     (row) =>
       (prefix === undefined || row.path === prefix || row.path.startsWith(`${prefix}.`)) &&
       (layer === undefined || row.layer === layer),
   );
-  return {
-    tokens: matches.slice(offset, offset + limit),
-    total: matches.length,
-    offset,
-    hasMore: offset + limit < matches.length,
-    docsUrl: TOKENS_URL,
-    source: SOURCE,
-  };
+  const start = Math.max(0, Math.trunc(offset));
+  const cap = Math.min(500, Math.max(1, Math.trunc(limit)));
+  return fitSlice(matches, start, (slice) => {
+    const page = slice.slice(0, cap);
+    const nextOffset = start + page.length;
+    const more = nextOffset < matches.length;
+    const args: NextCall['arguments'] = { offset: nextOffset };
+    if (prefix !== undefined) args.prefix = prefix;
+    if (layer !== undefined) args.layer = layer;
+    if (cap !== 200) args.limit = cap;
+    return envelope(
+      {
+        tokens: page,
+        total: matches.length,
+        offset: start,
+        hasMore: more,
+        ...(more ? { cursor: { offset: nextOffset } } : {}),
+        docsUrl: TOKENS_URL,
+        source: SOURCE,
+      },
+      'token-list',
+      more ? [{ tool: 'list_tokens', arguments: args, why: 'The next tokens in this list.' }, ...TOKEN_NEXT] : TOKEN_NEXT,
+    );
+  });
 }
 
 const VAR_RE = /var\((--todae-[a-z0-9-]+)/g;

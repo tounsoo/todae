@@ -1,12 +1,12 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, matchesGlob, relative } from 'node:path';
+import { basename, dirname, join, matchesGlob, relative } from 'node:path';
 import type { Root } from 'mdast';
 import { describe, expect, it } from 'vitest';
 import { exampleOf, withExampleCode } from './exampleCode';
 import exampleDependencyLoader from './exampleDependencyLoader.mjs';
 import { exampleSource } from './exampleSource.mjs';
 import { parseMdx } from './mdxAst';
-import remarkExamples, { defaultImports, exampleFile, exampleLocalModules, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
+import remarkExamples, { defaultImports, exampleBlocks, exampleFile, exampleLocalModules, exampleStylesheets, pageLocale } from './remarkExamples.mjs';
 import { remarkPlugins } from './remarkPlugins.mjs';
 
 const APP = join(process.cwd(), 'app');
@@ -95,6 +95,16 @@ describe('docs examples', () => {
     }
   });
 
+  it('leaves a sibling module off the page and pairs each stylesheet by its path', () => {
+    const file = join(EXAMPLES, 'fixtures', 'paired', 'EventCalendar.tsx');
+    const blocks = exampleBlocks(file);
+    expect(blocks.map((block) => block.lang)).toEqual(['tsx', 'css', 'css']);
+    expect(blocks.map((block) => basename(block.path))).toEqual(['EventCalendar.tsx', 'EventCalendar.module.css', 'Lane.module.css']);
+    expect(blocks.some((block) => block.value.includes('every week'))).toBe(false);
+    const page = join(process.cwd(), 'lib', 'docs-mcp', 'fixtures', 'pages', 'paired', 'page.mdx');
+    expect(withExampleCode(page, readFileSync(page, 'utf8'))).not.toContain('export const recurrence');
+  });
+
   it('shows a stylesheet the example imports from its folder after its code', () => {
     const tree = render("import AvatarSizes from '../../../examples/avatar/AvatarSizes';\n\n<Example of={AvatarSizes} />\n", join(APP, '(en)', 'avatar', 'page.mdx'));
     expect(tree.children.slice(1).map((node) => [node.type, 'lang' in node ? node.lang : undefined])).toEqual([
@@ -155,7 +165,7 @@ describe('docs examples', () => {
         shown.set(file, (shown.get(file) ?? new Set()).add(relative(APP, page).split('/')[0]!));
       }
     }
-    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx') && !file.startsWith('fixtures/'));
     expect(files.length).toBeGreaterThan(100);
     expect(files.filter((file) => !shown.get(file)?.has('(en)') || !shown.get(file)?.has('ko'))).toEqual([]);
   });
@@ -218,7 +228,7 @@ describe('docs examples', () => {
 
   it('uses no class name that only the docs stylesheet defines', () => {
     const docsCss = readFileSync(join(APP, 'globals.css'), 'utf8');
-    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx') && !file.startsWith('fixtures/'));
     const docsOnly = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/className=["']([^"']+)["']/g)]
         .flatMap((match) => match[1]!.split(/\s+/))
@@ -231,7 +241,7 @@ describe('docs examples', () => {
   it('imports only what a product has: the package, React, icon libraries, a stylesheet of its own, or a sibling module the page shows', () => {
     const allowed = /^(@tounsoo\/todae(\/[a-z-]+)?|react|lucide-react|@phosphor-icons\/react|@tabler\/icons-react|\.\/[\w-]+\.module\.css)$/;
     const local = /^\.\/[\w-]+$/;
-    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx'));
+    const files = readdirSync(EXAMPLES, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.tsx') && !file.startsWith('fixtures/'));
     const outside = files.flatMap((file) =>
       [...readFileSync(join(EXAMPLES, file), 'utf8').matchAll(/from '([^']+)'/g)]
         .map((match) => match[1]!)

@@ -1,11 +1,11 @@
 import type { McpServer, McpServerOptions } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
-import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
+import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles, resumeBuild } from '../../../lib/docs-mcp/build';
 import { VERSION_RE, getChanges } from '../../../lib/docs-mcp/changes';
 import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { getRecipe, listRecipes } from '../../../lib/docs-mcp/recipes';
-import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
+import { presentScaffold, scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import {
   BUILD_TOOL,
   BUILD_TOOL_INPUT_ELEMENTS,
@@ -22,6 +22,9 @@ import {
   toolCalls,
 } from '../../../lib/docs-mcp/limits';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
+import { deliver } from '../../../lib/docs-mcp/budget';
+import { readExample } from '../../../lib/docs-mcp/read';
+import { presentSearch } from '../../../lib/docs-mcp/search';
 import { getComponent, getDocsPage, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
 import { RELEASE } from '../../../lib/version';
 
@@ -31,7 +34,11 @@ export const maxDuration = 30;
 const name = z.string().trim().min(1).max(80);
 /** The longest file name build_tokens takes. */
 const MAX_FILE_NAME = 200;
-const pageQuery = z.string().trim().min(1).max(200);
+const pageQuery = z.string().trim().min(1).max(300);
+const sectionName = z.string().trim().min(1).max(160).optional();
+const includeCode = z.boolean().optional();
+const offset = z.number().int().min(0).optional();
+const pageRead = { section: sectionName, includeCode, offset };
 const tokenPath = z.string().trim().min(1).max(120);
 const contextName = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
 const oklch = z.tuple([z.number().min(0).max(1), z.number().min(0).max(0.5), z.number().min(0).max(360)]);
@@ -39,7 +46,19 @@ const colorMap = z.record(tokenPath, oklch);
 const version = z.string().trim().regex(VERSION_RE, 'Use a version such as 0.2.0');
 
 function ok(data: unknown) {
-  return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] };
+  // One budget for every tool. Size stays on nav, so a field named tokens (the catalog) is left alone.
+  // A result that already names its next calls keeps them.
+  if (data && typeof data === 'object' && !('nav' in data)) {
+    Object.assign(data, {
+      nav: {
+        what: 'result',
+        tokens: 0,
+        chars: 0,
+        next: [{ tool: 'search_docs', arguments: { query: 'todae' }, why: 'Search when the next call is not named on this result.' }],
+      },
+    });
+  }
+  return { content: [{ type: 'text' as const, text: deliver(data) }] };
 }
 
 function fail(error: unknown) {
@@ -56,21 +75,40 @@ const buildTokensArguments = {
   }, z.record(z.string().max(MAX_FILE_NAME), z.unknown())),
   resolver: z.string().max(200).optional(),
   scope: z.string().max(200).optional(),
+  offset: z.number().int().min(0).optional(),
+  field: z.enum(['css', 'overrideTypes']).optional(),
 };
 
 const serverInfo = { name: 'todae-docs', version: RELEASE.version };
 
 function registerTools(server: McpServer) {
-  server.tool('list_components', 'List Todae components from the published docs schema.', async () => {
-    try {
-      return ok(listComponents());
-    } catch (error) {
-      return fail(error);
-    }
-  });
+  server.tool(
+    'search_docs',
+    'Start here when you do not know a slug. Ranked hits across the English pages, sections, components, props, hooks, recipes, examples and tokens. Each hit has title, kind, ref (a slug or slug#anchor), a short snippet and tokens, the chars/4 cost of fetching it. Then get_docs_page with that ref, get_component for a prop or component, get_token for a token path, or get_example for a file. limit defaults to 8.',
+    { query: pageQuery, limit: z.number().int().min(1).max(20).optional() },
+    async ({ query, limit }) => {
+      try {
+        return ok(presentSearch(query, limit ? { limit } : {}));
+      } catch (error) {
+        return fail(error);
+      }
+    },
+  );
+  server.tool(
+    'list_components',
+    'List Todae components from the published docs schema. For a task in ordinary words, call search_docs first. A long list comes back with a cursor. Pass cursor.offset for the next page. Walking the pages returns the whole catalog.',
+    { offset },
+    async ({ offset: from }) => {
+      try {
+        return ok(listComponents({ offset: from ?? 0 }));
+      } catch (error) {
+        return fail(error);
+      }
+    },
+  );
   server.tool(
     'get_component',
-    'Get one component or namespace (props and parts) from the docs schema. For the docs page, with the example code that shows how its parts and hooks fit together, call get_docs_page.',
+    'Props and parts for one component, part or hook. Cheap: usually a few hundred tokens. Call this for "what props does X take", not get_docs_page. An unknown name returns close search hits. For how the parts fit together, get_docs_page then get_example.',
     { name },
     async ({ name: componentName }) => {
       try {
@@ -82,7 +120,7 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'when_to_use',
-    'Read the When to use / When not to use sections from the docs page. Does not infer missing copy.',
+    'The When to use and When not to use copy as fields. Does not infer missing copy. For the rest of the page, get_docs_page.',
     { name },
     async ({ name: componentName }) => {
       try {
@@ -94,11 +132,28 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_docs_page',
-    'Read the English docs page for a component, part, hook or helper (such as "Tooltip" or "useTooltip"), or any page by slug (such as "utilities/use-tooltip") or docsUrl, as MDX source with absolute links. Each live example\'s code is inlined in a tsx fence above it, so the page shows how Todae composes the parts and hooks, which props alone do not. propsTables lists the names on the page whose props get_component returns.',
-    { name: pageQuery },
-    async ({ name: query }) => {
+    'Read one English docs page or one section. Pass a slug, a slug#anchor, a docs URL, or a component name such as useTooltip. section is an anchor or a heading. A path that starts with ko/ returns the English page at the rest of that path. Names are matched ignoring case, spaces and dashes. A page over 4000 tokens (chars/4) returns an outline, the intro, and a token count per section instead of the whole page. Each example is a stub (file, what it shows, lines, tokens); call get_example for the source. includeCode inlines that source when you really want it, still under the 40000 character response budget. An unknown name returns search hits, not a bare error.',
+    { name: pageQuery, ...pageRead },
+    async ({ name: query, section, includeCode: code, offset: from }) => {
       try {
-        return ok(getDocsPage(query));
+        return ok(getDocsPage(query, { ...(section ? { section } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
+      } catch (error) {
+        return fail(error);
+      }
+    },
+  );
+  server.tool(
+    'get_example',
+    'The source of one example file a page stub names, with line numbers. page is the slug (or slug#anchor); file is the file name, such as SchedulerExample.tsx. startLine and endLine are 1-based and inclusive. A long file returns a window and cursor.startLine for the next call. Prefer this over includeCode.',
+    {
+      page: pageQuery,
+      file: z.string().trim().min(1).max(200),
+      startLine: z.number().int().min(1).optional(),
+      endLine: z.number().int().min(1).optional(),
+    },
+    async ({ page, file, startLine, endLine }) => {
+      try {
+        return ok(readExample(page, file, { ...(startLine ? { startLine } : {}), ...(endLine ? { endLine } : {}) }));
       } catch (error) {
         return fail(error);
       }
@@ -117,11 +172,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_recipe',
-    'Read one recipe by name (such as "data-table") or title, as MDX source with absolute links: its code, how it behaves, its accessible composition, and its When to use and When not to use copy.',
-    { name },
-    async ({ name: recipe }) => {
+    'One recipe by name (data-table) or title (Data table). Same shape as get_docs_page: section, example stubs, and an outline when the page is over 4000 tokens. includeCode inlines the example. Unknown names return search hits. Call list_recipes only to see every recipe.',
+    { name, ...pageRead },
+    async ({ name: recipe, section, includeCode: code, offset: from }) => {
       try {
-        return ok(getRecipe(recipe));
+        return ok(getRecipe(recipe, { ...(section ? { section } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
       } catch (error) {
         return fail(error);
       }
@@ -129,7 +184,7 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'list_tokens',
-    "List Todae's tokens from its token catalog: path, type, layer, context, the set or modifier that declares it (with the context for a button variant), CSS custom property, CSS value and description. Filter by a path prefix such as \"color.accent\" or by layer. Returns 200 rows from offset 0 unless limit and offset say otherwise; hasMore says whether more match.",
+    "List Todae's tokens from its token catalog: path, type, layer, context, the set or modifier that declares it (with the context for a button variant), CSS custom property, CSS value and description. Filter by a path prefix such as \"color.accent\" or by layer. limit is the most rows in one page (default 200, at most 500). A long list comes back with cursor.offset. Pass that offset to list_tokens for the next page. Walking the pages returns every matching row.",
     {
       prefix: tokenPath.optional(),
       layer: z.enum(LAYERS).optional(),
@@ -169,11 +224,12 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'build_tokens',
-    `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. \`scope\`, a CSS selector such as ".brand-acme", builds a theme that applies only inside the elements it matches, so several themes can share a page. Returns the theme CSS and the ThemeProvider override types, or the build error, which lists any contrast pairs that fail. A build that runs longer than ${BUILD_TIMEOUT_MS / 1000} seconds is stopped, and a call that arrives while the server is busy with other builds is refused; try it again a few seconds later. Nothing is stored.`,
+    `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. \`scope\`, a CSS selector such as ".brand-acme", builds a theme that applies only inside the elements it matches, so several themes can share a page. Returns the theme CSS and the ThemeProvider override types, or the build error, which lists any contrast pairs that fail. A result over the 40000 character budget comes back with a cursor: pass cursor.field and cursor.offset to read the next slice. A build that runs longer than ${BUILD_TIMEOUT_MS / 1000} seconds is stopped, and a call that arrives while the server is busy with other builds is refused; try it again a few seconds later. Nothing is stored.`,
     buildTokensArguments,
-    async ({ files, resolver, scope }) => {
+    async ({ files, resolver, scope, offset: from, field }) => {
       try {
-        return ok(await buildTokenFiles(files, { ...(resolver ? { resolver } : {}), ...(scope === undefined ? {} : { scope }) }));
+        const built = await buildTokenFiles(files, { ...(resolver ? { resolver } : {}), ...(scope === undefined ? {} : { scope }) });
+        return ok(resumeBuild(built, from ? { offset: from, ...(field ? { field } : {}) } : undefined));
       } catch (error) {
         return fail(error);
       }
@@ -181,16 +237,18 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'scaffold_design_system',
-    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. Returns tokenFiles by path inside tokensFolder ("tokens"), in the shape build_tokens takes, and otherFiles by path from the project root, with the result of building tokenFiles. Save the files yourself; nothing is written to your machine.',
+    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. When the draft fits, returns tokenFiles and otherFiles, the shape build_tokens takes, plus whether those files build. A draft over the 40000 character budget comes back one file at a time. The first next call is this tool again, with the original arguments plus cursor.offset, and cursor.char when a file continues. Pass that call as it is. Save the files yourself; nothing is written to your machine.',
     {
       name: contextName,
       colors: z.object({ light: colorMap, dark: colorMap }).optional(),
       buttonVariants: z.array(contextName).max(8).optional(),
       densities: z.array(contextName).max(8).optional(),
+      offset,
+      char: z.number().int().min(0).optional(),
     },
-    async (options) => {
+    async ({ offset: from, char, ...options }) => {
       try {
-        return ok(await scaffoldDesignSystem(options));
+        return ok(presentScaffold(await scaffoldDesignSystem(options), from ?? 0, char ?? 0, options));
       } catch (error) {
         return fail(error);
       }
@@ -198,11 +256,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_guide',
-    'Read a docs page about building on Todae, as MDX source with absolute links.',
-    { topic: z.enum(GUIDE_TOPICS) },
-    async ({ topic }) => {
+    'A guide page: get-started, build-on-todae, tokens, css-layers, composition, platform or mcp. Same reads as get_docs_page (section, stubs). Prefer search_docs when you do not know the topic.',
+    { topic: z.enum(GUIDE_TOPICS), ...pageRead },
+    async ({ topic, section, includeCode: code, offset: from }) => {
       try {
-        return ok(getGuide(topic));
+        return ok(getGuide(topic, { ...(section ? { section } : {}), ...(code ? { includeCode: code } : {}), ...(from ? { offset: from } : {}) }));
       } catch (error) {
         return fail(error);
       }
@@ -210,11 +268,11 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_changes',
-    "What changed in @tounsoo/todae's released versions after `from` (the installed version, such as 0.2.0, not a range such as ^0.2.0), up to `to` (default: the latest release), from the package's changelog. Returns each release oldest first, with its breaking changes apart from the rest, so an agent upgrading a project can apply each break in order. Before 1.0 a minor release is the breaking one.",
-    { from: version, to: version.optional() },
-    async (options) => {
+    "What changed in @tounsoo/todae's released versions after `from` (the installed version, such as 0.2.0, not a range such as ^0.2.0), up to `to` (default: the latest release), from the package's changelog. Returns each release oldest first, with its breaking changes apart from the rest, so an agent upgrading a project can apply each break in order. A long range comes back with a cursor. Pass cursor.offset for the next releases. Walking them returns the whole range. Before 1.0 a minor release is the breaking one.",
+    { from: version, to: version.optional(), offset },
+    async ({ offset: from, ...options }) => {
       try {
-        return ok(getChanges(options));
+        return ok(getChanges({ ...options, offset: from ?? 0 }));
       } catch (error) {
         return fail(error);
       }

@@ -68,14 +68,18 @@ export function exampleStylesheets(file, text) {
 
 /**
  * The code blocks a page shows for an example file: its code, then each stylesheet it imports from its
- * folder that the page has not shown yet. A sibling module stays beside the example. The page explains
- * it instead of pasting the file. `shown` holds the stylesheets already shown.
+ * folder that the page has not shown yet. Each block carries that file's path. A sibling module stays
+ * beside the example. The page explains it instead of pasting the file. `shown` holds the stylesheets
+ * already shown on the page.
  */
 export function exampleBlocks(file, shown = new Set()) {
   const text = readFileSync(file, 'utf8');
   const sheets = exampleStylesheets(file, text).filter((path) => !shown.has(path));
   for (const path of sheets) shown.add(path);
-  return [{ lang: 'tsx', value: exampleSource(text) }, ...sheets.map((path) => ({ lang: 'css', value: readFileSync(path, 'utf8').trimEnd() }))];
+  return [
+    { lang: 'tsx', path: file, value: exampleSource(text) },
+    ...sheets.map((path) => ({ lang: 'css', path, value: readFileSync(path, 'utf8').trimEnd() })),
+  ];
 }
 
 /** The example files a page's import lines name, for the loader that rebuilds the page when one changes. */
