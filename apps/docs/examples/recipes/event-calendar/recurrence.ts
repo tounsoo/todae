@@ -216,20 +216,22 @@ function weekStep(start: Temporal.PlainDate, date: Temporal.PlainDate, interval:
 
 /**
  * The 0-based index of `instant` in the rule, or null when it is not a generated start.
+ * A start matches the time the series zone resolves for that date, so a skipped hour still counts.
  * COUNT and UNTIL are applied by the caller. This walks the grid with date arithmetic,
  * not by listing every occurrence from the series start.
  */
 export function occurrenceIndex(series: EventSeries, instant: Temporal.ZonedDateTime): number | null {
   const rule = series.rule;
   const startWall = wall(series.start, series.timeZone);
-  const at = wall(instant, series.timeZone);
-  if (!at.toPlainTime().equals(startWall.toPlainTime())) return null;
+  const zoned = instant.withTimeZone(series.timeZone);
+  const resolved = atWall(zoned.toPlainDate(), startWall.toPlainTime(), series.timeZone);
+  if (!sameInstant(zoned, resolved)) return null;
   if (rule === null) {
-    return at.toPlainDate().equals(startWall.toPlainDate()) ? 0 : null;
+    return zoned.toPlainDate().equals(startWall.toPlainDate()) ? 0 : null;
   }
   assertRule(rule);
   const startDate = startWall.toPlainDate();
-  const date = at.toPlainDate();
+  const date = zoned.toPlainDate();
   if (Temporal.PlainDate.compare(date, startDate) < 0) return null;
   if (rule.freq === 'DAILY') return dailyStep(startDate, date, rule.interval);
   if (rule.freq === 'WEEKLY') {
@@ -380,13 +382,24 @@ export function expandSeries(series: EventSeries, window: ExpandWindow): Occurre
     .slice(0, EXPANSION_CAP);
 }
 
+function durationOf(start: Temporal.ZonedDateTime, end: Temporal.ZonedDateTime, timeZone: string): Temporal.Duration {
+  return wall(start, timeZone).until(wall(end, timeZone));
+}
+
+/** The series length, or a longer override when one occurrence was stretched past it. */
+function longestDuration(series: EventSeries): Temporal.Duration {
+  return series.overrides.reduce((longest, item) => {
+    const next = durationOf(item.start, item.end, series.timeZone);
+    return Temporal.Duration.compare(next, longest) > 0 ? next : longest;
+  }, durationOf(series.start, series.end, series.timeZone));
+}
+
 /**
- * The window views should ask for. Pulls the start back by this series' length
- * so an occurrence that began before the visible range and still overlaps it is included.
+ * The window views should ask for. Pulls the start back by the longest length among the series
+ * and its overrides, so an occurrence that began before the visible range and still overlaps it is included.
  */
 export function viewWindow(series: EventSeries, visible: ExpandWindow): ExpandWindow {
-  const duration = wall(series.start, series.timeZone).until(wall(series.end, series.timeZone));
-  return { start: visible.start.subtract(duration), end: visible.end };
+  return { start: visible.start.subtract(longestDuration(series)), end: visible.end };
 }
 
 export type SeriesDraft = {

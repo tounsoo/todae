@@ -11,6 +11,7 @@ import {
   seriesFromDraft,
   seriesId,
   truncateBefore,
+  viewWindow,
   type EventSeries,
   type RecurrenceRule,
 } from './recurrence';
@@ -74,6 +75,15 @@ describe('expandSeries', () => {
     });
     const result = expandSeries(item, window(LA, '2026-11-16T09:00:00-08:00', '2026-11-17T09:00:00-08:00'));
     expect(days(result)).toEqual(['2026-11-16']);
+  });
+
+  it('stops a weekly count in the middle of the week', () => {
+    const item = series({
+      start: at(LA, '2026-11-16T09:00:00-08:00'),
+      end: at(LA, '2026-11-16T09:30:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['MO', 'WE', 'FR'], end: { kind: 'count', count: 4 } }),
+    });
+    expect(days(expandSeries(item, window(LA, '2026-11-16T00:00:00-08:00', '2026-11-30T00:00:00-08:00')))).toEqual(['2026-11-16', '2026-11-18', '2026-11-20', '2026-11-23']);
   });
 
   it('steps a daily series by its interval', () => {
@@ -471,6 +481,50 @@ describe('editing a series', () => {
         rule: rule({ freq: 'WEEKLY', byDay: ['MO', 'WE'] }),
       }),
     ).toThrow(RangeError);
+  });
+
+  it('keeps the remaining count when this and following starts on a skipped hour', () => {
+    const item = series({
+      start: at(LA, '2026-03-01T02:30:00-08:00'),
+      end: at(LA, '2026-03-01T03:30:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['SU'], end: { kind: 'count', count: 6 } }),
+    });
+    const range = window(LA, '2026-03-01T00:00:00-08:00', '2026-05-01T00:00:00-07:00');
+    const spring = expandSeries(item, range).find((occurrence) => occurrence.start.toPlainDate().toString() === '2026-03-08');
+    if (!spring) throw new Error('spring-forward occurrence');
+    const later = continueFrom(
+      item,
+      spring.originalStart,
+      { title: 'Later', start: spring.start, end: spring.end, allDay: false, rule: item.rule },
+      seriesId('later'),
+    );
+    expect(
+      expandSeries(later, range).map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString()]),
+    ).toEqual([
+      ['2026-03-08', '03:30:00'],
+      ['2026-03-15', '03:30:00'],
+      ['2026-03-22', '03:30:00'],
+      ['2026-03-29', '03:30:00'],
+      ['2026-04-05', '03:30:00'],
+    ]);
+  });
+
+  it('keeps a lengthened occurrence on the week it spills into', () => {
+    const item = series({
+      start: at(LA, '2026-11-15T15:00:00-08:00'),
+      end: at(LA, '2026-11-15T16:00:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['SU'] }),
+    });
+    const lengthened = overrideOccurrence(item, at(LA, '2026-11-22T15:00:00-08:00'), {
+      title: 'Long reading',
+      start: at(LA, '2026-11-21T20:00:00-08:00'),
+      end: at(LA, '2026-11-22T10:00:00-08:00'),
+      allDay: false,
+    });
+    const nextWeek = window(LA, '2026-11-22T00:00:00-08:00', '2026-11-29T00:00:00-08:00');
+    expect(
+      expandSeries(lengthened, viewWindow(lengthened, nextWeek)).map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString(), occurrence.title]),
+    ).toEqual([['2026-11-21', '20:00:00', 'Long reading']]);
   });
 
   it('reports the index of a generated start and rejects a day the rule skips', () => {
