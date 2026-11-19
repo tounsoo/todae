@@ -172,8 +172,8 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "typescript": ">=6.0.0"
   },
   "peerDependenciesMeta": {
@@ -188,13 +188,13 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitest/browser-playwright": "4.1.12",
-    "axe-core": "^4.13.0",
-    "esbuild": "0.25.12",
+    "axe-core": "^4.14.0",
+    "esbuild": "0.28.2",
     "jsdom": "^26.0.0",
     "playwright": "1.64.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "temporal-polyfill": "^1.0.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "temporal-polyfill": "^1.0.8",
     "typescript": "^6.0.2",
     "vite": "^6.4.5",
     "vitest": "^4.1.12"
