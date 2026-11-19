@@ -153,6 +153,24 @@
   transform: none;
 }
 
+/* The script removes this column after it measures a narrow calendar.
+   Until then the column is in the first paint, so the query hides it at that width. */
+@container calendar (max-inline-size: 375px) {
+  .frame[data-compare-grid] .head,
+  .frame[data-compare-grid] .body,
+  .frame[data-compare-grid] .strip {
+    grid-template-columns: var(--primary, 4.5rem) 0 var(--day-tracks);
+  }
+
+  .corner + .corner,
+  .gutter[data-compare] {
+    visibility: hidden;
+    min-inline-size: 0;
+    overflow: hidden;
+    border-inline-end-width: 0;
+  }
+}
+
 .markPiece {
   white-space: nowrap;
 }

@@ -1840,6 +1840,7 @@ export function EventCalendarExample({
           <VisuallyHidden.Root id={descriptionId}>{description}</VisuallyHidden.Root>
           <div
             className={styles.frame}
+            data-compare-grid={showCompare ? '' : undefined}
             style={{
               ['--days' as string]: days.length,
               ['--minutes' as string]: scale,
