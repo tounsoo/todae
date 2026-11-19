@@ -306,6 +306,26 @@ describe('route regressions', () => {
     }
   });
 
+  it('follows a Hangul search without calling search_docs with no query', async () => {
+    const { error, body } = await tool('search_docs', { query: '캘린더에서 공휴일 비활성화' });
+    expect(error).toBeNull();
+    expect(JSON.stringify(body)).toContain('Search in English');
+    const next = (body?.nav as { next?: { tool?: string; arguments?: Record<string, unknown> }[] } | undefined)?.next?.[0];
+    if (!next?.tool) return;
+    const followed = await tool(next.tool, next.arguments ?? {});
+    expect(followed.error).toBeNull();
+  });
+
+  it('names the page in an error and does not repeat Hangul', async () => {
+    const section = await tool('get_docs_page', { name: 'calendar#범위와-로캘' });
+    expect(section.error).toMatch(/No section with that anchor on calendar/);
+    expect(section.error).not.toMatch(/\p{Script=Hangul}/u);
+    const missing = await tool('get_docs_page', { name: 'ko/없는-페이지' });
+    expect(missing.error).toMatch(/No docs page for that name/);
+    expect(missing.error).toContain('page');
+    expect(missing.error).not.toMatch(/\p{Script=Hangul}/u);
+  });
+
   it('returns the English page when a Korean anchor does not line up', async () => {
     const { error, body } = await tool('get_docs_page', { name: 'ko/calendar#없는-섹션' });
     expect(error).toBeNull();

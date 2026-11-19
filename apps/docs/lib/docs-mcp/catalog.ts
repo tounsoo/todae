@@ -9,8 +9,6 @@ import { defaultImports, exampleBlocks, exampleFile, exampleLocalModules, EXAMPL
 import { absolutize, loadPages } from './mdx';
 import { headingAnchor, tokensOf } from './units';
 
-export type LocaleId = 'en';
-
 export type ExampleFile = {
   id: string;
   file: string;
@@ -33,7 +31,7 @@ export type SectionRecord = {
 };
 
 export type PageRecord = {
-  locale: LocaleId;
+  locale: 'en';
   slug: string;
   title: string;
   file: string;
@@ -264,7 +262,6 @@ export function resetPagesForTests(): void {
  * Null when that file is missing or cannot be read. The search index stays English.
  */
 export function koreanSectionAnchors(slug: string): string[] | null {
-  if (!slug || slug.split('/').some((part) => part === '' || part === '.' || part === '..')) return null;
   const file = join(APP_KO, slug, 'page.mdx');
   if (!existsSync(file)) return null;
   try {

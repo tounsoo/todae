@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { withExampleCode } from '../exampleCode';
-import { absolutize, EN_WHEN, pageFor, parseWhen } from './mdx';
+import { absolutize, pageFor } from './mdx';
 import { resolveName } from './meta';
 import { allPages, koreanSectionAnchors, type ExampleFile, type PageRecord, type SectionRecord } from './catalog';
 import { envelope, LARGE_PAGE_TOKENS, MAX_RESPONSE_CHARS, withFallback, type NextCall } from './budget';
@@ -82,8 +82,8 @@ function matchSection(page: PageRecord, query: string): SectionRecord | null {
   );
 }
 
-function noHangul(text: string): string {
-  return text.replace(/\p{Script=Hangul}/gu, '');
+function hangul(text: string): boolean {
+  return /\p{Script=Hangul}/u.test(text);
 }
 
 function pageMiss(query: string): Error {
@@ -98,12 +98,15 @@ function pageMiss(query: string): Error {
       .map((hit) => `- ${hit.ref} (${hit.kind}, ${hit.locale}, ${hit.tokens} tokens): ${hit.title}`),
   ];
   const hint = lines.length > 0 ? `Did you mean:\n${lines.join('\n')}\nCall search_docs.` : 'Call search_docs.';
-  return new Error(noHangul(`No docs page for "${query}". ${hint}`));
+  const name = hangul(query) ? 'that name' : `"${query}"`;
+  return new Error(`No docs page for ${name}. ${hint}`);
 }
 
 function sectionMiss(page: PageRecord, section: string): Error {
   const lines = page.sections.slice(0, 8).map((item) => `- ${page.slug}#${item.anchor} (${item.tokens} tokens): ${item.heading}`);
-  return new Error(noHangul(`No section "${section}" on ${page.locale}/${page.slug}. Did you mean:\n${lines.join('\n')}\nPass section as that anchor or heading.`));
+  const hint = `Did you mean:\n${lines.join('\n')}\nPass section as that anchor or heading.`;
+  if (hangul(section)) return new Error(`No section with that anchor on ${page.slug}. ${hint}`);
+  return new Error(`No section "${section}" on ${page.locale}/${page.slug}. ${hint}`);
 }
 
 /** A Korean anchor names the English section in the same position. */
@@ -367,5 +370,3 @@ export function readExample(pageQuery: string, file: string, options: Pick<ReadO
 export function suggest(query: string): SearchHit[] {
   return searchDocs(query, { limit: 5 });
 }
-
-export { EN_WHEN, parseWhen, SOURCE };

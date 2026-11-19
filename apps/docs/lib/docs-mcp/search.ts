@@ -1,5 +1,5 @@
 import { envelope, type NextCall } from './budget';
-import { allPages, type ExampleFile, type LocaleId, type PageRecord, type SectionRecord } from './catalog';
+import { allPages, type ExampleFile, type PageRecord, type SectionRecord } from './catalog';
 import { listComponentMeta } from './meta';
 import { catalogTokens } from './tokens';
 import { normalizeSlug, snippet, splitIdent, tokenize, tokensOf } from './units';
@@ -11,7 +11,7 @@ export type SearchHit = {
   kind: HitKind;
   /** `slug`, or `slug#anchor` for a section. A token's ref is `tokens` and `path` is the catalog path. */
   ref: string;
-  locale: LocaleId;
+  locale: 'en';
   snippet: string;
   /** chars/4 of the call that reads this hit, an upper bound the agent can budget. */
   tokens: number;
@@ -300,11 +300,7 @@ function nextFor(hit: SearchHit | undefined): NextCall[] {
 export function presentSearch(query: string, options?: { limit?: number }) {
   const hits = searchDocs(query, options);
   if (hits.length === 0 && /\p{Script=Hangul}/u.test(query)) {
-    return envelope(
-      { kind: 'search' as const, query, hits, note: 'Search in English.' },
-      'search',
-      [{ tool: 'search_docs', arguments: {}, why: 'Search in English.' }],
-    );
+    return envelope({ kind: 'search' as const, query, hits, note: 'Search in English.' }, 'search', []);
   }
   return envelope({ kind: 'search' as const, query, hits }, 'search', nextFor(hits[0]));
 }
