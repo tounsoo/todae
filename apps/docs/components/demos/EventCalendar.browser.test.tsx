@@ -1996,7 +1996,7 @@ describe('a repeating event from the keyboard', () => {
     expect(within(holiday).getByText('Repeats')).toBeVisible();
   });
 
-  it('keeps 2:30 when a skipped-hour series is retitled, and uses 2:00 when that start is typed', async () => {
+  it('keeps 2:30 when a skipped-hour series is retitled, counts the next remainder, and uses 2:00 when that start is typed', async () => {
     const occurred = (title: string, start: string, end: string) => `${title}, ${clock(start)} to ${clock(end)}, repeats`;
     const typeField = async (field: HTMLElement, text: string) => {
       await userEvent.clear(field);
@@ -2071,6 +2071,23 @@ describe('a repeating event from the keyboard', () => {
         occurred('Later', '02:30', '03:30'),
         occurred('Later', '02:30', '03:30'),
         occurred('Later', '02:30', '03:30'),
+      ]);
+      for (let step = 0; step < 8 && !screen.queryByRole('heading', { name: 'Sun, Mar 7' }); step += 1) {
+        await userEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+      }
+      for (let step = 0; step < 3; step += 1) await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+      const march28 = await openEditor(occurred('Later', '02:30', '03:30'));
+      await userEvent.click(within(march28).getByRole('button', { name: 'This and following' }));
+      const remainder = await screen.findByRole('dialog', { name: 'Edit Later' });
+      await expect.poll(() => (within(remainder).getByRole('spinbutton', { name: 'Times' }) as HTMLInputElement).value).toBe('2');
+      await fill(remainder, 'Title', 'Rest');
+      await save(remainder);
+      expect(await sundayLabels(), 'the second split leaves two Sundays at 2:30').toEqual([
+        occurred('Stand-up', '02:30', '03:30'),
+        occurred('Later', '03:30', '04:30'),
+        occurred('Later', '02:30', '03:30'),
+        occurred('Rest', '02:30', '03:30'),
+        occurred('Rest', '02:30', '03:30'),
       ]);
 
       await openSkippedSeries();
