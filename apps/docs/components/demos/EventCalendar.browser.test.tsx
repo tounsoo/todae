@@ -1995,4 +1995,128 @@ describe('a repeating event from the keyboard', () => {
     const holiday = await screen.findByRole('button', { name: 'Holiday, November 16, 2026, repeats' });
     expect(within(holiday).getByText('Repeats')).toBeVisible();
   });
+
+  it('keeps 2:30 when a skipped-hour series is retitled, and uses 2:00 when that start is typed', async () => {
+    const occurred = (title: string, start: string, end: string) => `${title}, ${clock(start)} to ${clock(end)}, repeats`;
+    const typeField = async (field: HTMLElement, text: string) => {
+      await userEvent.clear(field);
+      await userEvent.type(field, text);
+    };
+    const fill = async (dialog: HTMLElement, name: string, text: string, shown = text) => {
+      const field = within(dialog).getByRole('textbox', { name });
+      await typeField(field, text);
+      await userEvent.click(within(dialog).getByRole('heading'));
+      await expect.poll(() => (field as HTMLInputElement).value).toBe(shown);
+    };
+    const openSkippedSeries = async () => {
+      cleanup();
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale="en-US"
+            timeZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2027-03-07')}
+            opens={Temporal.PlainTime.from('00:00')}
+            closes={Temporal.PlainTime.from('06:00')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'New event' }));
+      const dialog = await screen.findByRole('dialog', { name: 'New event' });
+      await userEvent.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Stand-up');
+      await fill(dialog, 'Date', '3/7/2027');
+      await fill(dialog, 'Start', '2:30 AM', clock('02:30'));
+      await fill(dialog, 'End', '3:30 AM', clock('03:30'));
+      await userEvent.selectOptions(within(dialog).getByLabelText('Repeat'), 'WEEKLY');
+      await userEvent.click(within(dialog).getByText('After'));
+      const times = await within(dialog).findByRole('spinbutton', { name: 'Times' });
+      await typeField(times, '5');
+      await userEvent.click(within(dialog).getByRole('heading'));
+      await expect.poll(() => (times as HTMLInputElement).value).toBe('5');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+      await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+      expect(await sundayLabels()).toEqual([
+        occurred('Stand-up', '02:30', '03:30'),
+        occurred('Stand-up', '03:30', '04:30'),
+        occurred('Stand-up', '02:30', '03:30'),
+        occurred('Stand-up', '02:30', '03:30'),
+        occurred('Stand-up', '02:30', '03:30'),
+      ]);
+    };
+    const editSpring = async (scope: 'This and following' | 'All events') => {
+      for (let step = 0; step < 8 && !screen.queryByRole('heading', { name: 'Sun, Mar 7' }); step += 1) {
+        await userEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+      }
+      await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+      const choice = await openEditor(occurred('Stand-up', '03:30', '04:30'));
+      await userEvent.click(within(choice).getByRole('button', { name: scope }));
+      return screen.findByRole('dialog', { name: 'Edit Stand-up' });
+    };
+    const save = async (form: HTMLElement) => {
+      await userEvent.click(within(form).getByRole('button', { name: 'Save' }));
+      await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    };
+
+    await page.viewport(1280, 900);
+    try {
+      await openSkippedSeries();
+      const retitled = await editSpring('This and following');
+      expect((within(retitled).getByRole('textbox', { name: 'Start' }) as HTMLInputElement).value).toBe(clock('03:30'));
+      await fill(retitled, 'Title', 'Later');
+      await save(retitled);
+      expect(await sundayLabels(), 'a title-only split keeps 2:30').toEqual([
+        occurred('Stand-up', '02:30', '03:30'),
+        occurred('Later', '03:30', '04:30'),
+        occurred('Later', '02:30', '03:30'),
+        occurred('Later', '02:30', '03:30'),
+        occurred('Later', '02:30', '03:30'),
+      ]);
+
+      await openSkippedSeries();
+      const following = await editSpring('This and following');
+      await fill(following, 'Start', '2:00 AM', clock('02:00'));
+      await save(following);
+      expect(await sundayLabels(), 'this and following keeps the typed 2:00').toEqual([
+        occurred('Stand-up', '02:30', '03:30'),
+        occurred('Stand-up', '03:00', '04:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+      ]);
+
+      await openSkippedSeries();
+      const all = await editSpring('All events');
+      expect((within(all).getByRole('textbox', { name: 'Date' }) as HTMLInputElement).value).toBe('3/7/2027');
+      expect((within(all).getByRole('textbox', { name: 'Start' }) as HTMLInputElement).value).toBe(clock('02:30'));
+      await fill(all, 'Date', '3/14/2027');
+      await fill(all, 'Start', '2:00 AM', clock('02:00'));
+      await fill(all, 'End', '4:00 AM', clock('04:00'));
+      await save(all);
+      expect(await sundayLabels(), 'all events keeps the typed 2:00').toEqual([
+        occurred('Stand-up', '03:00', '04:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+        occurred('Stand-up', '02:00', '03:00'),
+      ]);
+    } finally {
+      await page.viewport(1280, 800);
+      cleanup();
+    }
+  });
 });
+
+async function sundayLabels(): Promise<string[]> {
+  for (let step = 0; step < 8 && !screen.queryByRole('heading', { name: 'Sun, Mar 7' }); step += 1) {
+    await userEvent.click(screen.getByRole('button', { name: 'Previous week' }));
+  }
+  const labels: string[] = [];
+  for (let week = 0; week < 7; week += 1) {
+    const sunday = screen.getAllByRole('heading', { level: 3 }).find((heading) => heading.textContent?.startsWith('Sun,'));
+    const button = sunday ? dayLane(sunday.textContent ?? '').querySelector('button') : null;
+    if (button) labels.push(button.getAttribute('aria-label') ?? '');
+    if (week < 6) await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+  }
+  return labels;
+}
