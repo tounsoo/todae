@@ -1396,6 +1396,28 @@ describe('the event menu and dialog', () => {
     expect(screen.getByRole('list', { name: 'Tue, Nov 17' }).contains(timed)).toBe(true);
   });
 
+  it('keeps focus on Offsite after Move to next day leaves the day view', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Day' }));
+    await choose(`Offsite, ${longDate('2026-11-16')}`, 'Move to next day');
+    const moved = screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-17')}` });
+    expect(screen.getByRole('heading', { name: 'Tue, Nov 17' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Mon, Nov 16' })).toBeNull();
+    expect(document.activeElement).toBe(moved);
+    await vi.waitFor(() => expect(polite()?.textContent).toBe(`Offsite, ${longDate('2026-11-17')}`));
+  });
+
+  it('keeps focus on a one-day all-day bar after it moves from Saturday onto the next week', async () => {
+    const saturday = event('hours', '2026-11-21T00:00:00-08:00[America/Los_Angeles]', '2026-11-22T00:00:00-08:00[America/Los_Angeles]', { title: 'Office hours', allDay: true });
+    render(<EventCalendarExample locale="en-US" timeZone={LA} anchor={date('2026-11-16')} events={[saturday]} />);
+    await choose(`Office hours, ${longDate('2026-11-21')}`, 'Move to next day');
+    const moved = screen.getByRole('button', { name: `Office hours, ${longDate('2026-11-22')}` });
+    expect(screen.getByRole('heading', { name: 'Sun, Nov 22' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Sat, Nov 21' })).toBeNull();
+    expect(document.activeElement).toBe(moved);
+    await vi.waitFor(() => expect(polite()?.textContent).toBe(`Office hours, ${longDate('2026-11-22')}`));
+  });
+
   it('focuses the strip bar when Save makes an event all-day, and the day heading when it leaves the lanes and the strip', async () => {
     render(<EventCalendarExample locale="en-US" />);
     const name = `Design review, ${clock('09:00')} to ${clock('10:30')}`;

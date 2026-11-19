@@ -1587,8 +1587,11 @@ export function EventCalendarExample({
 
   const onAdjust = (event: CalendarEvent, segment: DaySegment, change: SlotChange) => {
     if (event.allDay && change.kind === 'day') {
+      const day = segment.day.add({ days: change.days });
       const next = { ...event, start: event.start.add({ days: change.days }), end: event.end.add({ days: change.days }) };
-      commit(next, segment.day.add({ days: change.days }));
+      // The bar leaves this day. Show the day it lands on before focus moves, the same way Save does.
+      setAnchor(day);
+      commit(next, day);
       return;
     }
     const next = adjustEvent(event, segment, axis, change);
