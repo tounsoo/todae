@@ -1964,9 +1964,9 @@ export function EventCalendarExample({
               const spansDays = !start.toPlainDate().equals(end.toPlainDate());
               return strip ? barLabel(saved, locale, timeZone) : `${saved.title}, ${clockLabel(start, locale, spansDays)} to ${clockLabel(end, locale, spansDays)}`;
             };
-            const reveal = (saved: CalendarEvent, message?: string) => {
-              const home = shownDay(saved, day);
-              setAnchor(home ?? day);
+            const reveal = (saved: CalendarEvent, message?: string, around: Temporal.PlainDate = day) => {
+              const home = shownDay(saved, around);
+              setAnchor(home ?? around);
               if (saved.allDay && !editing.allDay) {
                 const start = editing.start.withTimeZone(timeZone);
                 const end = editing.end.withTimeZone(timeZone);
@@ -1974,9 +1974,9 @@ export function EventCalendarExample({
               }
               if (!saved.allDay) timedBefore.current.delete(saved.id);
               const strip = showsInStrip(saved, timeZone, opens, closes);
-              const laneHome = strip ? null : shownDay(saved, home ?? day);
+              const laneHome = strip ? null : shownDay(saved, home ?? around);
               setFocusKey(strip ? stripKey(saved.id) : laneHome ? blockKey(saved.id, laneHome) : null);
-              focusHeading.current = strip || laneHome ? null : (home ?? day);
+              focusHeading.current = strip || laneHome ? null : (home ?? around);
               announce(message ?? labelOf(saved));
               returnFocus.current = true;
             };
@@ -2005,9 +2005,17 @@ export function EventCalendarExample({
               setSeriesList((list) => list.map((item) => (item.id === current.id ? replaced : item)));
               const saved = firstOf(replaced) ?? { ...next, id: replaced.id, seriesId: replaced.id, repeats: detail.rule !== null, originalStart: next.start };
               if (editing.repeats) {
-                // The saved series starts on its first week. The week on screen is the one this edit started from.
-                announce(`Changed all events. ${labelOf(saved)}.`);
-                returnFocus.current = true;
+                const days = view === 'week' ? weekOf(anchor, locale) : [anchor];
+                const onScreen = expandSeries(replaced, visibleBounds(view, anchor, locale, timeZone)).map(occurrenceEvent).find((event) => {
+                  if (showsInStrip(event, timeZone, opens, closes)) {
+                    const covered = coveredDays(event, timeZone);
+                    return covered !== null && days.some((item) => Temporal.PlainDate.compare(item, covered.first) >= 0 && Temporal.PlainDate.compare(item, covered.last) <= 0);
+                  }
+                  return shownDay(event, anchor) !== null;
+                });
+                // The hours and the focus target belong to the occurrence still in this week. The first occurrence is the one to show when this week no longer has it.
+                const chosen = onScreen ?? saved;
+                reveal(chosen, `Changed all events. ${labelOf(chosen)}.`, onScreen ? anchor : day);
               } else {
                 reveal(saved);
               }

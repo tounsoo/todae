@@ -1972,6 +1972,58 @@ describe('repeating events', () => {
     expect(within(screen.getByRole('list', { name: 'Sun, Nov 22' })).getByRole('button', { name: readers })).toBeTruthy();
   });
 
+  async function editAllFromNextWeek() {
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await choose(bookClubName, 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    return screen.findByRole('dialog', { name: 'Edit Book club' });
+  }
+
+  it('returns focus to the Nov 22 strip bar when all events become all day, and restores 3:00 PM when they are timed again', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const form = await editAllFromNextWeek();
+    fireEvent.click(within(form).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const bar = screen.getByRole('button', { name: 'Book club, November 22, 2026, repeats' });
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    await vi.waitFor(() => expect(document.activeElement).toBe(bar));
+
+    await choose('Book club, November 22, 2026, repeats', 'Edit…');
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
+    const again = await screen.findByRole('dialog', { name: 'Edit Book club' });
+    fireEvent.click(within(again).getByRole('switch', { name: 'All day' }));
+    fireEvent.click(within(again).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Sun, Nov 22' })).getByRole('button', { name: bookClubName })).toBeTruthy();
+  });
+
+  it('keeps Nov 22 and focuses the 5:00 PM block when all events start then', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const form = await editAllFromNextWeek();
+    fireEvent.change(within(form).getByRole('textbox', { name: 'Start' }), { target: { value: '5:00 PM' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const moved = `Book club, ${clock('17:00')} to ${clock('18:00')}, repeats`;
+    const block = within(screen.getByRole('list', { name: 'Sun, Nov 22' })).getByRole('button', { name: moved });
+    expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
+    await vi.waitFor(() => expect(document.activeElement).toBe(block));
+  });
+
+  it('moves to the week of the new date when all events leave the week on screen', async () => {
+    render(<EventCalendarExample locale="en-US" />);
+    const form = await editAllFromNextWeek();
+    const date = within(form).getByRole('textbox', { name: 'Date' });
+    fireEvent.change(date, { target: { value: '11/29/2026' } });
+    fireEvent.blur(date);
+    fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByText('Nov 29 – Dec 5, 2026')).toBeTruthy();
+    const block = within(screen.getByRole('list', { name: 'Sun, Nov 29' })).getByRole('button', { name: bookClubName });
+    await vi.waitFor(() => expect(document.activeElement).toBe(block));
+  });
+
   it('changes every occurrence when the edit applies to all events', async () => {
     render(<EventCalendarExample locale="en-US" />);
     await choose(bookClubName, 'Edit…');
