@@ -150,6 +150,7 @@ export const SITE_GROUPS = [
       ['/recipes/data-table', 'Data table'],
       ['/recipes/date-time-picker', 'Date and time picker'],
       ['/recipes/date-range-presets', 'Date range with presets'],
+      ['/recipes/event-calendar', 'Event calendar'],
       ['/recipes/file-upload', 'File upload'],
       ['/recipes/filter-bar', 'Filter bar'],
       ['/recipes/inline-edit', 'Inline edit'],

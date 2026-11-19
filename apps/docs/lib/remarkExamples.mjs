@@ -90,8 +90,9 @@ export function exampleImports(pagePath, text) {
 }
 
 /**
- * Renders `<Example of={Name} />` as the code of the example `Name`, and any stylesheet it imports
- * from its folder that the page has not shown yet, followed by the example itself,
+ * Renders `<Example of={Name} />` as the code of the example `Name` and any stylesheet it
+ * imports from its folder that the page has not shown yet,
+ * followed by the example itself,
  * and refuses an `<Example>` without `of`, whose demo would show with no code.
  * `Name` is a page's default import from a file in `apps/docs/examples`. The element becomes a code
  * block of that file's code and `<Example><Name locale="…" /></Example>`, with the page's locale.

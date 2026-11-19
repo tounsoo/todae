@@ -1,0 +1,92 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--todae-space-3);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--todae-space-3);
+}
+
+.note {
+  margin: 0;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-text-label-font-size);
+}
+
+.frame {
+  display: flex;
+  gap: var(--todae-space-2);
+}
+
+.times {
+  position: relative;
+  flex: none;
+  inline-size: 3rem;
+}
+
+.times span {
+  position: absolute;
+  color: var(--todae-color-fg-muted);
+  font-size: var(--todae-text-label-font-size);
+  line-height: var(--todae-text-leading-tight);
+  transform: translateY(-50%);
+}
+
+/* The lane's box is the morning, 9:00 to 12:00, so it has no padding or border
+   along the axis. touch-action is none so a finger draws a place instead of
+   scrolling the page. */
+.board {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.lane {
+  position: relative;
+  block-size: 24rem;
+  touch-action: none;
+  border-radius: var(--todae-radius-md);
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      var(--todae-color-border-subtle) 0 var(--todae-border-width),
+      transparent var(--todae-border-width) calc(100% / 3)
+    ),
+    var(--todae-color-bg-subtle);
+}
+
+.event,
+.ghost {
+  position: absolute;
+  inset-inline: var(--todae-space-1);
+  border-radius: var(--todae-radius-sm);
+}
+
+.event {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  border: var(--todae-border-width) solid var(--todae-color-border-default);
+  background: var(--todae-color-bg-surface);
+  font-size: var(--todae-text-label-font-size);
+}
+
+.ghost {
+  border: var(--todae-border-width) dashed var(--todae-color-accent-default);
+  background: var(--todae-color-bg-surface);
+}
+
+.move {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+}
+
+.label {
+  padding-inline: var(--todae-space-2);
+  pointer-events: none;
+}
