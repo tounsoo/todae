@@ -1441,6 +1441,88 @@ describe('the event menu and dialog', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Mon, Nov 16' }));
   });
 
+  it('counts the remainder of a skipped-hour series, and saves the start that was typed', async () => {
+    const zone = 'America/Los_Angeles';
+    const start = Temporal.ZonedDateTime.from('2027-03-14T03:30:00-07:00[America/Los_Angeles]');
+    const end = start.add({ hours: 1 });
+    const later = Temporal.ZonedDateTime.from('2027-03-21T02:30:00-07:00[America/Los_Angeles]');
+    const occurrence = {
+      id: 'later',
+      seriesId: 'later',
+      title: 'Later',
+      start: later,
+      end: later.add({ hours: 1 }),
+      allDay: false,
+      repeats: true,
+      originalStart: later,
+    };
+    const template = {
+      id: 'later',
+      seriesId: 'later',
+      title: 'Later',
+      start,
+      end,
+      allDay: false,
+      repeats: true,
+      originalStart: start,
+    };
+    const rule = { freq: 'WEEKLY' as const, interval: 1, byDay: ['SU' as const], end: { kind: 'count' as const, count: 4 } };
+    const saved: { current: { start: Temporal.ZonedDateTime; startTime?: Temporal.PlainTime } | null } = { current: null };
+    render(
+      <EventEditor
+        event={occurrence}
+        locale="en-US"
+        timeZone={zone}
+        rule={rule}
+        template={template}
+        wallTime={time('02:30')}
+        chooseScope
+        onSave={(event, detail) => {
+          saved.current = { start: event.start, startTime: detail.startTime };
+        }}
+        onCancel={() => undefined}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'This and following' }));
+    const form = await screen.findByRole('dialog', { name: 'Edit Later' });
+    expect((within(form).getByRole('spinbutton', { name: 'Times' }) as HTMLInputElement).value).toBe('3');
+    cleanup();
+
+    const spring = {
+      id: 'later',
+      seriesId: 'later',
+      title: 'Later',
+      start,
+      end,
+      allDay: false,
+      repeats: true,
+      originalStart: start,
+    };
+    render(
+      <EventEditor
+        event={spring}
+        locale="en-US"
+        timeZone={zone}
+        rule={rule}
+        template={template}
+        wallTime={time('02:30')}
+        chooseScope
+        onSave={(event, detail) => {
+          saved.current = { start: event.start, startTime: detail.startTime };
+        }}
+        onCancel={() => undefined}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'This and following' }));
+    const gap = await screen.findByRole('dialog', { name: 'Edit Later' });
+    const startField = within(gap).getByRole('textbox', { name: 'Start' });
+    fireEvent.change(startField, { target: { value: '2:00 AM' } });
+    fireEvent.blur(startField);
+    fireEvent.click(within(gap).getByRole('button', { name: 'Save' }));
+    expect(saved.current?.startTime?.toString()).toBe('02:00:00');
+    expect(saved.current?.start.toPlainTime().toString()).toBe('03:00:00');
+  });
+
   it('cancels the dialog on Escape and keeps the event', async () => {
     render(
       <EventEditor

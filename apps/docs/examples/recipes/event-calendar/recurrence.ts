@@ -64,6 +64,11 @@ export type EventSeries = {
   start: Temporal.ZonedDateTime;
   end: Temporal.ZonedDateTime;
   allDay: boolean;
+  /**
+   * Local time the rule repeats when `start` resolves to a different local time.
+   * A split that begins in a skipped hour keeps 2:30 here, and `start` stays the 3:30 that day shows.
+   */
+  wallTime?: Temporal.PlainTime;
   /** Null is a single event. Anything else repeats. */
   rule: RecurrenceRule | null;
   /** Original starts removed from the set. They still consume COUNT. */
@@ -129,6 +134,21 @@ function wall(value: Temporal.ZonedDateTime, timeZone: string): Temporal.PlainDa
 
 function atWall(date: Temporal.PlainDate, time: Temporal.PlainTime, timeZone: string): Temporal.ZonedDateTime {
   return date.toZonedDateTime({ timeZone, plainTime: time });
+}
+
+function seriesClock(series: EventSeries): Temporal.PlainTime {
+  return series.wallTime ?? wall(series.start, series.timeZone).toPlainTime();
+}
+
+function chosenClock(series: EventSeries, start: Temporal.ZonedDateTime, entered?: Temporal.PlainTime): Temporal.PlainTime | undefined {
+  const zone = series.timeZone;
+  const clock = seriesClock(series);
+  const local = start.withTimeZone(zone);
+  const typed = entered ?? local.toPlainTime();
+  const resolved = atWall(local.toPlainDate(), clock, zone);
+  const kept = typed.equals(clock) || (sameInstant(local, resolved) && typed.equals(resolved.toPlainTime()));
+  if (kept) return clock.equals(local.toPlainTime()) ? undefined : clock;
+  return typed.equals(local.toPlainTime()) ? undefined : typed;
 }
 
 function endAt(start: Temporal.ZonedDateTime, duration: Temporal.Duration, timeZone: string): Temporal.ZonedDateTime {
@@ -224,7 +244,7 @@ export function occurrenceIndex(series: EventSeries, instant: Temporal.ZonedDate
   const rule = series.rule;
   const startWall = wall(series.start, series.timeZone);
   const zoned = instant.withTimeZone(series.timeZone);
-  const resolved = atWall(zoned.toPlainDate(), startWall.toPlainTime(), series.timeZone);
+  const resolved = atWall(zoned.toPlainDate(), seriesClock(series), series.timeZone);
   if (!sameInstant(zoned, resolved)) return null;
   if (rule === null) {
     return zoned.toPlainDate().equals(startWall.toPlainDate()) ? 0 : null;
@@ -336,7 +356,7 @@ export function expandSeries(series: EventSeries, window: ExpandWindow): Occurre
     if (!exdated(series, series.start)) keep(toOccurrence(series, series.start, duration));
   } else {
     const startDate = wall(series.start, series.timeZone).toPlainDate();
-    const time = wall(series.start, series.timeZone).toPlainTime();
+    const time = seriesClock(series);
     let step = firstStep(series.rule, startDate, window.start, series.timeZone);
     let seen = stepAt(series.rule, startDate, step).before;
     const limit = series.rule.end.kind === 'count' ? series.rule.end.count : Number.POSITIVE_INFINITY;
@@ -408,11 +428,24 @@ export type SeriesDraft = {
   end: Temporal.ZonedDateTime;
   allDay: boolean;
   rule: RecurrenceRule | null;
+  /** The start the user typed, when the zone cannot store that local time. */
+  startTime?: Temporal.PlainTime;
 };
 
-function shiftWall(value: Temporal.ZonedDateTime, from: Temporal.ZonedDateTime, to: Temporal.ZonedDateTime, timeZone: string): Temporal.ZonedDateTime {
-  const delta = from.withTimeZone(timeZone).toPlainDateTime().until(to.withTimeZone(timeZone).toPlainDateTime());
-  return value.withTimeZone(timeZone).toPlainDateTime().add(delta).toZonedDateTime(timeZone);
+function shiftByClock(
+  value: Temporal.ZonedDateTime,
+  fromDate: Temporal.PlainDate,
+  fromClock: Temporal.PlainTime,
+  toDate: Temporal.PlainDate,
+  toClock: Temporal.PlainTime,
+  timeZone: string,
+): Temporal.ZonedDateTime {
+  const local = value.withTimeZone(timeZone);
+  const days = fromDate.until(toDate, { largestUnit: 'day' }).days;
+  const date = local.toPlainDate().add({ days });
+  if (sameInstant(local, atWall(local.toPlainDate(), fromClock, timeZone))) return atWall(date, toClock, timeZone);
+  const delta = local.toPlainDate().toPlainDateTime(fromClock).until(local.toPlainDate().toPlainDateTime(toClock));
+  return local.toPlainDateTime().add({ days }).add(delta).toZonedDateTime(timeZone);
 }
 
 /** A single chosen weekday is the series start's weekday. Several weekdays must include it. */
@@ -428,7 +461,11 @@ function withStartWeekday(rule: RecurrenceRule | null, start: Temporal.ZonedDate
 /** All events. The template changes, and exceptions stay on the same local time. */
 export function replaceSeries(series: EventSeries, next: SeriesDraft): EventSeries {
   const zone = next.start.timeZoneId;
-  const shift = (value: Temporal.ZonedDateTime) => shiftWall(value, series.start, next.start, zone);
+  const wallTime = chosenClock(series, next.start, next.startTime);
+  const nextClock = wallTime ?? wall(next.start, zone).toPlainTime();
+  const fromDate = wall(series.start, series.timeZone).toPlainDate();
+  const toDate = wall(next.start, zone).toPlainDate();
+  const shift = (value: Temporal.ZonedDateTime) => shiftByClock(value, fromDate, seriesClock(series), toDate, nextClock, zone);
   return {
     ...series,
     title: next.title,
@@ -436,6 +473,7 @@ export function replaceSeries(series: EventSeries, next: SeriesDraft): EventSeri
     start: next.start,
     end: next.end,
     allDay: next.allDay,
+    wallTime,
     rule: withStartWeekday(next.rule, next.start),
     exdates: series.exdates.map(shift),
     overrides: series.overrides.map((item) => ({
@@ -460,7 +498,7 @@ function hasOccurrence(series: EventSeries): boolean {
   if (rule.end.kind === 'never') return true;
   const startWall = wall(series.start, series.timeZone);
   const startDate = startWall.toPlainDate();
-  const time = startWall.toPlainTime();
+  const time = seriesClock(series);
   const limit = rule.end.kind === 'count' ? rule.end.count : Number.POSITIVE_INFINITY;
   const until = rule.end.kind === 'until' ? rule.end.until : null;
   let step = 0;
@@ -534,11 +572,16 @@ function countedRemainder(series: EventSeries, originalStart: Temporal.ZonedDate
 export function continueFrom(series: EventSeries, originalStart: Temporal.ZonedDateTime, draft: SeriesDraft, id: SeriesId): EventSeries {
   const rule = countedRemainder(series, originalStart, withStartWeekday(draft.rule, draft.start));
   const later = seriesFromDraft(id, { ...draft, rule });
+  const wallTime = chosenClock(series, draft.start, draft.startTime);
   const zone = series.timeZone;
-  const shift = (value: Temporal.ZonedDateTime) => shiftWall(value, originalStart, draft.start, zone);
+  const nextClock = wallTime ?? wall(draft.start, zone).toPlainTime();
+  const fromDate = originalStart.withTimeZone(zone).toPlainDate();
+  const toDate = draft.start.withTimeZone(zone).toPlainDate();
+  const shift = (value: Temporal.ZonedDateTime) => shiftByClock(value, fromDate, seriesClock(series), toDate, nextClock, zone);
   const after = (value: Temporal.ZonedDateTime) => Temporal.ZonedDateTime.compare(value, originalStart) >= 0;
   return {
     ...later,
+    wallTime,
     exdates: series.exdates.filter(after).map(shift),
     overrides: series.overrides.filter((item) => after(item.originalStart)).map((item) => ({
       ...item,

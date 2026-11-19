@@ -1553,6 +1553,52 @@ describe('creating an event from empty lane space', () => {
     await page.viewport(1280, 800);
   });
 
+  it('hides the second zone column at 375px before the width is measured, and shows it when the calendar is wide', async () => {
+    const real = HTMLElement.prototype.getBoundingClientRect;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      const box = real.call(this);
+      const name = typeof this.className === 'string' ? this.className : '';
+      if (name.includes('calendar')) return new DOMRect(box.x, box.y, 0, box.height);
+      return box;
+    };
+    try {
+      await page.viewport(375, 800);
+      render(
+        <Providers>
+          <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" events={[]} />
+        </Providers>,
+      );
+      const compare = document.querySelector<HTMLElement>('[data-compare]');
+      expect(compare).toBeTruthy();
+      expect(compare!.checkVisibility({ visibilityProperty: true })).toBe(false);
+      expect(compare!.getBoundingClientRect().width).toBeLessThan(1);
+      const compareLabel = [...document.querySelectorAll<HTMLElement>('[class*="zoneName"]')].find((node) => node.textContent === 'GMT+5:30');
+      expect(compareLabel?.checkVisibility({ visibilityProperty: true })).toBe(false);
+      const primary = screen.getByText('PST');
+      expect(primary.checkVisibility()).toBe(true);
+      const day = document.querySelector('h3');
+      expect(day).toBeTruthy();
+      expect(day!.getBoundingClientRect().left).toBeGreaterThanOrEqual(primary.getBoundingClientRect().right - 1);
+      cleanup();
+
+      await page.viewport(1280, 800);
+      render(
+        <Providers>
+          <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" events={[]} />
+        </Providers>,
+      );
+      const wide = document.querySelector<HTMLElement>('[data-compare]');
+      expect(wide).toBeTruthy();
+      expect(wide!.checkVisibility({ visibilityProperty: true })).toBe(true);
+      expect(wide!.getBoundingClientRect().width).toBeGreaterThan(20);
+      expect(screen.getByText('GMT+5:30').checkVisibility()).toBe(true);
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = real;
+      cleanup();
+      await page.viewport(1280, 800);
+    }
+  });
+
   it('creates and places events in a zone that is not the viewer’s', async () => {
     const start = Temporal.Instant.from('2026-11-16T00:00:00Z');
     const end = Temporal.Instant.from('2026-11-16T01:00:00Z');
@@ -1949,4 +1995,180 @@ describe('a repeating event from the keyboard', () => {
     const holiday = await screen.findByRole('button', { name: 'Holiday, November 16, 2026, repeats' });
     expect(within(holiday).getByText('Repeats')).toBeVisible();
   });
+
+  describe('a skipped-hour series', () => {
+    const occurred = (title: string, start: string, end: string) => `${title}, ${clock(start)} to ${clock(end)}, repeats`;
+    const created = [
+      occurred('Stand-up', '02:30', '03:30'),
+      occurred('Stand-up', '03:30', '04:30'),
+      occurred('Stand-up', '02:30', '03:30'),
+      occurred('Stand-up', '02:30', '03:30'),
+      occurred('Stand-up', '02:30', '03:30'),
+    ];
+    const typeField = async (field: HTMLElement, text: string) => {
+      await userEvent.clear(field);
+      await userEvent.type(field, text);
+    };
+    const fill = async (dialog: HTMLElement, name: string, text: string, shown = text) => {
+      const field = within(dialog).getByRole('textbox', { name });
+      await typeField(field, text);
+      await userEvent.click(within(dialog).getByRole('heading'));
+      await expect.poll(() => (field as HTMLInputElement).value).toBe(shown);
+    };
+    const openSkippedSeries = async () => {
+      cleanup();
+      render(
+        <Providers>
+          <EventCalendarExample
+            locale="en-US"
+            timeZone="America/Los_Angeles"
+            anchor={Temporal.PlainDate.from('2027-03-07')}
+            opens={Temporal.PlainTime.from('00:00')}
+            closes={Temporal.PlainTime.from('06:00')}
+            events={[]}
+          />
+        </Providers>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'New event' }));
+      const dialog = await screen.findByRole('dialog', { name: 'New event' });
+      await userEvent.type(within(dialog).getByRole('textbox', { name: 'Title' }), 'Stand-up');
+      await fill(dialog, 'Date', '3/7/2027');
+      await fill(dialog, 'Start', '2:30 AM', clock('02:30'));
+      await fill(dialog, 'End', '3:30 AM', clock('03:30'));
+      await userEvent.selectOptions(within(dialog).getByLabelText('Repeat'), 'WEEKLY');
+      await userEvent.click(within(dialog).getByText('After'));
+      const times = await within(dialog).findByRole('spinbutton', { name: 'Times' });
+      await typeField(times, '5');
+      await userEvent.click(within(dialog).getByRole('heading'));
+      await expect.poll(() => (times as HTMLInputElement).value).toBe('5');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+      await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+      expect(await sundayLabels()).toEqual(created);
+    };
+    const editSpring = async (scope: 'This and following' | 'All events') => {
+      await showSunday('Sun, Mar 14');
+      const choice = await openEditor(occurred('Stand-up', '03:30', '04:30'));
+      await userEvent.click(within(choice).getByRole('button', { name: scope }));
+      return screen.findByRole('dialog', { name: 'Edit Stand-up' });
+    };
+    const save = async (form: HTMLElement) => {
+      await userEvent.click(within(form).getByRole('button', { name: 'Save' }));
+      await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+    };
+    const run = async (body: () => Promise<void>) => {
+      await page.viewport(1280, 900);
+      try {
+        await body();
+      } finally {
+        await page.viewport(1280, 800);
+        cleanup();
+      }
+    };
+
+    it('keeps 2:30 when a skipped-hour series is retitled, and the next split counts two', async () => {
+      await run(async () => {
+        await openSkippedSeries();
+        const retitled = await editSpring('This and following');
+        expect((within(retitled).getByRole('textbox', { name: 'Start' }) as HTMLInputElement).value).toBe(clock('03:30'));
+        await fill(retitled, 'Title', 'Later');
+        await save(retitled);
+        expect(await sundayLabels(), 'a title-only split keeps 2:30').toEqual([
+          occurred('Stand-up', '02:30', '03:30'),
+          occurred('Later', '03:30', '04:30'),
+          occurred('Later', '02:30', '03:30'),
+          occurred('Later', '02:30', '03:30'),
+          occurred('Later', '02:30', '03:30'),
+        ]);
+        await showSunday('Sun, Mar 28');
+        const march28 = await openEditor(occurred('Later', '02:30', '03:30'));
+        await userEvent.click(within(march28).getByRole('button', { name: 'This and following' }));
+        const remainder = await screen.findByRole('dialog', { name: 'Edit Later' });
+        await expect.poll(() => (within(remainder).getByRole('spinbutton', { name: 'Times' }) as HTMLInputElement).value).toBe('2');
+        await fill(remainder, 'Title', 'Rest');
+        await save(remainder);
+        expect(await sundayLabels(), 'the second split leaves two Sundays at 2:30').toEqual([
+          occurred('Stand-up', '02:30', '03:30'),
+          occurred('Later', '03:30', '04:30'),
+          occurred('Later', '02:30', '03:30'),
+          occurred('Rest', '02:30', '03:30'),
+          occurred('Rest', '02:30', '03:30'),
+        ]);
+      });
+    });
+
+    it('keeps a typed 2:00 when this and following is saved on a skipped-hour series', async () => {
+      await run(async () => {
+        await openSkippedSeries();
+        const following = await editSpring('This and following');
+        await fill(following, 'Start', '2:00 AM', clock('02:00'));
+        await save(following);
+        expect(await sundayLabels(), 'this and following keeps the typed 2:00').toEqual([
+          occurred('Stand-up', '02:30', '03:30'),
+          occurred('Stand-up', '03:00', '04:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+        ]);
+      });
+    });
+
+    it('keeps a typed 2:00 when all events are saved on a skipped-hour series', async () => {
+      await run(async () => {
+        await openSkippedSeries();
+        const all = await editSpring('All events');
+        expect((within(all).getByRole('textbox', { name: 'Date' }) as HTMLInputElement).value).toBe('3/7/2027');
+        expect((within(all).getByRole('textbox', { name: 'Start' }) as HTMLInputElement).value).toBe(clock('02:30'));
+        await fill(all, 'Date', '3/14/2027');
+        await fill(all, 'Start', '2:00 AM', clock('02:00'));
+        await fill(all, 'End', '4:00 AM', clock('04:00'));
+        await save(all);
+        expect(await sundayLabels(6), 'all events keeps the typed 2:00').toEqual([
+          occurred('Stand-up', '03:00', '04:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+          occurred('Stand-up', '02:00', '03:00'),
+        ]);
+      });
+    });
+  });
 });
+
+const skippedHourSundays = 5;
+
+function sundayHeading(): HTMLElement | undefined {
+  return screen.getAllByRole('heading', { level: 3 }).find((item) => item.textContent?.startsWith('Sun,'));
+}
+
+function showsSunday(name: string): boolean {
+  const text = sundayHeading()?.textContent ?? '';
+  return text === name || text.startsWith(`${name} ·`);
+}
+
+async function showSunday(name: string) {
+  const order = (label: string) => {
+    const match = label.split(' · ')[0]?.match(/([A-Z][a-z]{2}) (\d+)/);
+    const month = match?.[1];
+    const day = match?.[2];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return month && day ? months.indexOf(month) * 31 + Number(day) : 0;
+  };
+  const target = order(name);
+  for (let step = 0; step < 8 && !showsSunday(name); step += 1) {
+    const button = order(sundayHeading()?.textContent ?? '') < target ? 'Next week' : 'Previous week';
+    await userEvent.click(screen.getByRole('button', { name: button }));
+  }
+  if (!showsSunday(name)) throw new Error(`never showed ${name}`);
+}
+
+async function sundayLabels(weeks = skippedHourSundays): Promise<string[]> {
+  await showSunday('Sun, Mar 7');
+  const labels: string[] = [];
+  for (let week = 0; week < weeks; week += 1) {
+    const sunday = sundayHeading();
+    const button = sunday ? dayLane(sunday.textContent ?? '').querySelector('button') : null;
+    if (button) labels.push(button.getAttribute('aria-label') ?? '');
+    if (week < weeks - 1) await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+  }
+  return labels;
+}
