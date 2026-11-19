@@ -1947,6 +1947,7 @@ export function EventCalendarExample({
           opens={opens}
           prior={timedBefore.current.get(session.event.id) ?? null}
           rule={editingSeries?.rule ?? null}
+          wallTime={editingSeries?.wallTime}
           template={
             editingSeries
               ? { id: editingSeries.id, seriesId: editingSeries.id, title: editingSeries.title, start: editingSeries.start, end: editingSeries.end, allDay: editingSeries.allDay, repeats: editingSeries.rule !== null, originalStart: editingSeries.start }
@@ -1999,13 +2000,13 @@ export function EventCalendarExample({
               const saved = { ...editing, ...next, id: editing.id, seriesId: current.id, repeats: true, originalStart: editing.originalStart };
               reveal(saved, `Changed this event. ${labelOf(saved)}.`);
             } else if (detail.scope === 'following' && editing.originalStart) {
-              const created = continueFrom(current, editing.originalStart, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule }, freshSeriesId());
+              const created = continueFrom(current, editing.originalStart, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule, startTime: detail.startTime }, freshSeriesId());
               const previous = truncateBefore(current, editing.originalStart);
               setSeriesList((list) => list.flatMap((item) => (item.id === current.id ? (previous ? [previous, created] : [created]) : [item])));
               const saved = firstOf(created) ?? { ...next, id: created.id, seriesId: created.id, repeats: detail.rule !== null, originalStart: next.start };
               reveal(saved, `Changed this and following events. ${labelOf(saved)}.`);
             } else {
-              const replaced = replaceSeries(current, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule });
+              const replaced = replaceSeries(current, { title: next.title, start: next.start, end: next.end, allDay: next.allDay, rule: detail.rule, startTime: detail.startTime });
               setSeriesList((list) => list.map((item) => (item.id === current.id ? replaced : item)));
               const saved = firstOf(replaced) ?? { ...next, id: replaced.id, seriesId: replaced.id, repeats: detail.rule !== null, originalStart: next.start };
               if (editing.repeats) {
@@ -2165,6 +2166,7 @@ export function EventEditor({
   mode = 'edit',
   rule = null,
   template = null,
+  wallTime,
   chooseScope = false,
   onSave,
   onCancel,
@@ -2179,9 +2181,11 @@ export function EventEditor({
   mode?: 'create' | 'edit';
   rule?: RecurrenceRule | null;
   template?: CalendarEvent | null;
+  /** The series clock when `template.start` shows a different local time. */
+  wallTime?: Temporal.PlainTime;
   /** A repeating event asks which occurrences the edit applies to before the fields. */
   chooseScope?: boolean;
-  onSave: (event: CalendarEvent, detail: { rule: RecurrenceRule | null; scope: EditScope }) => void;
+  onSave: (event: CalendarEvent, detail: { rule: RecurrenceRule | null; scope: EditScope; startTime?: Temporal.PlainTime }) => void;
   onCancel: () => void;
   restoreFocusRef?: RefObject<HTMLElement | null>;
 }) {
@@ -2232,13 +2236,16 @@ export function EventEditor({
       setRepeat(oneWeekdayFollows(repeatFromRule(rule, template.start.withTimeZone(timeZone).toPlainDate()), draft.date));
     }
     if (next === 'following' && rule && template && event.originalStart) {
-      const probe = seriesFromDraft(seriesId('probe'), {
-        title: template.title,
-        start: template.start,
-        end: template.end,
-        allDay: template.allDay,
-        rule,
-      });
+      const probe = {
+        ...seriesFromDraft(seriesId('probe'), {
+          title: template.title,
+          start: template.start,
+          end: template.end,
+          allDay: template.allDay,
+          rule,
+        }),
+        wallTime,
+      };
       const left = remainingCount(probe, event.originalStart);
       if (left !== null) setRepeat((current) => ({ ...current, end: 'count', count: left }));
     }
@@ -2257,7 +2264,7 @@ export function EventEditor({
       setErrors({ [parsed.field]: parsed.message });
       return;
     }
-    onSave({ ...event, ...result.value }, { rule: parsed, scope: scope ?? 'series' });
+    onSave({ ...event, ...result.value }, { rule: parsed, scope: scope ?? 'series', startTime: result.value.allDay ? undefined : (fields.start ?? undefined) });
   };
 
   const creating = intent === 'create' || mode === 'create';

@@ -561,6 +561,47 @@ describe('editing a series', () => {
       ['2027-03-28', '04:00:00', 'Later'],
       ['2027-04-04', '04:00:00', 'Later'],
     ]);
+    const typed = continueFrom(
+      item,
+      spring.originalStart,
+      {
+        title: 'Later',
+        start: at(LA, '2027-03-14T03:00:00-07:00'),
+        end: at(LA, '2027-03-14T04:00:00-07:00'),
+        allDay: false,
+        rule: item.rule,
+        startTime: Temporal.PlainTime.from('02:00'),
+      },
+      seriesId('typed'),
+    );
+    expect([...expandSeries(earlier!, range), ...expandSeries(typed, range)].map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString(), occurrence.title])).toEqual([
+      ['2027-03-07', '02:30:00', 'Stand-up'],
+      ['2027-03-14', '03:00:00', 'Later'],
+      ['2027-03-21', '02:00:00', 'Later'],
+      ['2027-03-28', '02:00:00', 'Later'],
+      ['2027-04-04', '02:00:00', 'Later'],
+    ]);
+    const skipped = series({
+      ...item,
+      exdates: [at(LA, '2027-03-21T02:30:00-07:00')],
+    });
+    const movedExdate = continueFrom(
+      skipped,
+      spring.originalStart,
+      {
+        title: 'Later',
+        start: at(LA, '2027-03-14T04:00:00-07:00'),
+        end: at(LA, '2027-03-14T05:00:00-07:00'),
+        allDay: false,
+        rule: item.rule,
+      },
+      seriesId('moved-exdate'),
+    );
+    expect(expandSeries(movedExdate, range).map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString()])).toEqual([
+      ['2027-03-14', '04:00:00'],
+      ['2027-03-28', '04:00:00'],
+      ['2027-04-04', '04:00:00'],
+    ]);
   });
 
   it('keeps a lengthened occurrence on the week it spills into', () => {
