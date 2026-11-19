@@ -1553,6 +1553,52 @@ describe('creating an event from empty lane space', () => {
     await page.viewport(1280, 800);
   });
 
+  it('hides the second zone column at 375px before the width is measured, and shows it when the calendar is wide', async () => {
+    const real = HTMLElement.prototype.getBoundingClientRect;
+    HTMLElement.prototype.getBoundingClientRect = function () {
+      const box = real.call(this);
+      const name = typeof this.className === 'string' ? this.className : '';
+      if (name.includes('calendar')) return new DOMRect(box.x, box.y, 0, box.height);
+      return box;
+    };
+    try {
+      await page.viewport(375, 800);
+      render(
+        <Providers>
+          <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" events={[]} />
+        </Providers>,
+      );
+      const compare = document.querySelector<HTMLElement>('[data-compare]');
+      expect(compare).toBeTruthy();
+      expect(compare!.checkVisibility({ visibilityProperty: true })).toBe(false);
+      expect(compare!.getBoundingClientRect().width).toBeLessThan(1);
+      const compareLabel = [...document.querySelectorAll<HTMLElement>('[class*="zoneName"]')].find((node) => node.textContent === 'GMT+5:30');
+      expect(compareLabel?.checkVisibility({ visibilityProperty: true })).toBe(false);
+      const primary = screen.getByText('PST');
+      expect(primary.checkVisibility()).toBe(true);
+      const day = document.querySelector('h3');
+      expect(day).toBeTruthy();
+      expect(day!.getBoundingClientRect().left).toBeGreaterThanOrEqual(primary.getBoundingClientRect().right - 1);
+      cleanup();
+
+      await page.viewport(1280, 800);
+      render(
+        <Providers>
+          <EventCalendarExample locale="en-US" timeZone="America/Los_Angeles" compareZone="Asia/Kolkata" events={[]} />
+        </Providers>,
+      );
+      const wide = document.querySelector<HTMLElement>('[data-compare]');
+      expect(wide).toBeTruthy();
+      expect(wide!.checkVisibility({ visibilityProperty: true })).toBe(true);
+      expect(wide!.getBoundingClientRect().width).toBeGreaterThan(20);
+      expect(screen.getByText('GMT+5:30').checkVisibility()).toBe(true);
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = real;
+      cleanup();
+      await page.viewport(1280, 800);
+    }
+  });
+
   it('creates and places events in a zone that is not the viewer’s', async () => {
     const start = Temporal.Instant.from('2026-11-16T00:00:00Z');
     const end = Temporal.Instant.from('2026-11-16T01:00:00Z');

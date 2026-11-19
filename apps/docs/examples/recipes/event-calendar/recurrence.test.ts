@@ -502,10 +502,64 @@ describe('editing a series', () => {
       expandSeries(later, range).map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString()]),
     ).toEqual([
       ['2026-03-08', '03:30:00'],
-      ['2026-03-15', '03:30:00'],
-      ['2026-03-22', '03:30:00'],
-      ['2026-03-29', '03:30:00'],
-      ['2026-04-05', '03:30:00'],
+      ['2026-03-15', '02:30:00'],
+      ['2026-03-22', '02:30:00'],
+      ['2026-03-29', '02:30:00'],
+      ['2026-04-05', '02:30:00'],
+    ]);
+  });
+
+  it('keeps 2:30 when this and following leaves the start, and uses a new start when it changes', () => {
+    const item = series({
+      start: at(LA, '2027-03-07T02:30:00-08:00'),
+      end: at(LA, '2027-03-07T03:30:00-08:00'),
+      rule: rule({ freq: 'WEEKLY', byDay: ['SU'], end: { kind: 'count', count: 5 } }),
+    });
+    const range = window(LA, '2027-03-01T00:00:00-08:00', '2027-06-01T00:00:00-07:00');
+    const before = expandSeries(item, range);
+    expect(before.map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString()])).toEqual([
+      ['2027-03-07', '02:30:00'],
+      ['2027-03-14', '03:30:00'],
+      ['2027-03-21', '02:30:00'],
+      ['2027-03-28', '02:30:00'],
+      ['2027-04-04', '02:30:00'],
+    ]);
+    const spring = before.find((occurrence) => occurrence.start.toPlainDate().toString() === '2027-03-14');
+    if (!spring) throw new Error('spring-forward occurrence');
+    const unchanged = continueFrom(
+      item,
+      spring.originalStart,
+      { title: 'Later', start: spring.start, end: spring.end, allDay: false, rule: item.rule },
+      seriesId('later'),
+    );
+    const earlier = truncateBefore(item, spring.originalStart);
+    const kept = [...expandSeries(earlier!, range), ...expandSeries(unchanged, range)];
+    expect(kept.map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString(), occurrence.title])).toEqual([
+      ['2027-03-07', '02:30:00', 'Stand-up'],
+      ['2027-03-14', '03:30:00', 'Later'],
+      ['2027-03-21', '02:30:00', 'Later'],
+      ['2027-03-28', '02:30:00', 'Later'],
+      ['2027-04-04', '02:30:00', 'Later'],
+    ]);
+    const moved = continueFrom(
+      item,
+      spring.originalStart,
+      {
+        title: 'Later',
+        start: at(LA, '2027-03-14T04:00:00-07:00'),
+        end: at(LA, '2027-03-14T05:00:00-07:00'),
+        allDay: false,
+        rule: item.rule,
+      },
+      seriesId('moved'),
+    );
+    const shifted = [...expandSeries(earlier!, range), ...expandSeries(moved, range)];
+    expect(shifted.map((occurrence) => [occurrence.start.toPlainDate().toString(), occurrence.start.toPlainTime().toString(), occurrence.title])).toEqual([
+      ['2027-03-07', '02:30:00', 'Stand-up'],
+      ['2027-03-14', '04:00:00', 'Later'],
+      ['2027-03-21', '04:00:00', 'Later'],
+      ['2027-03-28', '04:00:00', 'Later'],
+      ['2027-04-04', '04:00:00', 'Later'],
     ]);
   });
 
