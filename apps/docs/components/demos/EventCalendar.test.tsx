@@ -1467,7 +1467,7 @@ describe('the event menu and dialog', () => {
       originalStart: start,
     };
     const rule = { freq: 'WEEKLY' as const, interval: 1, byDay: ['SU' as const], end: { kind: 'count' as const, count: 4 } };
-    let saved: { start: Temporal.ZonedDateTime; startTime?: Temporal.PlainTime } | null = null;
+    const saved: { current: { start: Temporal.ZonedDateTime; startTime?: Temporal.PlainTime } | null } = { current: null };
     render(
       <EventEditor
         event={occurrence}
@@ -1478,7 +1478,7 @@ describe('the event menu and dialog', () => {
         wallTime={time('02:30')}
         chooseScope
         onSave={(event, detail) => {
-          saved = { start: event.start, startTime: detail.startTime };
+          saved.current = { start: event.start, startTime: detail.startTime };
         }}
         onCancel={() => undefined}
       />,
@@ -1508,7 +1508,7 @@ describe('the event menu and dialog', () => {
         wallTime={time('02:30')}
         chooseScope
         onSave={(event, detail) => {
-          saved = { start: event.start, startTime: detail.startTime };
+          saved.current = { start: event.start, startTime: detail.startTime };
         }}
         onCancel={() => undefined}
       />,
@@ -1519,8 +1519,8 @@ describe('the event menu and dialog', () => {
     fireEvent.change(startField, { target: { value: '2:00 AM' } });
     fireEvent.blur(startField);
     fireEvent.click(within(gap).getByRole('button', { name: 'Save' }));
-    expect(saved?.startTime?.toString()).toBe('02:00:00');
-    expect(saved?.start.toPlainTime().toString()).toBe('03:00:00');
+    expect(saved.current?.startTime?.toString()).toBe('02:00:00');
+    expect(saved.current?.start.toPlainTime().toString()).toBe('03:00:00');
   });
 
   it('cancels the dialog on Escape and keeps the event', async () => {
