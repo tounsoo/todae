@@ -118,6 +118,42 @@
     block-size: 100%;
   }
 
+  /* The title and the detail stack. The row stays a flex row so the check keeps its place. */
+  .copy {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: var(--todae-option-list-gap);
+  }
+
+  .detail {
+    min-width: 0;
+    color: var(--todae-option-fg-default);
+    font-size: var(--todae-option-font-size);
+    font-weight: var(--todae-option-font-weight);
+    line-height: var(--todae-option-leading);
+  }
+
+  .option[data-selected] .detail {
+    color: var(--todae-option-fg-selected);
+  }
+
+  .option[aria-disabled='true'] .detail {
+    color: var(--todae-option-fg-disabled);
+  }
+
+  .option:has([data-todae-option-detail]) {
+    align-items: flex-start;
+  }
+
+  .option:has([data-todae-option-detail]) .check,
+  .list[data-selection-mode='multiple'] .option:has([data-todae-option-detail])::before {
+    top: calc(
+      var(--todae-option-padding-y) + (var(--todae-option-leading) * var(--todae-option-font-size) - var(--todae-option-check-scale) * 1em) / 2
+    );
+  }
+
   /* Forced colors drop backgrounds: outline the highlighted option. Selection
      keeps its check mark, a glyph in the text color. */
   @media (forced-colors: active) {

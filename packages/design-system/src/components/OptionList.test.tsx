@@ -568,4 +568,166 @@ describe('OptionList inline, with its requested option arriving after mount', ()
       rect.mockRestore();
     }
   });
+
+  describe('detail line', () => {
+    function Fruit({
+      mode = 'single',
+      value = null,
+      onValueChange = () => undefined,
+    }: {
+      mode?: 'single' | 'multiple';
+      value?: string | null | string[];
+      onValueChange?: (value: string | string[]) => void;
+    }) {
+      const rows = (
+        <>
+          <OptionList.Option value="apple">
+            Apple
+            <OptionList.OptionDetail>Keeps for weeks</OptionList.OptionDetail>
+          </OptionList.Option>
+          <OptionList.Option value="pear">
+            Pear
+            <OptionList.OptionDetail>Apple butter</OptionList.OptionDetail>
+          </OptionList.Option>
+        </>
+      );
+      if (mode === 'multiple') {
+        return (
+          <OptionList.Root
+            selectionMode="multiple"
+            value={Array.isArray(value) ? value : []}
+            onValueChange={onValueChange}
+            aria-label="Fruit"
+          >
+            {rows}
+          </OptionList.Root>
+        );
+      }
+      return (
+        <OptionList.Root value={typeof value === 'string' ? value : null} onValueChange={onValueChange} aria-label="Fruit">
+          {rows}
+        </OptionList.Root>
+      );
+    }
+
+    const detailOf = (name: string) => screen.getByRole('option', { name }).querySelector('[data-todae-option-detail]');
+
+    it.each(['single', 'multiple'] as const)('names the title and describes the detail in %s mode', (mode) => {
+      render(<Fruit mode={mode} />);
+      const apple = screen.getByRole('option', { name: 'Apple' });
+      expect(detailOf('Apple')?.textContent).toBe('Keeps for weeks');
+      expect(apple.getAttribute('aria-describedby')).toBe(detailOf('Apple')?.id);
+      expect(screen.getByRole('option', { name: 'Pear' })).toBeTruthy();
+      expect(detailOf('Pear')?.textContent).toBe('Apple butter');
+    });
+
+    it('keeps a caller description id beside the detail', () => {
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+          <OptionList.Option value="apple" aria-describedby="hint">
+            Apple
+            <OptionList.OptionDetail>Keeps for weeks</OptionList.OptionDetail>
+          </OptionList.Option>
+        </OptionList.Root>,
+      );
+      expect(screen.getByRole('option', { name: 'Apple' }).getAttribute('aria-describedby')?.split(' ')).toEqual([
+        'hint',
+        detailOf('Apple')?.id,
+      ]);
+    });
+
+    it.each(['single', 'multiple'] as const)('selects by the title when the detail is clicked in %s mode', (mode) => {
+      const onValueChange = vi.fn();
+      render(<Fruit mode={mode} onValueChange={onValueChange} />);
+      fireEvent.click(detailOf('Pear')!);
+      expect(onValueChange).toHaveBeenCalledWith(mode === 'multiple' ? ['pear'] : 'pear');
+    });
+
+    it('moves with the keyboard by option, not by line', () => {
+      const onValueChange = vi.fn();
+      render(<Fruit onValueChange={onValueChange} />);
+      const list = screen.getByRole('listbox');
+      fireEvent.keyDown(list, { key: 'ArrowDown' });
+      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: 'Pear' }).id);
+      fireEvent.keyDown(list, { key: 'Enter' });
+      expect(onValueChange).toHaveBeenCalledWith('pear');
+    });
+
+    it('matches typeahead on the title only, not on a prefix the detail would finish', () => {
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+          <OptionList.Option value="short">
+            App
+            <OptionList.OptionDetail>le</OptionList.OptionDetail>
+          </OptionList.Option>
+          <OptionList.Option value="yam">Yam</OptionList.Option>
+        </OptionList.Root>,
+      );
+      const list = screen.getByRole('listbox');
+      const type = (key: string, at: number) => {
+        const event = createEvent.keyDown(list, { key });
+        Object.defineProperty(event, 'timeStamp', { value: at });
+        fireEvent(list, event);
+      };
+      // "appl" runs past the title "App" into the detail. That search fails, so the next letter starts again and finds Yam.
+      for (const [key, at] of [
+        ['a', 1000],
+        ['p', 1100],
+        ['p', 1200],
+        ['l', 1300],
+        ['y', 1400],
+      ] as const) {
+        type(key, at);
+      }
+      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: 'Yam' }).id);
+    });
+
+    it('matches a Korean title and not the detail', () => {
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="과일">
+          <OptionList.Option value="pear">
+            배
+            <OptionList.OptionDetail>아삭함</OptionList.OptionDetail>
+          </OptionList.Option>
+          <OptionList.Option value="apple">
+            사과
+            <OptionList.OptionDetail>달콤함</OptionList.OptionDetail>
+          </OptionList.Option>
+        </OptionList.Root>,
+      );
+      const list = screen.getByRole('listbox');
+      const event = createEvent.keyDown(list, { key: '사' });
+      Object.defineProperty(event, 'timeStamp', { value: 1000 });
+      fireEvent(list, event);
+      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: '사과' }).id);
+      expect(screen.getByRole('option', { name: '배' }).getAttribute('aria-describedby')).toBeTruthy();
+    });
+
+    it('reads a wrapped detail after commit', () => {
+      function AcmeDetail({ children }: { children: string }) {
+        return <OptionList.OptionDetail>{children}</OptionList.OptionDetail>;
+      }
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+          <OptionList.Option value="apple">
+            Apple
+            <AcmeDetail>Keeps for weeks</AcmeDetail>
+          </OptionList.Option>
+        </OptionList.Root>,
+      );
+      expect(screen.getByRole('option', { name: 'Apple' }).getAttribute('aria-describedby')).toBe(detailOf('Apple')?.id);
+      expect(detailOf('Apple')?.textContent).toBe('Keeps for weeks');
+    });
+
+    it('leaves an option without a detail as a trailing text node', () => {
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+        </OptionList.Root>,
+      );
+      const option = screen.getByRole('option', { name: 'Apple' });
+      expect(option.lastChild?.nodeType).toBe(Node.TEXT_NODE);
+      expect(option.hasAttribute('aria-describedby')).toBe(false);
+    });
+  });
 });

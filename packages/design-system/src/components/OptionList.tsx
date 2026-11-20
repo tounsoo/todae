@@ -14,11 +14,11 @@ import {
   type ComponentPropsWithRef,
   type KeyboardEvent,
   type MouseEvent,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import { useDomId } from '../internal/domId.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
-import { spokenText } from './buttonName.js';
 import { CheckGlyph, glyphOr } from './glyphs.js';
 import { optionDomId } from '../internal/optionDomId.js';
 import { observeMutations } from '../internal/sharedMutations.js';
@@ -31,9 +31,14 @@ import styles from './OptionList.module.css';
 /** `id` is derived from the list and value so `aria-activedescendant` can point at it. */
 export type OptionListOptionProps = {
   value: string;
-  children: string;
+  /** The title. A string, or a string plus one `OptionList.OptionDetail`. */
+  children: ReactNode;
   disabled?: boolean;
 } & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'id'>;
+
+export type OptionListOptionDetailProps = {
+  children?: ReactNode;
+} & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
 type OptionListBase = {
   children: ReactNode;
@@ -103,6 +108,91 @@ function hintOptions(children: ReactNode): { value: string; disabled: boolean; n
   });
 }
 
+const DETAIL_ATTR = 'data-todae-option-detail';
+
+type OptionPartContextValue = { detailId: string };
+
+const OptionPartContext = /* @__PURE__ */ createContext<OptionPartContextValue | null>(null);
+
+function useOptionPart(): OptionPartContextValue {
+  const part = useContext(OptionPartContext);
+  if (!part) throw new Error('OptionList.OptionDetail must render inside OptionList.Option');
+  return part;
+}
+
+/** Title text for typeahead and the option name. The detail line is not part of it. */
+function optionTitle(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+  if (
+    !(node instanceof Element) ||
+    node.getAttribute('aria-hidden') === 'true' ||
+    node.hasAttribute(DETAIL_ATTR) ||
+    node.namespaceURI === 'http://www.w3.org/2000/svg'
+  ) {
+    return '';
+  }
+  return [...node.childNodes].map(optionTitle).join('');
+}
+
+function collapse(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function joinIds(...groups: (string | undefined)[]): string | undefined {
+  const ids = [...new Set(groups.flatMap((group) => group?.split(/\s+/) ?? []).filter(Boolean))];
+  return ids.length > 0 ? ids.join(' ') : undefined;
+}
+
+type OptionContent = {
+  title: ReactNode[];
+  details: ReactElement<OptionListOptionDetailProps>[];
+  foreign: boolean;
+};
+
+// A direct OptionList.OptionDetail is known on the first render. A company's
+// wrapper still marks the line with data-todae-option-detail, which the option
+// reads after commit.
+function optionContent(children: ReactNode): OptionContent {
+  const title: ReactNode[] = [];
+  const details: ReactElement<OptionListOptionDetailProps>[] = [];
+  let foreign = false;
+  const walk = (node: ReactNode) => {
+    Children.forEach(node, (child) => {
+      if (child == null || typeof child === 'boolean') return;
+      if (typeof child === 'string' || typeof child === 'number') {
+        title.push(child);
+        return;
+      }
+      if (!isValidElement(child)) {
+        foreign = true;
+        title.push(child);
+        return;
+      }
+      if (child.type === OptionListOptionDetail) {
+        details.push(child as ReactElement<OptionListOptionDetailProps>);
+        return;
+      }
+      if (child.type === Fragment) {
+        walk((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      foreign = true;
+      title.push(child);
+    });
+  };
+  walk(children);
+  return { title, details, foreign };
+}
+
+function titleString(title: ReactNode[]): string {
+  return collapse(title.map((node) => (typeof node === 'string' || typeof node === 'number' ? String(node) : '')).join(' '));
+}
+
+function OptionListOptionDetail({ id, className, ...props }: OptionListOptionDetailProps) {
+  const part = useOptionPart();
+  return <span {...props} id={id ?? part.detailId} data-todae-option-detail="" className={cx(styles.detail, className)} />;
+}
+
 function OptionListOption({
   value,
   children,
@@ -112,6 +202,9 @@ function OptionListOption({
   onClick,
   ref,
   'aria-disabled': ariaDisabled,
+  'aria-describedby': describedBy,
+  'aria-label': ariaLabel,
+  'aria-labelledby': labelledBy,
   ...props
 }: OptionListOptionProps) {
   const ctx = useOptionList();
@@ -119,43 +212,81 @@ function OptionListOption({
   const refs = useComposedRefs(nodeRef, ref);
   const { register } = ctx;
   const unavailable = ariaDisabled === true || ariaDisabled === 'true';
-  if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
-    console.error('OptionList.Option children must be a string');
+  const content = optionContent(children);
+  const detailId = `${optionDomId(ctx.listId, value)}-detail`;
+  const direct = content.details.length === 1 && !content.foreign;
+  const directId = direct ? (content.details[0]?.props.id ?? detailId) : undefined;
+  const directTitle = direct ? titleString(content.title) : '';
+  if (process.env.NODE_ENV !== 'production') {
+    const plain = typeof children === 'string';
+    const composed = direct && directTitle !== '';
+    if (!plain && !composed && !content.foreign) console.error('OptionList.Option children must be a string');
+    if (content.details.length > 1) console.error('OptionList.Option takes a single OptionList.OptionDetail');
   }
-  const label = typeof children === 'string' ? children : String(children);
   // The entry holds what order, keys and selection need. Typeahead reads the
-  // label from the node, so a label change re-registers nothing and the list
+  // title from the node, so a label change re-registers nothing and the list
   // renders once.
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
     return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
   }, [disabled, register, unavailable, value]);
+  const [wrapped, setWrapped] = useState<{ id: string; title: string } | null>(null);
+  const seenDetail = useRef<{ id: string; title: string } | null>(null);
+  // A direct detail is known while rendering. A wrapper hides it, so read the
+  // attribute after commit. Skip the state update when nothing changed: calling
+  // setState here renders the list again.
+  useLayoutEffect(() => {
+    if (!content.foreign) {
+      if (seenDetail.current !== null) {
+        seenDetail.current = null;
+        setWrapped(null);
+      }
+      return;
+    }
+    const node = nodeRef.current;
+    const detail = node?.querySelector<HTMLElement>(`[${DETAIL_ATTR}]`) ?? null;
+    const next = detail?.id && node ? { id: detail.id, title: collapse(optionTitle(node)) } : null;
+    const prev = seenDetail.current;
+    if (prev?.id === next?.id && prev?.title === next?.title) return;
+    seenDetail.current = next;
+    setWrapped(next);
+  }, [children, content.foreign]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
+  const describedId = direct ? directId : wrapped?.id;
+  const title = direct ? directTitle : (wrapped?.title ?? '');
+  const named = ariaLabel != null || labelledBy != null;
+  const part = useMemo(() => ({ detailId }), [detailId]);
+  const stacked = Boolean(describedId);
   return (
-    <div
-      {...props}
-      ref={refs}
-      id={optionDomId(ctx.listId, value)}
-      role="option"
-      aria-selected={selected}
-      aria-disabled={disabled || unavailable || undefined}
-      data-selected={selected ? '' : undefined}
-      data-highlighted={ctx.highlighted === value ? '' : undefined}
-      className={cx(styles.option, className)}
-      onMouseDown={composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {
-        const list = event.currentTarget.closest('[role="listbox"]');
-        if (list instanceof HTMLElement && list.tabIndex < 0) event.preventDefault();
-      })}
-      onClick={composeHandlers(onClick, () => ctx.select(value, true))}
-    >
-      {selected ? (
-        <span className={styles.check} data-todae-glyph="" aria-hidden="true">
-          {glyphOr(check, <CheckGlyph />)}
-        </span>
-      ) : null}
-      {label}
-    </div>
+    <OptionPartContext.Provider value={part}>
+      <div
+        {...props}
+        ref={refs}
+        id={optionDomId(ctx.listId, value)}
+        role="option"
+        aria-selected={selected}
+        aria-disabled={disabled || unavailable || undefined}
+        aria-label={named ? ariaLabel : stacked && title ? title : undefined}
+        aria-labelledby={named ? labelledBy : undefined}
+        aria-describedby={joinIds(describedBy, describedId)}
+        data-selected={selected ? '' : undefined}
+        data-highlighted={ctx.highlighted === value ? '' : undefined}
+        className={cx(styles.option, className)}
+        onMouseDown={composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {
+          const list = event.currentTarget.closest('[role="listbox"]');
+          if (list instanceof HTMLElement && list.tabIndex < 0) event.preventDefault();
+        })}
+        onClick={composeHandlers(onClick, () => ctx.select(value, true))}
+      >
+        {selected ? (
+          <span className={styles.check} data-todae-glyph="" aria-hidden="true">
+            {glyphOr(check, <CheckGlyph />)}
+          </span>
+        ) : null}
+        {stacked ? <span className={styles.copy}>{children}</span> : children}
+      </div>
+    </OptionPartContext.Provider>
   );
 }
 
@@ -273,10 +404,10 @@ function OptionListRoot(props: OptionListRootProps) {
     // A typed character moves to the next option whose text starts with it;
     // a Space only joins a search already under way, and otherwise selects.
     if (isTypeaheadKey(event.key) && (event.key !== ' ' || typingAhead(typed.current, event.timeStamp))) {
-      // spokenText leaves out aria-hidden parts, such as the check glyph.
+      // optionTitle leaves out the detail line and aria-hidden parts, such as the check glyph.
       const text = (at: number) => {
         const node = enabledOptions[at]?.node;
-        return node ? spokenText(node).trim().toLowerCase() : '';
+        return node ? optionTitle(node).trim().toLowerCase() : '';
       };
       const found = findTypeahead(typed.current, event.key, event.timeStamp, enabled.length, text, index, index + 1);
       if (found >= 0) move(enabled[found]);
@@ -465,4 +596,8 @@ function revealInScrollBox(option: HTMLElement) {
   else if (rect.bottom > bottom) box.scrollTop += (rect.bottom - bottom) / scale;
 }
 
-export const OptionList = { Root: OptionListRoot, Option: OptionListOption } as const;
+export const OptionList = {
+  Root: OptionListRoot,
+  Option: OptionListOption,
+  OptionDetail: OptionListOptionDetail,
+} as const;

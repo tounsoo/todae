@@ -3744,7 +3744,7 @@
     },
     {
       "name": "OptionList.Option",
-      "description": "String-only option inside OptionList.Root.",
+      "description": "Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.",
       "props": [
         {
           "name": "value",
@@ -3754,9 +3754,9 @@
         },
         {
           "name": "children",
-          "type": "string",
+          "type": "React.ReactNode",
           "required": true,
-          "description": "Visible label. Text only."
+          "description": "Title. A string, plus one OptionList.OptionDetail for a second line."
         },
         {
           "name": "disabled",
@@ -3764,6 +3764,18 @@
           "required": false,
           "description": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
           "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "OptionList.OptionDetail",
+      "description": "Second line under an option title. The option describes itself with this line.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Detail text, announced as the option description."
         }
       ]
     },
