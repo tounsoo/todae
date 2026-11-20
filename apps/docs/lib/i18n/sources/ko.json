@@ -132,11 +132,11 @@
     "(section order)": "ee737dd90e41"
   },
   "code": {
-    "(top)": "f442cb431459",
+    "(top)": "b26fa7854d92",
     "# Code and Kbd": "7a928f5103b0",
-    "## Code": "dbe9f0a54b83",
+    "## Code": "b36828a3cb5e",
     "## Kbd": "d568c7489f2d",
-    "## Accessible composition": "f497b0d99225",
+    "## Accessible composition": "3c3dc76b46e2",
     "## When to use": "2d81a4d8f4de",
     "## Props": "7cb899518e8d",
     "(section order)": "809b0e250585"
@@ -537,17 +537,17 @@
     "(section order)": "18b56400fd30"
   },
   "menu": {
-    "(top)": "c9cd602f82c7",
+    "(top)": "cb0f3ea2e880",
     "# Menu": "4defd60a5176",
     "## Keyboard": "7a30a02ae4c8",
     "## Checkbox and radio items": "832117e3e828",
     "## Submenus": "93805bf5d7d3",
     "## Links": "ede13f3623cf",
     "## Context menus": "2d9cceca0184",
-    "## Icons": "57bbd70b0b4e",
-    "## Accessible composition": "b3fa00b10aa9",
+    "## Icons": "a5742eeef7cd",
+    "## Accessible composition": "b31bba7789d0",
     "## When to use": "9a102c1309d4",
-    "## Props": "51a8cb6780b4",
+    "## Props": "aa5c6b3046f6",
     "(section order)": "b64a64a1f9aa"
   },
   "message": {

@@ -994,8 +994,15 @@
     },
     {
       "name": "CodeBlock.Root",
-      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.",
+      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long, and wraps those lines when wrap is set. It takes native pre attributes.",
       "props": [
+        {
+          "name": "wrap",
+          "type": "boolean",
+          "required": false,
+          "description": "Wraps long lines instead of scrolling sideways.",
+          "default": "false"
+        },
         {
           "name": "tabIndex",
           "type": "number",
@@ -3203,6 +3210,30 @@
           "type": "(props: MenuItemRenderProps) => React.ReactElement",
           "required": false,
           "description": "Renders the item on another element, such as an a or a router link that goes somewhere when chosen. It receives every prop, ref included, and must pass them on."
+        }
+      ]
+    },
+    {
+      "name": "Menu.ItemIcon",
+      "description": "Leading icon for a menu item. Order-only and aria-hidden, so the name and typeahead stay the label. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic."
+        }
+      ]
+    },
+    {
+      "name": "Menu.ItemShortcut",
+      "description": "Trailing shortcut for a menu item, such as a Kbd. Order-only and aria-hidden, so the name and typeahead stay the label. Put aria-keyshortcuts on the item. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The shortcut, such as nested Kbd.Root elements."
         }
       ]
     },

@@ -468,6 +468,10 @@
     }
   },
   "CodeBlock.Root": {
+    "wrap": {
+      "en": "Wraps long lines instead of scrolling sideways.",
+      "ko": "긴 줄을 옆으로 스크롤하지 않고 줄바꿈합니다."
+    },
     "tabIndex": {
       "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",
       "ko": "블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."
@@ -1339,6 +1343,18 @@
     "render": {
       "en": "Renders the item on another element, such as an a or a router link that goes somewhere when chosen. It receives every prop, ref included, and must pass them on.",
       "ko": "항목을 선택하면 어딘가로 가는 a나 라우터 링크 같은 다른 요소로 렌더링합니다. ref를 포함한 모든 prop을 받으며, 그것을 넘겨야 합니다."
+    }
+  },
+  "Menu.ItemIcon": {
+    "children": {
+      "en": "Icon graphic.",
+      "ko": "아이콘 그래픽."
+    }
+  },
+  "Menu.ItemShortcut": {
+    "children": {
+      "en": "The shortcut, such as nested Kbd.Root elements.",
+      "ko": "단축키. 중첩된 Kbd.Root 같은 요소입니다."
     }
   },
   "Menu.RadioGroup": {

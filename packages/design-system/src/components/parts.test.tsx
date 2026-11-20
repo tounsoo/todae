@@ -475,7 +475,7 @@ const cases: Case[] = [
       <Menu.ContextTrigger {...p} />
     </Menu.Root>
   )],
-  ...(['Item', 'CheckboxItem', 'Separator'] as const).map(
+  ...(['Item', 'ItemIcon', 'ItemShortcut', 'CheckboxItem', 'Separator'] as const).map(
     (part): Case => [
       `Menu.${part}`,
       (p) => {

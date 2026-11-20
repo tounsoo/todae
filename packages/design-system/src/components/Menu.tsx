@@ -812,6 +812,32 @@ function useItem(
   };
 }
 
+export type MenuItemIconProps = ComponentPropsWithRef<'span'>;
+
+function ItemIcon({ className, ...props }: MenuItemIconProps) {
+  return (
+    <span
+      {...props}
+      data-todae-menu-icon=""
+      aria-hidden={props['aria-hidden'] ?? true}
+      className={cx(styles.itemIcon, className)}
+    />
+  );
+}
+
+export type MenuItemShortcutProps = ComponentPropsWithRef<'span'>;
+
+function ItemShortcut({ className, ...props }: MenuItemShortcutProps) {
+  return (
+    <span
+      {...props}
+      data-todae-menu-shortcut=""
+      aria-hidden={props['aria-hidden'] ?? true}
+      className={cx(styles.itemShortcut, className)}
+    />
+  );
+}
+
 function Item({ children, onSelect, closeOnSelect = true, render, ...props }: MenuItemProps) {
   const level = useLevel('Item');
   const item = useItem(level, 'menuitem', props, () => {
@@ -1200,6 +1226,8 @@ export const Menu = {
   ContextTrigger,
   Content,
   Item,
+  ItemIcon,
+  ItemShortcut,
   CheckboxItem,
   Group,
   RadioGroup,
