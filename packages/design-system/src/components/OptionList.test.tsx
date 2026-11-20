@@ -719,6 +719,33 @@ describe('OptionList inline, with its requested option arriving after mount', ()
       expect(detailOf('Apple')?.textContent).toBe('Keeps for weeks');
     });
 
+    it('names the title the way the row shows it when the title is more than one text node', () => {
+      render(
+        <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
+          <OptionList.Option value="joined">
+            {'App'}{'le'}
+            <OptionList.OptionDetail>Fruit</OptionList.OptionDetail>
+          </OptionList.Option>
+          <OptionList.Option value="count">
+            {'Apple'} ({3})
+            <OptionList.OptionDetail>In stock</OptionList.OptionDetail>
+          </OptionList.Option>
+        </OptionList.Root>,
+      );
+      for (const [name, detail] of [
+        ['Apple', 'Fruit'],
+        ['Apple (3)', 'In stock'],
+      ] as const) {
+        const option = screen.getByRole('option', { name });
+        const shown = option.cloneNode(true) as HTMLElement;
+        shown.querySelector('[data-todae-option-detail]')?.remove();
+        expect(shown.textContent?.replace(/\s+/g, ' ').trim()).toBe(name);
+        expect(option.getAttribute('aria-label')).toBe(name);
+        expect(option.getAttribute('aria-describedby')).toBe(option.querySelector('[data-todae-option-detail]')?.id);
+        expect(option.querySelector('[data-todae-option-detail]')?.textContent).toBe(detail);
+      }
+    });
+
     it('leaves an option without a detail as a trailing text node', () => {
       render(
         <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
