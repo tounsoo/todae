@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack.js';
+import { releasePageScrollbar, releasePageScrollbarOnUnmount } from './pageScrollbar.js';
 import { inGuestLayerWithin } from './tabbables.js';
 import { initialFocusTarget } from './useInitialFocus.js';
 import { reshowHeldInside } from './usePopoverSync.js';
@@ -41,6 +42,8 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
         // as a tooltip, which go back in front of it. A caller that shows it
         // itself does this right after its showModal().
         if (!latest.current.shownModal) reshowHeldInside(el);
+      } else {
+        releasePageScrollbar(el.ownerDocument);
       }
       sync(shown);
     });
@@ -58,6 +61,7 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
       unwatch();
       syncRef.current = () => undefined;
       dropModal(el);
+      releasePageScrollbarOnUnmount(el);
     };
   }, [el]);
   useLayoutEffect(() => {

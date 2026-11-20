@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pageScrollbarIsFlush, releasePageScrollbar, syncPageScrollbar } from './pageScrollbar.js';
+import { pageScrollbarIsFlush, releasePageScrollbar, releasePageScrollbarOnUnmount, syncPageScrollbar } from './pageScrollbar.js';
 
 function setWidths(innerWidth: number, clientWidth: number): void {
   Object.defineProperty(window, 'innerWidth', { configurable: true, get: () => innerWidth });
@@ -30,6 +30,18 @@ describe('page scrollbar lock', () => {
     setWidths(390, 375);
     syncPageScrollbar(document);
     expect(document.documentElement.hasAttribute('data-todae-no-page-scrollbar')).toBe(false);
+  });
+
+  it('keeps a marker a newer open recorded after an unmount', async () => {
+    setWidths(390, 390);
+    const el = document.createElement('dialog');
+    document.body.append(el);
+    syncPageScrollbar(document);
+    releasePageScrollbarOnUnmount(el);
+    el.remove();
+    syncPageScrollbar(document);
+    await Promise.resolve();
+    expect(document.documentElement.hasAttribute('data-todae-no-page-scrollbar')).toBe(true);
   });
 
   it('leaves the record alone while a modal dialog is open', () => {

@@ -1,7 +1,7 @@
 import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { liftDialog } from './inertOutside.js';
 import { dropModal } from './modalStack.js';
-import { releasePageScrollbar, syncPageScrollbar } from './pageScrollbar.js';
+import { releasePageScrollbar, releasePageScrollbarOnUnmount, syncPageScrollbar } from './pageScrollbar.js';
 import { inGuestLayerWithin } from './tabbables.js';
 import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
@@ -110,7 +110,10 @@ export function useModalDialog({
     if (!present || !el) return;
     return () => {
       // Only at the end of the exit: not when the element is replaced, nor at
-      // StrictMode's pretend unmount.
+      // StrictMode's pretend unmount. Unmounting while open removes the
+      // element with no close(), and the marker would stay for the next modal.
+      // StrictMode leaves the element connected, so the open dialog keeps it.
+      releasePageScrollbarOnUnmount(el);
       if (presentRef.current || !el.open) return;
       const active = el.ownerDocument.activeElement;
       const guest = active instanceof HTMLElement && inGuestLayerWithin(active, el) ? active : null;

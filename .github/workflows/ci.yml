@@ -153,9 +153,13 @@ jobs:
         if: ${{ !cancelled() && needs.changes.outputs.class == 'all' && steps.package-dist.outputs.cache-hit != 'true' }}
         run: pnpm build:ds
       # Firefox and WebKit run the package's browser tests in the Engines jobs.
+      # Docs' scroll-lock project is a second Chromium, launched without
+      # --hide-scrollbars, so a long page has a scrollbar that takes width.
       - name: Browser tests
         if: ${{ !cancelled() && needs.changes.outputs.class == 'all' }}
-        run: pnpm test:browser --project chromium
+        run: |
+          pnpm --filter @tounsoo/todae test:browser --project chromium
+          pnpm --filter docs test:browser --project chromium --project scroll-lock
 
       # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
       - if: ${{ !cancelled() && needs.changes.outputs.class == 'all' }}
