@@ -2,13 +2,18 @@
    look from components (Link.Root, Table.Root and so on), not from here. Every
    selector sits in :where(), so any class a company adds wins. */
 @layer todae.base {
-  /* A modal <dialog> makes the page behind it inert; this stops it scrolling
-     too. The gutter stays, so a page with a scrollbar does not
-     shift when it goes. A page's own overflow on the root wins over this,
-     as any page style wins over todae.base. */
+  /* A modal <dialog> makes the page behind it inert. This stops that page
+     scrolling. The gutter stays only when the page's scrollbar was already
+     taking width. Reserving it on a page with no scrollbar narrows the page,
+     and Chromium does that even when its scrollbar takes no width.
+     data-todae-no-page-scrollbar marks that page. A page's own overflow on
+     the root wins over this, as any page style wins over todae.base. */
   :where(:root:has(dialog:modal)) {
     overflow: hidden;
     overscroll-behavior: none;
+  }
+
+  :where(:root:not([data-todae-no-page-scrollbar]):has(dialog:modal)) {
     scrollbar-gutter: stable;
   }
 }
