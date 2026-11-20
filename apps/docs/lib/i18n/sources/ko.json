@@ -60,14 +60,14 @@
   },
   "button": {
     "(top)": "21f9bbd314e1",
-    "# Button": "fb3e7be52720",
+    "# Button": "b8caf790c115",
     "## Toggle": "e5bd3c655eca",
     "## Button.Group": "f0ded5f40ad7",
     "## Icons": "52d0a9d4863a",
     "## Links": "8287503072f1",
     "## Accessible composition": "3e6c45ede0e5",
     "## When to use": "d57fe8233a0b",
-    "### Button.Root": "188c84737d40",
+    "### Button.Root": "570258da52c2",
     "### Button.Icon": "0479470eb2ff",
     "### Button.Group": "b332e12d19f9",
     "## Props": "01a8223cf786",
@@ -572,13 +572,14 @@
     "(section order)": "aa315b686964"
   },
   "optionlist": {
-    "(top)": "982ecc37814f",
-    "# OptionList": "9af9913ffda5",
+    "(top)": "79fa29c40cf3",
+    "# OptionList": "0f34c7cc527d",
+    "## Detail": "58e635bbfbad",
     "## Icons": "c64f640cde20",
-    "## Accessible composition": "c19b4a381263",
+    "## Accessible composition": "e95c5b0be999",
     "## When to use": "f5fbfd42f51c",
-    "## Props": "5341a504c460",
-    "(section order)": "1676be320e51"
+    "## Props": "230671f0f6b1",
+    "(section order)": "0ecd65585283"
   },
   "pagination": {
     "(top)": "92ea2c253331",
@@ -1000,9 +1001,9 @@
     "(section order)": "db1562c09156"
   },
   "toggle-group": {
-    "(top)": "f5a375d2c2b9",
-    "# ToggleGroup": "4d3750ae4d8d",
-    "## Segmented look": "2bca66ceee53",
+    "(top)": "4e7975a0c134",
+    "# ToggleGroup": "2fe698e95751",
+    "## Segmented look": "304a3bbe7fae",
     "## Accessible composition": "dc7693b6a613",
     "## When to use": "7f754185d7b0",
     "## Props": "862a7b077e89",

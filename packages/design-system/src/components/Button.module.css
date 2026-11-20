@@ -135,29 +135,49 @@
   .group {
     display: inline-flex;
     align-items: stretch;
+    /* The shared border a joined segment pulls across. ToggleGroup spends it
+       so a wrapped line starts on the group's edge. */
+    --_join-outset: max(0px, var(--todae-button-border-width) - var(--_button-join-gap, 0px));
   }
 
   /* ToggleGroup sets --_button-join-gap from its gap. At 0 the items share a
      border and the meeting corners are square. A wider gap separates them and
-     gives those corners back. */
+     gives those corners back. A tip rendered beside a button is not a .root,
+     so it never takes the margin. */
   .group > .root ~ .root {
     margin-inline-start: min(0px, calc(var(--_button-join-gap, 0px) - var(--todae-button-border-width)));
   }
 
   /* Counted among the group's buttons, whatever their tag (a button or a
-     link through render), and past the tooltips they render beside them. */
-  .group > .root:nth-child(1 of .root):not(:nth-last-child(1 of .root)) {
+     link through render), and past the tooltips they render beside them.
+     ToggleGroup marks the item at each end of a wrapped row. Those keep the
+     outer radius. An unmarked group is one row, and these rules are unchanged. */
+  .group > .root:nth-child(1 of .root):not(:nth-last-child(1 of .root)):not([data-todae-row-end]) {
     border-start-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
     border-end-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
   }
 
-  .group > .root:nth-last-child(1 of .root):not(:nth-child(1 of .root)) {
+  .group > .root:nth-last-child(1 of .root):not(:nth-child(1 of .root)):not([data-todae-row-start]) {
     border-start-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
     border-end-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
   }
 
-  .group > .root:not(:nth-child(1 of .root)):not(:nth-last-child(1 of .root)) {
+  .group > .root:not(:nth-child(1 of .root)):not(:nth-last-child(1 of .root)):not([data-todae-row-start]):not([data-todae-row-end]) {
     border-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+  }
+
+  .group > .root[data-todae-row-start]:not([data-todae-row-end]) {
+    border-start-start-radius: var(--_button-radius, var(--todae-button-radius));
+    border-end-start-radius: var(--_button-radius, var(--todae-button-radius));
+    border-start-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-end-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+  }
+
+  .group > .root[data-todae-row-end]:not([data-todae-row-start]) {
+    border-start-end-radius: var(--_button-radius, var(--todae-button-radius));
+    border-end-end-radius: var(--_button-radius, var(--todae-button-radius));
+    border-start-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-end-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
   }
 
   .group > .root:focus-visible {

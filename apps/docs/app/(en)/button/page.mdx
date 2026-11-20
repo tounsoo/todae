@@ -12,7 +12,7 @@ import ButtonOverflow from '../../../examples/button/ButtonOverflow';
 
 Icon-only roots tip that name. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip. Auto tips are never interactive.
 
-Variants use the existing paint packs. Default `type` is `button`. `aria-disabled="true"` draws the button as disabled but keeps it focusable, for a button that turns unavailable while it may have focus, such as Next at the last page: `disabled` would drop that focus to the page. A click then does nothing: `onClick` doesn't run, a toggle doesn't flip, and the button submits no form and follows no link.
+Variants use the existing paint packs. `critical` is the irreversible action in a confirm dialog, such as Delete next to a secondary Cancel. Default `type` is `button`. `aria-disabled="true"` draws the button as disabled but keeps it focusable, for a button that turns unavailable while it may have focus, such as Next at the last page: `disabled` would drop that focus to the page. A click then does nothing: `onClick` doesn't run, a toggle doesn't flip, and the button submits no form and follows no link.
 
 <Example of={ButtonVariants} />
 
@@ -91,9 +91,9 @@ export function IconButton({ label, icon, ...props }: IconButtonProps) {
 
 ### Button.Root
 
-**When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
+**When:** One action in a native button. Variants primary / secondary / ghost / critical; default `type="button"`. `critical` confirms an irreversible action, such as deleting an account, and sits beside a secondary cancel. Icon-only needs `aria-label`, which it auto-tips.
 
-**When not:** Navigation in text → [Link](/link); navigation that looks like a button → `Button.Root` with `render`. A setting that takes effect at once → Switch. A form choice → Checkbox. Selected segment → ToggleGroup (Button.Group has no selection).
+**When not:** Navigation in text → [Link](/link); navigation that looks like a button → `Button.Root` with `render`. A setting that takes effect at once → Switch. A form choice → Checkbox. Selected segment → ToggleGroup (Button.Group has no selection). `critical` for an action the person can undo, or for status text that is not an action → Alert `tone="critical"`.
 
 ### Button.Icon
 

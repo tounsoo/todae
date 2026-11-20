@@ -7,7 +7,7 @@ export const meta = {
   props: [
     {
       name: "variant",
-      type: "\"primary\" | \"secondary\" | \"ghost\"",
+      type: "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
       required: false,
       default: "\"secondary\"",
       description: "Button variant.",

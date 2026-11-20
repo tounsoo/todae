@@ -8,6 +8,7 @@ export default function ButtonVariants() {
       <Button.Root>Save</Button.Root>
       <Button.Root variant="secondary">Cancel</Button.Root>
       <Button.Root variant="ghost">Ghost</Button.Root>
+      <Button.Root variant="critical">Delete</Button.Root>
       <Button.Root disabled>Disabled</Button.Root>
     </>
   );

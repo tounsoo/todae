@@ -465,7 +465,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
           "required": false,
           "description": "Visual style. Non-primary sets data-button-variant.",
           "default": "\"primary\""
@@ -3775,7 +3775,7 @@
     },
     {
       "name": "OptionList.Option",
-      "description": "String-only option inside OptionList.Root.",
+      "description": "Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.",
       "props": [
         {
           "name": "value",
@@ -3785,9 +3785,9 @@
         },
         {
           "name": "children",
-          "type": "string",
+          "type": "React.ReactNode",
           "required": true,
-          "description": "Visible label. Text only."
+          "description": "Title. A string, plus one OptionList.OptionDetail for a second line."
         },
         {
           "name": "disabled",
@@ -3795,6 +3795,18 @@
           "required": false,
           "description": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
           "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "OptionList.OptionDetail",
+      "description": "Second line under an option title. The option describes itself with this line.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Detail text, announced as the option description."
         }
       ]
     },
@@ -5123,7 +5135,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
           "required": false,
           "description": "Button variant.",
           "default": "\"secondary\""
@@ -5308,8 +5320,15 @@
           "name": "selectionMode",
           "type": "\"single\" | \"multiple\"",
           "required": false,
-          "description": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+          "description": "Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.",
           "default": "\"single\""
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.",
+          "default": "false"
         },
         {
           "name": "value",

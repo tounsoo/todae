@@ -448,6 +448,17 @@ const cases: Case[] = [
       </OptionList.Root>
     ),
   ],
+  [
+    'OptionList.OptionDetail',
+    (p) => (
+      <OptionList.Root aria-label="l" value={null} onValueChange={noop}>
+        <OptionList.Option value="a">
+          a
+          <OptionList.OptionDetail {...p}>detail</OptionList.OptionDetail>
+        </OptionList.Option>
+      </OptionList.Root>
+    ),
+  ],
   ['Popover.Root', (p) => <PopoverCase p={p} />],
   ['Menu.Trigger', (p) => (
     <Menu.Root>
