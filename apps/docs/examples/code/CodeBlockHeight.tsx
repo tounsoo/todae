@@ -3,7 +3,7 @@
 import { CodeBlock, ScrollArea } from '@tounsoo/todae';
 
 const source = [
-  `const label = '${'token-'.repeat(8)}end';`,
+  `const label = '${'token-'.repeat(16)}end';`,
   ...Array.from({ length: 24 }, (_, index) => `const line${index + 1} = ${index + 1};`),
 ].join('\n');
 

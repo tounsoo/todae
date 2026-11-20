@@ -48,21 +48,24 @@ describe('CodeBlock wrap and a capped height', () => {
   });
 
   it('caps a block’s height in one ScrollArea that also scrolls a long line', async () => {
-    const source = [`const label = '${'token-'.repeat(8)}end';`, ...Array.from({ length: 24 }, (_, i) => `const line${i + 1} = ${i + 1};`)].join(
+    const source = [`const label = '${'token-'.repeat(16)}end';`, ...Array.from({ length: 24 }, (_, i) => `const line${i + 1} = ${i + 1};`)].join(
       '\n',
     );
     render(
-      <ScrollArea.Root focusable data-testid="area" axis="both" aria-label="Long source" style={{ maxBlockSize: '8rem' }}>
-        <CodeBlock.Root data-testid="block" style={{ overflow: 'visible' }}>
-          <code>{source}</code>
-        </CodeBlock.Root>
-      </ScrollArea.Root>,
+      <div style={{ inlineSize: '46rem' }}>
+        <ScrollArea.Root focusable data-testid="area" axis="both" aria-label="Long source" style={{ maxBlockSize: '8rem' }}>
+          <CodeBlock.Root data-testid="block" style={{ overflow: 'visible' }}>
+            <code>{source}</code>
+          </CodeBlock.Root>
+        </ScrollArea.Root>
+      </div>,
     );
     await frame();
     const area = screen.getByTestId('area');
     const block = screen.getByTestId('block');
     const cap = parseFloat(getComputedStyle(area).maxBlockSize);
     expect(getComputedStyle(block).overflowX).toBe('visible');
+    expect(area.clientWidth).toBeGreaterThan(640);
     expect(area.clientHeight).toBeLessThanOrEqual(cap + 1);
     expect(area.scrollHeight).toBeGreaterThan(area.clientHeight);
     expect(area.scrollWidth).toBeGreaterThan(area.clientWidth);
