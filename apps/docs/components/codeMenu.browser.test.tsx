@@ -47,19 +47,26 @@ describe('CodeBlock wrap and a capped height', () => {
     expect(wrapped.getBoundingClientRect().height).toBeGreaterThan(plain.getBoundingClientRect().height);
   });
 
-  it('caps a block’s height when the block sits in a ScrollArea', () => {
-    const source = Array.from({ length: 24 }, (_, index) => `const line${index + 1} = ${index + 1};`).join('\n');
+  it('caps a block’s height in one ScrollArea that also scrolls a long line', async () => {
+    const source = [`const label = '${'token-'.repeat(8)}end';`, ...Array.from({ length: 24 }, (_, i) => `const line${i + 1} = ${i + 1};`)].join(
+      '\n',
+    );
     render(
-      <ScrollArea.Root data-testid="area" aria-label="Long source" style={{ maxBlockSize: '8rem' }}>
-        <CodeBlock.Root>
+      <ScrollArea.Root focusable data-testid="area" axis="both" aria-label="Long source" style={{ maxBlockSize: '8rem' }}>
+        <CodeBlock.Root data-testid="block" style={{ overflow: 'visible' }}>
           <code>{source}</code>
         </CodeBlock.Root>
       </ScrollArea.Root>,
     );
+    await frame();
     const area = screen.getByTestId('area');
+    const block = screen.getByTestId('block');
     const cap = parseFloat(getComputedStyle(area).maxBlockSize);
+    expect(getComputedStyle(block).overflowX).toBe('visible');
     expect(area.clientHeight).toBeLessThanOrEqual(cap + 1);
     expect(area.scrollHeight).toBeGreaterThan(area.clientHeight);
+    expect(area.scrollWidth).toBeGreaterThan(area.clientWidth);
+    expect(area.tabIndex).toBe(0);
   });
 });
 
@@ -89,11 +96,16 @@ describe('menu item icon and shortcut columns', () => {
             </Menu.ItemShortcut>
           </Menu.Item>
           <Menu.Item>Close</Menu.Item>
-          <Menu.Group>
+          <Menu.Group aria-label="More actions">
             <Menu.Item>Rename</Menu.Item>
           </Menu.Group>
           <Menu.Submenu defaultOpen>
-            <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+            <Menu.SubmenuTrigger>
+              {'More'}
+              <Menu.ItemShortcut data-testid="more-keys">
+                <Kbd.Root>M</Kbd.Root>
+              </Menu.ItemShortcut>
+            </Menu.SubmenuTrigger>
             <Menu.SubmenuContent>
               <Menu.Item>
                 <Menu.ItemIcon>
@@ -121,6 +133,11 @@ describe('menu item icon and shortcut columns', () => {
     const saveAsKeys = screen.getByTestId('save-as-keys').getBoundingClientRect();
     expect(Math.abs(saveKeys.right - saveAsKeys.right)).toBeLessThanOrEqual(1);
     expect(saveKeys.left).toBeGreaterThan(labelStart(save));
+    const moreKeys = screen.getByTestId('more-keys').getBoundingClientRect();
+    const chevron = more.querySelector('[data-todae-glyph]')!.getBoundingClientRect();
+    const gap = parseFloat(getComputedStyle(more).columnGap || getComputedStyle(more).gap);
+    expect(Math.abs(chevron.left - moreKeys.right - gap)).toBeLessThanOrEqual(1);
+    expect(Math.abs(chevron.right - saveKeys.right)).toBeLessThanOrEqual(1);
   });
 
   it('leaves the icon column closed when the only icon is inside a submenu', async () => {

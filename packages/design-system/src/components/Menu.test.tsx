@@ -184,7 +184,7 @@ describe('Menu', () => {
         <Menu.Content>
           <Menu.Item aria-keyshortcuts="Control+G">
             <Menu.ItemIcon>I</Menu.ItemIcon>
-            Go
+            {'Go'}
             <Menu.ItemShortcut>
               <Kbd.Root>to</Kbd.Root>
             </Menu.ItemShortcut>
@@ -200,8 +200,9 @@ describe('Menu', () => {
     expect(go.querySelector('[data-todae-menu-icon]')?.getAttribute('aria-hidden')).toBe('true');
     expect(go.querySelector('[data-todae-menu-shortcut]')?.getAttribute('aria-hidden')).toBe('true');
     go.focus();
-    // "got" continues into the shortcut. A hidden shortcut ends that search,
-    // so the next letter starts a new one and can leave the item.
+    // With no space between them, a visible shortcut makes the text "Goto"
+    // and "goto" stays on this item. A hidden shortcut ends the search at
+    // "got", so the next letter starts a new one and can leave the item.
     for (const [i, k] of [...'goto'].entries()) {
       fireEvent.keyDown(document.activeElement!, { key: k, timeStamp: 1000 + i * 50 });
     }

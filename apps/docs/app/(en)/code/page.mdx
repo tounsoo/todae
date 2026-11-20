@@ -17,7 +17,7 @@ A `CodeBlock.Root` that scrolls needs `tabIndex={0}` so keyboard users can reach
 
 <Example of={CodeBlockWrap} />
 
-Cap the height by wrapping the block in `ScrollArea.Root`, as this site wraps each fence (`DocsPre` in `ScrollRegion`). The area scrolls on the block axis, which is its default. Give it a `max-block-size` and a name.
+Cap the height by wrapping the block in `ScrollArea.Root`. This site already puts each fence in one (`DocsPre` inside `ScrollRegion`) and moves the scrolling off the block, with `overflow: visible` on the `pre`. Do the same, and give the area a `max-block-size`, `focusable` and a name. A block that still scrolls sideways uses `axis="both"`, so the one area scrolls both ways. The site's fences use `axis="inline"` because the page owns their height and `DocsPre` folds a long fence.
 
 <Example of={CodeBlockHeight} />
 
@@ -35,7 +35,7 @@ Restyle keys through `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.
 
 **Todae handles:** Only the look. The parts stay native `<code>`, `<pre>` and `<kbd>` elements, and Todae adds no role, `tabindex` or name. `Code.Root` keeps the text color around it. `CodeBlock.Root` scrolls sideways when a line is too long, or wraps that line when `wrap` is set. Todae does not make the block focusable and does not cap its height.
 
-**You supply:** For a `CodeBlock.Root` that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. To cap the height, wrap the block in `ScrollArea.Root` with a `max-block-size` and an `aria-label`. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
+**You supply:** For a `CodeBlock.Root` that scrolls on its own, the `tabIndex={0}`, `role="region"` and `aria-label` described above. To cap the height, wrap the block in `ScrollArea.Root`, set the block's `overflow` to `visible`, and give the area `focusable`, a `max-block-size` and an `aria-label`. Use `axis="both"` when the lines are also too long to fit. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
 
 ```tsx
 // The server entry, so a Server Component can render it.
