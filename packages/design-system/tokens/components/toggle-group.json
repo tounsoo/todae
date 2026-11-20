@@ -22,6 +22,7 @@
         "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/fg/active/$value" } }
       },
       "border": {
+        "default": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/default/$value" } },
         "pressed": { "$type": "color", "$value": { "$ref": "#/button/secondary/border/active/$value" } }
       },
       "pressed-ring-width": { "$type": "dimension", "$value": { "$ref": "#/button/base/pressed-ring-width/$value" } },

@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -27,9 +28,11 @@ type ToggleGroupBase = {
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'children' | 'onChange'>;
 
-/** One item pressed at most. Pressing the pressed item again clears it. */
+/** One item pressed at most. Pressing the pressed item again clears it, unless `required`. */
 export type ToggleGroupSingleProps = ToggleGroupBase & {
   selectionMode?: 'single';
+  /** Pressing the pressed item keeps it pressed and does not call onValueChange. */
+  required?: boolean;
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (value: string | null) => void;
@@ -79,6 +82,8 @@ function Root(props: ToggleGroupRootProps) {
     children,
     ...rest
   } = props;
+  // Only the single shape has `required`. Multiple mode keeps letting a press clear an item.
+  const required = props.selectionMode === 'multiple' ? false : (props.required ?? false);
   const multiple = selectionMode === 'multiple';
   const [value, setValue] = useControlledState<string | null | readonly string[]>(
     valueProp,
@@ -95,7 +100,7 @@ function Root(props: ToggleGroupRootProps) {
       const next = pressed.has(item) ? list.filter((v) => v !== item) : [...list, item];
       setValue(next);
       (onValueChange as ToggleGroupMultipleProps['onValueChange'])?.(next);
-    } else {
+    } else if (!(required && pressed.has(item))) {
       const next = pressed.has(item) ? null : item;
       setValue(next);
       (onValueChange as ToggleGroupSingleProps['onValueChange'])?.(next);
@@ -116,6 +121,24 @@ function Root(props: ToggleGroupRootProps) {
   const focusLeave = useFocusLeave(() => setNavigating(null));
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
+
+  // Each wrapped row is marked before paint so its outer corners stay rounded.
+  // The join's overlap is CSS, so the marks do not move the items.
+  useLayoutEffect(() => {
+    const node = nodeRef.current;
+    const itemClass = styles.item;
+    if (!node || itemClass === undefined) return;
+    if (orientation !== 'horizontal') {
+      clearRowMarks(node, itemClass);
+      return;
+    }
+    const mark = () => markWrappedRows(node, itemClass);
+    mark();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(mark);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [orientation, children]);
 
   return (
     <ToggleGroupContext.Provider
@@ -172,3 +195,41 @@ function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItem
 }
 
 export const ToggleGroup = { Root, Item } as const;
+
+const ROW_START = 'data-todae-row-start';
+const ROW_END = 'data-todae-row-end';
+
+function rowItems(container: HTMLElement, itemClass: string) {
+  return [...container.children].filter(
+    (node): node is HTMLElement => node instanceof HTMLElement && node.classList.contains(itemClass),
+  );
+}
+
+function clearRowMarks(container: HTMLElement, itemClass: string) {
+  for (const item of rowItems(container, itemClass)) {
+    item.removeAttribute(ROW_START);
+    item.removeAttribute(ROW_END);
+  }
+}
+
+/** The first and last item of each line, once the group has wrapped. One line stays unmarked. */
+function markWrappedRows(container: HTMLElement, itemClass: string) {
+  const items = rowItems(container, itemClass);
+  const rows: HTMLElement[][] = [];
+  for (const item of items) {
+    const top = item.getBoundingClientRect().top;
+    const row = rows.find((group) => {
+      const first = group[0];
+      return first !== undefined && Math.abs(first.getBoundingClientRect().top - top) < 1;
+    });
+    if (row) row.push(item);
+    else rows.push([item]);
+  }
+  const wrapped = rows.length > 1;
+  for (const row of rows) {
+    row.forEach((item, index) => {
+      item.toggleAttribute(ROW_START, wrapped && index === 0);
+      item.toggleAttribute(ROW_END, wrapped && index === row.length - 1);
+    });
+  }
+}

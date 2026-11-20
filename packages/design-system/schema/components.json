@@ -5277,8 +5277,15 @@
           "name": "selectionMode",
           "type": "\"single\" | \"multiple\"",
           "required": false,
-          "description": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+          "description": "Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.",
           "default": "\"single\""
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.",
+          "default": "false"
         },
         {
           "name": "value",

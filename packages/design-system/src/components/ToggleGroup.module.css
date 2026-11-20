@@ -1,12 +1,27 @@
 @layer todae.components {
+  /* A horizontal group wraps when the row runs out of room. Items keep their
+     width, so the row breaks instead of shrinking them. */
+  .horizontal {
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+  }
+
+  .horizontal > .item {
+    flex: none;
+    max-inline-size: 100%;
+  }
+
   /* Horizontal items join through Button's group rules. The track, the gap
      and the segment hooks apply only while a secondary item is in the group,
-     so a row of ghost icon toggles stays a bare joined row. */
+     so a row of ghost icon toggles stays a bare joined row. The inline start
+     keeps Button's join padding, then adds the track's own. */
   .horizontal:has(> .item[data-button-variant='secondary']) {
     --_button-join-gap: var(--todae-togglegroup-gap);
     box-sizing: border-box;
     gap: var(--todae-togglegroup-gap);
-    padding: var(--todae-togglegroup-padding);
+    padding-block: var(--todae-togglegroup-padding);
+    padding-inline-end: var(--todae-togglegroup-padding);
+    padding-inline-start: calc(var(--todae-togglegroup-padding) + var(--_join-outset, 0px));
     background: var(--todae-togglegroup-bg);
     border: var(--todae-togglegroup-border-width) solid var(--todae-togglegroup-border);
     border-radius: var(--todae-togglegroup-radius);
@@ -30,6 +45,7 @@
     --_button-bg-focus: var(--todae-togglegroup-item-bg-default);
     --_button-bg-pressed: var(--todae-togglegroup-item-bg-pressed);
     --_button-fg-pressed: var(--todae-togglegroup-item-fg-pressed);
+    --_button-border-default: var(--todae-togglegroup-item-border-default);
     --_button-border-pressed: var(--todae-togglegroup-item-border-pressed);
     --_button-pressed-ring-width: var(--todae-togglegroup-item-pressed-ring-width);
   }

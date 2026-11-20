@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { Profiler } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from './Button.js';
-import { ToggleGroup } from './ToggleGroup.js';
+import { ToggleGroup, type ToggleGroupRootProps } from './ToggleGroup.js';
 
 afterEach(cleanup);
 
@@ -65,6 +65,37 @@ describe('ToggleGroup', () => {
     fireEvent.click(button('Center'));
     expect(pressed('Center')).toBe('false');
     expect(onChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it('keeps the pressed item when required, and does not call onValueChange', () => {
+    const onChange = vi.fn();
+    render(
+      <ToggleGroup.Root aria-label="Align" defaultValue="left" required onValueChange={onChange}>
+        <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+        <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
+      </ToggleGroup.Root>,
+    );
+    fireEvent.click(button('Left'));
+    expect(pressed('Left')).toBe('true');
+    expect(pressed('Center')).toBe('false');
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.click(button('Center'));
+    expect([pressed('Left'), pressed('Center')]).toEqual(['false', 'true']);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenLastCalledWith('center');
+  });
+
+  it('does not clear a required controlled value', () => {
+    const onChange = vi.fn();
+    render(
+      <ToggleGroup.Root aria-label="Align" value="left" required onValueChange={onChange}>
+        <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+        <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
+      </ToggleGroup.Root>,
+    );
+    fireEvent.click(button('Left'));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(pressed('Left')).toBe('true');
   });
 
   it('leaves an aria-disabled item unpressed on click, and keeps it focusable', () => {
@@ -167,6 +198,11 @@ describe('ToggleGroup.Root types', () => {
     )).not.toThrow();
   });
 
+  it('keeps required off multiple mode', () => {
+    type Multiple = Extract<ToggleGroupRootProps, { selectionMode: 'multiple' }>;
+    const absent: 'required' extends keyof Multiple ? never : true = true;
+    expect(absent).toBe(true);
+  });
 });
 
 describe('ToggleGroup read-only value', () => {
