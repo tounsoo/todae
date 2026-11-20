@@ -12,6 +12,23 @@ afterEach(() => {
 });
 
 describe('useModalLayerElement', () => {
+  it('reserves the scrollbar gutter from the page width when its caller opens the dialog', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, get: () => 390 });
+    Object.defineProperty(document.documentElement, 'clientWidth', { configurable: true, get: () => 375 });
+    const el = document.createElement('dialog');
+    document.body.append(el);
+    try {
+      renderHook(() => useModalLayerElement(el, true));
+      el.showModal();
+      expect(document.documentElement.style.getPropertyValue('--_todae-scroll-lock-gutter')).toBe('stable');
+      el.close();
+      expect(document.documentElement.style.getPropertyValue('--_todae-scroll-lock-gutter')).toBe('');
+    } finally {
+      Reflect.deleteProperty(document.documentElement, 'clientWidth');
+      document.documentElement.style.removeProperty('--_todae-scroll-lock-gutter');
+    }
+  });
+
   it('holds an open element its caller shows modally, also where :modal is unknown', () => {
     const el = document.createElement('dialog');
     el.setAttribute('open', '');

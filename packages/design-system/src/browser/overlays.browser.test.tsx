@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { useModalLayer } from '../hooks/useModalLayer.js';
 import { usePopover } from '../hooks/usePopover.js';
 import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet.js';
 import { Button } from '../components/Button.js';
@@ -672,7 +673,6 @@ describe('page width while a modal is open', () => {
         rerender(<Page open tall Root={Root} />);
         extra.showModal();
         expect(pageWidth()).toBe(before);
-        // A layout scrollbar is narrower than the viewport, and it has to stay that way.
         if (gap > 0) expect(pageWidth()).toBeLessThan(window.innerWidth);
         rerender(<Page open={false} tall Root={Root} />);
         expect(pageWidth()).toBe(before);
@@ -681,6 +681,39 @@ describe('page width while a modal is open', () => {
       } finally {
         extra.remove();
       }
+    });
+  });
+
+  it.each([
+    ['short', 700, false],
+    ['scrolling', 400, true],
+  ] as const)('keeps a %s page the same width when useModalLayer opens a dialog', async (_, height, tall) => {
+    await sized(390, height, () => {
+      function Own({ open }: { open: boolean }) {
+        const ref = useRef<HTMLDialogElement>(null);
+        useModalLayer(ref, open);
+        useLayoutEffect(() => {
+          const dialog = ref.current;
+          if (!dialog) return;
+          if (open) dialog.showModal();
+          else if (dialog.open) dialog.close();
+        }, [open]);
+        return (
+          <>
+            <div data-testid="page-width" style={{ width: '100%', height: tall ? '4000px' : '1px' }} />
+            <dialog ref={ref} aria-label="Own" />
+          </>
+        );
+      }
+      const { rerender } = render(<Own open={false} />);
+      if (tall) expect(document.documentElement.scrollHeight).toBeGreaterThan(document.documentElement.clientHeight);
+      const before = pageWidth();
+      const gap = window.innerWidth - document.documentElement.clientWidth;
+      rerender(<Own open />);
+      expect(pageWidth()).toBe(before);
+      if (gap > 0) expect(pageWidth()).toBeLessThan(window.innerWidth);
+      rerender(<Own open={false} />);
+      expect(pageWidth()).toBe(before);
     });
   });
 

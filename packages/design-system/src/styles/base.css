@@ -2,12 +2,6 @@
    look from components (Link.Root, Table.Root and so on), not from here. Every
    selector sits in :where(), so any class a company adds wins. */
 @layer todae.base {
-  /* A modal <dialog> makes the page behind it inert; this stops it scrolling
-     too. scrollLock sets --_todae-scroll-lock-gutter before showModal: stable
-     when the page had a scrollbar, so the page does not shift when the bar
-     goes, and auto when it did not, so a short page keeps its width. A page's
-     own overflow on the root wins over this, as any page style wins over
-     todae.base. */
   :where(:root:has(dialog:modal)) {
     overflow: hidden;
     overscroll-behavior: none;

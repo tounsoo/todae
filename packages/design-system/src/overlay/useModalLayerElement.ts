@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack.js';
+import { installScrollLock } from './scrollLock.js';
 import { inGuestLayerWithin } from './tabbables.js';
 import { initialFocusTarget } from './useInitialFocus.js';
 import { reshowHeldInside } from './usePopoverSync.js';
@@ -11,6 +12,8 @@ import { reshowHeldInside } from './usePopoverSync.js';
  * inside back in front after each show.
  */
 export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean, shownModal = false): void {
+  // Not at import time: a top-level call would ship in every import from the entry.
+  installScrollLock();
   const latest = useRef({ open, shownModal });
   const syncRef = useRef<() => void>(() => undefined);
   // First, so the effects below read this commit's values.

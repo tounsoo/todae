@@ -1,8 +1,7 @@
 const GUTTER = '--_todae-scroll-lock-gutter';
 
 const open = new Set<HTMLDialogElement>();
-// The inline value to put back, or unset while nothing is locked.
-let saved: string | undefined;
+let restore: { inline: string } | undefined;
 
 function gap(doc: Document): number {
   const view = doc.defaultView;
@@ -12,17 +11,17 @@ function gap(doc: Document): number {
 
 function arm(doc: Document): void {
   const root = doc.documentElement;
-  saved = root.style.getPropertyValue(GUTTER);
+  restore = { inline: root.style.getPropertyValue(GUTTER) };
   // stable reserves a gutter even when the bar took no space, which narrows a short page.
   root.style.setProperty(GUTTER, gap(doc) > 0 ? 'stable' : 'auto');
 }
 
 function disarm(doc: Document): void {
-  if (saved === undefined) return;
+  if (restore === undefined) return;
   const root = doc.documentElement;
-  if (saved) root.style.setProperty(GUTTER, saved);
+  if (restore.inline) root.style.setProperty(GUTTER, restore.inline);
   else root.style.removeProperty(GUTTER);
-  saved = undefined;
+  restore = undefined;
 }
 
 function live(): number {
@@ -37,11 +36,6 @@ function noteClosed(dialog: HTMLDialogElement): void {
   if (live() === 0) disarm(dialog.ownerDocument);
 }
 
-/**
- * Reserves the scrollbar gutter only when the page had one at the moment a
- * modal opened. The CSS lock applies to every modal dialog, so this wraps
- * showModal and close rather than one component.
- */
 export function installScrollLock(): void {
   if (typeof HTMLDialogElement === 'undefined') return;
   const proto = HTMLDialogElement.prototype;
@@ -53,17 +47,18 @@ export function installScrollLock(): void {
   const close = proto.close;
 
   function patchedShow(this: HTMLDialogElement): void {
-    // A dialog removed without close() must not keep the next page locked.
     if (live() === 0) disarm(this.ownerDocument);
     const first = open.size === 0;
     if (first) arm(this.ownerDocument);
+    const tracked = open.has(this);
+    open.add(this);
     try {
       showModal.call(this);
     } catch (error) {
+      if (!tracked) open.delete(this);
       if (first) disarm(this.ownerDocument);
       throw error;
     }
-    open.add(this);
   }
 
   function patchedClose(this: HTMLDialogElement, returnValue?: string): void {
@@ -74,8 +69,6 @@ export function installScrollLock(): void {
   Object.defineProperty(patchedShow, patched, { value: true });
   proto.showModal = patchedShow;
   proto.close = patchedClose;
-  // close() does not bubble. Capture still hears a dialog the browser closes
-  // itself, including one removed while it is open.
   document.addEventListener(
     'close',
     (event) => {
