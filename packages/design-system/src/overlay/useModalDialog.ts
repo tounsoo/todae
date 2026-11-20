@@ -1,6 +1,7 @@
 import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { liftDialog } from './inertOutside.js';
 import { dropModal } from './modalStack.js';
+import { releasePageScrollbar, syncPageScrollbar } from './pageScrollbar.js';
 import { inGuestLayerWithin } from './tabbables.js';
 import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
@@ -72,6 +73,7 @@ export function useModalDialog({
       const resume = lastFocus.current;
       // Out of a coachmark's dim page first, so focus can land in it.
       liftDialog(el);
+      syncPageScrollbar(el.ownerDocument);
       el.showModal();
       // In front of the popovers already open inside it, such as a tooltip
       // held open, which go back in front of it.
@@ -113,6 +115,7 @@ export function useModalDialog({
       const active = el.ownerDocument.activeElement;
       const guest = active instanceof HTMLElement && inGuestLayerWithin(active, el) ? active : null;
       el.close();
+      releasePageScrollbar(el.ownerDocument);
       if (!guest) return;
       dropModal(el);
       focusWithoutScroll(guest);

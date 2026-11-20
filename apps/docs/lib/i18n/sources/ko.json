@@ -205,7 +205,7 @@
   },
   "dialog": {
     "(top)": "e7e6fc366a28",
-    "# Dialog": "9acf06b85273",
+    "# Dialog": "9bd78336dfec",
     "## Alert dialog": "6ce81842f302",
     "## Icons": "53e5ccf42b18",
     "## Accessible composition": "9d44feb03621",
@@ -593,7 +593,7 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "e3cf61dbe290",
+    "# Native platform": "7912425efb51",
     "## What Safari and Firefox do differently": "fb68583b26df",
     "(section order)": "838d852d6965"
   },

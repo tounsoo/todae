@@ -53,7 +53,10 @@ describe('todae.base styles', () => {
   });
 
   it('styles no native element: components carry those styles', () => {
-    expect(selectors(base)).toEqual([':where(:root:has(dialog:modal))']);
+    expect(selectors(base)).toEqual([
+      ':where(:root:has(dialog:modal))',
+      ':where(:root:not([data-todae-no-page-scrollbar]):has(dialog:modal))',
+    ]);
   });
 
   it('stops page scroll, without !important, while a modal dialog is open', () => {
@@ -61,7 +64,12 @@ describe('todae.base styles', () => {
     const rule = base.slice(base.indexOf(':where(:root:has(dialog:modal))'));
     const body = rule.slice(rule.indexOf('{') + 1, rule.indexOf('}'));
     expect(body).toContain('overflow: hidden;');
+    expect(body).not.toContain('scrollbar-gutter');
     expect(body).not.toContain('!important');
+    const gutter = base.slice(base.indexOf(':where(:root:not([data-todae-no-page-scrollbar]):has(dialog:modal))'));
+    const gutterBody = gutter.slice(gutter.indexOf('{') + 1, gutter.indexOf('}'));
+    expect(gutterBody).toContain('scrollbar-gutter: stable;');
+    expect(gutterBody).not.toContain('!important');
   });
 
   it('only reads tokens the build declares', () => {

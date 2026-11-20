@@ -18,6 +18,8 @@ Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not in
 
 iOS may still rubber-band the page behind an open overlay. Chrome may ignore `cancel.preventDefault()` without user activation. State still resyncs from the native `close` event.
 
+Opening a dialog leaves the page width unchanged. A page with no scrollbar stays that width, and a page whose scrollbar already takes space keeps that space.
+
 ## Alert dialog
 
 `role="alertdialog"` marks a dialog that interrupts to ask for a response, such as confirming a destructive action. A backdrop click no longer closes it; Escape still does. On open, focus goes to its first close part, so a `Dialog.Close` that says Cancel takes it without an `initialFocusRef`. It needs a message: render `Dialog.Description` or pass `aria-describedby`, or it logs an error in development. Leave out the header close: Cancel is the way out.

@@ -58,8 +58,7 @@ describe.each(roots)('%s', (name, Root) => {
 
       rerender(<Harness open={false} />);
       await waitFor(() => {
-        const dialog = document.querySelector('dialog');
-        expect(dialog == null || dialog.open).toBe(false);
+        expect(document.querySelector('dialog')?.open ?? false).toBe(false);
       });
       expect(pageBox().width).toBe(before.width);
       expect(markerBox().left).toBe(beforeMarker);

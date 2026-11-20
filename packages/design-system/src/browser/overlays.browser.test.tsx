@@ -533,9 +533,10 @@ describe('page scroll behind a modal', () => {
       );
     }
     expect(overflow()).not.toBe('hidden');
+    const gutter = window.innerWidth > document.documentElement.clientWidth ? 'stable' : 'auto';
     const { rerender } = render(<Harness open />);
     expect(overflow()).toBe('hidden');
-    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('stable');
+    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe(gutter);
     const dialog = document.querySelector('dialog')!;
     rerender(<Harness open={false} />);
     // The exit motion runs with the dialog still open and the page inert.
