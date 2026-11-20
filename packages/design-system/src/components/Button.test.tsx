@@ -193,10 +193,9 @@ describe('Button.Group', () => {
     expect(group.getAttribute('role')).toBe('group');
   });
 
-  it('joins every root, so a sibling tip between buttons does not break the overlap', () => {
-    expect(css).toMatch(/\.group > \.root \{\s*margin-inline-start:/);
-    expect(css).not.toContain('.root + .root');
-    expect(css).not.toContain('.root ~ .root');
+  it('overlaps later roots after a sibling tip', () => {
+    expect(css).toContain('.group > .root ~ .root');
+    expect(css).not.toContain('.group > .root + .root');
   });
 });
 

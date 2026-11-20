@@ -135,20 +135,20 @@
   .group {
     display: inline-flex;
     align-items: stretch;
-    /* The overlap below, as a length. 0 when the gap is wider than the border. */
-    --_join-outset: max(0px, var(--todae-button-border-width) - var(--_button-join-gap, 0px));
-    padding-inline-start: var(--_join-outset);
   }
 
   /* ToggleGroup sets --_button-join-gap from its gap. At 0 the items share a
      border and the meeting corners are square. A wider gap separates them and
-     gives those corners back. Every item takes the overlap, including the
-     first, and the padding above gives it back, so the first item of a wrapped
-     row stays on the group's edge instead of hanging off it. A tip rendered
-     beside a button is not a .root, so it never takes the margin. The pad and
-     the overlap cancel, and a single row keeps its place. */
-  .group > .root {
-    margin-inline-start: calc(var(--_join-outset, 0px) * -1);
+     gives those corners back. A tip rendered beside a button is not a .root,
+     so it never takes the margin. */
+  .group > .root ~ .root {
+    margin-inline-start: min(0px, calc(var(--_button-join-gap, 0px) - var(--todae-button-border-width)));
+  }
+
+  /* A wrapped row's first item is a later sibling, so the overlap above would
+     pull it past the group's edge. The mark puts it back. */
+  .group > .root[data-todae-row-start] {
+    margin-inline-start: 0;
   }
 
   /* Counted among the group's buttons, whatever their tag (a button or a

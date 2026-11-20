@@ -120,6 +120,40 @@ it('keeps a Button.Group on one row when the space is narrow', () => {
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
 });
 
+it('keeps a sized Button.Group at the width it was given', () => {
+  render(
+    <Button.Group aria-label="Pages" style={{ width: 200 }}>
+      <Button.Root>One</Button.Root>
+      <Button.Root>Two</Button.Root>
+    </Button.Group>,
+  );
+  const group = screen.getByRole('group', { name: 'Pages' });
+  expect(group.getBoundingClientRect().width).toBeCloseTo(200, 0);
+  const [first, second] = buttons() as [HTMLElement, HTMLElement];
+  const shared = parseFloat(getComputedStyle(first).borderRightWidth);
+  expect(first.getBoundingClientRect().right - second.getBoundingClientRect().left).toBeCloseTo(shared, 0);
+});
+
+it('keeps a segment wider than the row inside the group', () => {
+  render(
+    <div style={{ width: 160 }}>
+      <ToggleGroup.Root aria-label="Days" defaultValue="long">
+        <ToggleGroup.Item value="long">Wednesday-and-the-rest-of-the-week</ToggleGroup.Item>
+        <ToggleGroup.Item value="short">Thu</ToggleGroup.Item>
+      </ToggleGroup.Root>
+    </div>,
+  );
+  const group = screen.getByRole('group', { name: 'Days' });
+  const host = group.parentElement as HTMLElement;
+  const long = screen.getByRole('button', { name: 'Wednesday-and-the-rest-of-the-week' });
+  const hostBox = host.getBoundingClientRect();
+  const groupBox = group.getBoundingClientRect();
+  const itemBox = long.getBoundingClientRect();
+  expect(groupBox.right, 'the group stays inside its host').toBeLessThanOrEqual(hostBox.right + 0.5);
+  expect(itemBox.right, 'the segment border stays inside the group').toBeLessThanOrEqual(groupBox.right + 0.5);
+  expect(itemBox.left, 'the segment starts inside the group').toBeGreaterThanOrEqual(groupBox.left - 0.5);
+});
+
 it('keeps one joined row when the group has room', () => {
   render(group(['Left', 'Center', 'Right']));
   const items = buttons();
