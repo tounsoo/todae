@@ -532,10 +532,13 @@ describe('page scroll behind a modal', () => {
         </Root>
       );
     }
+    const gap = window.innerWidth - document.documentElement.clientWidth;
     expect(overflow()).not.toBe('hidden');
     const { rerender } = render(<Harness open />);
     expect(overflow()).toBe('hidden');
-    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('stable');
+    // A page that was not scrolling has no gutter to keep. Reserving one
+    // narrows it by the scrollbar's width.
+    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe(gap > 0 ? 'stable' : 'auto');
     const dialog = document.querySelector('dialog')!;
     rerender(<Harness open={false} />);
     // The exit motion runs with the dialog still open and the page inert.
@@ -593,5 +596,118 @@ describe('page scroll behind a modal', () => {
     } finally {
       dialog.remove();
     }
+  });
+});
+
+describe('page width while a modal is open', () => {
+  const roots = [
+    ['Dialog', Dialog.Root],
+    ['Drawer', Drawer.Root],
+    ['BottomSheet', BottomSheet.Root],
+  ] as const;
+
+  async function sized(width: number, height: number, run: () => Promise<void> | void): Promise<void> {
+    const frame = window.frameElement as HTMLIFrameElement | null;
+    if (!frame) throw new Error('the browser test has no frame to size');
+    const previous = {
+      width: frame.style.width,
+      height: frame.style.height,
+      boxSizing: frame.style.boxSizing,
+      border: frame.style.border,
+      margin: document.body.style.margin,
+    };
+    frame.style.boxSizing = 'content-box';
+    frame.style.border = '0';
+    frame.style.width = `${width}px`;
+    frame.style.height = `${height}px`;
+    document.body.style.margin = '0';
+    await new Promise(requestAnimationFrame);
+    try {
+      await run();
+    } finally {
+      frame.style.width = previous.width;
+      frame.style.height = previous.height;
+      frame.style.boxSizing = previous.boxSizing;
+      frame.style.border = previous.border;
+      document.body.style.margin = previous.margin;
+    }
+  }
+
+  function pageWidth(): number {
+    const probe = document.querySelector('[data-testid="page-width"]');
+    if (!(probe instanceof HTMLElement)) throw new Error('missing page width probe');
+    return Math.round(probe.getBoundingClientRect().width);
+  }
+
+  function Page({ open, tall, Root }: { open: boolean; tall: boolean; Root: (typeof roots)[number][1] }) {
+    return (
+      <>
+        <div data-testid="page-width" style={{ width: '100%', height: tall ? '4000px' : '1px' }} />
+        <Root open={open} onOpenChange={() => undefined} aria-label="Panel">
+          <p>Body</p>
+        </Root>
+      </>
+    );
+  }
+
+  it.each(roots)('keeps a short page 390px wide when a %s opens', async (_, Root) => {
+    await sized(390, 700, () => {
+      expect(window.innerWidth).toBe(390);
+      const { rerender } = render(<Page open={false} tall={false} Root={Root} />);
+      expect(pageWidth()).toBe(390);
+      rerender(<Page open tall={false} Root={Root} />);
+      expect(pageWidth()).toBe(390);
+    });
+  });
+
+  it.each(roots)('keeps a scrolling page the same width when a %s opens and while another modal is still open', async (_, Root) => {
+    await sized(390, 400, () => {
+      const { rerender } = render(<Page open={false} tall Root={Root} />);
+      expect(document.documentElement.scrollHeight).toBeGreaterThan(document.documentElement.clientHeight);
+      const before = pageWidth();
+      const gap = window.innerWidth - document.documentElement.clientWidth;
+      const extra = document.createElement('dialog');
+      document.body.append(extra);
+      try {
+        rerender(<Page open tall Root={Root} />);
+        extra.showModal();
+        expect(pageWidth()).toBe(before);
+        // A layout scrollbar is narrower than the viewport, and it has to stay that way.
+        if (gap > 0) expect(pageWidth()).toBeLessThan(window.innerWidth);
+        rerender(<Page open={false} tall Root={Root} />);
+        expect(pageWidth()).toBe(before);
+        extra.close();
+        expect(pageWidth()).toBe(before);
+      } finally {
+        extra.remove();
+      }
+    });
+  });
+
+  it('keeps a short page 390px wide for a modal dialog of your own, including two at once', async () => {
+    await sized(390, 700, () => {
+      const probe = document.createElement('div');
+      probe.dataset.testid = 'page-width';
+      probe.style.width = '100%';
+      probe.style.height = '1px';
+      const first = document.createElement('dialog');
+      const second = document.createElement('dialog');
+      document.body.append(probe, first, second);
+      try {
+        expect(window.innerWidth).toBe(390);
+        expect(pageWidth()).toBe(390);
+        first.showModal();
+        second.showModal();
+        expect(pageWidth()).toBe(390);
+        first.close();
+        expect(pageWidth()).toBe(390);
+        second.close();
+        expect(pageWidth()).toBe(390);
+      } finally {
+        probe.remove();
+        first.remove();
+        second.remove();
+      }
+    });
   });
 });
