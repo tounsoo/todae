@@ -134,7 +134,8 @@ function optionTitle(node: Node): string {
   return [...node.childNodes].map(optionTitle).join('');
 }
 
-function collapse(text: string): string {
+/** The option's name. Callers concatenate adjacent text first, then this collapses whitespace to match the row. */
+function optionName(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
@@ -185,7 +186,8 @@ function optionContent(children: ReactNode): OptionContent {
 }
 
 function titleString(title: ReactNode[]): string {
-  return collapse(title.map((node) => (typeof node === 'string' || typeof node === 'number' ? String(node) : '')).join(' '));
+  // Join with nothing. A space here is not on screen: {'App'}{'le'} shows "Apple", and {'Apple'} ({3}) shows "Apple (3)".
+  return optionName(title.map((node) => (typeof node === 'string' || typeof node === 'number' ? String(node) : '')).join(''));
 }
 
 function OptionListOptionDetail({ id, className, ...props }: OptionListOptionDetailProps) {
@@ -245,7 +247,7 @@ function OptionListOption({
     }
     const node = nodeRef.current;
     const detail = node?.querySelector<HTMLElement>(`[${DETAIL_ATTR}]`) ?? null;
-    const next = detail?.id && node ? { id: detail.id, title: collapse(optionTitle(node)) } : null;
+    const next = detail?.id && node ? { id: detail.id, title: optionName(optionTitle(node)) } : null;
     const prev = seenDetail.current;
     if (prev?.id === next?.id && prev?.title === next?.title) return;
     seenDetail.current = next;

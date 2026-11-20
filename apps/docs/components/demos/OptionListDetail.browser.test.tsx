@@ -106,16 +106,25 @@ describe.each(['light', 'dark'] as const)('%s appearance', (appearance) => {
         expect(option.getAttribute('aria-selected')).toBe('true');
         const selectedDetail = getComputedStyle(detail!).color;
         expect(selectedDetail).toBe(getComputedStyle(option).color);
-        const check = option.querySelector('[data-todae-glyph]');
+        const check = option.querySelector<HTMLElement>('[data-todae-glyph]')!;
         const titleNow = box(
           [...(option.querySelector('[class*="copy"]')?.childNodes ?? [])].find(
             (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.includes(copy.apple),
           )!,
         );
-        const checkBox = check!.getBoundingClientRect();
+        const checkBox = check.getBoundingClientRect();
+        const optionBox = option.getBoundingClientRect();
+        const line = Number.parseFloat(optionStyle.lineHeight);
+        const expectedTop = optionBox.top + Number.parseFloat(optionStyle.paddingTop) + (line - checkBox.height) / 2;
+        // Centered on the first line. A check pinned to the top of the row fails this.
+        expect(Math.abs(checkBox.top - expectedTop)).toBeLessThanOrEqual(1);
         const checkMid = (checkBox.top + checkBox.bottom) / 2;
         expect(checkMid).toBeGreaterThanOrEqual(titleNow.top - 1);
         expect(checkMid).toBeLessThanOrEqual(titleNow.bottom + 1);
+        if (mode === 'multiple') {
+          const boxTop = Number.parseFloat(getComputedStyle(option, '::before').top);
+          expect(Math.abs(boxTop - Number.parseFloat(getComputedStyle(check).top))).toBeLessThanOrEqual(1);
+        }
 
         screen.getByRole('listbox').focus();
         await userEvent.keyboard('{ArrowDown}');
