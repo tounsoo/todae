@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
+import { observeSize } from '../internal/sharedObservers.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonRootProps } from './Button.js';
@@ -150,10 +151,16 @@ function Root(props: ToggleGroupRootProps) {
       setLines((prev) => (sameLines(prev, next) ? prev : next));
     };
     measure();
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(root);
-    return () => observer.disconnect();
+    // One observer for the page. The group catches the container. Each item
+    // catches a label that changes width without moving the group's box.
+    const watched = [root, ...root.querySelectorAll<HTMLElement>(':scope > [data-todae-toggle-item]')];
+    const stops = watched.map((el) => observeSize(el, measure));
+    if (typeof ResizeObserver !== 'undefined') return () => stops.forEach((stop) => stop());
+    window.addEventListener('resize', measure);
+    return () => {
+      stops.forEach((stop) => stop());
+      window.removeEventListener('resize', measure);
+    };
   }, [orientation, children]);
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
@@ -236,21 +243,26 @@ function sameLines(
 
 /** The first and last item of each flex line, in DOM order, which is the inline order. */
 function readLines(root: HTMLElement) {
-  const items = [...root.querySelectorAll<HTMLElement>(':scope > [data-todae-toggle-item]')];
-  const byTop = new Map<number, HTMLElement[]>();
+  const items = [...root.querySelectorAll<HTMLElement>(':scope > [data-todae-toggle-item]')].filter((item) => {
+    const box = item.getBoundingClientRect();
+    return box.width > 0 || box.height > 0;
+  });
+  const lines: HTMLElement[][] = [];
   for (const item of items) {
-    const top = Math.round(item.getBoundingClientRect().top);
-    const line = byTop.get(top);
-    if (line) line.push(item);
-    else byTop.set(top, [item]);
+    const top = item.getBoundingClientRect().top;
+    const line = lines.at(-1);
+    const lineTop = line?.[0]?.getBoundingClientRect().top ?? top;
+    // A real next line sits a control below this one. Subpixel tops on one row stay together.
+    if (line && Math.abs(top - lineTop) <= 1) line.push(item);
+    else lines.push([item]);
   }
   const start = new Set<string>();
   const end = new Set<string>();
-  for (const line of byTop.values()) {
+  for (const line of lines) {
     const first = line[0]?.dataset.todaeToggleItem;
-    const last = line[line.length - 1]?.dataset.todaeToggleItem;
-    if (first) start.add(first);
-    if (last) end.add(last);
+    const last = line.at(-1)?.dataset.todaeToggleItem;
+    if (first !== undefined) start.add(first);
+    if (last !== undefined) end.add(last);
   }
   return { start, end };
 }

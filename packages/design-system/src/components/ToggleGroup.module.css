@@ -8,6 +8,7 @@
      border. data-line-* restores the outer corners of each line. */
   .horizontal {
     flex-wrap: wrap;
+    box-sizing: border-box;
     max-inline-size: 100%;
     min-inline-size: 0;
     row-gap: var(--_join-overlap, 0px);
@@ -16,7 +17,6 @@
 
   .horizontal:has(> .item[data-button-variant='secondary']) {
     --_button-join-gap: var(--todae-togglegroup-gap);
-    box-sizing: border-box;
     column-gap: var(--todae-togglegroup-gap);
     row-gap: max(var(--todae-togglegroup-gap), var(--_join-overlap, 0px));
     padding-block: var(--todae-togglegroup-padding);
@@ -32,13 +32,13 @@
   }
 
   .horizontal > .item[data-line-start] {
-    --_join-radius-start-start: var(--_button-radius, var(--todae-togglegroup-item-radius));
-    --_join-radius-end-start: var(--_button-radius, var(--todae-togglegroup-item-radius));
+    --_join-radius-start-start: var(--_join-full-radius);
+    --_join-radius-end-start: var(--_join-full-radius);
   }
 
   .horizontal > .item[data-line-end] {
-    --_join-radius-start-end: var(--_button-radius, var(--todae-togglegroup-item-radius));
-    --_join-radius-end-end: var(--_button-radius, var(--todae-togglegroup-item-radius));
+    --_join-radius-start-end: var(--_join-full-radius);
+    --_join-radius-end-end: var(--_join-full-radius);
   }
 
   /* Vertical groups do not draw the track. Anvil's segmented control is a row.

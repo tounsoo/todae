@@ -49,6 +49,8 @@ it('wraps inside 375px with no horizontal overflow, and each line stays joined',
     else lines.set(top, [item]);
   }
   expect(lines.size).toBeGreaterThan(1);
+  const lineStarts = [...lines.values()].map((line) => line[0]!.getBoundingClientRect().left);
+  expect(Math.max(...lineStarts) - Math.min(...lineStarts)).toBeLessThanOrEqual(1);
   for (const line of lines.values()) {
     const first = line[0]!;
     const last = line[line.length - 1]!;
@@ -70,6 +72,26 @@ it('wraps inside 375px with no horizontal overflow, and each line stays joined',
   await userEvent.keyboard('{ArrowRight}');
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday' }));
   expect(monday).toHaveAttribute('aria-pressed', 'true');
+});
+
+it('wraps a ghost row inside 375px without overflowing', () => {
+  render(
+    <div style={{ width: 375 }}>
+      <ToggleGroup.Root aria-label="Marks">
+        {['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'].map((label) => (
+          <ToggleGroup.Item key={label} value={label} variant="ghost">
+            {label}
+          </ToggleGroup.Item>
+        ))}
+      </ToggleGroup.Root>
+    </div>,
+  );
+  const group = screen.getByRole('group', { name: 'Marks' });
+  const box = group.getBoundingClientRect();
+  expect(box.width).toBeLessThanOrEqual(375);
+  expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth);
+  const tops = new Set(within(group).getAllByRole('button').map((item) => Math.round(item.getBoundingClientRect().top)));
+  expect(tops.size).toBeGreaterThan(1);
 });
 
 it('joins a single line the same way Button.Group does', () => {

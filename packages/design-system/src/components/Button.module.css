@@ -153,6 +153,8 @@
      of a wrapped line; unset, this is the corner, square where the gap is 0. */
   .group > .root {
     --_join-corner: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    /* The item's own radius, for a wrapped line's outer corners. */
+    --_join-full-radius: var(--_button-radius, var(--todae-button-radius));
   }
 
   .group > .root:nth-child(1 of .root):not(:nth-last-child(1 of .root)) {

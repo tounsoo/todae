@@ -220,8 +220,9 @@ describe('ToggleGroup layout and border token', () => {
     expect(css).toContain('max-inline-size: 100%');
     expect(css).toContain('data-line-start');
     expect(css).toContain('data-line-end');
+    expect(css).toContain('box-sizing: border-box');
     expect(buttonCss).toContain('--_join-overlap');
-    expect(buttonCss).toContain('--_join-radius-start-start');
+    expect(buttonCss).toContain('--_join-full-radius');
   });
 
   it('gives an unpressed segment togglegroup.item.border.default, matching the secondary border', () => {
