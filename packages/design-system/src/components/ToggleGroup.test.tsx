@@ -85,6 +85,15 @@ describe('ToggleGroup', () => {
     expect(onChange).toHaveBeenLastCalledWith('center');
   });
 
+  it('does not put required on the group element', () => {
+    render(
+      <ToggleGroup.Root aria-label="Align" required defaultValue="left">
+        <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+      </ToggleGroup.Root>,
+    );
+    expect(screen.getByRole('group', { name: 'Align' }).hasAttribute('required')).toBe(false);
+  });
+
   it('does not clear a required controlled value', () => {
     const onChange = vi.fn();
     render(

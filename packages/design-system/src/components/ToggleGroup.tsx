@@ -83,6 +83,7 @@ function Root(props: ToggleGroupRootProps) {
     ...rest
   } = props;
   // Only the single shape has `required`. Multiple mode keeps letting a press clear an item.
+  // It stays out of the div: the single shape leaves it in `rest`.
   const required = props.selectionMode === 'multiple' ? false : (props.required ?? false);
   const multiple = selectionMode === 'multiple';
   const [value, setValue] = useControlledState<string | null | readonly string[]>(
@@ -123,7 +124,8 @@ function Root(props: ToggleGroupRootProps) {
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
   // Each wrapped row is marked before paint so its outer corners stay rounded.
-  // The join's overlap is CSS, so the marks do not move the items.
+  // The join's overlap is CSS, so the marks do not move the items. An item's
+  // own size can rewrap the row without changing the group's box.
   useLayoutEffect(() => {
     const node = nodeRef.current;
     const itemClass = styles.item;
@@ -137,6 +139,7 @@ function Root(props: ToggleGroupRootProps) {
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(mark);
     observer.observe(node);
+    for (const item of rowItems(node, itemClass)) observer.observe(item);
     return () => observer.disconnect();
   }, [orientation, children]);
 
@@ -151,7 +154,7 @@ function Root(props: ToggleGroupRootProps) {
       }}
     >
       <div
-        {...rest}
+        {...omitRequired(rest)}
         {...container}
         ref={refs}
         onFocus={(event: FocusEvent<HTMLDivElement>) => {
@@ -195,6 +198,12 @@ function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItem
 }
 
 export const ToggleGroup = { Root, Item } as const;
+
+function omitRequired<T extends object>(props: T): Omit<T, 'required'> {
+  if (!('required' in props)) return props;
+  const { required: _required, ...dom } = props as T & { required?: unknown };
+  return dom;
+}
 
 const ROW_START = 'data-todae-row-start';
 const ROW_END = 'data-todae-row-end';

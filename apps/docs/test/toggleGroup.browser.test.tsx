@@ -106,6 +106,20 @@ it('wraps a right-to-left group from the inline start', () => {
   expectJoinedRows(buttons(), true);
 });
 
+it('keeps a Button.Group on one row when the space is narrow', () => {
+  render(
+    <div style={{ width: 80 }}>
+      <Button.Group aria-label="Pages">
+        <Button.Root>One</Button.Root>
+        <Button.Root>Two</Button.Root>
+        <Button.Root>Three</Button.Root>
+      </Button.Group>
+    </div>,
+  );
+  const tops = buttons().map((item) => item.getBoundingClientRect().top);
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+});
+
 it('keeps one joined row when the group has room', () => {
   render(group(['Left', 'Center', 'Right']));
   const items = buttons();
