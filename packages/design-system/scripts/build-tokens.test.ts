@@ -1413,7 +1413,7 @@ describe('company token build', () => {
   it('declares aliases for new tokens in Todae entries', async () => {
     const px = (value: number) => ({ $type: 'dimension', $value: { value, unit: 'px' } });
     const resolver = await company((r) => {
-      for (const paint of ['primary', 'secondary', 'ghost', 'outline']) {
+      for (const paint of ['primary', 'secondary', 'ghost', 'critical', 'outline']) {
         r.modifiers.buttonVariant.contexts[paint] = [
           ...(r.modifiers.buttonVariant.contexts[paint] ?? []),
           { button: { [paint]: { lift: px(2) } } },
@@ -1801,7 +1801,7 @@ describe('company token build', () => {
     });
     await expect(buildCompanyTokens({ resolver: tone, base: tokensDir })).rejects.toThrow(/both alias button\.\*/);
     const hyphen = await company(async (resolver, root) => {
-      for (const context of ['primary', 'secondary', 'ghost', 'outline']) {
+      for (const context of ['primary', 'secondary', 'ghost', 'critical', 'outline']) {
         const file = join(root, `button.${context}.json`);
         const tokens = context === 'outline' ? JSON.parse(await readFile(file, 'utf8')) : { button: { [context]: {} } };
         tokens.button[context]['padding-x'] = { $type: 'dimension', $value: { value: 2, unit: 'px' } };

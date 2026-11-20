@@ -489,6 +489,23 @@
   --todae-button-ghost-fg-hover: var(--_todae-button-ghost-fg-hover, var(--todae-color-fg-default));
   --todae-button-ghost-ring-focus: var(--_todae-button-ghost-ring-focus, var(--todae-focus-ring));
   --todae-button-ghost-shadow: var(--_todae-button-ghost-shadow, var(--todae-shadow-none));
+  --todae-button-critical-bg-active: var(--_todae-button-critical-bg-active, var(--todae-color-status-critical-fg));
+  --todae-button-critical-bg-default: var(--_todae-button-critical-bg-default, var(--todae-color-danger-default));
+  --todae-button-critical-bg-disabled: var(--_todae-button-critical-bg-disabled, var(--todae-color-status-critical-bg));
+  --todae-button-critical-bg-focus: var(--_todae-button-critical-bg-focus, var(--todae-color-danger-default));
+  --todae-button-critical-bg-hover: var(--_todae-button-critical-bg-hover, var(--todae-color-status-critical-fg));
+  --todae-button-critical-border-active: var(--_todae-button-critical-border-active, var(--todae-color-status-critical-border));
+  --todae-button-critical-border-default: var(--_todae-button-critical-border-default, var(--todae-color-danger-default));
+  --todae-button-critical-border-disabled: var(--_todae-button-critical-border-disabled, var(--todae-color-status-critical-border));
+  --todae-button-critical-border-focus: var(--_todae-button-critical-border-focus, var(--todae-color-danger-default));
+  --todae-button-critical-border-hover: var(--_todae-button-critical-border-hover, var(--todae-color-status-critical-fg));
+  --todae-button-critical-fg-active: var(--_todae-button-critical-fg-active, var(--todae-color-status-critical-bg));
+  --todae-button-critical-fg-default: var(--_todae-button-critical-fg-default, var(--todae-color-on-accent));
+  --todae-button-critical-fg-disabled: var(--_todae-button-critical-fg-disabled, var(--todae-color-status-critical-fg));
+  --todae-button-critical-fg-focus: var(--_todae-button-critical-fg-focus, var(--todae-color-on-accent));
+  --todae-button-critical-fg-hover: var(--_todae-button-critical-fg-hover, var(--todae-color-on-accent));
+  --todae-button-critical-ring-focus: var(--_todae-button-critical-ring-focus, var(--todae-focus-ring));
+  --todae-button-critical-shadow: var(--_todae-button-critical-shadow, var(--todae-shadow-none));
   --todae-stack-gap: var(--_todae-stack-gap, var(--todae-space-stack-gap));
   --todae-stack-gap-condensed: var(--_todae-stack-gap-condensed, var(--todae-space-stack-gap-condensed));
   --todae-stack-gap-spacious: var(--_todae-stack-gap-spacious, var(--todae-space-stack-gap-spacious));
@@ -1475,5 +1492,25 @@
   --todae-button-fg-hover: var(--todae-button-ghost-fg-hover);
   --todae-button-ring-focus: var(--todae-button-ghost-ring-focus);
   --todae-button-shadow: var(--todae-button-ghost-shadow);
+}
+
+[data-button-variant="critical"] {
+  --todae-button-bg-active: var(--todae-button-critical-bg-active);
+  --todae-button-bg-default: var(--todae-button-critical-bg-default);
+  --todae-button-bg-disabled: var(--todae-button-critical-bg-disabled);
+  --todae-button-bg-focus: var(--todae-button-critical-bg-focus);
+  --todae-button-bg-hover: var(--todae-button-critical-bg-hover);
+  --todae-button-border-active: var(--todae-button-critical-border-active);
+  --todae-button-border-default: var(--todae-button-critical-border-default);
+  --todae-button-border-disabled: var(--todae-button-critical-border-disabled);
+  --todae-button-border-focus: var(--todae-button-critical-border-focus);
+  --todae-button-border-hover: var(--todae-button-critical-border-hover);
+  --todae-button-fg-active: var(--todae-button-critical-fg-active);
+  --todae-button-fg-default: var(--todae-button-critical-fg-default);
+  --todae-button-fg-disabled: var(--todae-button-critical-fg-disabled);
+  --todae-button-fg-focus: var(--todae-button-critical-fg-focus);
+  --todae-button-fg-hover: var(--todae-button-critical-fg-hover);
+  --todae-button-ring-focus: var(--todae-button-critical-ring-focus);
+  --todae-button-shadow: var(--todae-button-critical-shadow);
 }
 }

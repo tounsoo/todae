@@ -2,7 +2,7 @@ import { consumeCssVar, cssVarName, type AliasGroup } from './serialize.ts';
 import type { Layer } from './shared.ts';
 
 const CSS_VAR_RE = /^--todae-[a-z0-9-]+$/;
-const CONTEXT_ORDER = ['light', 'dark', 'compact', 'comfortable', 'spacious', 'primary', 'secondary', 'ghost'];
+const CONTEXT_ORDER = ['light', 'dark', 'compact', 'comfortable', 'spacious', 'primary', 'secondary', 'ghost', 'critical'];
 
 declare const cssVarBrand: unique symbol;
 
