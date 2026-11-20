@@ -1,15 +1,44 @@
 @layer todae.components {
   /* Horizontal items join through Button's group rules. The track, the gap
      and the segment hooks apply only while a secondary item is in the group,
-     so a row of ghost icon toggles stays a bare joined row. */
+     so a row of ghost icon toggles stays a bare joined row. The row wraps.
+     The overlap padding gives back the shared border the first segment of
+     each line pulls across, so a wrapped line starts where the first one does.
+     The row gap is at least that overlap, so two lines don't stack a double
+     border. data-line-* restores the outer corners of each line. */
+  .horizontal {
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    row-gap: var(--_join-overlap, 0px);
+    padding-inline-start: var(--_join-overlap, 0px);
+  }
+
   .horizontal:has(> .item[data-button-variant='secondary']) {
     --_button-join-gap: var(--todae-togglegroup-gap);
     box-sizing: border-box;
-    gap: var(--todae-togglegroup-gap);
-    padding: var(--todae-togglegroup-padding);
+    column-gap: var(--todae-togglegroup-gap);
+    row-gap: max(var(--todae-togglegroup-gap), var(--_join-overlap, 0px));
+    padding-block: var(--todae-togglegroup-padding);
+    padding-inline-end: var(--todae-togglegroup-padding);
+    padding-inline-start: calc(var(--todae-togglegroup-padding) + var(--_join-overlap, 0px));
     background: var(--todae-togglegroup-bg);
     border: var(--todae-togglegroup-border-width) solid var(--todae-togglegroup-border);
     border-radius: var(--todae-togglegroup-radius);
+  }
+
+  .horizontal > .item:nth-child(1 of .item) {
+    margin-inline-start: calc(0px - var(--_join-overlap, 0px));
+  }
+
+  .horizontal > .item[data-line-start] {
+    --_join-radius-start-start: var(--_button-radius, var(--todae-togglegroup-item-radius));
+    --_join-radius-end-start: var(--_button-radius, var(--todae-togglegroup-item-radius));
+  }
+
+  .horizontal > .item[data-line-end] {
+    --_join-radius-start-end: var(--_button-radius, var(--todae-togglegroup-item-radius));
+    --_join-radius-end-end: var(--_button-radius, var(--todae-togglegroup-item-radius));
   }
 
   /* Vertical groups do not draw the track. Anvil's segmented control is a row.
@@ -30,6 +59,7 @@
     --_button-bg-focus: var(--todae-togglegroup-item-bg-default);
     --_button-bg-pressed: var(--todae-togglegroup-item-bg-pressed);
     --_button-fg-pressed: var(--todae-togglegroup-item-fg-pressed);
+    --_button-border-default: var(--todae-togglegroup-item-border-default);
     --_button-border-pressed: var(--todae-togglegroup-item-border-pressed);
     --_button-pressed-ring-width: var(--todae-togglegroup-item-pressed-ring-width);
   }

@@ -1180,6 +1180,7 @@
   --todae-togglegroup-item-bg-default: var(--_todae-togglegroup-item-bg-default, var(--todae-button-secondary-bg-default));
   --todae-togglegroup-item-bg-hover: var(--_todae-togglegroup-item-bg-hover, var(--todae-button-secondary-bg-hover));
   --todae-togglegroup-item-bg-pressed: var(--_todae-togglegroup-item-bg-pressed, var(--todae-button-secondary-bg-active));
+  --todae-togglegroup-item-border-default: var(--_todae-togglegroup-item-border-default, var(--todae-button-secondary-border-default));
   --todae-togglegroup-item-border-pressed: var(--_todae-togglegroup-item-border-pressed, var(--todae-button-secondary-border-active));
   --todae-togglegroup-item-fg-pressed: var(--_todae-togglegroup-item-fg-pressed, var(--todae-button-secondary-fg-active));
   --todae-togglegroup-item-padding-y: var(--_todae-togglegroup-item-padding-y, var(--todae-button-base-padding-y));

@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -27,17 +28,30 @@ type ToggleGroupBase = {
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'children' | 'onChange'>;
 
-/** One item pressed at most. Pressing the pressed item again clears it. */
+/** One item pressed at most. Pressing the pressed item again clears it, unless `required`. */
 export type ToggleGroupSingleProps = ToggleGroupBase & {
   selectionMode?: 'single';
-  value?: string | null;
-  defaultValue?: string | null;
-  onValueChange?: (value: string | null) => void;
-};
+} & (
+  | {
+      /** Pressing the pressed item keeps it pressed, so the value does not become null. */
+      required?: false;
+      value?: string | null;
+      defaultValue?: string | null;
+      onValueChange?: (value: string | null) => void;
+    }
+  | {
+      /** Pressing the pressed item keeps it pressed, so the value does not become null. */
+      required: true;
+      value?: string;
+      defaultValue?: string;
+      onValueChange?: (value: string) => void;
+    }
+);
 
 /** Any number of items pressed. */
 export type ToggleGroupMultipleProps = ToggleGroupBase & {
   selectionMode: 'multiple';
+  required?: never;
   value?: readonly string[];
   defaultValue?: readonly string[];
   onValueChange?: (value: string[]) => void;
@@ -57,6 +71,9 @@ type ToggleGroupContextValue = {
   readOnly: boolean;
   disabled: boolean;
   roving: UseRovingFocusResult | null;
+  /** Values at the start or end of a wrapped line. Empty until measured. */
+  lineStart: ReadonlySet<string>;
+  lineEnd: ReadonlySet<string>;
 };
 
 const ToggleGroupContext = /* @__PURE__ */ createContext<ToggleGroupContextValue | null>(null);
@@ -66,6 +83,7 @@ function Root(props: ToggleGroupRootProps) {
   const toolbar = useToolbar(nodeRef);
   const {
     selectionMode = 'single',
+    required = false,
     value: valueProp,
     defaultValue,
     onValueChange,
@@ -95,11 +113,17 @@ function Root(props: ToggleGroupRootProps) {
       const next = pressed.has(item) ? list.filter((v) => v !== item) : [...list, item];
       setValue(next);
       (onValueChange as ToggleGroupMultipleProps['onValueChange'])?.(next);
-    } else {
-      const next = pressed.has(item) ? null : item;
-      setValue(next);
-      (onValueChange as ToggleGroupSingleProps['onValueChange'])?.(next);
+      return;
     }
+    if (required) {
+      if (pressed.has(item)) return;
+      setValue(item);
+      (onValueChange as ((value: string) => void) | undefined)?.(item);
+      return;
+    }
+    const next = pressed.has(item) ? null : item;
+    setValue(next);
+    (onValueChange as ((value: string | null) => void) | undefined)?.(next);
   };
 
   // Inside a toolbar the toolbar owns the arrow keys and Tab. On its own,
@@ -114,6 +138,23 @@ function Root(props: ToggleGroupRootProps) {
     onActiveValueChange: setNavigating,
   });
   const focusLeave = useFocusLeave(() => setNavigating(null));
+  const [lines, setLines] = useState(NO_LINES);
+  useLayoutEffect(() => {
+    const root = nodeRef.current;
+    if (!root || orientation !== 'horizontal') {
+      setLines((prev) => (sameLines(prev, NO_LINES) ? prev : NO_LINES));
+      return;
+    }
+    const measure = () => {
+      const next = readLines(root);
+      setLines((prev) => (sameLines(prev, next) ? prev : next));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [orientation, children]);
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
@@ -125,6 +166,8 @@ function Root(props: ToggleGroupRootProps) {
         readOnly: valueProp !== undefined && !onValueChange,
         disabled,
         roving: toolbar ? null : roving,
+        lineStart: lines.start,
+        lineEnd: lines.end,
       }}
     >
       <div
@@ -162,6 +205,9 @@ function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItem
       variant="secondary"
       {...props}
       className={cx(styles.item, className)}
+      data-todae-toggle-item={value}
+      data-line-start={ctx.lineStart.has(value) ? '' : undefined}
+      data-line-end={ctx.lineEnd.has(value) ? '' : undefined}
       {...roving}
       disabled={off}
       pressed={ctx.pressed.has(value)}
@@ -172,3 +218,39 @@ function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItem
 }
 
 export const ToggleGroup = { Root, Item } as const;
+
+const NO_LINES: { start: ReadonlySet<string>; end: ReadonlySet<string> } = { start: new Set(), end: new Set() };
+
+function sameSet(a: ReadonlySet<string>, b: ReadonlySet<string>) {
+  if (a.size !== b.size) return false;
+  for (const value of a) if (!b.has(value)) return false;
+  return true;
+}
+
+function sameLines(
+  a: { start: ReadonlySet<string>; end: ReadonlySet<string> },
+  b: { start: ReadonlySet<string>; end: ReadonlySet<string> },
+) {
+  return sameSet(a.start, b.start) && sameSet(a.end, b.end);
+}
+
+/** The first and last item of each flex line, in DOM order, which is the inline order. */
+function readLines(root: HTMLElement) {
+  const items = [...root.querySelectorAll<HTMLElement>(':scope > [data-todae-toggle-item]')];
+  const byTop = new Map<number, HTMLElement[]>();
+  for (const item of items) {
+    const top = Math.round(item.getBoundingClientRect().top);
+    const line = byTop.get(top);
+    if (line) line.push(item);
+    else byTop.set(top, [item]);
+  }
+  const start = new Set<string>();
+  const end = new Set<string>();
+  for (const line of byTop.values()) {
+    const first = line[0]?.dataset.todaeToggleItem;
+    const last = line[line.length - 1]?.dataset.todaeToggleItem;
+    if (first) start.add(first);
+    if (last) end.add(last);
+  }
+  return { start, end };
+}

@@ -135,6 +135,9 @@
   .group {
     display: inline-flex;
     align-items: stretch;
+    /* How far a joined segment overlaps the previous border. ToggleGroup
+       spends this so a wrapped line starts in line with the one above. */
+    --_join-overlap: max(0px, calc(var(--todae-button-border-width) - var(--_button-join-gap, 0px)));
   }
 
   /* ToggleGroup sets --_button-join-gap from its gap. At 0 the items share a
@@ -146,18 +149,27 @@
 
   /* Counted among the group's buttons, whatever their tag (a button or a
      link through render), and past the tooltips they render beside them. */
+  /* The joined corner. ToggleGroup sets --_join-radius-* on the outer corners
+     of a wrapped line; unset, this is the corner, square where the gap is 0. */
+  .group > .root {
+    --_join-corner: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+  }
+
   .group > .root:nth-child(1 of .root):not(:nth-last-child(1 of .root)) {
-    border-start-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
-    border-end-end-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-start-end-radius: var(--_join-radius-start-end, var(--_join-corner));
+    border-end-end-radius: var(--_join-radius-end-end, var(--_join-corner));
   }
 
   .group > .root:nth-last-child(1 of .root):not(:nth-child(1 of .root)) {
-    border-start-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
-    border-end-start-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-start-start-radius: var(--_join-radius-start-start, var(--_join-corner));
+    border-end-start-radius: var(--_join-radius-end-start, var(--_join-corner));
   }
 
   .group > .root:not(:nth-child(1 of .root)):not(:nth-last-child(1 of .root)) {
-    border-radius: min(var(--_button-radius, var(--todae-button-radius)), calc(var(--_button-join-gap, 0px) * 1000));
+    border-start-start-radius: var(--_join-radius-start-start, var(--_join-corner));
+    border-end-start-radius: var(--_join-radius-end-start, var(--_join-corner));
+    border-start-end-radius: var(--_join-radius-start-end, var(--_join-corner));
+    border-end-end-radius: var(--_join-radius-end-end, var(--_join-corner));
   }
 
   .group > .root:focus-visible {

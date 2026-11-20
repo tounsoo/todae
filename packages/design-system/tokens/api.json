@@ -4382,6 +4382,10 @@
       "type": "color"
     },
     {
+      "path": "togglegroup.item.border.default",
+      "type": "color"
+    },
+    {
       "path": "togglegroup.item.border.pressed",
       "type": "color"
     },
