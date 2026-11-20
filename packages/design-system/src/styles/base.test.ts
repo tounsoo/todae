@@ -61,6 +61,7 @@ describe('todae.base styles', () => {
     const rule = base.slice(base.indexOf(':where(:root:has(dialog:modal))'));
     const body = rule.slice(rule.indexOf('{') + 1, rule.indexOf('}'));
     expect(body).toContain('overflow: hidden;');
+    expect(body).toContain('scrollbar-gutter: var(--_todae-scroll-lock-gutter, auto);');
     expect(body).not.toContain('!important');
   });
 

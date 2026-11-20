@@ -108,7 +108,9 @@ describe('tree shaking', () => {
 
   it('leaves out components that are not imported', async () => {
     expect(await bundle(`export { Dialog } from './index.js';`)).toContain('showModal');
+    expect(await bundle(`export { Dialog } from './index.js';`)).toContain('--_todae-scroll-lock-gutter');
     expect(await bundle(`export { Button } from './index.js';`)).not.toContain('showModal');
+    expect(await bundle(`export { Button } from './index.js';`)).not.toContain('--_todae-scroll-lock-gutter');
   });
 
   it('marks only stylesheets as having side effects', () => {

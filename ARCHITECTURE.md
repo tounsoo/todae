@@ -126,7 +126,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 
 ## CSS
 
-- **Todae's CSS sits in one cascade layer, `todae`.** `src/styles/layers.css` declares `todae.reset` (empty), `todae.base` (tokens and the modal scroll lock) and `todae.components`, and is imported first by every build entry. A company's token build adds `todae.theme` after them. *Why:* a company places Todae with one name, and its own CSS wins by layer order, not specificity.
+- **Todae's CSS sits in one cascade layer, `todae`.** `src/styles/layers.css` declares `todae.reset` (empty), `todae.base` (tokens and the modal scroll lock, which keeps a scrollbar gutter only when the page had one) and `todae.components`, and is imported first by every build entry. A company's token build adds `todae.theme` after them. *Why:* a company places Todae with one name, and its own CSS wins by layer order, not specificity.
 - **Component styles are CSS Modules** in `@layer todae.components`. Components that style a single native element (Link, Table, Code and similar) use the `todae.components.native` sublayer, so container components such as Pagination beat them.
 - **Take colors, spacing, radii and sizes from tokens** through their `--todae-*` custom properties rather than literals. Restyling goes through tokens first; a class works for layout.
 - **Classes are camelCase**, and a part's main class is usually `.root`. Name a custom property a sheet sets for its own arithmetic `--_<name>` (`--_ring-room`), so it doesn't look like a token.

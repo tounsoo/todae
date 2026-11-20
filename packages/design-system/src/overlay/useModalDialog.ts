@@ -6,6 +6,7 @@ import { takeCloseRequest, useLayerInside } from './useEscapeKey.js';
 import { useModalLayerElement } from './useModalLayerElement.js';
 import { reshowHeldInside } from './usePopoverSync.js';
 import { focusWithoutScroll } from '../internal/revealRing.js';
+import { installScrollLock } from './scrollLock.js';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -48,6 +49,8 @@ export function useModalDialog({
   closeOnFormSubmit: (event: FormEvent<HTMLDialogElement>) => void;
   closedby: 'closerequest' | 'none';
 } {
+  // Not at import time: a top-level call would ship in every import from the entry.
+  installScrollLock();
   const openRef = useRef(open);
   openRef.current = open;
   // Read from the listeners, so they bind once per element.
