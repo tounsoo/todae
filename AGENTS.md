@@ -85,14 +85,15 @@ Tier: T0
 | docs-deploy | Docs deploy | `.github/workflows/docs-deploy.yml` | #398 | seeded |
 | pstack-update | The weekly pstack update | `.github/workflows/pstack-update.yml` | #457 | seeded |
 | self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
+| agent-docs | A new docs page, docs section or check changes the agent notes and the verify skill | `.github/scripts/agent-docs.mjs` | #472 | seeded |
 
 ## CI jobs
 
 `.github/workflows/ci.yml` runs on every push to `main` and on a pull request when it opens, gets a push, reopens, or is marked ready. It has no paths filter.
 
-On a draft whose change class is not `markdown`, the jobs that run are Changes, Check, Token API, Token consumers, Forbidden paths and rule-checker, and `Checks` fails as the repo lines say.
+On a draft whose change class is not `markdown`, the jobs that run are Changes, Check, Token API, Token consumers, Agent docs, Forbidden paths and rule-checker, and `Checks` fails as the repo lines say.
 
-A change classed `markdown` runs Changes, Forbidden paths, rule-checker and Checks. Checks allows the other jobs to be skipped. `rule-checker` still runs, because the rule table lives in this file. [Check your change](CONTRIBUTING.md#check-your-change) lists the Markdown files that count as read and so leave the `markdown` class. A change classed `prose` still runs Build (including `pnpm publish:check`, `pnpm ssr:smoke` and `pnpm test`), Docs build and pages, Token API, Token consumers, Forbidden paths, rule-checker, and the pinned-actions step of Static. Fernway and Engines start, then skip their browser tests.
+A change classed `markdown` runs Changes, Forbidden paths, rule-checker and Checks. Checks allows the other jobs to be skipped. `rule-checker` still runs, because the rule table lives in this file. [Check your change](CONTRIBUTING.md#check-your-change) lists the Markdown files that count as read and so leave the `markdown` class. A change classed `prose` still runs Build (including `pnpm publish:check`, `pnpm ssr:smoke` and `pnpm test`), Docs build and pages, Token API, Token consumers, Agent docs, Forbidden paths, rule-checker, and the pinned-actions step of Static. Fernway and Engines start, then skip their browser tests.
 
 ## Conventions
 
@@ -102,6 +103,7 @@ A change classed `markdown` runs Changes, Forbidden paths, rule-checker and Chec
 - Cursor's verify skill is `.cursor/skills/verify/SKILL.md` ([0005](docs/decisions/0005-verify-procedure.md)). Claude's is `.claude/skills/verify/SKILL.md` and ends in PASS, FAIL or BLOCKED ([0007](docs/decisions/0007-claude-verify-and-pr-template.md)). Run the one for the tool in use on the commit that ends each review round, before a pull request opens and before each push of new work.
 - The Claude model sheet is `.claude/pstack-models.md`. The pinned copy's skills read it. A change to a role's model or effort goes there, with Ben's yes. Cursor's installed pstack reads the user sheet home describes (`~/.cursor/rules/pstack-models.mdc`, written by `/setup-pstack`).
 - Briefs use `.claude/task-prompt.md`.
+- A pull request that adds a docs page, a docs section (a group in `SITE_GROUPS`) or a check (a CI job or step, or a command `pnpm check` runs) also changes the agent notes, this file or `CLAUDE.md`, and Claude's verify skill (`SKILL.md` or `verify.mjs` in `.claude/skills/verify/`), with what an agent needs to know about it. A new check also gets a row in the [rule table](#rule-table). Review checks that row, not the job. Where one or both need no change, its body says why on a line `Agent docs unchanged: <reason>`. CI's Agent docs job, and the verify skill's `agent-docs` step, fail otherwise. [0018](docs/decisions/0018-agent-docs-check.md) says what counts.
 - `.agents/playbooks/` holds the playbooks that are about this repo: `changesets.md`, `docs-translation.md` and `tokens.md`. Open each one whose `when` line fits the task.
 - Git follows home's `standards/git.md`. This repo's base branch is `main`.
 - A change to `.claude/`, `.agents/`, `AGENTS.md`, `CLAUDE.md`, or the `.claude/**` entry in the `ignores` list in `eslint.config.mjs`, needs Ben's yes. Home's `standards/git.md` covers the shared half of that rule.
