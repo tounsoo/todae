@@ -61,10 +61,15 @@
     outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 
-  /* Disabled items still take keyboard focus, and show it, so they are found. */
+  /* Disabled items still take keyboard focus, and show it, so they are found.
+     A key cap paints its own color, so the shortcut takes the same disabled color. */
   .item[data-disabled] {
     color: var(--todae-menu-item-fg-disabled);
     cursor: not-allowed;
+  }
+
+  .item[data-disabled] > .itemShortcut kbd {
+    color: var(--todae-menu-item-fg-disabled);
   }
 
   .indicator {

@@ -99,6 +99,20 @@ describe('menu item icon and shortcut columns', () => {
             </Menu.ItemShortcut>
           </Menu.Item>
           <Menu.Item>Close</Menu.Item>
+          <Menu.CheckboxItem defaultChecked>
+            Pin
+            <Menu.ItemShortcut data-testid="pin-keys">
+              <Kbd.Root>P</Kbd.Root>
+            </Menu.ItemShortcut>
+          </Menu.CheckboxItem>
+          <Menu.RadioGroup aria-label="Sort" defaultValue="name">
+            <Menu.RadioItem value="name">
+              Name
+              <Menu.ItemShortcut data-testid="name-keys">
+                <Kbd.Root>N</Kbd.Root>
+              </Menu.ItemShortcut>
+            </Menu.RadioItem>
+          </Menu.RadioGroup>
           <Menu.Group aria-label="More actions">
             <Menu.Item>Rename</Menu.Item>
           </Menu.Group>
@@ -128,13 +142,21 @@ describe('menu item icon and shortcut columns', () => {
     const close = item('Close');
     const rename = item('Rename');
     const more = item('More');
+    const pin = screen.getByRole('menuitemcheckbox', { name: (text) => text === 'Pin' });
+    const byName = screen.getByRole('menuitemradio', { name: (text) => text === 'Name' });
     expect(Math.abs(labelStart(save) - labelStart(saveAs))).toBeLessThanOrEqual(1);
     expect(Math.abs(labelStart(save) - labelStart(close))).toBeLessThanOrEqual(1);
     expect(Math.abs(labelStart(save) - labelStart(rename))).toBeLessThanOrEqual(1);
     expect(Math.abs(labelStart(save) - labelStart(more))).toBeLessThanOrEqual(1);
+    expect(Math.abs(labelStart(save) - labelStart(pin))).toBeLessThanOrEqual(1);
+    expect(Math.abs(labelStart(save) - labelStart(byName))).toBeLessThanOrEqual(1);
     const saveKeys = screen.getByTestId('save-keys').getBoundingClientRect();
     const saveAsKeys = screen.getByTestId('save-as-keys').getBoundingClientRect();
+    const pinKeys = screen.getByTestId('pin-keys').getBoundingClientRect();
+    const nameKeys = screen.getByTestId('name-keys').getBoundingClientRect();
     expect(Math.abs(saveKeys.right - saveAsKeys.right)).toBeLessThanOrEqual(1);
+    expect(Math.abs(saveKeys.right - pinKeys.right)).toBeLessThanOrEqual(1);
+    expect(Math.abs(saveKeys.right - nameKeys.right)).toBeLessThanOrEqual(1);
     expect(saveKeys.left).toBeGreaterThan(labelStart(save));
     const moreKeys = screen.getByTestId('more-keys').getBoundingClientRect();
     const chevron = more.querySelector('[data-todae-glyph]')!.getBoundingClientRect();
@@ -177,5 +199,41 @@ describe('menu item icon and shortcut columns', () => {
     expect(nested.querySelector('[data-todae-menu-icon]')).toBeNull();
     expect(document.querySelector('[data-todae-menu-icon]')).not.toBeNull();
     expect(getComputedStyle(nested).paddingInlineStart).toBe(getComputedStyle(plain).paddingInlineStart);
+  });
+
+  it('dims a shortcut on a disabled item', async () => {
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>File</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item disabled>
+            Save
+            <Menu.ItemShortcut data-testid="off-keys">
+              <Kbd.Root>
+                <Kbd.Root>S</Kbd.Root>
+              </Kbd.Root>
+            </Menu.ItemShortcut>
+          </Menu.Item>
+          <Menu.Item>
+            Open
+            <Menu.ItemShortcut data-testid="on-keys">
+              <Kbd.Root>
+                <Kbd.Root>O</Kbd.Root>
+              </Kbd.Root>
+            </Menu.ItemShortcut>
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await frame();
+    const key = (id: string) => {
+      const cap = screen.getByTestId(id).querySelector('kbd kbd');
+      if (!cap) throw new Error(`${id} has no key cap.`);
+      return cap;
+    };
+    const save = screen.getByRole('menuitem', { name: (text) => text === 'Save' });
+    const disabledColor = getComputedStyle(save).color;
+    expect(getComputedStyle(key('off-keys')).color).toBe(disabledColor);
+    expect(getComputedStyle(key('on-keys')).color).not.toBe(disabledColor);
   });
 });

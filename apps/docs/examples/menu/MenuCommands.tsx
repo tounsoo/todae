@@ -4,8 +4,8 @@ import { Kbd, Menu, Stack, Text, useHotkey } from '@tounsoo/todae';
 import { FilePlus, Save } from 'lucide-react';
 import { useState } from 'react';
 
-const newKeys = ['Meta+N'];
-const saveKeys = ['Meta+S'];
+const newKeys = ['Alt+Shift+N'];
+const saveKeys = ['Alt+Shift+S'];
 
 export default function MenuCommands() {
   const [last, setLast] = useState('nothing yet');
@@ -23,7 +23,7 @@ export default function MenuCommands() {
             New
             <Menu.ItemShortcut>
               <Kbd.Root>
-                <Kbd.Root>Meta</Kbd.Root>+<Kbd.Root>N</Kbd.Root>
+                <Kbd.Root>Alt</Kbd.Root>+<Kbd.Root>Shift</Kbd.Root>+<Kbd.Root>N</Kbd.Root>
               </Kbd.Root>
             </Menu.ItemShortcut>
           </Menu.Item>
@@ -34,7 +34,7 @@ export default function MenuCommands() {
             Save
             <Menu.ItemShortcut>
               <Kbd.Root>
-                <Kbd.Root>Meta</Kbd.Root>+<Kbd.Root>S</Kbd.Root>
+                <Kbd.Root>Alt</Kbd.Root>+<Kbd.Root>Shift</Kbd.Root>+<Kbd.Root>S</Kbd.Root>
               </Kbd.Root>
             </Menu.ItemShortcut>
           </Menu.Item>
