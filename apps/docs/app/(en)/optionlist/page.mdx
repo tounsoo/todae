@@ -1,9 +1,10 @@
+import OptionListDetail from '../../../examples/optionlist/OptionListDetail';
 import OptionListMultiple from '../../../examples/optionlist/OptionListMultiple';
 import OptionListSingle from '../../../examples/optionlist/OptionListSingle';
 
 # OptionList
 
-`role="listbox"` with `aria-activedescendant`. Options are strings. Keyboard is Arrow, Home, End, Enter, and Space, and typing a letter moves to the next option that starts with it. Escape is not handled so it can close a parent Popover.
+`role="listbox"` with `aria-activedescendant`. An option's title is a string, and `OptionList.OptionDetail` can add a line under it. Keyboard is Arrow, Home, End, Enter, and Space, and typing a letter moves to the next option whose title starts with it. Escape is not handled so it can close a parent Popover.
 
 Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400` and use an accent-soft row fill (`color.bg.selected`, 12% accent). Highlighted selected is 20% (`color.accent.soft-strong`). Rows are `2px` apart. Hover is gated with `@media (hover: hover)`.
 
@@ -14,6 +15,19 @@ With `selectionMode="multiple"`, every row keeps a check gutter. Selected fills 
 <Example of={OptionListMultiple} />
 
 Options are `OptionList.Option` parts inside `OptionList.Root`.
+
+## Detail
+
+`OptionList.OptionDetail` is a second line under the title. The title is the option's name. The detail is the description, through `aria-describedby`. Typing and the arrow keys still use the title.
+
+```tsx
+<OptionList.Option value="apple">
+  Apple
+  <OptionList.OptionDetail>Crisp and sweet</OptionList.OptionDetail>
+</OptionList.Option>
+```
+
+<Example of={OptionListDetail} />
 
 A combobox can pass `id`, `activeValue`, `onActiveValueChange`, and `tabIndex={-1}` so the input owns focus and `aria-activedescendant`. Uncontrolled lists keep `tabIndex={0}`.
 
@@ -34,9 +48,9 @@ import { Check } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. The arrow keys, Home and End skip disabled options and stop at the ends. Typing moves to the next option whose text starts with what was typed: one letter, or the same letter again, cycles through those options, and a pause of half a second starts a new search. A Space joins a search under way, and otherwise selects. Keys with Ctrl, Meta or Alt, and the move keys with Shift, are left to the page, and a key pressed in a field inside the list stays with that field. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
+**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. `OptionList.OptionDetail` is that option's description through `aria-describedby`. The arrow keys, Home and End skip disabled options and stop at the ends. Typing moves to the next option whose title starts with what was typed: one letter, or the same letter again, cycles through those options, and a pause of half a second starts a new search. The detail is not part of that search. A Space joins a search under way, and otherwise selects. Keys with Ctrl, Meta or Alt, and the move keys with Shift, are left to the page, and a key pressed in a field inside the list stays with that field. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
 
-**You supply:** A name with `aria-label`, or `aria-labelledby` pointing at a visible label; the type does not require one. Option text that reads well on its own, since the string is the option's name. When an input owns focus, wire it with [useCombobox](/utilities/use-combobox), which gives the list `tabIndex={-1}` and puts `aria-activedescendant`, `aria-controls` and `aria-expanded` on the input.
+**You supply:** A name with `aria-label`, or `aria-labelledby` pointing at a visible label; the type does not require one. A title that reads well on its own, since it is the option's name. The detail is the description, not part of the name. When an input owns focus, wire it with [useCombobox](/utilities/use-combobox), which gives the list `tabIndex={-1}` and puts `aria-activedescendant`, `aria-controls` and `aria-expanded` on the input.
 
 **Watch for:** Escape is not handled, so a list in your own overlay needs something else to close on Escape, such as Popover. Two lists with the same `id` give their options the same ids. `tabIndex={-1}` without an input that carries `aria-activedescendant` leaves the list out of keyboard reach.
 
@@ -51,3 +65,5 @@ import { Check } from 'lucide-react';
 <PropsTable name="OptionList.Root" />
 
 <PropsTable name="OptionList.Option" />
+
+<PropsTable name="OptionList.OptionDetail" />

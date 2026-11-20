@@ -572,13 +572,14 @@
     "(section order)": "aa315b686964"
   },
   "optionlist": {
-    "(top)": "982ecc37814f",
-    "# OptionList": "9af9913ffda5",
+    "(top)": "79fa29c40cf3",
+    "# OptionList": "0f34c7cc527d",
+    "## Detail": "58e635bbfbad",
     "## Icons": "c64f640cde20",
-    "## Accessible composition": "c19b4a381263",
+    "## Accessible composition": "e95c5b0be999",
     "## When to use": "f5fbfd42f51c",
-    "## Props": "5341a504c460",
-    "(section order)": "1676be320e51"
+    "## Props": "230671f0f6b1",
+    "(section order)": "0ecd65585283"
   },
   "pagination": {
     "(top)": "92ea2c253331",
