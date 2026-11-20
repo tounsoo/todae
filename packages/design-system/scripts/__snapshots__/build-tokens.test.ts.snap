@@ -15,5 +15,6 @@ exports[`committed token graph > builds and snapshots CSS selectors 1`] = `
   "[data-button-variant="primary"]",
   "[data-button-variant="secondary"]",
   "[data-button-variant="ghost"]",
+  "[data-button-variant="critical"]",
 ]
 `;

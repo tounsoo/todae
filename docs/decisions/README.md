@@ -4,6 +4,7 @@ These files record dated decisions. Design-system rules stay in [ARCHITECTURE.md
 
 Copy [template.md](template.md) for a new decision. Name it `NNNN-short-slug.md` and use the next number. The newest number is first.
 
+- [0017. The base theme ships a critical Button variant](0017-critical-button-variant.md). Active, 2026-11-20.
 - [0016. Shared agent rules live in the home repo](0016-shared-agent-rules-live-in-home.md). Active, 2026-11-16.
 - [0015. Threads read a pinned pstack copy that a weekly workflow updates](0015-pinned-pstack-copy.md). Active, 2026-11-12.
 - [0014. Typed inputs are Field parts, and pickers are composed](0014-typed-inputs-and-field-picker.md). Active, 2026-11-09.

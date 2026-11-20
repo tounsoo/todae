@@ -465,7 +465,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
           "required": false,
           "description": "Visual style. Non-primary sets data-button-variant.",
           "default": "\"primary\""
@@ -5092,7 +5092,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
           "required": false,
           "description": "Button variant.",
           "default": "\"secondary\""
