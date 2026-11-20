@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { DOCS_ORIGIN } from '../origin';
 import { resolveEntries } from '@tounsoo/todae/tokens-builder';
 import { buildTokenFiles, todaeTokensDir, type BuildResult } from './build';
+import { envelope, MAX_RESPONSE_CHARS, type NextCall } from './budget';
 import { catalogTokens } from './tokens';
 
 const SOURCE = 'todae-docs' as const;
@@ -190,4 +191,88 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     docsUrl: `${DOCS_ORIGIN}/guides/build-on-todae`,
     source: SOURCE,
   };
+}
+
+export type ScaffoldDraft = Awaited<ReturnType<typeof scaffoldDesignSystem>>;
+
+const SCAFFOLD_SLICE = 24_000;
+
+/** The same call again, with the cursor filled in, so the next page needs no rebuilt arguments. */
+function scaffoldNext(options: ScaffoldOptions, cursor: { offset: number; char?: number }): NextCall {
+  const args: NextCall['arguments'] = { name: options.name, offset: cursor.offset, char: cursor.char ?? 0 };
+  if (options.colors) args.colors = options.colors;
+  if (options.buttonVariants) args.buttonVariants = options.buttonVariants;
+  if (options.densities) args.densities = options.densities;
+  return {
+    tool: 'scaffold_design_system',
+    arguments: args,
+    why: 'The next file of this draft. Pass these arguments unchanged.',
+  };
+}
+
+/**
+ * The draft itself when it fits the response budget, which is the shape `build_tokens` takes.
+ * A draft over the budget comes back one file at a time. A file that is still too long continues at `cursor.char`.
+ * The first next call repeats the original arguments with that cursor.
+ */
+export function presentScaffold(result: ScaffoldDraft, offset = 0, char = 0, options?: ScaffoldOptions) {
+  if (offset === 0 && char === 0 && JSON.stringify(result).length <= MAX_RESPONSE_CHARS - 800) return result;
+  const files = [
+    ...Object.entries(result.tokenFiles).map(([path, contents]) => ({ group: 'tokenFiles' as const, path, contents })),
+    ...result.otherFiles.map((file) => ({ group: 'otherFiles' as const, path: file.path, contents: file.contents })),
+    ...(!result.build.ok ? [{ group: 'build' as const, path: 'build-error', contents: result.build.error }] : []),
+  ];
+  const index = Math.max(0, Math.trunc(offset));
+  const current = files[index];
+  const start = Math.max(0, Math.trunc(char));
+  const rest = current ? current.contents.slice(start) : '';
+  // The next call carries the original arguments, so the file slice shrinks until the whole JSON fits.
+  const room = MAX_RESPONSE_CHARS;
+  const pageAt = (size: number) => {
+    const nextChar = start + size;
+    const fileDone = !current || nextChar >= current.contents.length;
+    const cursor = !current
+      ? undefined
+      : fileDone
+        ? index + 1 < files.length
+          ? { offset: index + 1 }
+          : undefined
+        : { offset: index, char: nextChar };
+    const body = {
+      tokensFolder: result.tokensFolder,
+      index,
+      total: files.length,
+      ...(current ? { file: { group: current.group, path: current.path, contents: rest.slice(0, size) } } : {}),
+      ...(index === 0 && start === 0 ? { build: { ok: result.build.ok }, command: result.command } : {}),
+      ...(cursor ? { cursor } : {}),
+      docsUrl: result.docsUrl,
+      source: result.source,
+    };
+    return cursor && options ? envelope(body, 'scaffold', [scaffoldNext(options, cursor)]) : body;
+  };
+  let take = rest.length;
+  if (take > SCAFFOLD_SLICE) {
+    const cut = rest.slice(0, SCAFFOLD_SLICE);
+    const newline = cut.lastIndexOf('\n');
+    take = newline > 0 ? newline : SCAFFOLD_SLICE;
+  }
+  if (JSON.stringify(pageAt(take)).length > room && take > 1) {
+    let lo = 1;
+    let hi = take - 1;
+    let best = 1;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const cut = rest.slice(0, mid);
+      const newline = cut.lastIndexOf('\n');
+      const size = newline > 0 ? newline : mid;
+      if (JSON.stringify(pageAt(size)).length <= room) {
+        best = size;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    take = best;
+  }
+  return pageAt(take);
 }

@@ -65,12 +65,13 @@ const nextConfig = {
     return dev ? config : stableBuild(config);
   },
   outputFileTracingIncludes: {
-    // The MCP reads English pages only, with the example files and stylesheets they show, builds company tokens on Todae's token
+    // The MCP reads English pages only, with the example files, sibling modules and stylesheets they show, builds company tokens on Todae's token
     // files with its CLI, and reads the changelog. The CLI in dist/scripts imports the shared color math from dist/src/color.
     '/api/[transport]': [
       '../../packages/design-system/CHANGELOG.md',
       './app/(en)/**/page.mdx',
       './examples/**/*.tsx',
+      './examples/**/!(*.test).ts',
       './examples/**/*.module.css',
       '../../packages/design-system/tokens/**/*.json',
       '../../packages/design-system/dist/scripts/**/*.js',

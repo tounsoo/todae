@@ -173,6 +173,21 @@ export async function buildTokenFiles(
   }
 }
 
+type BuiltFiles = { ok: true; css: string; overrideTypes: string };
+
+/**
+ * The next slice of a build that `deliver` split. A css cursor means the types
+ * were already in that response, so the next slice is css only. A types cursor
+ * means the css was already whole.
+ */
+export function resumeBuild<T extends { ok: boolean }>(built: T, cursor?: { field?: 'css' | 'overrideTypes'; offset?: number }): T {
+  const offset = cursor?.offset ?? 0;
+  if (!built.ok || offset <= 0) return built;
+  const files = built as T & BuiltFiles;
+  if (cursor?.field === 'overrideTypes') return { ...files, css: '', overrideTypes: files.overrideTypes.slice(offset), offset };
+  return { ...files, css: files.css.slice(offset), overrideTypes: '', offset };
+}
+
 /** Todae's own contrast pairs, measured on its base theme. */
 export async function baseContrast(base = todaeTokensDir()) {
   const pairs = contrastResults(await resolveEntries(base)).map(({ fg, bg, over, min, where, lc }) => ({

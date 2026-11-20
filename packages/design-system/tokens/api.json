@@ -518,6 +518,74 @@
       "type": "dimension"
     },
     {
+      "path": "button.critical.bg.active",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.bg.default",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.bg.disabled",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.bg.focus",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.bg.hover",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.border.active",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.border.default",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.border.disabled",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.border.focus",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.border.hover",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.fg.active",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.fg.default",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.fg.disabled",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.fg.focus",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.fg.hover",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.ring.focus",
+      "type": "color"
+    },
+    {
+      "path": "button.critical.shadow",
+      "type": "shadow"
+    },
+    {
       "path": "button.ghost.bg.active",
       "type": "color"
     },

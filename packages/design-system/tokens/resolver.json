@@ -232,7 +232,8 @@
       "contexts": {
         "primary": [{ "$ref": "./components/button.primary.json" }],
         "secondary": [{ "$ref": "./components/button.secondary.json" }],
-        "ghost": [{ "$ref": "./components/button.ghost.json" }]
+        "ghost": [{ "$ref": "./components/button.ghost.json" }],
+        "critical": [{ "$ref": "./components/button.critical.json" }]
       },
       "$extensions": {
         "dev.todae": {

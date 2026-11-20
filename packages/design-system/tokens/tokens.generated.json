@@ -4799,6 +4799,261 @@
       "description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state."
     },
     {
+      "path": "button.critical.bg.active",
+      "type": "color",
+      "cssVar": "--todae-button-critical-bg-active",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-critical-bg-default",
+      "cssValue": "var(--todae-color-danger-default)",
+      "ref": "color.danger.default",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-critical-bg-disabled",
+      "cssValue": "var(--todae-color-status-critical-bg)",
+      "ref": "color.status.critical.bg",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-critical-bg-focus",
+      "cssValue": "var(--todae-color-danger-default)",
+      "ref": "color.danger.default",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-critical-bg-hover",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-critical-border-active",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-critical-border-default",
+      "cssValue": "var(--todae-color-danger-default)",
+      "ref": "color.danger.default",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-critical-border-disabled",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-critical-border-focus",
+      "cssValue": "var(--todae-color-danger-default)",
+      "ref": "color.danger.default",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-critical-border-hover",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-critical-fg-active",
+      "cssValue": "var(--todae-color-status-critical-bg)",
+      "ref": "color.status.critical.bg",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-critical-fg-default",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-critical-fg-disabled",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-critical-fg-focus",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-critical-fg-hover",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-critical-ring-focus",
+      "cssValue": "var(--todae-focus-ring)",
+      "ref": "focus.ring",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
+      "path": "button.critical.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-button-critical-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": "critical",
+      "entry": {
+        "kind": "modifier",
+        "name": "buttonVariant",
+        "context": "critical"
+      },
+      "description": "The critical Button.Root variant: the irreversible action in a confirm dialog. Colors per state, from the danger and status critical scales."
+    },
+    {
       "path": "stack.gap",
       "type": "dimension",
       "cssVar": "--todae-stack-gap",

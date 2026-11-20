@@ -23,7 +23,7 @@ declare global {
 }
 
 // Every example file in apps/docs/examples, whose default export is one docs example. Pages pass an example their locale.
-const examples = import.meta.glob<{ default: ComponentType<{ locale: string }> }>(['../../examples/**/*.tsx'], { eager: true });
+const examples = import.meta.glob<{ default: ComponentType<{ locale: string }> }>(['../../examples/**/*.tsx', '!../../examples/fixtures/**'], { eager: true });
 
 const demos = Object.entries(examples).map(([file, mod]) => {
   const Shown = mod.default;

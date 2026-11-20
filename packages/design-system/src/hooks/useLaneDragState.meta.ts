@@ -13,7 +13,7 @@ export const meta = {
     },
     {
       name: 'select',
-      type: '(state: LaneDragChange | null) => T',
+      type: '(state: LaneDragChange | LaneCreateDrag | null) => T',
       required: true,
       description: 'Picks what this component shows from the drag under way, or from null when there is none.',
     },

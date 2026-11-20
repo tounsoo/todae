@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -627,6 +627,86 @@ describe('Calendar in a browser', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' }));
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
+  });
+
+  it('keeps one Tab stop and the date name when a day has content, and lets that day grow', async () => {
+    render(
+      <Themed>
+        <Calendar.Root aria-label="Plain" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Root>
+        <Calendar.Root aria-label="Noted" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+          <Calendar.Header />
+          <Calendar.Grid
+            renderDay={(day) =>
+              day.date.toString() === '2026-10-13' ? <span style={{ display: 'block', blockSize: '4rem' }}>Review</span> : null
+            }
+          />
+        </Calendar.Root>
+        <button type="button">after</button>
+      </Themed>,
+    );
+    const plainGrid = screen.getByRole('group', { name: 'Plain' });
+    const notedGrid = screen.getByRole('group', { name: 'Noted' });
+    const plain = within(plainGrid).getByRole('button', { name: 'Tuesday, October 13, 2026' });
+    const noted = within(notedGrid).getByRole('button', { name: 'Tuesday, October 13, 2026' });
+    expect(noted.textContent).toContain('Review');
+    expect(noted.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026');
+    expect(noted.getBoundingClientRect().height).toBeGreaterThan(plain.getBoundingClientRect().height);
+    const quiet = within(notedGrid).getByRole('button', { name: 'Wednesday, October 14, 2026' });
+    expect(quiet.getBoundingClientRect().height).toBeCloseTo(plain.getBoundingClientRect().height, 0);
+    noted.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
+    expect(document.activeElement?.textContent).not.toContain('Review');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
+  });
+
+  it('draws an outside day in the weekday color in light and dark', () => {
+    render(
+      <>
+        {(['light', 'dark'] as const).map((appearance) => (
+          <div key={appearance} data-appearance={appearance} data-density="comfortable">
+            <Calendar.Root aria-label={appearance} locale="en-US" firstDayOfWeek={7} defaultValue={plainDate('2026-10-13')}>
+              <Calendar.Header />
+              <Calendar.Grid showOutsideDays />
+            </Calendar.Root>
+          </div>
+        ))}
+      </>,
+    );
+    for (const appearance of ['light', 'dark'] as const) {
+      const grid = within(screen.getByRole('group', { name: appearance })).getByRole('grid');
+      const outside = within(grid).getByRole('button', { name: 'Sunday, September 27, 2026' });
+      const inside = within(grid).getByRole('button', { name: 'Thursday, October 1, 2026' });
+      const weekday = within(grid).getAllByRole('columnheader')[0]!;
+      expect(getComputedStyle(outside).color).toBe(getComputedStyle(weekday).color);
+      expect(getComputedStyle(outside).color).not.toBe(getComputedStyle(inside).color);
+    }
+  });
+
+  it('focuses the outside day that was pressed', async () => {
+    const month = Temporal.PlainYearMonth.from('2026-10');
+    const roots = [
+      <Calendar.Root key="single" aria-label="Start" locale="en-US" firstDayOfWeek={7} defaultValue={plainDate('2026-10-13')}>
+        <Calendar.Header />
+        <Calendar.Grid showOutsideDays />
+      </Calendar.Root>,
+      <Calendar.Root key="range" mode="range" aria-label="Start" locale="en-US" firstDayOfWeek={7} defaultMonth={month}>
+        <Calendar.Header />
+        <Calendar.Grid showOutsideDays />
+      </Calendar.Root>,
+    ];
+    for (const root of roots) {
+      cleanup();
+      render(<Themed>{root}</Themed>);
+      await userEvent.click(screen.getByRole('button', { name: 'Monday, September 28, 2026' }));
+      const stop = document.querySelector<HTMLButtonElement>('[data-todae-calendar-cell][tabindex="0"]');
+      expect(stop?.getAttribute('aria-label')).toBe('Monday, September 28, 2026');
+      expect(document.activeElement).toBe(stop);
+    }
   });
 });
 

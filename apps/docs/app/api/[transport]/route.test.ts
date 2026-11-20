@@ -253,6 +253,29 @@ describe('docs MCP route', () => {
     }
   });
 
+  it('describes the search, section and example flow, and keeps the old tool names', async () => {
+    const text = await post({ jsonrpc: '2.0', id: 50, method: 'tools/list', params: {} });
+    for (const name of ['search_docs', 'get_example', 'get_docs_page', 'get_component', 'get_recipe', 'get_guide', 'list_components', 'when_to_use', 'list_tokens', 'get_token']) {
+      expect(text).toContain(`"name":"${name}"`);
+    }
+    expect(text).toContain('search_docs');
+    expect(text).toMatch(/search_docs first/i);
+    expect(text).toMatch(/get_example/);
+    expect(text.toLowerCase()).not.toContain('korean');
+    expect(text).not.toContain('한국어');
+    expect(text).not.toMatch(/"locale"/);
+  });
+
+  it('keeps an inlined scheduler page inside the response budget', async () => {
+    const text = await post(call(51, 'get_docs_page', { name: 'recipes/scheduler', includeCode: true }));
+    const payload = text.match(/"text":"((?:\\.|[^"\\])*)"/)?.[1];
+    expect(payload).toBeTruthy();
+    const decoded = JSON.parse(`"${payload}"`) as string;
+    expect(decoded.length).toBeLessThanOrEqual(40_000);
+    const body = JSON.parse(decoded) as { kind: string; cursor?: unknown };
+    expect(body.kind === 'outline' || body.kind === 'over-budget' || body.cursor != null).toBe(true);
+  });
+
   it('takes string files that fill the byte budget exactly', async () => {
     const files = { 'resolver.json': ' '.repeat(MAX_BYTES / 2), 'b.json': ' '.repeat(MAX_BYTES / 2) };
     const response = await send(JSON.stringify(call(37, 'build_tokens', { files })));

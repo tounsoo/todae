@@ -75,6 +75,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/data-table': () => import('../../app/(en)/recipes/data-table/page.mdx'),
   'recipes/date-time-picker': () => import('../../app/(en)/recipes/date-time-picker/page.mdx'),
   'recipes/date-range-presets': () => import('../../app/(en)/recipes/date-range-presets/page.mdx'),
+  'recipes/event-calendar': () => import('../../app/(en)/recipes/event-calendar/page.mdx'),
   'recipes/file-upload': () => import('../../app/(en)/recipes/file-upload/page.mdx'),
   'recipes/filter-bar': () => import('../../app/(en)/recipes/filter-bar/page.mdx'),
   'recipes/inline-edit': () => import('../../app/(en)/recipes/inline-edit/page.mdx'),

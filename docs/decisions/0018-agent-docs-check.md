@@ -1,4 +1,4 @@
-# 0017. CI fails a new page, section or check that leaves the agent notes and the verify skill behind
+# 0018. CI fails a new page, section or check that leaves the agent notes and the verify skill behind
 
 - **Date:** 2026-11-13
 - **Status:** Active
