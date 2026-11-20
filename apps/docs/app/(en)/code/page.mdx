@@ -1,3 +1,5 @@
+import CodeBlockHeight from '../../../examples/code/CodeBlockHeight';
+import CodeBlockWrap from '../../../examples/code/CodeBlockWrap';
 import KbdShortcut from '../../../examples/code/KbdShortcut';
 import CodeInText from '../../../examples/code/CodeInText';
 
@@ -11,7 +13,15 @@ import CodeInText from '../../../examples/code/CodeInText';
 
 <Example of={CodeInText} block />
 
-A `CodeBlock.Root` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. `code.font.family` and `code.font.scale` (the size as a share of the text around it) set the font of inline code and code blocks alike. Restyle the inline box through `code.tint` (how much of the text color it takes), `code.radius`, `code.padding.x` and `code.padding.y`, and the block through the `code.block` tokens.
+A `CodeBlock.Root` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. Set `wrap` when a long line should wrap instead. The block then keeps its width and does not scroll sideways.
+
+<Example of={CodeBlockWrap} />
+
+Cap the height by wrapping the block in `ScrollArea.Root`, as this site wraps each fence (`DocsPre` in `ScrollRegion`). The area scrolls on the block axis, which is its default. Give it a `max-block-size` and a name.
+
+<Example of={CodeBlockHeight} />
+
+`code.font.family` and `code.font.scale` (the size as a share of the text around it) set the font of inline code and code blocks alike. Restyle the inline box through `code.tint` (how much of the text color it takes), `code.radius`, `code.padding.x` and `code.padding.y`, and the block through the `code.block` tokens.
 
 ## Kbd
 
@@ -23,9 +33,9 @@ Restyle keys through `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.
 
 ## Accessible composition
 
-**Todae handles:** Only the look. The parts stay native `<code>`, `<pre>` and `<kbd>` elements, and Todae adds no role, `tabindex` or name. `Code.Root` keeps the text color around it. `CodeBlock.Root` scrolls sideways when a line is too long, but Todae does not make it focusable.
+**Todae handles:** Only the look. The parts stay native `<code>`, `<pre>` and `<kbd>` elements, and Todae adds no role, `tabindex` or name. `Code.Root` keeps the text color around it. `CodeBlock.Root` scrolls sideways when a line is too long, or wraps that line when `wrap` is set. Todae does not make the block focusable and does not cap its height.
 
-**You supply:** For a `CodeBlock.Root` that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
+**You supply:** For a `CodeBlock.Root` that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. To cap the height, wrap the block in `ScrollArea.Root` with a `max-block-size` and an `aria-label`. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
 
 ```tsx
 // The server entry, so a Server Component can render it.

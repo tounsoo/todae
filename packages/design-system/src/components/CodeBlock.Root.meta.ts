@@ -2,8 +2,16 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'CodeBlock.Root',
-  description: 'A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.',
+  description:
+    'A native pre styled from the code.block tokens. It scrolls sideways when a line is too long, and wraps those lines when wrap is set. It takes native pre attributes.',
   props: [
+    {
+      name: 'wrap',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description: 'Wraps long lines instead of scrolling sideways.',
+    },
     {
       name: 'tabIndex',
       type: 'number',

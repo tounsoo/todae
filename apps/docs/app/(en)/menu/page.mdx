@@ -1,3 +1,4 @@
+import MenuCommands from '../../../examples/menu/MenuCommands';
 import MenuContext from '../../../examples/menu/MenuContext';
 import MenuActions from '../../../examples/menu/MenuActions';
 import MenuSubmenu from '../../../examples/menu/MenuSubmenu';
@@ -57,6 +58,10 @@ A right click or Shift+F10 in a text field inside the region leaves the browser'
 
 `Menu.CheckboxItem` shows the `check` glyph while checked: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. `Menu.SubmenuTrigger` shows the `chevron` glyph, turned toward the end of the line. An icon-only trigger takes an icon from any library in `Button.Icon`, and needs a name.
 
+A command can show a leading icon and a trailing shortcut. Put `Menu.ItemIcon` first and `Menu.ItemShortcut` last. Items in the menu share those columns: shortcuts sit on the trailing edge, and a menu that uses an icon keeps that column on an item that has no icon, so the labels start together. Both slots are `aria-hidden`. The item's name and its typeahead use the label text only. Put `aria-keyshortcuts` on the item, with `Alt`, `Control`, `Meta` and `Shift`, the same names [useHotkey](/utilities/use-hotkey) takes, so assistive technology can announce the shortcut without reading the keys as the name.
+
+<Example of={MenuCommands} />
+
 ```tsx
 import { Check, Ellipsis } from 'lucide-react';
 
@@ -80,7 +85,7 @@ import { Check, Ellipsis } from 'lucide-react';
 
 **Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.SubmenuTrigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and names its submenu. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above. `Menu.ContextTrigger` handles the `contextmenu` event and Shift+F10 and the ContextMenu key, places the menu at the pointer or the focused element, and returns focus when it closes. A menu or submenu that scrolls past its max height shows arrows at the cut-off edges, as on [ScrollArea](/scroll-area#arrows-at-a-cut-off-edge); resting the pointer on one scrolls without moving focus, and they are hidden from assistive technology.
 
-**You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code or from a `Menu.ContextTrigger` with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby` (without one, `Menu.Content` logs an error in development when it opens), a context menu needs a visible `Menu.Trigger` too, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
+**You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code or from a `Menu.ContextTrigger` with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby` (without one, `Menu.Content` logs an error in development when it opens), a context menu needs a visible `Menu.Trigger` too, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it. `Menu.ItemIcon` and `Menu.ItemShortcut` are already hidden, so a plain label needs no `textValue`. Put `aria-keyshortcuts` on an item that shows a shortcut.
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -101,7 +106,7 @@ export function RowActions({ label, children }: { label: string; children: React
 }
 ```
 
-**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu. A context menu that is the only way to reach its actions: a long press on iOS doesn't open it, and few people know Shift+F10. A context menu over content whose browser menu people need, such as links and images, since it replaces Open in new tab and Save image. Submenus nested more than two deep, which are hard to follow and to reach with a pointer.
+**Watch for:** A `Kbd` in the item's label instead of `Menu.ItemShortcut`, which joins the name and the typeahead text. A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu. A context menu that is the only way to reach its actions: a long press on iOS doesn't open it, and few people know Shift+F10. A context menu over content whose browser menu people need, such as links and images, since it replaces Open in new tab and Save image. Submenus nested more than two deep, which are hard to follow and to reach with a pointer.
 
 ## When to use
 
@@ -120,6 +125,10 @@ export function RowActions({ label, children }: { label: string; children: React
 <PropsTable name="Menu.Content" />
 
 <PropsTable name="Menu.Item" />
+
+<PropsTable name="Menu.ItemIcon" />
+
+<PropsTable name="Menu.ItemShortcut" />
 
 <PropsTable name="Menu.CheckboxItem" />
 

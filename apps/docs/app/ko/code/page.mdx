@@ -1,3 +1,5 @@
+import CodeBlockHeight from '../../../examples/code/CodeBlockHeight';
+import CodeBlockWrap from '../../../examples/code/CodeBlockWrap';
 import KbdShortcut from '../../../examples/code/KbdShortcut';
 import CodeInText from '../../../examples/code/CodeInText';
 
@@ -11,7 +13,15 @@ import CodeInText from '../../../examples/code/CodeInText';
 
 <Example of={CodeInText} block />
 
-스크롤하는 `CodeBlock.Root`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하고, 그 탭 위치에 이름이 있도록 `role="region"`과 `aria-label`을 주세요. `code.font.family`와 `code.font.scale`(주변 텍스트에 대한 크기 비율)은 인라인 코드와 코드 블록의 글꼴을 함께 정합니다. 인라인 상자는 `code.tint`(텍스트 색을 얼마나 쓰는지), `code.radius`, `code.padding.x`, `code.padding.y`로, 블록은 `code.block` 토큰으로 바꾸세요.
+스크롤하는 `CodeBlock.Root`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하고, 그 탭 위치에 이름이 있도록 `role="region"`과 `aria-label`을 주세요. 긴 줄을 가로로 스크롤하지 않고 줄바꿈하려면 `wrap`을 설정하세요. 블록은 제 너비를 유지하고 옆으로 스크롤하지 않습니다.
+
+<Example of={CodeBlockWrap} />
+
+높이를 제한하려면 블록을 `ScrollArea.Root`로 감싸세요. 이 사이트도 각 코드 펜스를 그렇게 감쌉니다(`ScrollRegion` 안의 `DocsPre`). 영역은 기본값인 블록 축으로 스크롤합니다. `max-block-size`와 이름을 주세요.
+
+<Example of={CodeBlockHeight} />
+
+`code.font.family`와 `code.font.scale`(주변 텍스트에 대한 크기 비율)은 인라인 코드와 코드 블록의 글꼴을 함께 정합니다. 인라인 상자는 `code.tint`(텍스트 색을 얼마나 쓰는지), `code.radius`, `code.padding.x`, `code.padding.y`로, 블록은 `code.block` 토큰으로 바꾸세요.
 
 ## Kbd
 
@@ -23,9 +33,9 @@ import CodeInText from '../../../examples/code/CodeInText';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 모양만 맡습니다. 각 부분은 네이티브 `<code>`, `<pre>`, `<kbd>` 요소 그대로이고, Todae는 role도 `tabindex`도 이름도 더하지 않습니다. `Code.Root`는 주변 텍스트 색을 그대로 씁니다. `CodeBlock.Root`는 줄이 너무 길면 옆으로 스크롤되지만, Todae가 포커스를 받게 만들지는 않습니다.
+**Todae가 맡는 것:** 모양만 맡습니다. 각 부분은 네이티브 `<code>`, `<pre>`, `<kbd>` 요소 그대로이고, Todae는 role도 `tabindex`도 이름도 더하지 않습니다. `Code.Root`는 주변 텍스트 색을 그대로 씁니다. `CodeBlock.Root`는 줄이 너무 길면 옆으로 스크롤하고, `wrap`이 있으면 그 줄을 줄바꿈합니다. Todae는 블록을 포커스되게 만들지 않고, 높이도 제한하지 않습니다.
 
-**직접 제공할 것:** 스크롤되는 `CodeBlock.Root`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
+**직접 제공할 것:** 스크롤되는 `CodeBlock.Root`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 높이를 제한하려면 `max-block-size`와 `aria-label`이 있는 `ScrollArea.Root`로 블록을 감싸세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
 
 ```tsx
 // The server entry, so a Server Component can render it.
