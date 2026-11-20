@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'OptionList.Option',
-  description: 'String-only option inside OptionList.Root.',
+  description: 'Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.',
   props: [
     {
       name: 'value',
@@ -12,9 +12,9 @@ export const meta = {
     },
     {
       name: 'children',
-      type: 'string',
+      type: 'React.ReactNode',
       required: true,
-      description: 'Visible label. Text only.',
+      description: 'Title. A string, plus one OptionList.OptionDetail for a second line.',
     },
     {
       name: 'disabled',

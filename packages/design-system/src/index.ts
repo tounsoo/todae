@@ -137,6 +137,7 @@ export { composeRefs } from './internal/props.js';
 export {
   OptionList,
   type OptionListMultipleProps,
+  type OptionListOptionDetailProps,
   type OptionListOptionProps,
   type OptionListRootProps,
   type OptionListSingleProps,
