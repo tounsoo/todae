@@ -1,16 +1,27 @@
 @layer todae.components {
-  /* A horizontal group wraps when the row runs out of room. Items keep their
-     width, so the row breaks instead of shrinking them. A segment wider than
-     the row sizes its border box, so the padding and border stay inside. */
+  /* A horizontal group wraps when the row runs out of room. The inline-start
+     padding gives back the shared border a later line's first segment pulls
+     across, so that line starts where the first one does. The first segment's
+     margin spends the same length, and its max size includes it, so a lone
+     label stays as wide as it is on its own. */
   .horizontal {
     flex-wrap: wrap;
+    box-sizing: border-box;
     max-inline-size: 100%;
+    min-inline-size: 0;
+    padding-inline-start: var(--_join-outset, 0px);
+    row-gap: var(--_join-outset);
   }
 
   .horizontal > .item {
     flex: none;
     box-sizing: border-box;
-    max-inline-size: 100%;
+    max-width: calc(100% + var(--_join-outset, 0px));
+    max-inline-size: calc(100% + var(--_join-outset, 0px));
+  }
+
+  .horizontal > .item:nth-child(1 of .item) {
+    margin-inline-start: calc(var(--_join-outset, 0px) * -1);
   }
 
   /* Horizontal items join through Button's group rules. The track, the gap
@@ -19,8 +30,11 @@
   .horizontal:has(> .item[data-button-variant='secondary']) {
     --_button-join-gap: var(--todae-togglegroup-gap);
     box-sizing: border-box;
-    gap: var(--todae-togglegroup-gap);
-    padding: var(--todae-togglegroup-padding);
+    column-gap: var(--todae-togglegroup-gap);
+    row-gap: max(var(--todae-togglegroup-gap), var(--_join-outset, 0px));
+    padding-block: var(--todae-togglegroup-padding);
+    padding-inline-end: var(--todae-togglegroup-padding);
+    padding-inline-start: calc(var(--todae-togglegroup-padding) + var(--_join-outset, 0px));
     background: var(--todae-togglegroup-bg);
     border: var(--todae-togglegroup-border-width) solid var(--todae-togglegroup-border);
     border-radius: var(--todae-togglegroup-radius);

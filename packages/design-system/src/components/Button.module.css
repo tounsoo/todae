@@ -135,6 +135,9 @@
   .group {
     display: inline-flex;
     align-items: stretch;
+    /* The shared border a joined segment pulls across. ToggleGroup spends it
+       so a wrapped line starts on the group's edge. */
+    --_join-outset: max(0px, var(--todae-button-border-width) - var(--_button-join-gap, 0px));
   }
 
   /* ToggleGroup sets --_button-join-gap from its gap. At 0 the items share a
@@ -143,12 +146,6 @@
      so it never takes the margin. */
   .group > .root ~ .root {
     margin-inline-start: min(0px, calc(var(--_button-join-gap, 0px) - var(--todae-button-border-width)));
-  }
-
-  /* A wrapped row's first item is a later sibling, so the overlap above would
-     pull it past the group's edge. The mark puts it back. */
-  .group > .root[data-todae-row-start] {
-    margin-inline-start: 0;
   }
 
   /* Counted among the group's buttons, whatever their tag (a button or a

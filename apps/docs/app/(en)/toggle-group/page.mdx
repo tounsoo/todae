@@ -1,5 +1,7 @@
 import ToggleGroupStyles from '../../../examples/toggle-group/ToggleGroupStyles';
 import ToggleGroupAlign from '../../../examples/toggle-group/ToggleGroupAlign';
+import ToggleGroupRequired from '../../../examples/toggle-group/ToggleGroupRequired';
+import ToggleGroupWrap from '../../../examples/toggle-group/ToggleGroupWrap';
 
 # ToggleGroup
 
@@ -9,11 +11,15 @@ In the default single mode, one item is pressed at most, and pressing it again c
 
 <Example of={ToggleGroupAlign} />
 
+<Example of={ToggleGroupRequired} />
+
 With `selectionMode="multiple"`, any number can be pressed, and the value is an array.
 
 <Example of={ToggleGroupStyles} />
 
 Name the group with `aria-label` or `aria-labelledby`. Horizontal items join like [Button.Group](/button) and wrap onto another line when the row runs out of room. Each wrapped line keeps the joined ends of a single row. Its borders stay on the group's edge, and they do not cover the line above. Inside a [Toolbar](/toolbar), the toolbar owns the arrow keys and the tab stop.
+
+<Example of={ToggleGroupWrap} />
 
 ## Segmented look
 

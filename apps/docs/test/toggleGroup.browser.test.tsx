@@ -1,7 +1,9 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { userEvent } from 'vitest/browser';
 import { afterEach, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Button, ThemeProvider, ToggleGroup, type ThemeOverride } from '@tounsoo/todae';
+import { PRESETS } from '../components/playground/presets';
 
 afterEach(cleanup);
 
@@ -201,4 +203,130 @@ it('colors an unpressed segment from togglegroup.item.border.default and leaves 
   expect(border('Outside'), 'a secondary button keeps its own border').toBe(outside);
   expect(border('Left'), 'the unpressed segment takes the token').not.toBe(outside);
   expect(border('Right'), 'the pressed segment keeps border.pressed').toBe(outside);
+});
+
+function labelOf(button: HTMLElement) {
+  const label = button.querySelector('span');
+  if (!label) throw new Error('missing label');
+  return label;
+}
+
+it('keeps a one-item group as wide as its label', () => {
+  render(
+    <>
+      <Button.Root variant="secondary">Alpha</Button.Root>
+      <Button.Group aria-label="One button">
+        <Button.Root variant="secondary">Alpha</Button.Root>
+      </Button.Group>
+      <ToggleGroup.Root aria-label="One toggle" defaultValue="alpha">
+        <ToggleGroup.Item value="alpha">Alpha</ToggleGroup.Item>
+      </ToggleGroup.Root>
+    </>,
+  );
+  const [alone, grouped, toggled] = buttons() as [HTMLElement, HTMLElement, HTMLElement];
+  const aloneWidth = alone.getBoundingClientRect().width;
+  for (const button of [grouped, toggled]) {
+    expect(button.getBoundingClientRect().width).toBeCloseTo(aloneWidth, 0);
+    const label = labelOf(button);
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
+  }
+});
+
+it('rewraps when the container resizes without a render', async () => {
+  render(
+    <div style={{ width: 480 }}>
+      <ToggleGroup.Root aria-label="Days" defaultValue="Monday">
+        {days.map((value) => (
+          <ToggleGroup.Item key={value} value={value}>
+            {value}
+          </ToggleGroup.Item>
+        ))}
+      </ToggleGroup.Root>
+    </div>,
+  );
+  expect(rowsOf(buttons())).toHaveLength(1);
+  const host = screen.getByRole('group', { name: 'Days' }).parentElement as HTMLElement;
+  host.style.width = '160px';
+  await expect.poll(() => {
+    const rows = rowsOf(buttons());
+    const end = rows[0]?.at(-1);
+    return rows.length > 1 && end !== undefined && radius(end, 'topRight') > 0;
+  }).toBe(true);
+  expectJoinedRows(buttons(), false);
+});
+
+it('keeps a required item pressed on Space and Enter', async () => {
+  const seen: Array<string | null> = [];
+  render(
+    <ToggleGroup.Root aria-label="Align" required defaultValue="left" onValueChange={(value) => seen.push(value)}>
+      <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+      <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
+    </ToggleGroup.Root>,
+  );
+  const left = screen.getByRole('button', { name: 'Left' });
+  left.focus();
+  await userEvent.keyboard('{Enter}');
+  await userEvent.keyboard(' ');
+  await userEvent.click(left);
+  expect(left).toHaveAttribute('aria-pressed', 'true');
+  expect(seen).toEqual([]);
+  await userEvent.click(screen.getByRole('button', { name: 'Center' }));
+  expect(seen).toEqual(['center']);
+});
+
+it('follows button.secondary.border.default on an unpressed segment', () => {
+  const overrides: ThemeOverride = {
+    'button.secondary.border.default': { colorSpace: 'oklch', components: [0.55, 0.22, 30] },
+  };
+  render(
+    <ThemeProvider appearance="light" overrides={overrides}>
+      <Button.Root variant="secondary">Outside</Button.Root>
+      <ToggleGroup.Root aria-label="Align" defaultValue="right">
+        <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+        <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+      </ToggleGroup.Root>
+    </ThemeProvider>,
+  );
+  const border = (name: string) => getComputedStyle(screen.getByRole('button', { name })).borderTopColor;
+  const outside = border('Outside');
+  expect(border('Left')).toBe(outside);
+  expect(border('Right')).not.toBe(outside);
+});
+
+it('keeps a wrapped Anvil track inside its padding', () => {
+  const anvil = PRESETS.find((preset) => preset.id === 'anvil');
+  if (!anvil) throw new Error('missing Anvil preset');
+  render(
+    <ThemeProvider appearance="light" overrides={anvil.light}>
+      <div style={{ width: 200 }}>
+        <ToggleGroup.Root aria-label="Days" defaultValue="Monday">
+          {days.map((value) => (
+            <ToggleGroup.Item key={value} value={value}>
+              {value}
+            </ToggleGroup.Item>
+          ))}
+        </ToggleGroup.Root>
+      </div>
+    </ThemeProvider>,
+  );
+  const group = screen.getByRole('group', { name: 'Days' });
+  const box = group.getBoundingClientRect();
+  const style = getComputedStyle(group);
+  const contentStart = box.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
+  const contentEnd = box.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
+  expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth);
+  const rows = rowsOf(buttons());
+  expect(rows.length).toBeGreaterThan(1);
+  let previousBottom = Number.NEGATIVE_INFINITY;
+  for (const row of rows) {
+    const start = row[0] as HTMLElement;
+    const end = row[row.length - 1] as HTMLElement;
+    expect(start.getBoundingClientRect().left).toBeCloseTo(contentStart, 0);
+    expect(end.getBoundingClientRect().right).toBeLessThanOrEqual(contentEnd + 0.5);
+    expect(radius(start, 'topLeft')).toBeGreaterThan(0);
+    expect(radius(end, 'topRight')).toBeGreaterThan(0);
+    const top = Math.min(...row.map((item) => item.getBoundingClientRect().top));
+    expect(top).toBeGreaterThanOrEqual(previousBottom - 0.5);
+    previousBottom = Math.max(...row.map((item) => item.getBoundingClientRect().bottom));
+  }
 });

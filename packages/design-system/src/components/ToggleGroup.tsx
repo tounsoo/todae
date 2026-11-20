@@ -11,6 +11,8 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { cancelLayout, queueLayout, STAGE } from '../internal/layoutBatch.js';
+import { observeChildren, observeSize } from '../internal/sharedObservers.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonRootProps } from './Button.js';
 import buttonStyles from './Button.module.css';
@@ -104,7 +106,7 @@ function Root(props: ToggleGroupRootProps) {
     } else if (!(required && pressed.has(item))) {
       const next = pressed.has(item) ? null : item;
       setValue(next);
-      (onValueChange as ToggleGroupSingleProps['onValueChange'])?.(next);
+      (onValueChange as ((value: string | null) => void) | undefined)?.(next);
     }
   };
 
@@ -123,9 +125,9 @@ function Root(props: ToggleGroupRootProps) {
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
-  // Each wrapped row is marked before paint so its outer corners stay rounded.
-  // The join's overlap is CSS, so the marks do not move the items. An item's
-  // own size can rewrap the row without changing the group's box.
+  // Wrapped rows are marked before paint so their outer corners stay rounded.
+  // The marks only set radii. The overlap that keeps a line on the group's
+  // edge is CSS, so measuring does not move the items.
   useLayoutEffect(() => {
     const node = nodeRef.current;
     const itemClass = styles.item;
@@ -134,14 +136,45 @@ function Root(props: ToggleGroupRootProps) {
       clearRowMarks(node, itemClass);
       return;
     }
-    const mark = () => markWrappedRows(node, itemClass);
-    mark();
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(mark);
-    observer.observe(node);
-    for (const item of rowItems(node, itemClass)) observer.observe(item);
-    return () => observer.disconnect();
-  }, [orientation, children]);
+    const key = {};
+    let plan: RowMark[] = [];
+    const read = () => {
+      plan = planWrappedRows(node, itemClass);
+    };
+    const write = () => {
+      applyRowMarks(plan);
+    };
+    // The first measure runs in this layout effect, so the corners are set
+    // before paint. A later resize shares the page's read-then-write batch.
+    read();
+    write();
+    const measure = () => queueLayout(key, STAGE.measure, { read, write });
+    const stops = new Map<Element, () => void>();
+    const follow = () => {
+      const live = new Set<Element>(rowItems(node, itemClass));
+      for (const [el, stop] of stops) {
+        if (live.has(el)) continue;
+        stop();
+        stops.delete(el);
+      }
+      for (const item of live) {
+        if (stops.has(item)) continue;
+        stops.set(item, observeSize(item, measure));
+      }
+    };
+    const stopGroup = observeSize(node, measure);
+    follow();
+    const stopChildren = observeChildren(node, () => {
+      follow();
+      measure();
+    });
+    return () => {
+      stopGroup();
+      stopChildren();
+      for (const stop of stops.values()) stop();
+      cancelLayout(key);
+    };
+  }, [orientation]);
 
   return (
     <ToggleGroupContext.Provider
@@ -221,8 +254,10 @@ function clearRowMarks(container: HTMLElement, itemClass: string) {
   }
 }
 
+type RowMark = { item: HTMLElement; start: boolean; end: boolean };
+
 /** The first and last item of each line, once the group has wrapped. One line stays unmarked. */
-function markWrappedRows(container: HTMLElement, itemClass: string) {
+function planWrappedRows(container: HTMLElement, itemClass: string): RowMark[] {
   const items = rowItems(container, itemClass);
   const rows: HTMLElement[][] = [];
   for (const item of items) {
@@ -235,10 +270,20 @@ function markWrappedRows(container: HTMLElement, itemClass: string) {
     else rows.push([item]);
   }
   const wrapped = rows.length > 1;
-  for (const row of rows) {
-    row.forEach((item, index) => {
-      item.toggleAttribute(ROW_START, wrapped && index === 0);
-      item.toggleAttribute(ROW_END, wrapped && index === row.length - 1);
-    });
+  return items.map((item) => {
+    const row = rows.find((group) => group.includes(item));
+    const index = row ? row.indexOf(item) : 0;
+    return {
+      item,
+      start: wrapped && index === 0,
+      end: wrapped && row !== undefined && index === row.length - 1,
+    };
+  });
+}
+
+function applyRowMarks(plan: readonly RowMark[]) {
+  for (const mark of plan) {
+    mark.item.toggleAttribute(ROW_START, mark.start);
+    mark.item.toggleAttribute(ROW_END, mark.end);
   }
 }
