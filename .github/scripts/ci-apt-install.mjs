@@ -82,6 +82,7 @@ function shellWords(command) {
 }
 
 function commandName(token) {
+  if (token.startsWith('-')) return token;
   const slash = token.lastIndexOf('/');
   return slash === -1 ? token : token.slice(slash + 1);
 }

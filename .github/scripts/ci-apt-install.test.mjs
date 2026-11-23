@@ -22,6 +22,7 @@ test('a browser install without apt packages is not this class', () => {
 
 test('a pinned Playwright package and apt-get options are still apt installs', () => {
   assert.deepEqual(commands(pullRequest('"npx playwright@1.64.1 install --with-deps webkit"')), ['npx playwright@1.64.1 install --with-deps webkit']);
+  assert.deepEqual(commands(pullRequest(JSON.stringify('playwright install --with-deps=/usr/lib'))), ['playwright install --with-deps=/usr/lib']);
   assert.deepEqual(commands(pullRequest('"sudo apt-get -o Acquire::Retries=3 install -y libgtk-3-0t64"')), [
     'sudo apt-get -o Acquire::Retries=3 install -y libgtk-3-0t64',
   ]);
