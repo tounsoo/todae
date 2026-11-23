@@ -32,6 +32,10 @@ test('package runners treat @playwright/test as playwright', () => {
     'pnpm --filter @tounsoo/todae exec @playwright/test install --with-deps chromium',
     'npx @playwright/test install-deps',
     'bunx --bun @playwright/test install-deps',
+    'npx --registry https://registry.npmjs.org @playwright/test install --with-deps',
+    'npx -w apps/docs @playwright/test install --with-deps',
+    'pnpm dlx --dir /tmp @playwright/test install --with-deps',
+    'yarn --cwd apps/docs dlx @playwright/test install --with-deps',
   ];
   for (const command of flagged) {
     assert.deepEqual(commands(pullRequest(JSON.stringify(command))), [command], command);
