@@ -65,6 +65,33 @@ test('the repo passes, including the historical proof', () => {
   assert.deepEqual(selfTest(), []);
 });
 
+test('a shell operator or a path to the binary still counts as an apt install', () => {
+  const cases = [
+    ['pnpm exec playwright install --with-deps;', 'pnpm exec playwright install --with-deps'],
+    ['pnpm exec playwright install-deps; echo done', 'pnpm exec playwright install-deps'],
+    ['playwright install --with-deps&&echo ok', 'playwright install --with-deps'],
+    ['(cd apps/docs && pnpm exec playwright install --with-deps)', 'pnpm exec playwright install --with-deps'],
+    ['./node_modules/.bin/playwright install --with-deps', './node_modules/.bin/playwright install --with-deps'],
+    ['/usr/bin/apt-get install', '/usr/bin/apt-get install'],
+    ['playwright install --with-deps || true', 'playwright install --with-deps'],
+    ['playwright install --with-deps | cat', 'playwright install --with-deps'],
+  ];
+  for (const [command, expected] of cases) {
+    assert.deepEqual(commands(pullRequest(JSON.stringify(command))), [expected], command);
+  }
+});
+
+test('a quoted sentence is not an apt install', () => {
+  assert.deepEqual(commands(pullRequest(JSON.stringify('echo "use apt-get to install"'))), []);
+});
+
+test('a reusable workflow is in scope', () => {
+  const command = 'pnpm exec playwright install --with-deps webkit';
+  const body = `jobs:\n  engines:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: ${JSON.stringify(command)}\n`;
+  assert.deepEqual(commands(`on: workflow_call\n${body}`), [command]);
+  assert.deepEqual(commands(`on:\n  workflow_call:\n${body}`), [command]);
+});
+
 test('the command fails on a past workflow and passes on this repo', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ci-apt-'));
   const past = join(dir, 'past.yml');
