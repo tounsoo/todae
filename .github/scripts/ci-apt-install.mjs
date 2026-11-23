@@ -81,55 +81,27 @@ function shellWords(command) {
   return words;
 }
 
+const PLAYWRIGHT_PACKAGES = new Set(['playwright', '@playwright/test']);
+
+function packageName(token) {
+  if (!token || token.startsWith('-')) return null;
+  const scoped = /^(@[^/\s]+\/[^@/\s]+)(?:@\S+)?$/.exec(token);
+  if (scoped) return scoped[1];
+  if (token.includes('/')) return null;
+  const plain = /^([^@/\s]+)(?:@\S+)?$/.exec(token);
+  return plain ? plain[1] : null;
+}
+
 function commandName(token) {
   if (token.startsWith('-')) return token;
+  if (packageName(token)?.startsWith('@')) return token;
   const slash = token.lastIndexOf('/');
   return slash === -1 ? token : token.slice(slash + 1);
 }
 
-const PLAYWRIGHT_PACKAGES = new Set(['playwright', '@playwright/test']);
-const DIRECT_RUNNERS = new Set(['npx', 'bunx']);
-
-function packageName(spec) {
-  const scoped = /^(@[^/\s]+\/[^@/\s]+)(?:@\S+)?$/.exec(spec);
-  if (scoped) return scoped[1];
-  const plain = /^([^@/\s]+)(?:@\S+)?$/.exec(spec);
-  return plain ? plain[1] : null;
-}
-
-function isPlaywrightPackage(spec) {
-  const name = spec ? packageName(spec) : null;
+function isPlaywright(token) {
+  const name = packageName(token);
   return name !== null && PLAYWRIGHT_PACKAGES.has(name);
-}
-
-function skipFlags(tokens, start) {
-  let index = start;
-  while (index < tokens.length && tokens[index].startsWith('-')) {
-    if (tokens[index] === '--') return index + 1;
-    index += 1;
-  }
-  return index;
-}
-
-function packageSpecAt(tokens, command, index) {
-  if (DIRECT_RUNNERS.has(command)) return skipFlags(tokens, index + 1);
-  if (command === 'yarn') {
-    const next = skipFlags(tokens, index + 1);
-    return tokens[next] === 'dlx' || tokens[next] === 'exec' ? skipFlags(tokens, next + 1) : next;
-  }
-  if (command !== 'pnpm') return -1;
-  for (let cursor = index + 1; cursor < tokens.length; cursor += 1) {
-    if (tokens[cursor] === 'exec' || tokens[cursor] === 'dlx') return skipFlags(tokens, cursor + 1);
-  }
-  return -1;
-}
-
-function invokedPlaywright(tokens) {
-  for (let index = 0; index < tokens.length; index += 1) {
-    const specAt = packageSpecAt(tokens, commandName(tokens[index]), index);
-    if (specAt !== -1 && isPlaywrightPackage(tokens[specAt])) return specAt;
-  }
-  return -1;
 }
 
 function splitCommands(line) {
@@ -180,12 +152,10 @@ function splitCommands(line) {
 }
 
 function matchApt(command) {
-  const raw = shellWords(command);
-  const tokens = raw.map(commandName);
-  const invoked = invokedPlaywright(raw);
+  const tokens = shellWords(command).map(commandName);
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
-    if (index === invoked || /^playwright(?:@\S+)?$/.test(token)) {
+    if (isPlaywright(token)) {
       const next = tokens[index + 1];
       if (next === 'install-deps') return true;
       if (next === 'install' && tokens.some((item) => item === '--with-deps' || item.startsWith('--with-deps='))) return true;
