@@ -1,0 +1,14 @@
+# Install steps from #381 at 6d659a85. Firefox timed out on these.
+on: [push, pull_request]
+jobs:
+  fernway:
+    steps:
+      - run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
+      - run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
+  engines:
+    steps:
+      - run: pnpm --filter @tounsoo/todae exec playwright install --with-deps ${{ matrix.browser }}
+      - run: pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}
+  docs:
+    steps:
+      - run: pnpm --filter docs exec playwright install --with-deps webkit firefox
