@@ -20,6 +20,28 @@ test('a browser install without apt packages is not this class', () => {
   assert.deepEqual(aptCommands('# playwright install --with-deps webkit\necho ok').map((hit) => hit.command), []);
 });
 
+test('package runners treat @playwright/test as playwright', () => {
+  const flagged = [
+    'npx @playwright/test install --with-deps',
+    'pnpm exec @playwright/test install --with-deps',
+    'pnpm dlx @playwright/test install --with-deps',
+    'yarn @playwright/test install --with-deps',
+    'bunx @playwright/test install --with-deps',
+    'yarn dlx @playwright/test install --with-deps',
+    'npx --yes @playwright/test@1.64.1 install --with-deps',
+    'pnpm --filter @tounsoo/todae exec @playwright/test install --with-deps chromium',
+    'npx @playwright/test install-deps',
+    'bunx --bun @playwright/test install-deps',
+  ];
+  for (const command of flagged) {
+    assert.deepEqual(commands(pullRequest(JSON.stringify(command))), [command], command);
+  }
+  assert.deepEqual(commands(pullRequest(JSON.stringify('npx @playwright/test install chromium'))), []);
+  assert.deepEqual(commands(pullRequest(JSON.stringify('pnpm exec @playwright/test install chromium'))), []);
+  assert.deepEqual(commands(pullRequest(JSON.stringify('yarn playwright install --with-deps'))), ['yarn playwright install --with-deps']);
+  assert.deepEqual(commands(pullRequest(JSON.stringify('bunx playwright install --with-deps'))), ['bunx playwright install --with-deps']);
+});
+
 test('a pinned Playwright package and apt-get options are still apt installs', () => {
   assert.deepEqual(commands(pullRequest('"npx playwright@1.64.1 install --with-deps webkit"')), ['npx playwright@1.64.1 install --with-deps webkit']);
   assert.deepEqual(commands(pullRequest(JSON.stringify('playwright install --with-deps=/usr/lib'))), ['playwright install --with-deps=/usr/lib']);
