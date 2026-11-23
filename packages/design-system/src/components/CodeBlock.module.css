@@ -13,6 +13,14 @@
     overflow-x: auto;
   }
 
+  /* wrap replaces the sideways scroll. overflow-x stays visible so the block
+     axis is not forced to auto by the overflow pairing. */
+  .root[data-wrap] {
+    overflow-x: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
   /* Code inside the block drops its own box, whether it is a Code.Root or a plain code. */
   .root code {
     padding: 0;

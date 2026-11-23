@@ -137,6 +137,7 @@ export { composeRefs } from './internal/props.js';
 export {
   OptionList,
   type OptionListMultipleProps,
+  type OptionListOptionDetailProps,
   type OptionListOptionProps,
   type OptionListRootProps,
   type OptionListSingleProps,
@@ -157,8 +158,10 @@ export {
   type MenuContextTriggerProps,
   type MenuContextTriggerRenderProps,
   type MenuGroupProps,
+  type MenuItemIconProps,
   type MenuItemProps,
   type MenuItemRenderProps,
+  type MenuItemShortcutProps,
   type MenuOpenChangeReason,
   type MenuRadioGroupProps,
   type MenuRadioItemProps,

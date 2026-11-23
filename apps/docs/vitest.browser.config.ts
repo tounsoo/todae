@@ -42,7 +42,19 @@ export default defineConfig({
       provider: playwright(),
       headless: true,
       screenshotFailures: false,
-      instances: [{ browser: 'chromium' }],
+      instances: [
+        {
+          browser: 'chromium',
+          // The scroll-lock project launches Chromium with a real scrollbar.
+          exclude: ['**/node_modules/**', '.next/**', '**/scrollLock.browser.test.tsx'],
+        },
+        {
+          browser: 'chromium',
+          name: 'scroll-lock',
+          include: ['test/scrollLock.browser.test.tsx'],
+          provider: playwright({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }),
+        },
+      ],
     },
   },
 });

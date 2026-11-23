@@ -14728,6 +14728,20 @@
       "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
     },
     {
+      "path": "togglegroup.item.border.default",
+      "type": "color",
+      "cssVar": "--todae-togglegroup-item-border-default",
+      "cssValue": "var(--todae-button-secondary-border-default)",
+      "ref": "button.secondary.border.default",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "ToggleGroup.Root: the track a horizontal group of secondary items (the default) sits in, and the parts of a segment that differ from Button. Defaults draw joined secondary buttons on no track. A vertical group does not draw the track."
+    },
+    {
       "path": "togglegroup.item.border.pressed",
       "type": "color",
       "cssVar": "--todae-togglegroup-item-border-pressed",

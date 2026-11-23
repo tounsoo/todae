@@ -33,7 +33,7 @@
     "lint": "eslint .",
     "stylelint": "stylelint \"packages/design-system/src/**/*.css\"",
     "check:self": "node scripts/check-self.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm stylelint && node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs self-test && pnpm check:self",
+    "check": "pnpm lint && pnpm typecheck && pnpm stylelint && node --experimental-strip-types --no-warnings=ExperimentalWarning .cursor/skills/verify/verify.mjs self-test && node .github/scripts/ci-apt-install.mjs --self-test && pnpm check:self",
     "graft:build": "npx -y @nanonets/graft@0.18.0 build",
     "graft:check": "npx -y @nanonets/graft@0.18.0 check",
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"

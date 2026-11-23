@@ -994,8 +994,15 @@
     },
     {
       "name": "CodeBlock.Root",
-      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.",
+      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long, and wraps those lines when wrap is set. It takes native pre attributes.",
       "props": [
+        {
+          "name": "wrap",
+          "type": "boolean",
+          "required": false,
+          "description": "Wraps long lines instead of scrolling sideways.",
+          "default": "false"
+        },
         {
           "name": "tabIndex",
           "type": "number",
@@ -3207,6 +3214,30 @@
       ]
     },
     {
+      "name": "Menu.ItemIcon",
+      "description": "Leading icon for a menu item. Order-only and aria-hidden, so the name and typeahead stay the label. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic."
+        }
+      ]
+    },
+    {
+      "name": "Menu.ItemShortcut",
+      "description": "Trailing shortcut for a menu item, such as a Kbd. Order-only and aria-hidden, so the name and typeahead stay the label. Put aria-keyshortcuts on the item. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The shortcut, such as nested Kbd.Root elements."
+        }
+      ]
+    },
+    {
       "name": "Menu.RadioGroup",
       "description": "A Menu.Group that owns one value for its Menu.RadioItem children.",
       "props": [
@@ -3744,7 +3775,7 @@
     },
     {
       "name": "OptionList.Option",
-      "description": "String-only option inside OptionList.Root.",
+      "description": "Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.",
       "props": [
         {
           "name": "value",
@@ -3754,9 +3785,9 @@
         },
         {
           "name": "children",
-          "type": "string",
+          "type": "React.ReactNode",
           "required": true,
-          "description": "Visible label. Text only."
+          "description": "Title. A string, plus one OptionList.OptionDetail for a second line."
         },
         {
           "name": "disabled",
@@ -3764,6 +3795,18 @@
           "required": false,
           "description": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
           "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "OptionList.OptionDetail",
+      "description": "Second line under an option title. The option describes itself with this line.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Detail text, announced as the option description."
         }
       ]
     },
@@ -5277,8 +5320,15 @@
           "name": "selectionMode",
           "type": "\"single\" | \"multiple\"",
           "required": false,
-          "description": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+          "description": "Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.",
           "default": "\"single\""
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.",
+          "default": "false"
         },
         {
           "name": "value",

@@ -16,7 +16,14 @@ export const meta = {
       type: '"single" | "multiple"',
       required: false,
       default: '"single"',
-      description: 'Single presses one item at most; pressing it again clears it. Multiple presses any number.',
+      description: 'Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.',
+    },
+    {
+      name: 'required',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description: 'In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.',
     },
     {
       name: 'value',

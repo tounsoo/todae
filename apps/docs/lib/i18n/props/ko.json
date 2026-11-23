@@ -468,6 +468,10 @@
     }
   },
   "CodeBlock.Root": {
+    "wrap": {
+      "en": "Wraps long lines instead of scrolling sideways.",
+      "ko": "긴 줄을 옆으로 스크롤하지 않고 줄바꿈합니다."
+    },
     "tabIndex": {
       "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",
       "ko": "블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."
@@ -1341,6 +1345,18 @@
       "ko": "항목을 선택하면 어딘가로 가는 a나 라우터 링크 같은 다른 요소로 렌더링합니다. ref를 포함한 모든 prop을 받으며, 그것을 넘겨야 합니다."
     }
   },
+  "Menu.ItemIcon": {
+    "children": {
+      "en": "Icon graphic.",
+      "ko": "아이콘 그래픽."
+    }
+  },
+  "Menu.ItemShortcut": {
+    "children": {
+      "en": "The shortcut, such as nested Kbd.Root elements.",
+      "ko": "단축키. 중첩된 Kbd.Root 같은 요소입니다."
+    }
+  },
   "Menu.RadioGroup": {
     "value": {
       "en": "Controlled value. null is controlled with nothing checked.",
@@ -1585,12 +1601,18 @@
       "ko": "선택 값."
     },
     "children": {
-      "en": "Visible label. Text only.",
-      "ko": "보이는 레이블. 텍스트만 지원합니다."
+      "en": "Title. A string, plus one OptionList.OptionDetail for a second line.",
+      "ko": "제목. 문자열이며, 두 번째 줄에는 OptionList.OptionDetail을 하나 둡니다."
     },
     "disabled": {
       "en": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
       "ko": "포인터와 키보드 선택에서 제외합니다. 지금은 쓸 수 없지만 계속 닿을 수 있는 옵션에는 disabled 대신 aria-disabled를 쓰세요."
+    }
+  },
+  "OptionList.OptionDetail": {
+    "children": {
+      "en": "Detail text, announced as the option description.",
+      "ko": "상세 텍스트. 옵션의 설명으로 읽힙니다."
     }
   },
   "OptionList.Root": {
@@ -2195,8 +2217,12 @@
       "ko": "\"Alignment\"처럼 묶음의 이름을 붙입니다."
     },
     "selectionMode": {
-      "en": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
-      "ko": "single은 많아야 한 항목을 누르며, 다시 누르면 해제됩니다. multiple은 몇 개든 누릅니다."
+      "en": "Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.",
+      "ko": "single은 많아야 한 항목을 누릅니다. 눌린 항목을 다시 누르면 해제되며, required이면 해제되지 않습니다. multiple은 몇 개든 누릅니다."
+    },
+    "required": {
+      "en": "In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.",
+      "ko": "single 모드에서 눌린 항목을 다시 눌러도 눌린 채로 두고, onValueChange를 호출하지 않습니다."
     },
     "value": {
       "en": "Controlled pressed value: a value or null for single, an array for multiple.",
