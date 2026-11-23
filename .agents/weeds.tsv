@@ -32,3 +32,4 @@ date	class	ref	caught_by	note
 2026-11-18	month-day-unbounded	#488	ben	Month cells had no boundary and centered numbers, so a left-aligned chip read as the neighboring day.
 2026-11-18	month-today-mark-overlap	#488	review	The today circle was absolute and reserved no row, so it covered that day's bars and at a narrow width hid the event.
 2026-11-23	ci-apt-install	#505	ben	The apt check matched a whole line, so a semicolon, a path, a quoted sentence, or workflow_call slipped through.
+2026-11-23	ci-apt-install	#505	ben	The apt check took the program as the last path segment, so npx @playwright/test install --with-deps read as test and was missed.
