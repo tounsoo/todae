@@ -1,5 +1,19 @@
 # @tounsoo/todae
 
+## 0.12.1
+
+### Patch Changes
+
+- OptionList.OptionDetail adds a second line under an option title. ([#498](https://github.com/tounsoo/todae/pull/498))
+
+- CodeBlock wraps long lines when asked, and Menu.Item can show a leading icon and a trailing shortcut. ([#502](https://github.com/tounsoo/todae/pull/502))
+
+- A modal Dialog, Drawer, BottomSheet, or a dialog opened with useModalLayer no longer narrows a page that had no scrollbar. ([#501](https://github.com/tounsoo/todae/pull/501))
+
+- ToggleGroup wraps onto more than one line, keeps a single selection when required, and styles an unpressed segment border with togglegroup.item.border.default. ([#499](https://github.com/tounsoo/todae/pull/499))
+
+- Button.Root accepts variant="critical", a filled irreversible action colored from the danger and status critical tokens. ([#496](https://github.com/tounsoo/todae/pull/496))
+
 ## 0.12.0
 
 ### Minor Changes
