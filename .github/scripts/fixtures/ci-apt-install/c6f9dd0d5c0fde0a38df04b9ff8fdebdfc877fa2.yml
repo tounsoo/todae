@@ -1,0 +1,368 @@
+name: CI
+
+# Checkout reads the repo. Cache and artifact upload use the run's own tokens, not this one.
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    # Markdown never starts a job. A changeset, the package README and the published
+    # changelog are markdown a tool or npm reads, so they still run. Docs pages are MDX.
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/README.md'
+      - 'packages/design-system/CHANGELOG.md'
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
+  # Drafts skip Checks and Docs. Token API, Token consumers, and Forbidden paths still run.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**'
+      - '!**.md'
+      - '.changeset/**'
+      - 'packages/design-system/README.md'
+      - 'packages/design-system/CHANGELOG.md'
+      - '*-body.md'
+      - '**/*-body.md'
+      - '.audit/**'
+
+# A new push to a pull request cancels its older run; runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  static:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The changeset check compares the pull request with its base branch.
+          fetch-depth: 0
+
+      - &classify-diff
+        id: change
+        name: Classify the diff
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: bash .github/scripts/classify-diff.sh
+
+      - uses: ./.github/actions/setup
+
+      # Fails when the package changed outside its tests and no changeset was added.
+      # The Version Packages pull request deletes the changesets, so it skips the check.
+      - name: Changeset
+        if: ${{ steps.change.outputs.class == 'all' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
+        run: pnpm changeset status --since=origin/${{ github.base_ref }}
+      - name: Tokens
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm tokens:check
+      - name: Schema
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
+      - name: Check
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm check
+      # Every remote action is pinned to a commit. Dependabot (.github/dependabot.yml) moves the pins.
+      - name: Pinned actions
+        if: ${{ !cancelled() }}
+        run: node .github/scripts/pinned-actions.mjs
+
+  build:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+
+      - name: Build the package
+        id: package-build
+        if: ${{ !cancelled() }}
+        run: pnpm build:ds
+      # Fernway restores this copy. A failed save does not fail the job, because a miss makes Fernway build dist itself.
+      - name: Share the package build
+        if: ${{ steps.package-build.outcome == 'success' }}
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: packages/design-system/dist
+          key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Publish checks
+        if: ${{ !cancelled() }}
+        run: pnpm publish:check
+      - name: SSR smoke
+        if: ${{ !cancelled() }}
+        run: pnpm ssr:smoke
+      - name: Unit tests
+        if: ${{ !cancelled() }}
+        run: pnpm test
+
+  fernway:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Fernway
+    # Playwright 1.56 can't install Chromium on ubuntu-latest's 26.04 image.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - *classify-diff
+
+      - uses: ./.github/actions/setup
+
+      # Keyed on the lockfile, which pins Playwright and so its Chromium build.
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install-deps chromium
+
+      - name: Restore the package build
+        id: package-dist
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: packages/design-system/dist
+          key: ds-dist-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Build the package
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.package-dist.outputs.cache-hit != 'true' }}
+        run: pnpm build:ds
+      # Firefox and WebKit run the package's browser tests in the Engines jobs.
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm test:browser --project chromium
+
+      # The first install ran before dist existed, so it couldn't link the todae-tokens bin.
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm install --frozen-lockfile --offline
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        name: Second-brand example
+        run: pnpm --filter fernway-example build
+
+  # The package's browser tests in the other engines README's browser floors name, beside Fernway's Chromium run.
+  engines:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Engines (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # WebKit runs in its own job below, in Playwright's image.
+        browser: [firefox]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - *classify-diff
+
+      - uses: ./.github/actions/setup
+
+      # Keyed on the lockfile, which pins Playwright and so its browser builds.
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps ${{ matrix.browser }}
+      - if: ${{ !cancelled() && steps.change.outputs.class == 'all' && steps.playwright-cache.outputs.cache-hit == 'true' }}
+        run: pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}
+
+      # Firefox runs every test page in one content process, where pages that run at once take each
+      # other's clicks, so it runs one file at a time.
+      # Tests on the Firefox quarantine (packages/design-system/scripts/firefox-quarantine.ts, issue 367)
+      # still run, but their failures warn instead of failing the job. Any other failure still fails it,
+      # and the job summary lists each quarantined test's result. By 1.0 the quarantine must be empty and
+      # Firefox fully blocking again.
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' && matrix.browser == 'firefox' }}
+        working-directory: packages/design-system
+        env:
+          BROWSER_RESULTS: ${{ runner.temp }}/firefox-results.json
+        run: |
+          set +e
+          pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts
+          status=$?
+          set -e
+          node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status" --summary "$GITHUB_STEP_SUMMARY"
+
+  # The image the docs job uses, with WebKit and every system package it needs already in it. Installing
+  # those packages on the runner meant 114 MB from Ubuntu's mirror on every run, and when that mirror slowed
+  # down the install outlasted the job's timeout. apps/docs/test/image.test.ts checks that this image and the
+  # docs job's are the same, with the pinned Playwright version and a digest. A Playwright bump changes the
+  # tag and the digest here and in the docs job, with docker buildx imagetools inspect giving the digest.
+  webkit:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Engines (webkit)
+    runs-on: ubuntu-24.04
+    container: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      # The job runs as root, but the runner's user owns the workspace, so git refuses it until it's trusted.
+      # Without this, Classify the diff can't read the commits and runs every test on a prose-only change.
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - *classify-diff
+
+      - uses: ./.github/actions/setup
+
+      # The image's sans-serif is WenQuanYi Zen Hei, which has no bold face, so bold text would measure
+      # as wide as regular. Liberation Sans, already in the image, has one, as every real system font does.
+      - name: Use a sans-serif with a bold face
+        run: |
+          cat > /etc/fonts/local.conf <<'EOF'
+          <?xml version="1.0"?>
+          <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+          <fontconfig>
+            <alias binding="same">
+              <family>sans-serif</family>
+              <prefer><family>Liberation Sans</family></prefer>
+            </alias>
+          </fontconfig>
+          EOF
+          fc-match sans-serif:bold
+
+      - name: Browser tests
+        if: ${{ !cancelled() && steps.change.outputs.class == 'all' }}
+        run: pnpm --filter @tounsoo/todae test:browser --project webkit
+
+  # One result named Checks, so branch protection that requires that name keeps working.
+  checks:
+    name: Checks
+    needs: [static, build, fernway, engines, webkit]
+    if: ${{ always() && !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require static, build, fernway, engines, and webkit
+        run: |
+          set -euo pipefail
+          needs='${{ toJSON(needs) }}'
+          printf '%s\n' "$needs" | jq -r 'to_entries[] | "\(.key) \(.value.result)"'
+          printf '%s\n' "$needs" | jq -e '[.[].result] | all(. == "success")' >/dev/null
+
+  # Drafts skip Checks. This job still runs, as Token API does, so a lint or type error fails before review.
+  check:
+    name: Check
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Lint and types
+        run: pnpm check
+
+  # Drafts skip Checks. This job still runs so a removed, renamed, or retyped token path fails before review.
+  # The prose-only skip does not apply. This job is the only token API gate, so a docs-only pull request still runs it.
+  token-api:
+    name: Token API
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Snapshot matches the build
+        run: pnpm --filter @tounsoo/todae tokens:check --base "${{ github.event.pull_request.base.sha }}"
+      - name: No public token was removed, renamed or retyped
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-token-api.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
+  # Informational. Lists components that read a changed token. Never fails the build.
+  token-consumers:
+    name: Token consumers
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Report
+        run: pnpm --filter @tounsoo/todae exec node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/token-consumers.ts --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}" --summary "$GITHUB_STEP_SUMMARY"
+
+  # Drafts skip Checks and Docs. This job still runs, as Token API does, so a scratch file fails before review.
+  forbidden-paths:
+    name: Forbidden paths
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: No forbidden paths
+        run: |
+          set -euo pipefail
+          bash .github/scripts/forbidden-paths.sh --self-test
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+            diff_args=("$base...$head")
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            diff_args=("$base" "$head")
+          fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            echo "forbidden-paths: skipped because this push has no base commit"
+            exit 0
+          fi
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null || ! git cat-file -e "$head^{commit}" 2>/dev/null; then
+            echo "forbidden-paths: could not read the base or head commit"
+            exit 1
+          fi
+          # -z keeps a quote, tab, or newline in the path. --no-renames lists the new path of a rename.
+          # Do not store this output in a variable. Bash drops bytes at the first NUL.
+          git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames "${diff_args[@]}" | bash .github/scripts/forbidden-paths.sh
+
+  docs:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Docs build and pages
+    runs-on: ubuntu-latest
+    # Playwright's image brings the browsers its own version fits. Its version is @playwright/test's
+    # in apps/docs, which apps/docs/test/image.test.ts checks. The digest keeps a re-pushed tag out.
+    container: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm build:ds
+      - run: pnpm --filter docs build
+      - run: pnpm --filter docs test:axe
+      - run: pnpm --filter docs exec playwright install --with-deps webkit firefox
+      # Firefox refuses to launch as root when HOME is owned by another user.
+      - run: pnpm --filter docs test:peek
+        env:
+          HOME: /root

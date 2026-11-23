@@ -1,0 +1,81 @@
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { aptCommands, findAptInstalls, fixturePath, PAST_COMMANDS, PAST_WORKFLOWS, selfTest } from './ci-apt-install.mjs';
+
+const script = fileURLToPath(new URL('./ci-apt-install.mjs', import.meta.url));
+const root = fileURLToPath(new URL('../..', import.meta.url));
+
+const pullRequest = (run) => `on: pull_request\njobs:\n  engines:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: ${run}\n`;
+
+const commands = (text) => findAptInstalls(text).map((hit) => hit.command);
+
+test('flags the apt install commands from the workflows that timed out', () => {
+  for (const command of PAST_COMMANDS) {
+    assert.deepEqual(commands(pullRequest(JSON.stringify(command))), [command], command);
+  }
+});
+
+test('flags the CI workflow each referenced commit actually merged', () => {
+  for (const past of PAST_WORKFLOWS) {
+    const hashed = spawnSync('git', ['hash-object', fixturePath(past.blob)], { cwd: root, encoding: 'utf8' });
+    assert.equal(hashed.stdout.trim(), past.blob, past.rev);
+    const has = spawnSync('git', ['cat-file', '-e', `${past.rev}^{commit}`], { cwd: root });
+    if (has.status !== 0) continue;
+    const revBlob = spawnSync('git', ['rev-parse', `${past.rev}:.github/workflows/ci.yml`], { cwd: root, encoding: 'utf8' });
+    assert.equal(revBlob.stdout.trim(), past.blob, past.rev);
+  }
+});
+
+test('a browser install without apt packages is not this class', () => {
+  assert.deepEqual(commands(pullRequest('pnpm exec playwright install webkit')), []);
+  assert.deepEqual(commands(pullRequest('pnpm install --frozen-lockfile')), []);
+  assert.deepEqual(commands(pullRequest('"node .github/scripts/ci-apt-install.mjs --self-test"')), []);
+  assert.deepEqual(aptCommands('# playwright install --with-deps webkit\necho ok').map((hit) => hit.command), []);
+});
+
+test('a pinned Playwright package and apt-get options are still apt installs', () => {
+  assert.deepEqual(commands(pullRequest('"npx playwright@1.64.1 install --with-deps webkit"')), ['npx playwright@1.64.1 install --with-deps webkit']);
+  assert.deepEqual(commands(pullRequest('"sudo apt-get -o Acquire::Retries=3 install -y libgtk-3-0t64"')), [
+    'sudo apt-get -o Acquire::Retries=3 install -y libgtk-3-0t64',
+  ]);
+});
+
+test('apt-get, a continued line and a block scalar are flagged, and a comment is not', () => {
+  assert.deepEqual(commands(pullRequest('"sudo apt-get install -y libgtk-3-0"')), ['sudo apt-get install -y libgtk-3-0']);
+  const continued = pullRequest('|\n          pnpm exec playwright install \\\n            --with-deps webkit\n');
+  assert.deepEqual(commands(continued), ['pnpm exec playwright install --with-deps webkit']);
+  const commented = pullRequest('|\n          # playwright install --with-deps webkit\n          echo ok\n');
+  assert.deepEqual(commands(commented), []);
+});
+
+test('workflow_dispatch stays out, and the same command on a pull request does not', () => {
+  const command = 'pnpm --filter bench exec playwright install --with-deps chromium';
+  const body = `jobs:\n  bench:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: ${JSON.stringify(command)}\n`;
+  assert.deepEqual(commands(`on: workflow_dispatch\n${body}`), []);
+  assert.deepEqual(commands(`on:\n  workflow_dispatch:\n${body}`), []);
+  assert.deepEqual(commands(`on:\n  pull_request:\n  workflow_dispatch:\n${body}`), [command]);
+});
+
+test('the repo passes, including the historical proof', () => {
+  assert.deepEqual(selfTest(), []);
+});
+
+test('the command fails on a past workflow and passes on this repo', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ci-apt-'));
+  const past = join(dir, 'past.yml');
+  writeFileSync(past, pullRequest(JSON.stringify(PAST_COMMANDS[0])));
+  const failed = spawnSync(process.execPath, [script, past], { encoding: 'utf8' });
+  assert.equal(failed.status, 1);
+  assert.match(failed.stderr, /playwright install --with-deps/);
+  assert.match(failed.stderr, /mcr\.microsoft\.com\/playwright/);
+  assert.match(failed.stderr, /#347/);
+  assert.match(failed.stderr, /#381/);
+  const passed = spawnSync(process.execPath, [script, '--self-test'], { cwd: root, encoding: 'utf8' });
+  assert.equal(passed.status, 0, passed.stderr);
+  rmSync(dir, { recursive: true });
+});

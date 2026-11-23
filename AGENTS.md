@@ -69,6 +69,7 @@ Tier: T0
 | forbidden-paths | No scratch paths in a diff | `.github/scripts/forbidden-paths.sh` | #281 | seeded |
 | verify-self-test | Cursor's verify script self-test | `.cursor/skills/verify/verify.mjs` | #307 | seeded |
 | pinned-actions | Remote actions are pinned to a commit | `.github/scripts/pinned-actions.mjs` | #359 | seeded |
+| ci-apt-install | A push or pull request workflow does not apt-install browser packages | `.github/scripts/ci-apt-install.mjs` | #347 | enforced |
 | changeset | A package change carries a changeset | `.github/scripts/changeset-exempt.mjs`, `.github/workflows/ci.yml` | #171 | seeded |
 | token-api | No public token is removed, renamed or retyped | `pnpm tokens:api:check` | #279 | seeded |
 | token-consumers | Report components that read a changed token | `packages/design-system/scripts/token-consumers.ts` | #287 | seeded |
