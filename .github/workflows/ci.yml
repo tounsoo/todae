@@ -79,10 +79,6 @@ jobs:
       - name: Pinned actions
         if: ${{ !cancelled() }}
         run: node .github/scripts/pinned-actions.mjs
-      # WebKit (#347) and Firefox (#381) timed out installing browser packages from Ubuntu's mirror.
-      - name: No apt browser install
-        if: ${{ !cancelled() && needs.changes.outputs.class == 'all' }}
-        run: node .github/scripts/ci-apt-install.mjs --self-test
 
   build:
     needs: changes
@@ -278,10 +274,6 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Lint and types
         run: pnpm check
-      # The same apt check as Static. A draft skips Static, and this is the job that still runs.
-      - name: No apt browser install
-        if: ${{ !cancelled() && needs.changes.outputs.class == 'all' }}
-        run: node .github/scripts/ci-apt-install.mjs --self-test
 
   # Checks fails on drafts. This job still runs so a removed, renamed, or retyped token path fails before review.
   # The prose-only skip does not apply. This job is the only token API gate, so a docs-only pull request still runs it.

@@ -1,12 +1,11 @@
-// Fails when a workflow that runs on a push or pull request installs system packages from Ubuntu's
-// apt mirror. Playwright's `install --with-deps` and `install-deps` do that install. WebKit's did,
-// until the job timed out (#347). Firefox's was left on the runner and later timed out too (#381).
-// The fix is the digest-pinned mcr.microsoft.com/playwright image Fernway, Engines and Docs use:
-// the browsers and their packages are already in it, so the job deletes the install.
+// Fails when a workflow that runs on a push, a pull request, or workflow_call installs apt packages.
+// Playwright's `install --with-deps` and `install-deps` do that install, and so does apt-get.
+// WebKit's did, until the job timed out (#347). Firefox's was left on the runner and later timed out
+// too (#381). The fix is the digest-pinned mcr.microsoft.com/playwright image Fernway, Engines and
+// Docs use: the browsers and the libraries they need are already in it, so the job deletes the install.
 // A workflow_dispatch-only workflow is out of scope. Bench stays on the runner so its records keep
 // one machine type, and it never runs on a push or a pull request.
 // With no arguments it scans .github/workflows and .github/actions. Each argument is a file to scan instead.
-import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,25 +13,11 @@ import { isAlias, isMap, isScalar, isSeq, LineCounter, parseAllDocuments } from 
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 
-const CI_EVENTS = new Set(['push', 'pull_request', 'pull_request_target', 'merge_group']);
+const CI_EVENTS = new Set(['push', 'pull_request', 'pull_request_target', 'merge_group', 'workflow_call']);
 
-// The run lines from the workflows that timed out. #347 merged them, they were still on main at
-// acf5adff when WebKit's install timed out, and #381 (6d659a85) left the Firefox ones in place.
-export const PAST_COMMANDS = [
-  'pnpm --filter @tounsoo/todae exec playwright install --with-deps ${{ matrix.browser }}',
-  'pnpm --filter @tounsoo/todae exec playwright install-deps ${{ matrix.browser }}',
-  'pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium',
-  'pnpm --filter @tounsoo/todae exec playwright install-deps chromium',
-  'pnpm --filter docs exec playwright install --with-deps webkit firefox',
-];
-
-// Each fixture is `.github/workflows/ci.yml` at that commit, byte for byte. The blob id is
-// `git rev-parse <rev>:.github/workflows/ci.yml`, so a shallow clone still proves the file.
-export const PAST_WORKFLOWS = [
-  { ref: '#347', rev: '26833697d9c697c81fe1eeb7b743b79b61f4b98c', blob: '9e27dc3c41110c1fbc38875d60e88b3bf73f635f' },
-  { ref: '#347', rev: 'acf5adff8f103b21f6b7a89cbb68dd6761768e87', blob: '82ce4d149381dec0008560889a0c37b4282f0a84' },
-  { ref: '#381', rev: '6d659a85eed65b92147f14e4894b19aedfdae137', blob: 'c6f9dd0d5c0fde0a38df04b9ff8fdebdfc877fa2' },
-];
+// The install steps from the workflows that timed out, kept as short excerpts. #347 is 26833697.
+// #381 is 6d659a85. acf5adff had the same five steps as #347.
+const PAST_FIXTURES = ['347.yml', '381.yml'];
 
 const FIX =
   'Delete the install. Run the job in the digest-pinned mcr.microsoft.com/playwright image Fernway, Engines and Docs use. The browsers and their packages are already in it. playwright install --with-deps, playwright install-deps and apt-get install pull packages from Ubuntu\'s mirror, which timed out WebKit (#347) and Firefox (#381).';
@@ -52,14 +37,104 @@ export function defaultFiles() {
   return [...yamlFiles(join(root, '.github/workflows'), false), ...yamlFiles(join(root, '.github/actions'), true)];
 }
 
-function word(token) {
-  return token.replace(/^['"]+|['"]+$/g, '');
+// A quoted sentence is one word. `echo "use apt-get to install"` does not run apt-get.
+function shellWords(command) {
+  const words = [];
+  let current = '';
+  let quote = '';
+  let started = false;
+  const flush = () => {
+    if (!started) return;
+    words.push(current);
+    current = '';
+    started = false;
+  };
+  for (let index = 0; index < command.length; index += 1) {
+    const ch = command[index];
+    if (quote) {
+      started = true;
+      if (ch === '\\' && quote === '"' && index + 1 < command.length) {
+        current += command[index + 1];
+        index += 1;
+        continue;
+      }
+      if (ch === quote) {
+        quote = '';
+        continue;
+      }
+      current += ch;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      started = true;
+      continue;
+    }
+    if (ch === ' ' || ch === '\t') {
+      flush();
+      continue;
+    }
+    started = true;
+    current += ch;
+  }
+  flush();
+  return words;
 }
 
-// Tokens, not a substring: `ci-apt-install` is the check's own name, and it is not an apt install.
-function matchApt(line) {
-  if (/^\s*#/.test(line)) return false;
-  const tokens = line.trim().split(/\s+/).map(word);
+function commandName(token) {
+  const slash = token.lastIndexOf('/');
+  return slash === -1 ? token : token.slice(slash + 1);
+}
+
+function splitCommands(line) {
+  const commands = [];
+  let current = '';
+  let quote = '';
+  const push = () => {
+    const command = current.replace(/\s+/g, ' ').trim();
+    current = '';
+    if (command === '' || command.startsWith('#')) return;
+    commands.push(command);
+  };
+  for (let index = 0; index < line.length; index += 1) {
+    const ch = line[index];
+    if (quote) {
+      current += ch;
+      if (ch === '\\' && quote === '"' && index + 1 < line.length) {
+        current += line[index + 1];
+        index += 1;
+        continue;
+      }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      current += ch;
+      continue;
+    }
+    if (ch === '#' && (current === '' || /\s$/.test(current))) break;
+    if (ch === ';') {
+      push();
+      continue;
+    }
+    if ((ch === '&' && line[index + 1] === '&') || (ch === '|' && line[index + 1] === '|')) {
+      push();
+      index += 1;
+      continue;
+    }
+    if (ch === '|' || ch === '(' || ch === ')') {
+      push();
+      continue;
+    }
+    current += ch;
+  }
+  push();
+  return commands;
+}
+
+function matchApt(command) {
+  const tokens = shellWords(command).map(commandName);
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
     if (/^playwright(?:@\S+)?$/.test(token)) {
@@ -72,17 +147,18 @@ function matchApt(line) {
   return false;
 }
 
-// One hit per logical command. A trailing backslash joins the next physical line.
+// One hit per shell command. A trailing backslash joins the next physical line.
 export function aptCommands(script) {
   const lines = String(script).split(/\r?\n/);
   const found = [];
   let buffer = '';
   let start = 0;
   const flush = () => {
-    const command = buffer.replace(/\s+/g, ' ').trim();
+    const line = buffer;
     buffer = '';
-    if (command === '' || command.startsWith('#')) return;
-    if (matchApt(command)) found.push({ index: start, command });
+    for (const command of splitCommands(line)) {
+      if (matchApt(command)) found.push({ index: start, command });
+    }
   };
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index] ?? '';
@@ -231,51 +307,29 @@ export function scan(files) {
   return lines;
 }
 
-function workflowWith(command) {
-  return `on: pull_request\njobs:\n  engines:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: ${JSON.stringify(command)}\n`;
-}
-
-function gitOutput(args) {
-  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
-  if (result.status !== 0) return null;
-  return result.stdout.trim();
-}
-
-export function fixturePath(blob) {
-  return join(root, '.github/scripts/fixtures/ci-apt-install', `${blob}.yml`);
+function runLines(text) {
+  return text.split(/\r?\n/).flatMap((line) => {
+    const match = /^\s*(?:-\s+)?run:\s+(\S.*)$/.exec(line);
+    return match ? [match[1].trim()] : [];
+  });
 }
 
 export function selfTest() {
   const problems = [];
-  for (const command of PAST_COMMANDS) {
-    const hits = findAptInstalls(workflowWith(command), 'past.yml');
-    if (!hits.some((hit) => hit.command === command)) {
-      problems.push(`past command was not flagged: ${command}`);
-    }
-  }
-  for (const past of PAST_WORKFLOWS) {
-    const path = fixturePath(past.blob);
-    if (gitOutput(['hash-object', path]) !== past.blob) {
-      problems.push(`${past.ref} fixture is not blob ${past.blob} from ${past.rev}`);
-      continue;
-    }
+  for (const name of PAST_FIXTURES) {
+    const path = join(root, '.github/scripts/fixtures/ci-apt-install', name);
     let text;
     try {
       text = readFileSync(path, 'utf8');
     } catch (error) {
-      problems.push(`${past.ref} fixture could not be read: ${error.message.split('\n')[0]}`);
+      problems.push(`${name} could not be read: ${error.message.split('\n')[0]}`);
       continue;
     }
-    const hits = findAptInstalls(text, `${past.rev}:.github/workflows/ci.yml`);
-    for (const command of PAST_COMMANDS) {
-      if (!hits.some((hit) => hit.command === command)) {
-        problems.push(`${past.ref} ${past.rev} did not flag: ${command}`);
-      }
-    }
-    const has = spawnSync('git', ['cat-file', '-e', `${past.rev}^{commit}`], { cwd: root });
-    if (has.status !== 0) continue;
-    if (gitOutput(['rev-parse', `${past.rev}:.github/workflows/ci.yml`]) !== past.blob) {
-      problems.push(`${past.ref} ${past.rev} is not blob ${past.blob}`);
+    const hits = findAptInstalls(text, name);
+    const runs = runLines(text);
+    if (runs.length === 0) problems.push(`${name} has no install steps`);
+    for (const command of runs) {
+      if (!hits.some((hit) => hit.command === command)) problems.push(`${name} did not flag: ${command}`);
     }
   }
   const bench = join(root, '.github/workflows/bench.yml');

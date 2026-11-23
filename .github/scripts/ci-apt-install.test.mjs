@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { aptCommands, findAptInstalls, fixturePath, PAST_COMMANDS, PAST_WORKFLOWS, selfTest } from './ci-apt-install.mjs';
+import { aptCommands, findAptInstalls, selfTest } from './ci-apt-install.mjs';
 
 const script = fileURLToPath(new URL('./ci-apt-install.mjs', import.meta.url));
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -13,23 +12,6 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const pullRequest = (run) => `on: pull_request\njobs:\n  engines:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: ${run}\n`;
 
 const commands = (text) => findAptInstalls(text).map((hit) => hit.command);
-
-test('flags the apt install commands from the workflows that timed out', () => {
-  for (const command of PAST_COMMANDS) {
-    assert.deepEqual(commands(pullRequest(JSON.stringify(command))), [command], command);
-  }
-});
-
-test('flags the CI workflow each referenced commit actually merged', () => {
-  for (const past of PAST_WORKFLOWS) {
-    const hashed = spawnSync('git', ['hash-object', fixturePath(past.blob)], { cwd: root, encoding: 'utf8' });
-    assert.equal(hashed.stdout.trim(), past.blob, past.rev);
-    const has = spawnSync('git', ['cat-file', '-e', `${past.rev}^{commit}`], { cwd: root });
-    if (has.status !== 0) continue;
-    const revBlob = spawnSync('git', ['rev-parse', `${past.rev}:.github/workflows/ci.yml`], { cwd: root, encoding: 'utf8' });
-    assert.equal(revBlob.stdout.trim(), past.blob, past.rev);
-  }
-});
 
 test('a browser install without apt packages is not this class', () => {
   assert.deepEqual(commands(pullRequest('pnpm exec playwright install webkit')), []);
@@ -51,6 +33,7 @@ test('apt-get, a continued line and a block scalar are flagged, and a comment is
   assert.deepEqual(commands(continued), ['pnpm exec playwright install --with-deps webkit']);
   const commented = pullRequest('|\n          # playwright install --with-deps webkit\n          echo ok\n');
   assert.deepEqual(commands(commented), []);
+  assert.deepEqual(commands(pullRequest(JSON.stringify('echo ok # apt-get install -y libgtk'))), []);
 });
 
 test('workflow_dispatch stays out, and the same command on a pull request does not', () => {
@@ -83,6 +66,8 @@ test('a shell operator or a path to the binary still counts as an apt install', 
 
 test('a quoted sentence is not an apt install', () => {
   assert.deepEqual(commands(pullRequest(JSON.stringify('echo "use apt-get to install"'))), []);
+  assert.deepEqual(commands(pullRequest(JSON.stringify("echo 'use apt-get to install'"))), []);
+  assert.deepEqual(commands(pullRequest(JSON.stringify('echo "use apt-get to install" && apt-get install -y foo'))), ['apt-get install -y foo']);
 });
 
 test('a reusable workflow is in scope', () => {
@@ -92,17 +77,23 @@ test('a reusable workflow is in scope', () => {
   assert.deepEqual(commands(`on:\n  workflow_call:\n${body}`), [command]);
 });
 
-test('the command fails on a past workflow and passes on this repo', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'ci-apt-'));
-  const past = join(dir, 'past.yml');
-  writeFileSync(past, pullRequest(JSON.stringify(PAST_COMMANDS[0])));
-  const failed = spawnSync(process.execPath, [script, past], { encoding: 'utf8' });
-  assert.equal(failed.status, 1);
-  assert.match(failed.stderr, /playwright install --with-deps/);
-  assert.match(failed.stderr, /mcr\.microsoft\.com\/playwright/);
-  assert.match(failed.stderr, /#347/);
-  assert.match(failed.stderr, /#381/);
+test('the check fails on the #347 and #381 steps and passes on this repo', () => {
+  for (const name of ['347.yml', '381.yml']) {
+    const fixture = join(root, '.github/scripts/fixtures/ci-apt-install', name);
+    const failed = spawnSync(process.execPath, [script, fixture], { encoding: 'utf8' });
+    assert.equal(failed.status, 1, failed.stderr);
+    assert.match(failed.stderr, new RegExp(`${name}:\\d+: fernway:`));
+    assert.match(failed.stderr, new RegExp(`${name}:\\d+: engines:`));
+    assert.match(failed.stderr, new RegExp(`${name}:\\d+: docs:`));
+    assert.match(failed.stderr, /mcr\.microsoft\.com\/playwright/);
+  }
+  const head = spawnSync(process.execPath, [script], { cwd: root, encoding: 'utf8' });
+  assert.equal(head.status, 0, head.stderr);
   const passed = spawnSync(process.execPath, [script, '--self-test'], { cwd: root, encoding: 'utf8' });
   assert.equal(passed.status, 0, passed.stderr);
-  rmSync(dir, { recursive: true });
+});
+
+test('pnpm check runs the apt install check', () => {
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  assert.match(pkg.scripts.check, /node \.github\/scripts\/ci-apt-install\.mjs --self-test/);
 });
