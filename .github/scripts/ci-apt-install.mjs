@@ -81,10 +81,27 @@ function shellWords(command) {
   return words;
 }
 
+const PLAYWRIGHT_PACKAGES = new Set(['playwright', '@playwright/test']);
+
+function packageName(token) {
+  if (!token || token.startsWith('-')) return null;
+  const scoped = /^(@[^/\s]+\/[^@/\s]+)(?:@\S+)?$/.exec(token);
+  if (scoped) return scoped[1];
+  if (token.includes('/')) return null;
+  const plain = /^([^@/\s]+)(?:@\S+)?$/.exec(token);
+  return plain ? plain[1] : null;
+}
+
 function commandName(token) {
   if (token.startsWith('-')) return token;
+  if (packageName(token)?.startsWith('@')) return token;
   const slash = token.lastIndexOf('/');
   return slash === -1 ? token : token.slice(slash + 1);
+}
+
+function isPlaywright(token) {
+  const name = packageName(token);
+  return name !== null && PLAYWRIGHT_PACKAGES.has(name);
 }
 
 function splitCommands(line) {
@@ -138,7 +155,7 @@ function matchApt(command) {
   const tokens = shellWords(command).map(commandName);
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
-    if (/^playwright(?:@\S+)?$/.test(token)) {
+    if (isPlaywright(token)) {
       const next = tokens[index + 1];
       if (next === 'install-deps') return true;
       if (next === 'install' && tokens.some((item) => item === '--with-deps' || item.startsWith('--with-deps='))) return true;
