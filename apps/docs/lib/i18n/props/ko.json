@@ -468,6 +468,10 @@
     }
   },
   "CodeBlock.Root": {
+    "wrap": {
+      "en": "Wraps long lines instead of scrolling sideways.",
+      "ko": "긴 줄을 옆으로 스크롤하지 않고 줄바꿈합니다."
+    },
     "tabIndex": {
       "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",
       "ko": "블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."
@@ -1341,6 +1345,18 @@
       "ko": "항목을 선택하면 어딘가로 가는 a나 라우터 링크 같은 다른 요소로 렌더링합니다. ref를 포함한 모든 prop을 받으며, 그것을 넘겨야 합니다."
     }
   },
+  "Menu.ItemIcon": {
+    "children": {
+      "en": "Icon graphic.",
+      "ko": "아이콘 그래픽."
+    }
+  },
+  "Menu.ItemShortcut": {
+    "children": {
+      "en": "The shortcut, such as nested Kbd.Root elements.",
+      "ko": "단축키. 중첩된 Kbd.Root 같은 요소입니다."
+    }
+  },
   "Menu.RadioGroup": {
     "value": {
       "en": "Controlled value. null is controlled with nothing checked.",
@@ -1585,12 +1601,18 @@
       "ko": "선택 값."
     },
     "children": {
-      "en": "Visible label. Text only.",
-      "ko": "보이는 레이블. 텍스트만 지원합니다."
+      "en": "Title. A string, plus one OptionList.OptionDetail for a second line.",
+      "ko": "제목. 문자열이며, 두 번째 줄에는 OptionList.OptionDetail을 하나 둡니다."
     },
     "disabled": {
       "en": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
       "ko": "포인터와 키보드 선택에서 제외합니다. 지금은 쓸 수 없지만 계속 닿을 수 있는 옵션에는 disabled 대신 aria-disabled를 쓰세요."
+    }
+  },
+  "OptionList.OptionDetail": {
+    "children": {
+      "en": "Detail text, announced as the option description.",
+      "ko": "상세 텍스트. 옵션의 설명으로 읽힙니다."
     }
   },
   "OptionList.Root": {
@@ -1768,6 +1790,10 @@
     }
   },
   "Slider.Root": {
+    "mode": {
+      "en": "One thumb, or \"range\" for two thumbs on one track. A thumb stops when it meets the other.",
+      "ko": "손잡이 하나입니다. \"range\"이면 한 트랙에 손잡이 두 개입니다. 손잡이는 다른 손잡이에 닿으면 멈춥니다."
+    },
     "min": {
       "en": "The lowest value.",
       "ko": "가장 낮은 값."
@@ -1781,16 +1807,40 @@
       "ko": "화살표 키 한 번에 값이 움직이는 양."
     },
     "value": {
-      "en": "The value, with onChange. Use defaultValue to leave it to the input.",
-      "ko": "onChange와 함께 쓰는 값. 입력 요소에 맡기려면 defaultValue를 쓰세요."
+      "en": "The value, with onChange. With mode=\"range\", the start and the end, with onValueChange.",
+      "ko": "onChange와 함께 쓰는 값입니다. mode=\"range\"이면 onValueChange와 함께 쓰는 시작과 끝입니다."
     },
     "defaultValue": {
-      "en": "The starting value, when the input keeps it.",
-      "ko": "입력 요소가 값을 관리할 때의 시작 값."
+      "en": "The starting value, when the slider keeps it. With mode=\"range\", the starting pair.",
+      "ko": "슬라이더가 값을 가질 때의 시작 값입니다. mode=\"range\"이면 처음의 시작과 끝입니다."
+    },
+    "onValueChange": {
+      "en": "With mode=\"range\", called with the next start and end after a gesture.",
+      "ko": "mode=\"range\"일 때, 손잡이를 움직인 다음의 시작과 끝을 받습니다."
+    },
+    "startLabel": {
+      "en": "Required when mode is \"range\". The accessible name of the start thumb.",
+      "ko": "mode가 \"range\"이면 필수입니다. 시작 손잡이의 접근 이름입니다."
+    },
+    "endLabel": {
+      "en": "Required when mode is \"range\". The accessible name of the end thumb.",
+      "ko": "mode가 \"range\"이면 필수입니다. 끝 손잡이의 접근 이름입니다."
+    },
+    "startValueText": {
+      "en": "With mode=\"range\", what a screen reader says for the start thumb instead of the number.",
+      "ko": "mode가 \"range\"일 때, 스크린 리더가 시작 손잡이의 숫자 대신 읽는 말입니다."
+    },
+    "endValueText": {
+      "en": "With mode=\"range\", what a screen reader says for the end thumb instead of the number.",
+      "ko": "mode가 \"range\"일 때, 스크린 리더가 끝 손잡이의 숫자 대신 읽는 말입니다."
+    },
+    "name": {
+      "en": "The field name. With mode=\"range\", the start field name and the end field name. Omit it and neither range input submits.",
+      "ko": "필드 이름입니다. mode=\"range\"이면 시작 필드 이름과 끝 필드 이름입니다. 생략하면 range 입력은 어느 쪽도 제출하지 않습니다."
     },
     "aria-valuetext": {
-      "en": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\".",
-      "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."
+      "en": "On one thumb, what a screen reader says instead of the number, such as \"40%\" or \"Medium\". On a range, use startValueText and endValueText.",
+      "ko": "손잡이 하나에서 스크린 리더가 숫자 대신 읽는 말. \"40%\"나 \"Medium\"처럼. 범위에서는 startValueText와 endValueText를 씁니다."
     }
   },
   "Stack.Root": {
@@ -2167,8 +2217,12 @@
       "ko": "\"Alignment\"처럼 묶음의 이름을 붙입니다."
     },
     "selectionMode": {
-      "en": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
-      "ko": "single은 많아야 한 항목을 누르며, 다시 누르면 해제됩니다. multiple은 몇 개든 누릅니다."
+      "en": "Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.",
+      "ko": "single은 많아야 한 항목을 누릅니다. 눌린 항목을 다시 누르면 해제되며, required이면 해제되지 않습니다. multiple은 몇 개든 누릅니다."
+    },
+    "required": {
+      "en": "In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.",
+      "ko": "single 모드에서 눌린 항목을 다시 눌러도 눌린 채로 두고, onValueChange를 호출하지 않습니다."
     },
     "value": {
       "en": "Controlled pressed value: a value or null for single, an array for multiple.",
@@ -2823,6 +2877,16 @@
     "children": {
       "en": "The link text, usually the heading of the section.",
       "ko": "링크 텍스트로, 보통 섹션의 제목입니다."
+    }
+  },
+  "Calendar.Grid": {
+    "renderDay": {
+      "en": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show.",
+      "ko": "그리드가 그리는 각 날짜 버튼 안에 그립니다. 그 날의 날짜와, 보이는 달 밖인지, 오늘인지, 선택됐는지, 고를 수 없는지를 받아 호출됩니다. 버튼은 유일한 Tab 정지점으로 남고 이름은 전체 날짜 그대로이며, 내용은 그 날의 설명으로 읽힙니다. 내용은 상호작용하지 않습니다. 해가 보이는 동안에는 무시됩니다."
+    },
+    "showOutsideDays": {
+      "en": "Draws the leading and trailing days as buttons, in the weekday color, and marks them outside. Off by default, and passing renderDay does not draw those days. Ignored while the years show.",
+      "ko": "앞쪽과 뒤쪽의 날을 버튼으로 그리고, 요일 색으로 칠하며, 달 밖으로 표시합니다. 기본값은 꺼짐이고, renderDay를 전달해도 그 날은 그려지지 않습니다. 해가 보이는 동안에는 무시됩니다."
     }
   },
   "Calendar.Root": {
@@ -3507,8 +3571,8 @@
       "ko": "각 레인 요소가 축을 따라 덮는 구간. 첫날 시작부터 센 분처럼 보드의 단위로 씁니다."
     },
     "onDrop": {
-      "en": "Called on a drop that changes an item's place, with the change.",
-      "ko": "항목의 자리를 바꾸는 놓기에서 그 변경을 받아 불립니다."
+      "en": "Called on a drop that changes an item's place, with the change. A create calls onCreate instead.",
+      "ko": "항목의 자리를 바꾸는 놓기에서 그 변경을 받아 불립니다. 새로 만드는 끌기는 대신 onCreate를 부릅니다."
     },
     "axis": {
       "en": "The direction the range runs in each lane. `inline` follows the text direction, and `block` runs down. Default `inline`.",
@@ -3519,12 +3583,16 @@
       "ko": "시작이나 끝이 맞춰지는 지점들로, 오름차순입니다. 없으면 자리가 맞춰지지 않습니다."
     },
     "minSpan": {
-      "en": "The shortest span a resize leaves. Default 0.",
-      "ko": "크기 조절이 남기는 가장 짧은 구간. 기본값은 0입니다."
+      "en": "The shortest span a resize leaves, and the span a click on empty lane space creates, from the grid cell that contains the press. Default 0, so that click does nothing.",
+      "ko": "크기 조절이 남기는 가장 짧은 구간이자, 빈 레인을 클릭하면 누른 칸에서 생기는 구간의 길이입니다. 기본값은 0이므로 그 클릭은 아무것도 만들지 않습니다."
     },
     "check": {
       "en": "Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop.",
       "ko": "포인터 아래의 자리가 바뀔 때마다, 그리고 놓을 때 한 번 더 항목 `id`가 `to`로 갈 수 있는지 알려 줍니다."
+    },
+    "onCreate": {
+      "en": "Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. Dragged forward, the press floors to the grid cell that contains it. Dragged back, that cell runs up to the next grid point. The end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0.",
+      "ko": "빈 레인 공간을 누르고 손을 떼어 새 자리가 생기면 한 번 불립니다. 넘기지 않으면 빈 공간에서는 끌기가 시작되지 않습니다. 끌면 누른 지점과 포인터 사이의 구간이 됩니다. 앞으로 끌면 누른 지점은 그 지점을 담은 칸으로 내려가고, 뒤로 끌면 그 칸이 다음 격자점까지 이어집니다. 포인터 아래의 끝은 가장 가까운 격자점에 맞춰집니다. 끌기 임계값 안에서 떼면 그 칸에서 `minSpan` 길이의 칸이 생기고 레인의 클릭은 삼키며, `minSpan`이 0이면 아무것도 생기지 않습니다."
     },
     "disabled": {
       "en": "Turn dragging off. While `disabled` is true, a drag under way can't be dropped.",

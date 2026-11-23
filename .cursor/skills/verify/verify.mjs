@@ -474,7 +474,14 @@ async function headerCheck(page, copy, groups, pathname, width) {
     if (!(await menu.isVisible())) throw new Error('menu button hidden on a narrow page');
     await menu.click();
     const dialog = page.getByRole('dialog');
-    await dialog.waitFor({ state: 'visible' });
+    // A click can land on the server HTML before the header hydrates, and that
+    // click is not replayed. Click again once the button has had time to attach.
+    try {
+      await dialog.waitFor({ state: 'visible', timeout: 1000 });
+    } catch {
+      await menu.click();
+      await dialog.waitFor({ state: 'visible' });
+    }
     const start = dialog.getByRole('link', { name: copy.top.start, exact: true });
     if (!(await start.isVisible())) throw new Error('drawer is missing the Get started link');
     await dialog.getByRole('button', { name: copy.closeMenu, exact: true }).click();

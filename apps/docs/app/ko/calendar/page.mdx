@@ -1,3 +1,5 @@
+import CalendarDayContent from '../../../examples/calendar/CalendarDayContent';
+import CalendarOutsideDays from '../../../examples/calendar/CalendarOutsideDays';
 import CalendarRange from '../../../examples/calendar/CalendarRange';
 import CalendarInline from '../../../examples/calendar/CalendarInline';
 
@@ -29,9 +31,23 @@ import CalendarInline from '../../../examples/calendar/CalendarInline';
 
 Todae는 Temporal 폴리필을 포함하지 않습니다. `Calendar.Root`는 렌더링할 때 `Temporal`을 호출하므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고).
 
+## 날짜 안의 내용
+
+`Calendar.Grid`의 `renderDay`는 그리드가 그리는 각 날짜 버튼 안에 내용을 더 그립니다. 그리드는 그 날의 `Temporal.PlainDate`와 `outside`, `today`, `selected`, `disabled`를 넘겨 호출합니다. `outside`는 앞쪽이나 뒤쪽 주에 있어 보이는 달 밖에 있는 날이며, 그 날들은 `showOutsideDays`가 있을 때만 그려집니다. `disabled`는 그 날을 고를 수 없다는 뜻입니다. 달력이 비활성화되었거나, 날이 `min`과 `max` 밖이거나, `isDateDisabled`가 제외했거나, 범위를 그 날로 끝낼 수 없을 때입니다. 주는 그리드가 그대로 만들고, 첫 열도 `firstDayOfWeek`를 따릅니다.
+
+`showOutsideDays`는 앞쪽과 뒤쪽의 날을 버튼으로 그리며, 요일 이름과 같은 옅은 색을 쓰고 `data-outside`를 붙입니다. 기본값은 꺼짐입니다. 꺼져 있으면 `renderDay`가 있어도 그 칸은 빈 채로 있습니다. `renderDay`를 전달해도 그 날이 생기거나 누를 수 있게 되지 않습니다. `showOutsideDays`가 있으면 `renderDay`는 그 날에도 호출됩니다. 화살표 키, Home, End, Page Up, Page Down은 여전히 포커스가 있는 날짜를 옮기고, 보이는 달은 그 날짜를 따릅니다.
+
+날짜 버튼은 유일한 Tab 정지점으로 남습니다. 이름은 전체 날짜 그대로입니다. 날에 내용이 있으면 그 내용은 버튼의 설명으로 읽히므로, 화면 읽기는 날짜를 읽은 다음 내용을 읽습니다. `renderDay`에는 일정 제목이나 "+N more" 개수처럼 글자를 넣으세요. 상호작용하는 내용은 지원하지 않습니다. 날 안에서 포커스를 받을 수 있는 것은 잘못된 마크업이고, 이 슬롯은 그 요소에 키보드 경로를 주지 않습니다. 개발 중에는 `renderDay`가 그런 요소를 돌려주면 `Calendar.Grid`가 오류를 기록합니다. 동작은 날짜를 누르는 쪽에 둡니다. 날짜 버튼을 누르거나 Enter와 Space를 누르는 것입니다.
+
+<Example of={CalendarDayContent} block />
+
+`showOutsideDays`를 주면 보이는 달 앞뒤 주의 날도 버튼이 됩니다.
+
+<Example of={CalendarOutsideDays} block />
+
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Calendar.Root`는 `role="group"`입니다. `Calendar.Grid`는 `Calendar.Header`가 렌더링되어 있는 동안 헤더의 달로 이름이 붙는 `role="grid"` 표이며, 요일마다 `abbr`가 전체 이름인 열 머리글이 있습니다. Tab 정지점은 하나입니다. 화살표 키는 하루와 한 주씩, Home과 End는 주의 처음과 끝으로, Page Up과 Page Down은 한 달씩, Shift와 함께면 한 해씩 움직입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서는 왼쪽과 오른쪽이 바뀝니다. 날마다 전체 날짜로 이름 붙은 버튼이고, 선택한 날의 칸에는 `aria-selected`가, 오늘에는 `aria-current="date"`가 붙습니다. `isDateDisabled`가 제외한 날짜에는 `aria-disabled`가 붙고, `min`과 `max` 밖의 날은 비활성화됩니다. 연월은 해가 보이는 동안 true인 `aria-expanded`를 가진 버튼이고, 라이브 영역 안에 있어서 바뀌면 스크린 리더가 알려 줍니다. 해 페이지도 Tab 정지점이 하나인 `role="grid"`입니다. 화살표 키는 한 해와 한 줄씩, Home과 End는 줄의 처음과 끝으로, Page Up과 Page Down은 한 페이지씩 움직입니다. 연월 옆의 버튼은 [StringsProvider](/utilities/strings-provider)의 `previousMonth`와 `nextMonth` 문자열로, 해가 보이는 동안은 `previousYears`와 `nextYears`로 이름이 붙고, 이 버튼들과 연월은 [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 그립니다. `disabled`나 비활성화된 [Fieldset](/fieldset)은 모든 버튼을 비활성화합니다. 범위 모드에서는 그리드와 해 페이지에 `aria-multiselectable`이 붙고 범위가 걸친 모든 날과 해에 `aria-selected`가 붙으며, 범위가 종료일을 기다리는 동안에는 첫 번째로 고른 날과 그 해에만 붙습니다. 첫 번째 선택 뒤에는 `pickEndDate` 문자열을 라이브 영역으로 알려 주고, 범위를 끝낼 수 없는 날에는 `aria-disabled`가 붙지만 포커스는 받을 수 있습니다. 이때 Escape나 Android 뒤로 가기 제스처 같은 모달의 닫기 요청은 첫 번째 선택만 취소하고 거기서 멈추므로, 달력을 감싼 팝오버나 대화상자는 열린 채로 남습니다.
+**Todae가 맡는 것:** `Calendar.Root`는 `role="group"`입니다. `Calendar.Grid`는 `Calendar.Header`가 렌더링되어 있는 동안 헤더의 달로 이름이 붙는 `role="grid"` 표이며, 요일마다 `abbr`가 전체 이름인 열 머리글이 있습니다. Tab 정지점은 하나입니다. 화살표 키는 하루와 한 주씩, Home과 End는 주의 처음과 끝으로, Page Up과 Page Down은 한 달씩, Shift와 함께면 한 해씩 움직입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서는 왼쪽과 오른쪽이 바뀝니다. 날마다 전체 날짜로 이름 붙은 버튼입니다. 날에 내용이 있으면 그 내용은 버튼의 설명으로 읽힙니다. 선택한 날의 칸에는 `aria-selected`가, 오늘에는 `aria-current="date"`가 붙습니다. `isDateDisabled`가 제외한 날짜에는 `aria-disabled`가 붙고, `min`과 `max` 밖의 날은 비활성화됩니다. 연월은 해가 보이는 동안 true인 `aria-expanded`를 가진 버튼이고, 라이브 영역 안에 있어서 바뀌면 스크린 리더가 알려 줍니다. 해 페이지도 Tab 정지점이 하나인 `role="grid"`입니다. 화살표 키는 한 해와 한 줄씩, Home과 End는 줄의 처음과 끝으로, Page Up과 Page Down은 한 페이지씩 움직입니다. 연월 옆의 버튼은 [StringsProvider](/utilities/strings-provider)의 `previousMonth`와 `nextMonth` 문자열로, 해가 보이는 동안은 `previousYears`와 `nextYears`로 이름이 붙고, 이 버튼들과 연월은 [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 그립니다. `disabled`나 비활성화된 [Fieldset](/fieldset)은 모든 버튼을 비활성화합니다. 범위 모드에서는 그리드와 해 페이지에 `aria-multiselectable`이 붙고 범위가 걸친 모든 날과 해에 `aria-selected`가 붙으며, 범위가 종료일을 기다리는 동안에는 첫 번째로 고른 날과 그 해에만 붙습니다. 첫 번째 선택 뒤에는 `pickEndDate` 문자열을 라이브 영역으로 알려 주고, 범위를 끝낼 수 없는 날에는 `aria-disabled`가 붙지만 포커스는 받을 수 있습니다. 이때 Escape나 Android 뒤로 가기 제스처 같은 모달의 닫기 요청은 첫 번째 선택만 취소하고 거기서 멈추므로, 달력을 감싼 팝오버나 대화상자는 열린 채로 남습니다.
 
 **직접 제공할 것:** `aria-label`이나 `aria-labelledby`로 그룹의 이름, 그리고 `Calendar.Header`가 없으면 그리드의 이름. 페이지의 언어가 브라우저의 언어와 다르면 `locale`.
 

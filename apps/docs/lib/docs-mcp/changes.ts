@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { fitSlice } from './budget';
 import { packageFile } from './package-file';
 
 const SOURCE = 'todae-docs' as const;
@@ -116,7 +117,7 @@ function releases(): Release[] {
  * release unless given), oldest first, with each release's breaking changes
  * apart from the rest.
  */
-export function getChanges({ from, to }: { from: string; to?: string }, all: Release[] = releases()) {
+export function getChanges({ from, to, offset }: { from: string; to?: string; offset?: number }, all: Release[] = releases()) {
   const latest = all.at(-1)?.version;
   if (!latest) throw new Error('The changelog has no releases');
   const target = to ?? latest;
@@ -129,13 +130,22 @@ export function getChanges({ from, to }: { from: string; to?: string }, all: Rel
   const picked = all.filter(
     (release) => compareVersions(release.version, from) > 0 && compareVersions(release.version, target) <= 0,
   );
-  return {
+  const breakingCount = picked.reduce((count, release) => count + release.breaking.length, 0);
+  const whole = {
     from,
     to: target,
     latest,
-    breakingCount: picked.reduce((count, release) => count + release.breaking.length, 0),
+    breakingCount,
     releases: picked,
     changelogUrl: CHANGELOG_URL,
     source: SOURCE,
   };
+  if (offset === undefined) return whole;
+  const start = offset;
+  return fitSlice(picked, start, (slice, cursor) => ({
+    ...whole,
+    releases: slice,
+    offset: start,
+    ...(cursor ? { cursor } : {}),
+  }));
 }

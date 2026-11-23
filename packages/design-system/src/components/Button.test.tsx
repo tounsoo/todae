@@ -43,11 +43,13 @@ describe('Button.Root', () => {
     expect(button.getAttribute('data-button-variant')).toBeNull();
   });
 
-  it('sets data-button-variant for secondary and ghost', () => {
+  it('sets data-button-variant for secondary, ghost and critical', () => {
     const { rerender } = render(<Button.Root variant="secondary">Cancel</Button.Root>);
     expect(screen.getByRole('button').getAttribute('data-button-variant')).toBe('secondary');
     rerender(<Button.Root variant="ghost">Ghost</Button.Root>);
     expect(screen.getByRole('button').getAttribute('data-button-variant')).toBe('ghost');
+    rerender(<Button.Root variant="critical">Delete</Button.Root>);
+    expect(screen.getByRole('button').getAttribute('data-button-variant')).toBe('critical');
   });
 
   it('keeps an explicit type and disabled', () => {

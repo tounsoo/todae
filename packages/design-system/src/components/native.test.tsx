@@ -33,6 +33,19 @@ describe('native element components', () => {
     expect(el.classList.length).toBeGreaterThan(1);
   });
 
+  it('scrolls a code block sideways unless wrap is set', () => {
+    const { rerender } = render(<CodeBlock.Root data-testid="x">const value = 1;</CodeBlock.Root>);
+    const block = screen.getByTestId('x');
+    expect(block.hasAttribute('data-wrap')).toBe(false);
+    expect(block.hasAttribute('wrap')).toBe(false);
+    rerender(
+      <CodeBlock.Root wrap data-testid="x">
+        const value = 1;
+      </CodeBlock.Root>,
+    );
+    expect(screen.getByTestId('x').getAttribute('data-wrap')).toBe('');
+  });
+
   it('passes the link props, class included, to a render function', () => {
     const RouterLink = (props: ComponentPropsWithRef<'a'>) => <a {...props} data-router="" />;
     render(

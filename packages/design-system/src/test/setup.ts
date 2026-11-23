@@ -114,6 +114,12 @@ function polyfillRendering(): void {
   };
 }
 
+function polyfillComputedStyle(): void {
+  if (typeof window === 'undefined') return;
+  const native = window.getComputedStyle.bind(window);
+  window.getComputedStyle = ((element: Element) => native(element)) as typeof window.getComputedStyle;
+}
+
 function polyfillCssSupports(): void {
   const css = globalThis.CSS ?? {};
   if (typeof css.supports === 'function') return;
@@ -179,5 +185,6 @@ polyfillInert();
 polyfillPointerEvent();
 polyfillPopover();
 polyfillRendering();
+polyfillComputedStyle();
 polyfillCssSupports();
 polyfillMatchMedia();

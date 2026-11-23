@@ -1,4 +1,5 @@
-import type { RefObject } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
+import { releasePageScrollbarOnUnmount, syncPageScrollbar } from '../overlay/pageScrollbar.js';
 import { useModalLayerElement } from '../overlay/useModalLayerElement.js';
 import { useRefElement } from '../overlay/useRefElement.js';
 
@@ -16,5 +17,15 @@ import { useRefElement } from '../overlay/useRefElement.js';
  * render the `<dialog>` in that component.
  */
 export function useModalLayer(ref: RefObject<HTMLDialogElement | null>, open: boolean): void {
+  // Before the caller's effect, which is where showModal() runs. The element
+  // state from useRefElement arrives a commit later, after that effect.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!open || !el) return;
+    syncPageScrollbar(el.ownerDocument);
+    return () => {
+      releasePageScrollbarOnUnmount(el);
+    };
+  }, [open, ref]);
   useModalLayerElement(useRefElement(ref), open);
 }

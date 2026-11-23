@@ -17,12 +17,12 @@ const drifted: [ComponentMeta, string][] = [
   [meta('Button.Root', prop('variant', '"primary" | "secondary"', false, { default: '"primary"' })), 'Button.Root variant: type is ""primary" | "secondary"",'],
   [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost" | "outline"', false, { default: '"primary"' })), 'outline'],
   [meta('Button.Root', prop('tone', 'string')), 'Button.Root tone: TypeScript has no such prop'],
-  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost"', true, { default: '"primary"' })), 'Button.Root variant: required is true'],
+  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost" | "critical"', true, { default: '"primary"' })), 'Button.Root variant: required is true'],
   [
-    meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost"', false, { default: '"ghost"' })),
+    meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost" | "critical"', false, { default: '"ghost"' })),
     'Button.Root variant: default is "ghost", the code defaults to "primary"',
   ],
-  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost"')), 'Button.Root variant: has no default'],
+  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost" | "critical"')), 'Button.Root variant: has no default'],
   [meta('Button.Root', prop('variant', 'ButtonVariantz', false, { default: '"primary"' })), `Button.Root variant: type "ButtonVariantz" doesn't compile`],
   [meta('Button.Root', prop('type', '"button" | "submit" | "reset" | "image" | …', false, { default: '"button"' })), 'Button.Root type: type is'],
   [meta('useSelection', prop('keys', 'readonly string[]', true)), 'useSelection keys: type is "readonly string[]"'],
@@ -50,7 +50,7 @@ const drifted: [ComponentMeta, string][] = [
     'useAnnouncer options.politeness: default is "assertive", the code defaults to "polite"',
   ],
   // Unquoted, so it isn't a literal; the code still has one.
-  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost"', false, { default: 'ghost' })), "Button.Root variant: default ghost isn't a literal, the code defaults to \"primary\""],
+  [meta('Button.Root', prop('variant', '"primary" | "secondary" | "ghost" | "critical"', false, { default: 'ghost' })), "Button.Root variant: default ghost isn't a literal, the code defaults to \"primary\""],
   // An `any` inside a type.
   [meta('Field.ChipInput', prop('chips', 'readonly any[]', true)), 'Field.ChipInput chips: type is "readonly any[]", which allows anything'],
   [meta('Button.Root.Whatever'), 'Button.Root.Whatever: no such export'],

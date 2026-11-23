@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, StrictMode, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Menu, type MenuRootProps } from '../index.js';
+import { Kbd, Menu, type MenuRootProps } from '../index.js';
 
 afterEach(cleanup);
 
@@ -175,6 +175,38 @@ describe('Menu', () => {
     fireEvent.keyUp(document.activeElement!, { key: ' ' });
     expect(onRename).toHaveBeenCalledTimes(1);
     expect(isOpen()).toBe(false);
+  });
+
+  it('names an item from its label, and typeahead ignores the icon and the shortcut', async () => {
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>File</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item aria-keyshortcuts="Control+G">
+            <Menu.ItemIcon>I</Menu.ItemIcon>
+            {'Go'}
+            <Menu.ItemShortcut>
+              <Kbd.Root>to</Kbd.Root>
+            </Menu.ItemShortcut>
+          </Menu.Item>
+          <Menu.Item>Open</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    const named = (name: string) => screen.getByRole('menuitem', { name: (text) => text === name });
+    const go = named('Go');
+    expect(go.getAttribute('aria-keyshortcuts')).toBe('Control+G');
+    expect(go.querySelector('[data-todae-menu-icon]')?.getAttribute('aria-hidden')).toBe('true');
+    expect(go.querySelector('[data-todae-menu-shortcut]')?.getAttribute('aria-hidden')).toBe('true');
+    go.focus();
+    // With no space between them, a visible shortcut makes the text "Goto"
+    // and "goto" stays on this item. A hidden shortcut ends the search at
+    // "got", so the next letter starts a new one and can leave the item.
+    for (const [i, k] of [...'goto'].entries()) {
+      fireEvent.keyDown(document.activeElement!, { key: k, timeStamp: 1000 + i * 50 });
+    }
+    expect(document.activeElement).toBe(named('Open'));
   });
 
   it('a space inside a typeahead search searches instead of choosing', async () => {

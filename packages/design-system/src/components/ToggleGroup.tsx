@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -10,6 +11,8 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { cancelLayout, queueLayout, STAGE } from '../internal/layoutBatch.js';
+import { observeChildren, observeSize } from '../internal/sharedObservers.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { Button, type ButtonRootProps } from './Button.js';
 import buttonStyles from './Button.module.css';
@@ -27,9 +30,11 @@ type ToggleGroupBase = {
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'children' | 'onChange'>;
 
-/** One item pressed at most. Pressing the pressed item again clears it. */
+/** One item pressed at most. Pressing the pressed item again clears it, unless `required`. */
 export type ToggleGroupSingleProps = ToggleGroupBase & {
   selectionMode?: 'single';
+  /** Pressing the pressed item keeps it pressed and does not call onValueChange. */
+  required?: boolean;
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (value: string | null) => void;
@@ -79,6 +84,9 @@ function Root(props: ToggleGroupRootProps) {
     children,
     ...rest
   } = props;
+  // Only the single shape has `required`. Multiple mode keeps letting a press clear an item.
+  // It stays out of the div: the single shape leaves it in `rest`.
+  const required = props.selectionMode === 'multiple' ? false : (props.required ?? false);
   const multiple = selectionMode === 'multiple';
   const [value, setValue] = useControlledState<string | null | readonly string[]>(
     valueProp,
@@ -95,10 +103,10 @@ function Root(props: ToggleGroupRootProps) {
       const next = pressed.has(item) ? list.filter((v) => v !== item) : [...list, item];
       setValue(next);
       (onValueChange as ToggleGroupMultipleProps['onValueChange'])?.(next);
-    } else {
+    } else if (!(required && pressed.has(item))) {
       const next = pressed.has(item) ? null : item;
       setValue(next);
-      (onValueChange as ToggleGroupSingleProps['onValueChange'])?.(next);
+      (onValueChange as ((value: string | null) => void) | undefined)?.(next);
     }
   };
 
@@ -117,6 +125,57 @@ function Root(props: ToggleGroupRootProps) {
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
+  // Wrapped rows are marked before paint so their outer corners stay rounded.
+  // The marks only set radii. The overlap that keeps a line on the group's
+  // edge is CSS, so measuring does not move the items.
+  useLayoutEffect(() => {
+    const node = nodeRef.current;
+    const itemClass = styles.item;
+    if (!node || itemClass === undefined) return;
+    if (orientation !== 'horizontal') {
+      clearRowMarks(node, itemClass);
+      return;
+    }
+    const key = {};
+    let plan: RowMark[] = [];
+    const read = () => {
+      plan = planWrappedRows(node, itemClass);
+    };
+    const write = () => {
+      applyRowMarks(plan);
+    };
+    // The first measure runs in this layout effect, so the corners are set
+    // before paint. A later resize shares the page's read-then-write batch.
+    read();
+    write();
+    const measure = () => queueLayout(key, STAGE.measure, { read, write });
+    const stops = new Map<Element, () => void>();
+    const follow = () => {
+      const live = new Set<Element>(rowItems(node, itemClass));
+      for (const [el, stop] of stops) {
+        if (live.has(el)) continue;
+        stop();
+        stops.delete(el);
+      }
+      for (const item of live) {
+        if (stops.has(item)) continue;
+        stops.set(item, observeSize(item, measure));
+      }
+    };
+    const stopGroup = observeSize(node, measure);
+    follow();
+    const stopChildren = observeChildren(node, () => {
+      follow();
+      measure();
+    });
+    return () => {
+      stopGroup();
+      stopChildren();
+      for (const stop of stops.values()) stop();
+      cancelLayout(key);
+    };
+  }, [orientation]);
+
   return (
     <ToggleGroupContext.Provider
       value={{
@@ -128,7 +187,7 @@ function Root(props: ToggleGroupRootProps) {
       }}
     >
       <div
-        {...rest}
+        {...omitRequired(rest)}
         {...container}
         ref={refs}
         onFocus={(event: FocusEvent<HTMLDivElement>) => {
@@ -172,3 +231,59 @@ function Item({ value, disabled, onFocus, className, ...props }: ToggleGroupItem
 }
 
 export const ToggleGroup = { Root, Item } as const;
+
+function omitRequired<T extends object>(props: T): Omit<T, 'required'> {
+  if (!('required' in props)) return props;
+  const { required: _required, ...dom } = props as T & { required?: unknown };
+  return dom;
+}
+
+const ROW_START = 'data-todae-row-start';
+const ROW_END = 'data-todae-row-end';
+
+function rowItems(container: HTMLElement, itemClass: string) {
+  return [...container.children].filter(
+    (node): node is HTMLElement => node instanceof HTMLElement && node.classList.contains(itemClass),
+  );
+}
+
+function clearRowMarks(container: HTMLElement, itemClass: string) {
+  for (const item of rowItems(container, itemClass)) {
+    item.removeAttribute(ROW_START);
+    item.removeAttribute(ROW_END);
+  }
+}
+
+type RowMark = { item: HTMLElement; start: boolean; end: boolean };
+
+/** The first and last item of each line, once the group has wrapped. One line stays unmarked. */
+function planWrappedRows(container: HTMLElement, itemClass: string): RowMark[] {
+  const items = rowItems(container, itemClass);
+  const rows: HTMLElement[][] = [];
+  for (const item of items) {
+    const top = item.getBoundingClientRect().top;
+    const row = rows.find((group) => {
+      const first = group[0];
+      return first !== undefined && Math.abs(first.getBoundingClientRect().top - top) < 1;
+    });
+    if (row) row.push(item);
+    else rows.push([item]);
+  }
+  const wrapped = rows.length > 1;
+  return items.map((item) => {
+    const row = rows.find((group) => group.includes(item));
+    const index = row ? row.indexOf(item) : 0;
+    return {
+      item,
+      start: wrapped && index === 0,
+      end: wrapped && row !== undefined && index === row.length - 1,
+    };
+  });
+}
+
+function applyRowMarks(plan: readonly RowMark[]) {
+  for (const mark of plan) {
+    mark.item.toggleAttribute(ROW_START, mark.start);
+    mark.item.toggleAttribute(ROW_END, mark.end);
+  }
+}

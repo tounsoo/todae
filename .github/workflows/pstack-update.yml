@@ -8,7 +8,7 @@ name: pstack update
 # the base branch's own scripts run here: nothing from the fetched copy or from the update branch is executed.
 #
 # The pull request only changes .agents/pstack, which .github/scripts/change-class.sh counts as files no tool
-# reads, so CI runs only Changes, Forbidden paths (with .agents/pstack/check.sh) and Checks on it, and
+# reads, so CI runs only Changes, Forbidden paths (with .agents/pstack/check.sh), rule-checker and Checks on it, and
 # docs-deploy.yml builds no preview for it or for its merge into main.
 permissions: {}
 

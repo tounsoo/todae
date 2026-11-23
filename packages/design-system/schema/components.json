@@ -465,7 +465,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
           "required": false,
           "description": "Visual style. Non-primary sets data-button-variant.",
           "default": "\"primary\""
@@ -532,7 +532,21 @@
     {
       "name": "Calendar.Grid",
       "description": "The shown month as a role=\"grid\" table, one week to a row, labelled by Calendar.Header's month while one is rendered, unless it has its own aria-label or aria-labelledby. One Tab stop; arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. While Calendar.Header shows the years, it is a grid of twelve years in the same pattern, by year and row of four, and by page. In range mode, Escape drops the first pick of a range and stops there, so a popover around the calendar stays open. Takes native table attributes except role and children.",
-      "props": []
+      "props": [
+        {
+          "name": "renderDay",
+          "type": "(day: CalendarDayState) => React.ReactNode",
+          "required": false,
+          "description": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show."
+        },
+        {
+          "name": "showOutsideDays",
+          "type": "boolean",
+          "required": false,
+          "description": "Draws the leading and trailing days as buttons, in the weekday color, and marks them outside. Off by default, and passing renderDay does not draw those days. Ignored while the years show.",
+          "default": "false"
+        }
+      ]
     },
     {
       "name": "Calendar.Header",
@@ -980,8 +994,15 @@
     },
     {
       "name": "CodeBlock.Root",
-      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.",
+      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long, and wraps those lines when wrap is set. It takes native pre attributes.",
       "props": [
+        {
+          "name": "wrap",
+          "type": "boolean",
+          "required": false,
+          "description": "Wraps long lines instead of scrolling sideways.",
+          "default": "false"
+        },
         {
           "name": "tabIndex",
           "type": "number",
@@ -3193,6 +3214,30 @@
       ]
     },
     {
+      "name": "Menu.ItemIcon",
+      "description": "Leading icon for a menu item. Order-only and aria-hidden, so the name and typeahead stay the label. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic."
+        }
+      ]
+    },
+    {
+      "name": "Menu.ItemShortcut",
+      "description": "Trailing shortcut for a menu item, such as a Kbd. Order-only and aria-hidden, so the name and typeahead stay the label. Put aria-keyshortcuts on the item. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The shortcut, such as nested Kbd.Root elements."
+        }
+      ]
+    },
+    {
       "name": "Menu.RadioGroup",
       "description": "A Menu.Group that owns one value for its Menu.RadioItem children.",
       "props": [
@@ -3730,7 +3775,7 @@
     },
     {
       "name": "OptionList.Option",
-      "description": "String-only option inside OptionList.Root.",
+      "description": "Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.",
       "props": [
         {
           "name": "value",
@@ -3740,9 +3785,9 @@
         },
         {
           "name": "children",
-          "type": "string",
+          "type": "React.ReactNode",
           "required": true,
-          "description": "Visible label. Text only."
+          "description": "Title. A string, plus one OptionList.OptionDetail for a second line."
         },
         {
           "name": "disabled",
@@ -3750,6 +3795,18 @@
           "required": false,
           "description": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
           "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "OptionList.OptionDetail",
+      "description": "Second line under an option title. The option describes itself with this line.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Detail text, announced as the option description."
         }
       ]
     },
@@ -4261,8 +4318,15 @@
     },
     {
       "name": "Slider.Root",
-      "description": "A native range input tinted from the slider tokens. Takes native input attributes except type.",
+      "description": "A native range input tinted from the slider tokens, or with mode=\"range\" two thumbs on one track. One thumb takes native input attributes except type.",
       "props": [
+        {
+          "name": "mode",
+          "type": "'single' | 'range'",
+          "required": false,
+          "description": "One thumb, or \"range\" for two thumbs on one track. A thumb stops when it meets the other.",
+          "default": "'single'"
+        },
         {
           "name": "min",
           "type": "number | string",
@@ -4286,21 +4350,57 @@
         },
         {
           "name": "value",
-          "type": "number | string",
+          "type": "number | string | readonly [number, number]",
           "required": false,
-          "description": "The value, with onChange. Use defaultValue to leave it to the input."
+          "description": "The value, with onChange. With mode=\"range\", the start and the end, with onValueChange."
         },
         {
           "name": "defaultValue",
-          "type": "number | string",
+          "type": "number | string | readonly [number, number]",
           "required": false,
-          "description": "The starting value, when the input keeps it."
+          "description": "The starting value, when the slider keeps it. With mode=\"range\", the starting pair."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: [number, number]) => void",
+          "required": false,
+          "description": "With mode=\"range\", called with the next start and end after a gesture."
+        },
+        {
+          "name": "startLabel",
+          "type": "string",
+          "required": false,
+          "description": "Required when mode is \"range\". The accessible name of the start thumb."
+        },
+        {
+          "name": "endLabel",
+          "type": "string",
+          "required": false,
+          "description": "Required when mode is \"range\". The accessible name of the end thumb."
+        },
+        {
+          "name": "name",
+          "type": "string | readonly [string, string]",
+          "required": false,
+          "description": "The field name. With mode=\"range\", the start field name and the end field name. Omit it and neither range input submits."
+        },
+        {
+          "name": "startValueText",
+          "type": "string",
+          "required": false,
+          "description": "With mode=\"range\", what a screen reader says for the start thumb instead of the number."
+        },
+        {
+          "name": "endValueText",
+          "type": "string",
+          "required": false,
+          "description": "With mode=\"range\", what a screen reader says for the end thumb instead of the number."
         },
         {
           "name": "aria-valuetext",
           "type": "string",
           "required": false,
-          "description": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\"."
+          "description": "On one thumb, what a screen reader says instead of the number, such as \"40%\" or \"Medium\". On a range, use startValueText and endValueText."
         }
       ]
     },
@@ -5035,7 +5135,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\" | \"critical\"",
           "required": false,
           "description": "Button variant.",
           "default": "\"secondary\""
@@ -5220,8 +5320,15 @@
           "name": "selectionMode",
           "type": "\"single\" | \"multiple\"",
           "required": false,
-          "description": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+          "description": "Single presses one item at most. Pressing the pressed item clears it, unless required. Multiple presses any number.",
           "default": "\"single\""
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "In single mode, pressing the pressed item keeps it pressed and does not call onValueChange.",
+          "default": "false"
         },
         {
           "name": "value",
@@ -5873,7 +5980,7 @@
     },
     {
       "name": "useLaneDrag",
-      "description": "useLaneDrag({ range, onDrop }) returns { getBoardProps, getLaneProps, getQueueProps, getItemProps, getHandleProps, drag }, prop getters that let a person drag items along lanes that share one axis, such as talks on a conference's stages: place an item from a queue, move it along its lane or to another, resize either end, or take it back to the queue. Places snap to grid, check says whether a place conflicts with others, and a drop calls onDrop(change). The board scrolls while the pointer is near its edge, counted from past its scroll-padding, which marks a strip sticky parts such as lane names cover. Escape cancels a drag. It has no keyboard path: pair it with a way to move an item without dragging, such as a dialog.",
+      "description": "useLaneDrag({ range, onDrop }) returns { getBoardProps, getLaneProps, getQueueProps, getItemProps, getHandleProps, drag }, prop getters that let a person drag items along lanes that share one axis, such as talks on a conference's stages: place an item from a queue, move it along its lane or to another, resize either end, or take it back to the queue. With onCreate, a press on empty lane space drags out a new place. Places snap to grid, check says whether a place conflicts with others, and a drop calls onDrop(change). A create calls onCreate instead. The board scrolls while the pointer is near its edge, counted from past its scroll-padding, which marks a strip sticky parts such as lane names cover. Escape cancels a drag. It has no keyboard path: pair it with a way to move an item, and a way to create one, without dragging, such as a dialog.",
       "props": [
         {
           "name": "range",
@@ -5885,7 +5992,7 @@
           "name": "onDrop",
           "type": "(change: LaneDragChange) => void",
           "required": true,
-          "description": "Called on a drop that changes an item's place, with the change."
+          "description": "Called on a drop that changes an item's place, with the change. A create calls onCreate instead."
         },
         {
           "name": "axis",
@@ -5904,7 +6011,7 @@
           "name": "minSpan",
           "type": "number",
           "required": false,
-          "description": "The shortest span a resize leaves. Default 0.",
+          "description": "The shortest span a resize leaves, and the span a click on empty lane space creates, from the grid cell that contains the press. Default 0, so that click does nothing.",
           "default": "0"
         },
         {
@@ -5912,6 +6019,12 @@
           "type": "(id: string, to: LanePlace) => LaneVerdict | null",
           "required": false,
           "description": "Says whether the item `id` may go to `to`, each time the place under the pointer changes and again at the drop."
+        },
+        {
+          "name": "onCreate",
+          "type": "(place: LanePlace) => void",
+          "required": false,
+          "description": "Called once when a press on empty lane space ends on a new place. Omit it and empty space starts nothing. A drag sets the span between the press and the pointer. Dragged forward, the press floors to the grid cell that contains it. Dragged back, that cell runs up to the next grid point. The end under the pointer snaps to the nearest grid point. A press that stays inside the drag threshold creates a slot `minSpan` long from that cell, swallows the lane's click, and does nothing when `minSpan` is 0."
         },
         {
           "name": "disabled",
@@ -5934,7 +6047,7 @@
         },
         {
           "name": "select",
-          "type": "(state: LaneDragChange | null) => T",
+          "type": "(state: LaneDragChange | LaneCreateDrag | null) => T",
           "required": true,
           "description": "Picks what this component shows from the drag under way, or from null when there is none."
         },

@@ -61,10 +61,15 @@
     outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 
-  /* Disabled items still take keyboard focus, and show it, so they are found. */
+  /* Disabled items still take keyboard focus, and show it, so they are found.
+     A key cap paints its own color, so the shortcut takes the same disabled color. */
   .item[data-disabled] {
     color: var(--todae-menu-item-fg-disabled);
     cursor: not-allowed;
+  }
+
+  .item[data-disabled] > .itemShortcut kbd {
+    color: var(--todae-menu-item-fg-disabled);
   }
 
   .indicator {
@@ -125,6 +130,50 @@
   .submenuIndicator > :is(svg, img) {
     inline-size: 100%;
     block-size: 100%;
+  }
+
+  /* The leading icon and the trailing shortcut share one column across the
+     items of a menu, including items in a group. The icon uses the indicator's
+     box, the glyph size the menu already draws. A menu that shows an icon on
+     its own item keeps that column on an item that has neither an icon nor a
+     check or radio indicator, so labels still start together. The child
+     combinator keeps an icon inside a submenu from opening that column here. */
+  .itemIcon,
+  .itemShortcut {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .itemIcon {
+    inline-size: calc(var(--todae-menu-item-indicator-scale) * 1em);
+    block-size: calc(var(--todae-menu-item-indicator-scale) * 1em);
+  }
+
+  .itemIcon > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .itemShortcut {
+    margin-inline-start: auto;
+  }
+
+  /* A shortcut and the chevron share the trailing edge. The shortcut takes
+     the free space, and the chevron stays against it instead of taking a
+     second share and leaving the shortcut in the middle. */
+  .item:has(> .itemShortcut) > .submenuIndicator {
+    margin-inline-start: 0;
+  }
+
+  .menu:has(> .item > .itemIcon, > .group > .item > .itemIcon) > .item:not(:has(> .itemIcon)):not(:has(> .indicator)),
+  .menu:has(> .item > .itemIcon, > .group > .item > .itemIcon)
+    > .group
+    > .item:not(:has(> .itemIcon)):not(:has(> .indicator)) {
+    padding-inline-start: calc(
+      var(--todae-menu-item-padding-x) + (var(--todae-menu-item-indicator-scale) * 1em) + var(--todae-menu-gap)
+    );
   }
 
   .group {

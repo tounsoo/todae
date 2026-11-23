@@ -1,5 +1,24 @@
 # @tounsoo/todae
 
+## 0.12.0
+
+### Minor Changes
+
+- useLaneDrag can drag out a new place on empty lane space when you pass onCreate. ([#487](https://github.com/tounsoo/todae/pull/487))
+  
+  - `useLaneDragState` reads `LaneDragChange | LaneCreateDrag | null`. A create is `{ kind: 'create', id: null, from: null, to, verdict: null }`. `onDrop` still receives only `LaneDragChange`. A switch over every kind, or code that reads `state.id` as a string, has to handle the create, where `id` is null.
+  - A press on `[role="button"]` or a tab stop (`tabindex` of 0 or more) inside an item's handle does not start a move. Those controls keep the press.
+
+### Patch Changes
+
+- Calendar.Grid takes renderDay to draw content inside each day, read as that day's description, and showOutsideDays to draw the leading and trailing days. ([#483](https://github.com/tounsoo/todae/pull/483))
+
+## 0.11.3
+
+### Patch Changes
+
+- Slider.Root can take two thumbs for a range, paints a disabled thumb and fill with GrayText, and draws a single filled track in Chrome 135 and later, Safari, and Firefox. ([#477](https://github.com/tounsoo/todae/pull/477))
+
 ## 0.11.2
 
 ### Patch Changes

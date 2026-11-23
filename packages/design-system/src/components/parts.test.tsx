@@ -448,6 +448,17 @@ const cases: Case[] = [
       </OptionList.Root>
     ),
   ],
+  [
+    'OptionList.OptionDetail',
+    (p) => (
+      <OptionList.Root aria-label="l" value={null} onValueChange={noop}>
+        <OptionList.Option value="a">
+          a
+          <OptionList.OptionDetail {...p}>detail</OptionList.OptionDetail>
+        </OptionList.Option>
+      </OptionList.Root>
+    ),
+  ],
   ['Popover.Root', (p) => <PopoverCase p={p} />],
   ['Menu.Trigger', (p) => (
     <Menu.Root>
@@ -464,7 +475,7 @@ const cases: Case[] = [
       <Menu.ContextTrigger {...p} />
     </Menu.Root>
   )],
-  ...(['Item', 'CheckboxItem', 'Separator'] as const).map(
+  ...(['Item', 'ItemIcon', 'ItemShortcut', 'CheckboxItem', 'Separator'] as const).map(
     (part): Case => [
       `Menu.${part}`,
       (p) => {

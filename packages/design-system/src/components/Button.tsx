@@ -39,6 +39,7 @@ export interface ButtonVariants {
   primary: true;
   secondary: true;
   ghost: true;
+  critical: true;
 }
 
 export type ButtonVariant = keyof ButtonVariants;

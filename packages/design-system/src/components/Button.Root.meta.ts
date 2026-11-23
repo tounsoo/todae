@@ -6,7 +6,7 @@ export const meta = {
   props: [
     {
       name: 'variant',
-      type: '"primary" | "secondary" | "ghost"',
+      type: '"primary" | "secondary" | "ghost" | "critical"',
       required: false,
       default: '"primary"',
       description: 'Visual style. Non-primary sets data-button-variant.',
