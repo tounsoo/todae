@@ -327,6 +327,7 @@ const ko: Dictionary = {
     '/guides/build-on-todae': 'Todae로 디자인 시스템 만들기',
     '/guides/css-layers': 'CSS 레이어',
     '/platform': '네이티브 플랫폼',
+    '/guides/a2ui': 'A2UI와 함께 Todae 사용하기',
     '/mcp': 'MCP 서버',
     '/playground': '플레이그라운드',
   },

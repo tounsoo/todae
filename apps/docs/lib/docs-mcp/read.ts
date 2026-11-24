@@ -13,6 +13,11 @@ export type ReadOptions = {
   includeCode?: boolean;
   /** Continuation offset into a section or an inlined page, in characters. */
   offset?: number;
+  /**
+   * Return the whole page when it is over LARGE_PAGE_TOKENS.
+   * The response budget still applies. Used when one read has to carry a mapping and its example.
+   */
+  whole?: boolean;
   startLine?: number;
   endLine?: number;
 };
@@ -288,7 +293,7 @@ export function readPage(query: string, options: ReadOptions = {}) {
     return withFallback(full, outlineOf(page, 'The page with example code inline does not fit in the response budget, so this is the outline. Fetch a file with get_example.'));
   }
   const stubbed = pageBody(page, page.markdown, undefined, options.offset ?? 0);
-  if (stubbed.nav.tokens > LARGE_PAGE_TOKENS && !options.offset) {
+  if (stubbed.nav.tokens > LARGE_PAGE_TOKENS && !options.offset && !options.whole) {
     return outlineOf(
       page,
       `This page is over ${LARGE_PAGE_TOKENS} tokens, so this is the outline and the intro. Read a section by its anchor, or pass includeCode when you need the example source inline.`,

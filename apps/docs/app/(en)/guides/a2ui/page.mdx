@@ -1,0 +1,347 @@
+# Using Todae with A2UI
+
+A2UI v1.0 is a message format. An agent sends JSON that describes a surface, and the app renders it. Todae does not parse those messages and does not depend on `@a2ui/react` or `@a2ui/web_core`. The app owns the catalog. Todae supplies the widgets.
+
+Install `@a2ui/react` and `@a2ui/web_core` at 0.16 in the app. The names below are the exports in 0.16.1. v0.8 is deprecated. This page is v1.0 only.
+
+## The app owns the catalog
+
+The app advertises catalog ids. `catalogId` is an identifier, not a URL the agent fetches. For the official basic catalog the id is `https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json`. The agent picks one advertised id on `createSurface`.
+
+Keep that id when your widgets still accept the basic components and their props. Take a new id only when the contract changes, such as a new component or a new prop. v1.0 has no theme on the wire. Wrap the tree in `ThemeProvider` and `DensityProvider`, and style in the app.
+
+Send the same id in each of these places.
+
+- An A2A message sets `message.metadata.a2uiRendererCapabilities["1.0"].supportedCatalogIds`.
+- A stateful MCP client sets `initialize` `params.capabilities.a2ui.rendererCapabilities`.
+- A stateless MCP `tools/call` sets `params._meta.a2ui.rendererCapabilities`.
+
+`MessageProcessor.getRendererCapabilities({ versions: ['1.0'] })` returns the version-keyed object those three fields hold.
+
+## Map the basic catalog
+
+`weight` is a number, the flex grow of a direct child of `Row` or `Column`. It is not font weight. [Stack](/stack) has no weight prop, so set `flexGrow` on the element when `weight` is a number. `spaceAround` and `spaceEvenly` have no [Stack](/stack) `justify`. Those two, and `stretch` on the main axis, pack at the start.
+
+<table>
+  <thead>
+    <tr><th>A2UI</th><th>Todae</th><th>Props and gaps</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Text</td><td><code>Text.Root</code></td><td><code>text</code> is the children. <code>variant</code> is <code>body</code> (default) or <code>caption</code>. Caption has no size, so use <code>tone="muted"</code>. Text has no markdown. A markdown string renders as characters.</td></tr>
+    <tr><td>Image</td><td>none</td><td>Use <code>img</code>. <code>url</code> is <code>src</code>. <code>description</code> is <code>alt</code>. <code>fit</code> is <code>object-fit</code>, and <code>scaleDown</code> is <code>scale-down</code>. <code>variant</code> (<code>icon</code>, <code>avatar</code>, <code>smallFeature</code>, <code>mediumFeature</code>, <code>largeFeature</code>, <code>header</code>) is the app's CSS.</td></tr>
+    <tr><td>Icon</td><td>none</td><td>Todae ships no icon set. Map <code>name</code> to your icons. The example uses <code>lucide-react</code>. <code>name</code> may instead be an object with <code>svgPath</code>. <code>GlyphsProvider</code> swaps Todae's own glyphs, not this catalog.</td></tr>
+    <tr><td>Video</td><td>none</td><td>Use <code>video</code>. <code>url</code> is <code>src</code>. <code>posterUrl</code> is <code>poster</code>.</td></tr>
+    <tr><td>AudioPlayer</td><td>none</td><td>Use <code>audio</code> with <code>controls</code>. <code>url</code> is <code>src</code>. Put <code>description</code> in a <code>Text.Root</code> beside it.</td></tr>
+    <tr><td>Row</td><td><code>Stack.Root</code></td><td><code>direction="row"</code>. <code>children</code> is a list of child ids. <code>justify</code> maps <code>start</code>, <code>center</code>, <code>end</code>, and <code>spaceBetween</code> to <code>between</code>. <code>align</code> maps <code>start</code>, <code>center</code>, <code>end</code>, <code>stretch</code>.</td></tr>
+    <tr><td>Column</td><td><code>Stack.Root</code></td><td>Same as Row with <code>direction="column"</code>. The default direction of Stack is already column.</td></tr>
+    <tr><td>List</td><td><code>Stack.Root</code></td><td><code>as="ul"</code>, and wrap each child in <code>li</code>. <code>direction</code> <code>vertical</code> is column and <code>horizontal</code> is row. <code>align</code> maps as on Row. There is no List export.</td></tr>
+    <tr><td>Card</td><td><code>Card.Root</code></td><td>One <code>child</code>. Card takes any number of children, so render that one child inside it.</td></tr>
+    <tr><td>Tabs</td><td><code>Tabs.Root</code></td><td><code>tabs</code> is <code>title</code> plus <code>child</code>. Render <code>Tabs.List</code>, <code>Tabs.Tab</code>, and <code>Tabs.Panel</code>, paired by <code>value</code>. The catalog has no selected tab. The app holds it, starting at the first tab.</td></tr>
+    <tr><td>Modal</td><td><code>Dialog.Root</code></td><td><code>trigger</code> and <code>content</code> are child ids. Dialog has no trigger part. Render the trigger and set <code>open</code> from a click on a wrapper around it. Put <code>content</code> in <code>Dialog.Body</code>, and include <code>Dialog.Close</code>.</td></tr>
+    <tr><td>Divider</td><td><code>Separator.Root</code></td><td><code>axis</code> is <code>horizontal</code> (default) or <code>vertical</code>. Separator is an <code>hr</code> and has no orientation. A vertical rule is the app's border.</td></tr>
+    <tr><td>Button</td><td><code>Button.Root</code></td><td><code>child</code> is the label component, rendered inside the button. <code>action</code> resolves to a function. Call it from <code>onClick</code>. <code>variant</code> <code>primary</code> is <code>primary</code>, <code>borderless</code> is <code>ghost</code>, and <code>default</code> is <code>secondary</code>.</td></tr>
+    <tr><td>TextField</td><td><code>Field</code></td><td><code>label</code> is <code>Label.Root</code>, which requires <code>htmlFor</code>. <code>value</code> is a string, and the binder adds <code>setValue</code>. <code>shortText</code> is <code>Field.TextInput</code>. <code>obscured</code> is <code>type="password"</code>. <code>longText</code> is <code>Field.Textarea</code>. <code>number</code> is still a string on the wire. Parse it for <code>Field.NumberInput</code> and write the string back. <code>checks</code> set <code>isValid</code>. Pass <code>invalid</code> when that is false.</td></tr>
+    <tr><td>CheckBox</td><td><code>Checkbox.Root</code></td><td><code>label</code> is the children. <code>value</code> is boolean. Bind <code>checked</code> and <code>onCheckedChange</code> to <code>setValue</code>.</td></tr>
+    <tr><td>ChoicePicker</td><td><code>RadioGroup</code>, <code>Checkbox</code>, <code>ToggleGroup</code>, or the combobox recipe</td><td><code>options</code> are <code>label</code> and <code>value</code>. <code>value</code> is a string list. <code>mutuallyExclusive</code> (default) is <code>RadioGroup</code>, whose value is one string or null. <code>multipleSelection</code> is a <code>Checkbox.Root</code> per option. <code>displayStyle</code> <code>chips</code> is <code>ToggleGroup</code> (<code>single</code> or <code>multiple</code>). <code>filterable</code> uses the combobox recipe (<code>useCombobox</code> and <code>OptionList</code>). There is no Combobox export.</td></tr>
+    <tr><td>Slider</td><td><code>Slider.Root</code></td><td><code>value</code> is a number, with <code>setValue</code>. <code>min</code> defaults to 0. <code>max</code> is required. <code>steps</code> is a count of divisions, so the native <code>step</code> is <code>(max - min) / steps</code>. Omit <code>steps</code> and Todae's step stays 1. One thumb takes <code>onChange</code>.</td></tr>
+    <tr><td>DateTimeInput</td><td><code>Field.DateInput</code>, <code>Field.TimeInput</code>, or <code>Field.DateTimeInput</code></td><td><code>value</code> is an ISO string. Todae wants <code>Temporal.PlainDate</code>, <code>PlainTime</code>, or <code>PlainDateTime</code>, and ships no polyfill. <code>enableDate</code> alone is the date input. <code>enableTime</code> alone is the time input. Both is the date-time input. Both default to false, and then there is nothing to render. A date-time string with a UTC offset is not a <code>PlainDateTime</code>.</td></tr>
+  </tbody>
+</table>
+
+A child prop is a string id, or an object with `id` and `basePath`. `buildChild(id, basePath)` renders it. `createComponentImplementation` copies `name` and `schema` off the API object. Pass `TextApi`, not the web component `A2uiText`. Spreading `A2uiText` would keep its custom element.
+
+## Register implementations
+
+`basicCatalog.copyWith({ components })` keeps the basic catalog id, the protocol version `1.0`, and the catalog functions such as `formatString` and `required`. The `components` array replaces the whole list. Include every basic component you still accept. `new Catalog(basicCatalog.id, '1.0', implementations, [...basicCatalog.functions.values()])` is the same catalog written out.
+
+```tsx
+'use client';
+
+import { useEffect, useState, type ReactNode } from 'react';
+import { A2uiSurface, createComponentImplementation } from '@a2ui/react';
+import { MessageProcessor } from '@a2ui/web_core';
+import {
+  AudioPlayerApi, ButtonApi, CardApi, CheckBoxApi, ChoicePickerApi, ColumnApi, DateTimeInputApi,
+  DividerApi, IconApi, ImageApi, ListApi, ModalApi, RowApi, SliderApi, TabsApi, TextApi, TextFieldApi,
+  VideoApi, basicCatalog,
+} from '@a2ui/web_core/catalogs/basic/v1';
+import {
+  Button, Card, Checkbox, Dialog, Field, Label, OptionList, Popover, RadioGroup, Separator, Slider,
+  Stack, Tabs, Text, ToggleGroup, useCombobox,
+} from '@tounsoo/todae';
+import { Calendar, Check, CircleUser, Plus, Search, X, type LucideIcon } from 'lucide-react';
+
+type Build = (id: string, basePath?: string) => ReactNode;
+type Child = string | { id: string; basePath?: string };
+
+function renderChild(child: Child | undefined, build: Build) {
+  if (typeof child === 'string') return build(child);
+  if (child) return build(child.id, child.basePath);
+  return null;
+}
+
+const JUSTIFY = { start: 'start', center: 'center', end: 'end', spaceBetween: 'between' } as const;
+
+function justifyOf(value?: string) {
+  return value && value in JUSTIFY ? JUSTIFY[value as keyof typeof JUSTIFY] : undefined;
+}
+
+function grow(weight?: number) {
+  return typeof weight === 'number' ? { flexGrow: weight } : undefined;
+}
+
+function FilteredChoices({ label, variant, options, value, setValue }: {
+  label?: string;
+  variant?: string;
+  options: { label: string; value: string }[];
+  value?: string[];
+  setValue: (next: string[]) => void;
+}) {
+  const multiple = variant === 'multipleSelection';
+  const selected = value ?? [];
+  const cb = useCombobox({
+    options,
+    presentation: 'popover',
+    selectionMode: multiple ? 'multiple' : 'single',
+    value: multiple ? selected : (selected[0] ?? null),
+    onValueChange: (next) => setValue(Array.isArray(next) ? [...next] : next ? [next] : []),
+  });
+  return (
+    <>
+      <Field.Group>
+        <Label.Root {...cb.getLabelProps()}>{label}</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          {multiple ? <Field.ChipInput {...cb.getChipInputProps()} /> : <Field.TextInput {...cb.getInputProps()} />}
+        </Field.Root>
+      </Field.Group>
+      <Popover.Root {...cb.getPopoverProps()}>
+        <OptionList.Root {...cb.getListboxProps()}>
+          {cb.items.map((item) => <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />)}
+        </OptionList.Root>
+      </Popover.Root>
+    </>
+  );
+}
+
+const ICONS: Record<string, LucideIcon> = {
+  accountCircle: CircleUser, add: Plus, calendarToday: Calendar, check: Check, close: X, search: Search,
+};
+
+const implementations = [
+  createComponentImplementation(TextApi, ({ props }) => (
+    <Text.Root tone={props.variant === 'caption' ? 'muted' : 'default'} style={grow(props.weight)}>{props.text}</Text.Root>
+  )),
+  createComponentImplementation(ImageApi, ({ props }) => (
+    <img alt={props.description ?? ''} src={props.url} style={{ ...grow(props.weight), objectFit: props.fit === 'scaleDown' ? 'scale-down' : props.fit }} />
+  )),
+  createComponentImplementation(IconApi, ({ props }) => {
+    const style = grow(props.weight);
+    if (props.name && typeof props.name === 'object' && 'svgPath' in props.name && props.name.svgPath) {
+      return <svg aria-hidden viewBox="0 0 24 24" style={style}><path d={props.name.svgPath} /></svg>;
+    }
+    const Glyph = typeof props.name === 'string' ? ICONS[props.name] : undefined;
+    return Glyph ? <Glyph aria-hidden style={style} /> : null;
+  }),
+  createComponentImplementation(VideoApi, ({ props }) => (
+    <video controls poster={props.posterUrl} src={props.url} style={grow(props.weight)} />
+  )),
+  createComponentImplementation(AudioPlayerApi, ({ props }) => (
+    <span style={grow(props.weight)}>
+      {props.description ? <Text.Root>{props.description}</Text.Root> : null}
+      <audio controls src={props.url} />
+    </span>
+  )),
+  createComponentImplementation(RowApi, ({ props, buildChild }) => (
+    <Stack.Root align={props.align} direction="row" justify={justifyOf(props.justify)} style={grow(props.weight)}>
+      {(props.children ?? []).map((child) => renderChild(child, buildChild))}
+    </Stack.Root>
+  )),
+  createComponentImplementation(ColumnApi, ({ props, buildChild }) => (
+    <Stack.Root align={props.align} direction="column" justify={justifyOf(props.justify)} style={grow(props.weight)}>
+      {(props.children ?? []).map((child) => renderChild(child, buildChild))}
+    </Stack.Root>
+  )),
+  createComponentImplementation(ListApi, ({ props, buildChild }) => (
+    <Stack.Root align={props.align} as="ul" direction={props.direction === 'horizontal' ? 'row' : 'column'} style={grow(props.weight)}>
+      {(props.children ?? []).map((child, index) => <li key={index}>{renderChild(child, buildChild)}</li>)}
+    </Stack.Root>
+  )),
+  createComponentImplementation(CardApi, ({ props, buildChild }) => (
+    <Card.Root style={grow(props.weight)}>{renderChild(props.child, buildChild)}</Card.Root>
+  )),
+  createComponentImplementation(TabsApi, ({ props, buildChild }) => (
+    <Tabs.Root defaultValue="0">
+      <Tabs.List aria-label="Tabs">
+        {props.tabs.map((tab, index) => <Tabs.Tab key={index} value={String(index)}>{tab.title}</Tabs.Tab>)}
+      </Tabs.List>
+      {props.tabs.map((tab, index) => <Tabs.Panel key={index} value={String(index)}>{renderChild(tab.child, buildChild)}</Tabs.Panel>)}
+    </Tabs.Root>
+  )),
+  createComponentImplementation(ModalApi, ({ props, buildChild }) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <span onClick={() => setOpen(true)}>{renderChild(props.trigger, buildChild)}</span>
+        <Dialog.Root open={open} onOpenChange={setOpen}>
+          <Dialog.Close />
+          <Dialog.Body>{renderChild(props.content, buildChild)}</Dialog.Body>
+        </Dialog.Root>
+      </>
+    );
+  }),
+  createComponentImplementation(DividerApi, ({ props }) => <Separator.Root style={grow(props.weight)} />),
+  createComponentImplementation(ButtonApi, ({ props, buildChild }) => (
+    <Button.Root variant={props.variant === 'primary' ? 'primary' : props.variant === 'borderless' ? 'ghost' : 'secondary'} onClick={() => props.action()}>
+      {renderChild(props.child, buildChild)}
+    </Button.Root>
+  )),
+  createComponentImplementation(TextFieldApi, ({ props, context }) => {
+    const id = context.componentModel.id;
+    const invalid = props.isValid === false;
+    if (props.variant === 'number') {
+      const parsed = props.value ? Number(props.value) : null;
+      return (
+        <Field.Root id={id} invalid={invalid}>
+          <Field.NumberInput aria-label={props.label} value={parsed !== null && Number.isNaN(parsed) ? null : parsed} onValueChange={(next) => props.setValue(next === null ? '' : String(next))} />
+        </Field.Root>
+      );
+    }
+    if (props.variant === 'longText') {
+      return (
+        <Field.Root id={id} invalid={invalid}>
+          <Field.Textarea aria-label={props.label} placeholder={props.placeholder} value={props.value ?? ''} onValueChange={props.setValue} />
+        </Field.Root>
+      );
+    }
+    return (
+      <Field.Root id={id} invalid={invalid}>
+        <Field.TextInput aria-label={props.label} placeholder={props.placeholder} type={props.variant === 'obscured' ? 'password' : 'text'} value={props.value ?? ''} onValueChange={props.setValue} />
+      </Field.Root>
+    );
+  }),
+  createComponentImplementation(CheckBoxApi, ({ props }) => (
+    <Checkbox.Root checked={props.value} invalid={props.isValid === false} onCheckedChange={props.setValue}>{props.label}</Checkbox.Root>
+  )),
+  createComponentImplementation(ChoicePickerApi, ({ props }) => {
+    const selected = props.value ?? [];
+    if (props.filterable) {
+      return <FilteredChoices label={props.label} options={props.options} setValue={props.setValue} value={selected} variant={props.variant} />;
+    }
+    if (props.displayStyle === 'chips') {
+      return (
+        <ToggleGroup.Root aria-label={props.label} selectionMode={props.variant === 'multipleSelection' ? 'multiple' : 'single'} value={props.variant === 'multipleSelection' ? selected : (selected[0] ?? null)} onValueChange={(next) => props.setValue(Array.isArray(next) ? [...next] : next ? [next] : [])}>
+          {props.options.map((option) => <ToggleGroup.Item key={option.value} value={option.value}>{option.label}</ToggleGroup.Item>)}
+        </ToggleGroup.Root>
+      );
+    }
+    if (props.variant === 'multipleSelection') {
+      return (
+        <>
+          {props.options.map((option) => (
+            <Checkbox.Root key={option.value} checked={selected.includes(option.value)} onCheckedChange={(checked) => props.setValue(checked ? [...selected, option.value] : selected.filter((item) => item !== option.value))}>
+              {option.label}
+            </Checkbox.Root>
+          ))}
+        </>
+      );
+    }
+    return (
+      <RadioGroup.Root aria-label={props.label ?? 'Choices'} invalid={props.isValid === false} value={selected[0] ?? null} onValueChange={(next) => props.setValue(next ? [next] : [])}>
+        {props.options.map((option) => <RadioGroup.Item key={option.value} value={option.value}>{option.label}</RadioGroup.Item>)}
+      </RadioGroup.Root>
+    );
+  }),
+  createComponentImplementation(SliderApi, ({ props }) => (
+    <Slider.Root aria-label={props.label} max={props.max} min={props.min ?? 0} step={props.steps ? (props.max - (props.min ?? 0)) / props.steps : undefined} value={props.value} onChange={(event) => props.setValue(Number(event.currentTarget.value))} />
+  )),
+  createComponentImplementation(DateTimeInputApi, ({ props }) => {
+    const write = (next: { toString(): string } | null) => props.setValue(next ? next.toString() : '');
+    if (props.enableDate && props.enableTime) {
+      return <Field.DateTimeInput aria-label={props.label} value={props.value ? Temporal.PlainDateTime.from(props.value) : null} onValueChange={write} />;
+    }
+    if (props.enableTime) {
+      return <Field.TimeInput aria-label={props.label} value={props.value ? Temporal.PlainTime.from(props.value) : null} onValueChange={write} />;
+    }
+    if (props.enableDate) {
+      return <Field.DateInput aria-label={props.label} value={props.value ? Temporal.PlainDate.from(props.value) : null} onValueChange={write} />;
+    }
+    return null;
+  }),
+];
+
+const catalog = basicCatalog.copyWith({ components: implementations });
+
+export function createTodaeProcessor() {
+  return new MessageProcessor([catalog], (action) => {
+    void action.name;
+    void action.surfaceId;
+    void action.context;
+  });
+}
+
+export function TodaeSurfaces({ processor }: { processor: MessageProcessor }) {
+  const [surfaces, setSurfaces] = useState(() => [...processor.model.surfacesMap.values()]);
+  useEffect(() => {
+    const sync = () => setSurfaces([...processor.model.surfacesMap.values()]);
+    const created = processor.onSurfaceCreated(sync);
+    const deleted = processor.onSurfaceDeleted(sync);
+    return () => {
+      created.unsubscribe();
+      deleted.unsubscribe();
+    };
+  }, [processor]);
+  return surfaces.map((surface) => <A2uiSurface key={surface.id} surface={surface} />);
+}
+
+const processor = createTodaeProcessor();
+const capabilities = processor.getRendererCapabilities({ versions: ['1.0'] });
+const a2aMetadata = { a2uiRendererCapabilities: capabilities };
+const mcpInitializeCapabilities = { a2ui: { rendererCapabilities: capabilities } };
+const mcpCallMeta = { a2ui: { rendererCapabilities: capabilities } };
+
+processor.processMessages([
+  { version: '1.0', createSurface: { surfaceId: 'main', catalogId: catalog.id } },
+  {
+    version: '1.0',
+    updateComponents: {
+      surfaceId: 'main',
+      components: [
+        { id: 'root', component: 'Column', children: ['title', 'save'] },
+        { id: 'title', component: 'Text', text: { '@path': '/title' } },
+        { id: 'save-label', component: 'Text', text: 'Save' },
+        { id: 'save', component: 'Button', child: 'save-label', variant: 'primary', action: { event: { name: 'save' } } },
+      ],
+    },
+  },
+  { version: '1.0', updateDataModel: { surfaceId: 'main', path: '/', value: { title: 'Welcome' } } },
+]);
+```
+
+`a2aMetadata` is `message.metadata` on an A2A message. `mcpInitializeCapabilities` is `params.capabilities` on MCP `initialize`. `mcpCallMeta` is `params._meta` on a stateless `tools/call`. `catalog.id` is the basic catalog id.
+
+`TextField` sets `aria-label` from `label`. A visible label is `Label.Root` with `htmlFor` set to the field id. `number` parses the wire string for `Field.NumberInput` and writes a string back. A filterable `ChoicePicker` is `useCombobox` with `Field`, `OptionList`, and `Popover`, the [combobox](/recipes/combobox) recipe. There is no Combobox export. Unmapped icon names render nothing. A vertical `Divider` renders the same `Separator.Root`. `spaceAround` and `spaceEvenly` pack at the start.
+
+## A catalog of your own
+
+Add a component with `createComponentImplementation` and a Zod schema. `CommonSchemas` from `@a2ui/web_core/v1_0` supplies `DynamicString` and `Action`. Give the catalog a new id with `derive`. A string in `components` keeps that entry. An object adds or replaces one. `toJson()` is the catalog document. Publish it at the new id, or pass it as an inline catalog, and advertise that id. `createSurface.catalogId` must be the new id.
+
+```tsx
+import { z } from 'zod';
+import { CommonSchemas } from '@a2ui/web_core/v1_0';
+
+const ProfileApi = {
+  name: 'Profile',
+  schema: z.object({ username: CommonSchemas.DynamicString, onEdit: CommonSchemas.Action }),
+};
+
+const profile = createComponentImplementation(ProfileApi, ({ props }) => (
+  <Button.Root variant="secondary" onClick={() => props.onEdit()}>{props.username}</Button.Root>
+));
+
+const profileCatalog = catalog.derive({
+  catalogId: 'https://example.com/a2ui/profile.json',
+  components: [...catalog.components.keys(), profile],
+});
+```
+
+Change a prop, and change the id in the same edit. The Zod schema, `toJson()`, and `supportedCatalogIds` have to name that id together.

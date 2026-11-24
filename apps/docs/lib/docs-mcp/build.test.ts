@@ -330,6 +330,28 @@ describe('get_guide', () => {
       }
     }
   });
+
+  it('returns the A2UI mapping and the example in one call', () => {
+    const guide = getGuide('a2ui');
+    expect(guide.kind).toBe('page');
+    if (guide.kind !== 'page') throw new Error('expected the whole page');
+    const names = ['Text', 'Image', 'Icon', 'Video', 'AudioPlayer', 'Row', 'Column', 'List', 'Card', 'Tabs', 'Modal', 'Divider', 'Button', 'TextField', 'CheckBox', 'ChoicePicker', 'Slider', 'DateTimeInput'];
+    for (const name of names) expect(guide.markdown).toContain(`<td>${name}</td>`);
+    expect(guide.markdown).toContain('createComponentImplementation');
+    expect(guide.markdown).toContain('basicCatalog.copyWith');
+    expect(guide.markdown).toContain('new MessageProcessor');
+    expect(guide.markdown).toContain('getRendererCapabilities');
+    expect(guide.markdown).toContain('supportedCatalogIds');
+    expect(guide.markdown).toContain('a2uiRendererCapabilities');
+    expect(guide.markdown).toContain('params.capabilities.a2ui');
+    expect(guide.markdown).toContain('params._meta.a2ui');
+    const text = deliver(guide);
+    expect(text.length).toBeLessThanOrEqual(MAX_RESPONSE_CHARS);
+    const body = JSON.parse(text) as { kind: string; markdown?: string };
+    expect(body.kind).toBe('page');
+    expect(body.markdown).toContain('createComponentImplementation');
+    expect(body.markdown).toContain('<td>ChoicePicker</td>');
+  });
 });
 
 describe('build response budget', () => {
