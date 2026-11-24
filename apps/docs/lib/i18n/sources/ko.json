@@ -448,6 +448,14 @@
     "## Props": "9ac3d5243510",
     "(section order)": "6a27765bb93c"
   },
+  "guides/a2ui": {
+    "# Using Todae with A2UI": "d751eb6cdc8a",
+    "## The app owns the catalog": "d70036b3a64e",
+    "## Map the basic catalog": "2ba8ae82c278",
+    "## Register implementations": "c8f5edff0d0e",
+    "## A catalog of your own": "df002d94cffd",
+    "(section order)": "00c16b06f354"
+  },
   "guides/build-on-todae": {
     "(top)": "01a8c1793a65",
     "# Build your design system on Todae": "d56cd7be2b75",
@@ -520,7 +528,7 @@
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
     "## Read it in steps": "8289c8f5d2a2",
-    "## Tools": "0b8c2d538cd0",
+    "## Tools": "bdd09b1255a4",
     "## Build a design system with an agent": "ac048cff758e",
     "## Upgrade with an agent": "5312b18c2fb2",
     "## Limits": "88d73e6bc513",

@@ -1,0 +1,347 @@
+# A2UI와 함께 Todae 사용하기
+
+A2UI v1.0은 메시지 형식입니다. 에이전트가 표면을 묘사한 JSON을 보내면 앱이 그립니다. Todae는 그 메시지를 해석하지 않으며 `@a2ui/react`나 `@a2ui/web_core`에 의존하지 않습니다. 카탈로그는 앱이 가집니다. 위젯은 Todae가 줍니다.
+
+앱에 `@a2ui/react`와 `@a2ui/web_core` 0.16을 설치합니다. 아래 이름은 0.16.1의 export입니다. v0.8은 폐기되었습니다. 이 페이지는 v1.0만 다룹니다.
+
+## 카탈로그는 앱이 가집니다
+
+앱이 카탈로그 id를 알립니다. `catalogId`는 식별자이며, 에이전트가 가져오는 URL이 아닙니다. 공식 기본 카탈로그의 id는 `https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json`입니다. 에이전트는 `createSurface`에서 알린 id 하나를 고릅니다.
+
+위젯이 기본 컴포넌트와 그 props를 그대로 받으면 그 id를 유지합니다. 컴포넌트를 더하거나 prop을 바꾸는 것처럼 계약이 바뀔 때만 새 id를 씁니다. v1.0에는 와이어에 테마가 없습니다. 트리를 `ThemeProvider`와 `DensityProvider`로 감싸고, 스타일은 앱에서 둡니다.
+
+같은 id를 다음 자리에 보냅니다.
+
+- A2A 메시지는 `message.metadata.a2uiRendererCapabilities["1.0"].supportedCatalogIds`를 둡니다.
+- 상태를 가진 MCP 클라이언트는 `initialize`의 `params.capabilities.a2ui.rendererCapabilities`를 둡니다.
+- 상태 없는 MCP `tools/call`은 `params._meta.a2ui.rendererCapabilities`를 둡니다.
+
+`MessageProcessor.getRendererCapabilities({ versions: ['1.0'] })`가 그 세 칸에 들어가는, 버전을 키로 한 객체를 돌려줍니다.
+
+## 기본 카탈로그를 대응합니다
+
+`weight`는 숫자이며, `Row`나 `Column`의 직접 자식이 가지는 flex grow입니다. 글자 두께가 아닙니다. [Stack](/stack)에는 weight prop이 없으므로, `weight`가 숫자일 때 요소에 `flexGrow`를 둡니다. `spaceAround`와 `spaceEvenly`는 [Stack](/stack)의 `justify`에 없습니다. 그 둘과 주축의 `stretch`는 시작점에 모입니다.
+
+<table>
+  <thead>
+    <tr><th>A2UI</th><th>Todae</th><th>Props와 빈칸</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Text</td><td><code>Text.Root</code></td><td><code>text</code>가 children입니다. <code>variant</code>는 <code>body</code>(기본값) 또는 <code>caption</code>입니다. caption 크기는 없으므로 <code>tone="muted"</code>를 씁니다. Text는 markdown을 그리지 않습니다. markdown 문자열은 글자로 남습니다.</td></tr>
+    <tr><td>Image</td><td>없음</td><td><code>img</code>를 씁니다. <code>url</code>은 <code>src</code>입니다. <code>description</code>은 <code>alt</code>입니다. <code>fit</code>은 <code>object-fit</code>이고, <code>scaleDown</code>은 <code>scale-down</code>입니다. <code>variant</code>(<code>icon</code>, <code>avatar</code>, <code>smallFeature</code>, <code>mediumFeature</code>, <code>largeFeature</code>, <code>header</code>)는 앱의 CSS입니다.</td></tr>
+    <tr><td>Icon</td><td>없음</td><td>Todae는 아이콘 세트를 두지 않습니다. <code>name</code>을 앱의 아이콘에 대응합니다. 예제는 <code>lucide-react</code>를 씁니다. <code>name</code>은 <code>svgPath</code>를 가진 객체일 수도 있습니다. <code>GlyphsProvider</code>는 Todae 자신의 글리프를 바꿉니다. 이 카탈로그가 아닙니다.</td></tr>
+    <tr><td>Video</td><td>없음</td><td><code>video</code>를 씁니다. <code>url</code>은 <code>src</code>입니다. <code>posterUrl</code>은 <code>poster</code>입니다.</td></tr>
+    <tr><td>AudioPlayer</td><td>없음</td><td><code>controls</code>가 있는 <code>audio</code>를 씁니다. <code>url</code>은 <code>src</code>입니다. <code>description</code>은 옆의 <code>Text.Root</code>에 둡니다.</td></tr>
+    <tr><td>Row</td><td><code>Stack.Root</code></td><td><code>direction="row"</code>입니다. <code>children</code>은 자식 id 목록입니다. <code>justify</code>는 <code>start</code>, <code>center</code>, <code>end</code>, 그리고 <code>spaceBetween</code>을 <code>between</code>으로 대응합니다. <code>align</code>은 <code>start</code>, <code>center</code>, <code>end</code>, <code>stretch</code>를 대응합니다.</td></tr>
+    <tr><td>Column</td><td><code>Stack.Root</code></td><td>Row와 같고 <code>direction="column"</code>입니다. Stack의 기본 방향은 이미 column입니다.</td></tr>
+    <tr><td>List</td><td><code>Stack.Root</code></td><td><code>as="ul"</code>이고, 자식마다 <code>li</code>로 감쌉니다. <code>direction</code>의 <code>vertical</code>은 column이고 <code>horizontal</code>은 row입니다. <code>align</code>은 Row와 같이 대응합니다. List export는 없습니다.</td></tr>
+    <tr><td>Card</td><td><code>Card.Root</code></td><td><code>child</code>는 하나입니다. Card는 자식을 여러 개 받으므로, 그 자식 하나를 안에 그립니다.</td></tr>
+    <tr><td>Tabs</td><td><code>Tabs.Root</code></td><td><code>tabs</code>는 <code>title</code>과 <code>child</code>입니다. <code>Tabs.List</code>, <code>Tabs.Tab</code>, <code>Tabs.Panel</code>을 <code>value</code>로 짝짓습니다. 카탈로그에는 선택된 탭이 없습니다. 앱이 가지며, 첫 탭에서 시작합니다.</td></tr>
+    <tr><td>Modal</td><td><code>Dialog.Root</code></td><td><code>trigger</code>와 <code>content</code>는 자식 id입니다. Dialog에는 trigger 파트가 없습니다. trigger를 그리고, 그 주위를 감싼 요소의 클릭으로 <code>open</code>을 둡니다. <code>content</code>는 <code>Dialog.Body</code>에 두고, <code>Dialog.Close</code>를 넣습니다.</td></tr>
+    <tr><td>Divider</td><td><code>Separator.Root</code></td><td><code>axis</code>는 <code>horizontal</code>(기본값) 또는 <code>vertical</code>입니다. Separator는 <code>hr</code>이고 방향이 없습니다. 세로 선은 앱의 테두리입니다.</td></tr>
+    <tr><td>Button</td><td><code>Button.Root</code></td><td><code>child</code>는 버튼 안에 그리는 라벨 컴포넌트입니다. <code>action</code>은 함수로 풀립니다. <code>onClick</code>에서 호출합니다. <code>variant</code>의 <code>primary</code>는 <code>primary</code>, <code>borderless</code>는 <code>ghost</code>, <code>default</code>는 <code>secondary</code>입니다.</td></tr>
+    <tr><td>TextField</td><td><code>Field</code></td><td><code>label</code>은 <code>htmlFor</code>가 필요한 <code>Label.Root</code>입니다. <code>value</code>는 문자열이고, 바인더가 <code>setValue</code>를 더합니다. <code>shortText</code>는 <code>Field.TextInput</code>입니다. <code>obscured</code>는 <code>type="password"</code>입니다. <code>longText</code>는 <code>Field.Textarea</code>입니다. <code>number</code>는 와이어에서 여전히 문자열입니다. <code>Field.NumberInput</code>을 위해 숫자로 읽고, 문자열로 다시 씁니다. <code>checks</code>가 <code>isValid</code>를 둡니다. false이면 <code>invalid</code>를 넘깁니다.</td></tr>
+    <tr><td>CheckBox</td><td><code>Checkbox.Root</code></td><td><code>label</code>이 children입니다. <code>value</code>는 boolean입니다. <code>checked</code>와 <code>onCheckedChange</code>를 <code>setValue</code>에 묶습니다.</td></tr>
+    <tr><td>ChoicePicker</td><td><code>RadioGroup</code>, <code>Checkbox</code>, <code>ToggleGroup</code>, 또는 combobox 레시피</td><td><code>options</code>는 <code>label</code>과 <code>value</code>입니다. <code>value</code>는 문자열 목록입니다. <code>mutuallyExclusive</code>(기본값)는 <code>RadioGroup</code>이고, 값은 문자열 하나 또는 null입니다. <code>multipleSelection</code>은 옵션마다 <code>Checkbox.Root</code>입니다. <code>displayStyle</code>의 <code>chips</code>는 <code>ToggleGroup</code>(<code>single</code> 또는 <code>multiple</code>)입니다. <code>filterable</code>은 combobox 레시피(<code>useCombobox</code>와 <code>OptionList</code>)를 씁니다. Combobox export는 없습니다.</td></tr>
+    <tr><td>Slider</td><td><code>Slider.Root</code></td><td><code>value</code>는 숫자이고 <code>setValue</code>가 있습니다. <code>min</code>의 기본값은 0입니다. <code>max</code>는 필수입니다. <code>steps</code>는 칸의 개수이므로, 네이티브 <code>step</code>은 <code>(max - min) / steps</code>입니다. <code>steps</code>를 생략하면 Todae의 step은 1입니다. 엄지 하나는 <code>onChange</code>를 씁니다.</td></tr>
+    <tr><td>DateTimeInput</td><td><code>Field.DateInput</code>, <code>Field.TimeInput</code>, 또는 <code>Field.DateTimeInput</code></td><td><code>value</code>는 ISO 문자열입니다. Todae는 <code>Temporal.PlainDate</code>, <code>PlainTime</code>, <code>PlainDateTime</code>을 원하며 polyfill을 두지 않습니다. <code>enableDate</code>만 켜면 날짜 입력입니다. <code>enableTime</code>만 켜면 시간 입력입니다. 둘 다 켜면 날짜와 시간 입력입니다. 둘 다 기본값은 false이고, 그때는 그릴 것이 없습니다. UTC 오프셋이 있는 날짜-시간 문자열은 <code>PlainDateTime</code>이 아닙니다.</td></tr>
+  </tbody>
+</table>
+
+자식 prop은 문자열 id이거나, `id`와 `basePath`를 가진 객체입니다. `buildChild(id, basePath)`가 그립니다. `createComponentImplementation`은 API 객체에서 `name`과 `schema`를 복사합니다. 웹 컴포넌트 `A2uiText`가 아니라 `TextApi`를 넘깁니다. `A2uiText`를 펼치면 그 커스텀 요소가 남습니다.
+
+## 구현을 등록합니다
+
+`basicCatalog.copyWith({ components })`는 기본 카탈로그 id, 프로토콜 버전 `1.0`, `formatString`과 `required` 같은 카탈로그 함수를 유지합니다. `components` 배열은 목록 전체를 바꿉니다. 계속 받을 기본 컴포넌트를 모두 넣습니다. `new Catalog(basicCatalog.id, '1.0', implementations, [...basicCatalog.functions.values()])`는 같은 카탈로그를 풀어 쓴 것입니다.
+
+```tsx
+'use client';
+
+import { useEffect, useState, type ReactNode } from 'react';
+import { A2uiSurface, createComponentImplementation } from '@a2ui/react';
+import { MessageProcessor } from '@a2ui/web_core';
+import {
+  AudioPlayerApi, ButtonApi, CardApi, CheckBoxApi, ChoicePickerApi, ColumnApi, DateTimeInputApi,
+  DividerApi, IconApi, ImageApi, ListApi, ModalApi, RowApi, SliderApi, TabsApi, TextApi, TextFieldApi,
+  VideoApi, basicCatalog,
+} from '@a2ui/web_core/catalogs/basic/v1';
+import {
+  Button, Card, Checkbox, Dialog, Field, Label, OptionList, Popover, RadioGroup, Separator, Slider,
+  Stack, Tabs, Text, ToggleGroup, useCombobox,
+} from '@tounsoo/todae';
+import { Calendar, Check, CircleUser, Plus, Search, X, type LucideIcon } from 'lucide-react';
+
+type Build = (id: string, basePath?: string) => ReactNode;
+type Child = string | { id: string; basePath?: string };
+
+function renderChild(child: Child | undefined, build: Build) {
+  if (typeof child === 'string') return build(child);
+  if (child) return build(child.id, child.basePath);
+  return null;
+}
+
+const JUSTIFY = { start: 'start', center: 'center', end: 'end', spaceBetween: 'between' } as const;
+
+function justifyOf(value?: string) {
+  return value && value in JUSTIFY ? JUSTIFY[value as keyof typeof JUSTIFY] : undefined;
+}
+
+function grow(weight?: number) {
+  return typeof weight === 'number' ? { flexGrow: weight } : undefined;
+}
+
+function FilteredChoices({ label, variant, options, value, setValue }: {
+  label?: string;
+  variant?: string;
+  options: { label: string; value: string }[];
+  value?: string[];
+  setValue: (next: string[]) => void;
+}) {
+  const multiple = variant === 'multipleSelection';
+  const selected = value ?? [];
+  const cb = useCombobox({
+    options,
+    presentation: 'popover',
+    selectionMode: multiple ? 'multiple' : 'single',
+    value: multiple ? selected : (selected[0] ?? null),
+    onValueChange: (next) => setValue(Array.isArray(next) ? [...next] : next ? [next] : []),
+  });
+  return (
+    <>
+      <Field.Group>
+        <Label.Root {...cb.getLabelProps()}>{label}</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          {multiple ? <Field.ChipInput {...cb.getChipInputProps()} /> : <Field.TextInput {...cb.getInputProps()} />}
+        </Field.Root>
+      </Field.Group>
+      <Popover.Root {...cb.getPopoverProps()}>
+        <OptionList.Root {...cb.getListboxProps()}>
+          {cb.items.map((item) => <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />)}
+        </OptionList.Root>
+      </Popover.Root>
+    </>
+  );
+}
+
+const ICONS: Record<string, LucideIcon> = {
+  accountCircle: CircleUser, add: Plus, calendarToday: Calendar, check: Check, close: X, search: Search,
+};
+
+const implementations = [
+  createComponentImplementation(TextApi, ({ props }) => (
+    <Text.Root tone={props.variant === 'caption' ? 'muted' : 'default'} style={grow(props.weight)}>{props.text}</Text.Root>
+  )),
+  createComponentImplementation(ImageApi, ({ props }) => (
+    <img alt={props.description ?? ''} src={props.url} style={{ ...grow(props.weight), objectFit: props.fit === 'scaleDown' ? 'scale-down' : props.fit }} />
+  )),
+  createComponentImplementation(IconApi, ({ props }) => {
+    const style = grow(props.weight);
+    if (props.name && typeof props.name === 'object' && 'svgPath' in props.name && props.name.svgPath) {
+      return <svg aria-hidden viewBox="0 0 24 24" style={style}><path d={props.name.svgPath} /></svg>;
+    }
+    const Glyph = typeof props.name === 'string' ? ICONS[props.name] : undefined;
+    return Glyph ? <Glyph aria-hidden style={style} /> : null;
+  }),
+  createComponentImplementation(VideoApi, ({ props }) => (
+    <video controls poster={props.posterUrl} src={props.url} style={grow(props.weight)} />
+  )),
+  createComponentImplementation(AudioPlayerApi, ({ props }) => (
+    <span style={grow(props.weight)}>
+      {props.description ? <Text.Root>{props.description}</Text.Root> : null}
+      <audio controls src={props.url} />
+    </span>
+  )),
+  createComponentImplementation(RowApi, ({ props, buildChild }) => (
+    <Stack.Root align={props.align} direction="row" justify={justifyOf(props.justify)} style={grow(props.weight)}>
+      {(props.children ?? []).map((child) => renderChild(child, buildChild))}
+    </Stack.Root>
+  )),
+  createComponentImplementation(ColumnApi, ({ props, buildChild }) => (
+    <Stack.Root align={props.align} direction="column" justify={justifyOf(props.justify)} style={grow(props.weight)}>
+      {(props.children ?? []).map((child) => renderChild(child, buildChild))}
+    </Stack.Root>
+  )),
+  createComponentImplementation(ListApi, ({ props, buildChild }) => (
+    <Stack.Root align={props.align} as="ul" direction={props.direction === 'horizontal' ? 'row' : 'column'} style={grow(props.weight)}>
+      {(props.children ?? []).map((child, index) => <li key={index}>{renderChild(child, buildChild)}</li>)}
+    </Stack.Root>
+  )),
+  createComponentImplementation(CardApi, ({ props, buildChild }) => (
+    <Card.Root style={grow(props.weight)}>{renderChild(props.child, buildChild)}</Card.Root>
+  )),
+  createComponentImplementation(TabsApi, ({ props, buildChild }) => (
+    <Tabs.Root defaultValue="0">
+      <Tabs.List aria-label="Tabs">
+        {props.tabs.map((tab, index) => <Tabs.Tab key={index} value={String(index)}>{tab.title}</Tabs.Tab>)}
+      </Tabs.List>
+      {props.tabs.map((tab, index) => <Tabs.Panel key={index} value={String(index)}>{renderChild(tab.child, buildChild)}</Tabs.Panel>)}
+    </Tabs.Root>
+  )),
+  createComponentImplementation(ModalApi, ({ props, buildChild }) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <span onClick={() => setOpen(true)}>{renderChild(props.trigger, buildChild)}</span>
+        <Dialog.Root open={open} onOpenChange={setOpen}>
+          <Dialog.Close />
+          <Dialog.Body>{renderChild(props.content, buildChild)}</Dialog.Body>
+        </Dialog.Root>
+      </>
+    );
+  }),
+  createComponentImplementation(DividerApi, ({ props }) => <Separator.Root style={grow(props.weight)} />),
+  createComponentImplementation(ButtonApi, ({ props, buildChild }) => (
+    <Button.Root variant={props.variant === 'primary' ? 'primary' : props.variant === 'borderless' ? 'ghost' : 'secondary'} onClick={() => props.action()}>
+      {renderChild(props.child, buildChild)}
+    </Button.Root>
+  )),
+  createComponentImplementation(TextFieldApi, ({ props, context }) => {
+    const id = context.componentModel.id;
+    const invalid = props.isValid === false;
+    if (props.variant === 'number') {
+      const parsed = props.value ? Number(props.value) : null;
+      return (
+        <Field.Root id={id} invalid={invalid}>
+          <Field.NumberInput aria-label={props.label} value={parsed !== null && Number.isNaN(parsed) ? null : parsed} onValueChange={(next) => props.setValue(next === null ? '' : String(next))} />
+        </Field.Root>
+      );
+    }
+    if (props.variant === 'longText') {
+      return (
+        <Field.Root id={id} invalid={invalid}>
+          <Field.Textarea aria-label={props.label} placeholder={props.placeholder} value={props.value ?? ''} onValueChange={props.setValue} />
+        </Field.Root>
+      );
+    }
+    return (
+      <Field.Root id={id} invalid={invalid}>
+        <Field.TextInput aria-label={props.label} placeholder={props.placeholder} type={props.variant === 'obscured' ? 'password' : 'text'} value={props.value ?? ''} onValueChange={props.setValue} />
+      </Field.Root>
+    );
+  }),
+  createComponentImplementation(CheckBoxApi, ({ props }) => (
+    <Checkbox.Root checked={props.value} invalid={props.isValid === false} onCheckedChange={props.setValue}>{props.label}</Checkbox.Root>
+  )),
+  createComponentImplementation(ChoicePickerApi, ({ props }) => {
+    const selected = props.value ?? [];
+    if (props.filterable) {
+      return <FilteredChoices label={props.label} options={props.options} setValue={props.setValue} value={selected} variant={props.variant} />;
+    }
+    if (props.displayStyle === 'chips') {
+      return (
+        <ToggleGroup.Root aria-label={props.label} selectionMode={props.variant === 'multipleSelection' ? 'multiple' : 'single'} value={props.variant === 'multipleSelection' ? selected : (selected[0] ?? null)} onValueChange={(next) => props.setValue(Array.isArray(next) ? [...next] : next ? [next] : [])}>
+          {props.options.map((option) => <ToggleGroup.Item key={option.value} value={option.value}>{option.label}</ToggleGroup.Item>)}
+        </ToggleGroup.Root>
+      );
+    }
+    if (props.variant === 'multipleSelection') {
+      return (
+        <>
+          {props.options.map((option) => (
+            <Checkbox.Root key={option.value} checked={selected.includes(option.value)} onCheckedChange={(checked) => props.setValue(checked ? [...selected, option.value] : selected.filter((item) => item !== option.value))}>
+              {option.label}
+            </Checkbox.Root>
+          ))}
+        </>
+      );
+    }
+    return (
+      <RadioGroup.Root aria-label={props.label ?? 'Choices'} invalid={props.isValid === false} value={selected[0] ?? null} onValueChange={(next) => props.setValue(next ? [next] : [])}>
+        {props.options.map((option) => <RadioGroup.Item key={option.value} value={option.value}>{option.label}</RadioGroup.Item>)}
+      </RadioGroup.Root>
+    );
+  }),
+  createComponentImplementation(SliderApi, ({ props }) => (
+    <Slider.Root aria-label={props.label} max={props.max} min={props.min ?? 0} step={props.steps ? (props.max - (props.min ?? 0)) / props.steps : undefined} value={props.value} onChange={(event) => props.setValue(Number(event.currentTarget.value))} />
+  )),
+  createComponentImplementation(DateTimeInputApi, ({ props }) => {
+    const write = (next: { toString(): string } | null) => props.setValue(next ? next.toString() : '');
+    if (props.enableDate && props.enableTime) {
+      return <Field.DateTimeInput aria-label={props.label} value={props.value ? Temporal.PlainDateTime.from(props.value) : null} onValueChange={write} />;
+    }
+    if (props.enableTime) {
+      return <Field.TimeInput aria-label={props.label} value={props.value ? Temporal.PlainTime.from(props.value) : null} onValueChange={write} />;
+    }
+    if (props.enableDate) {
+      return <Field.DateInput aria-label={props.label} value={props.value ? Temporal.PlainDate.from(props.value) : null} onValueChange={write} />;
+    }
+    return null;
+  }),
+];
+
+const catalog = basicCatalog.copyWith({ components: implementations });
+
+export function createTodaeProcessor() {
+  return new MessageProcessor([catalog], (action) => {
+    void action.name;
+    void action.surfaceId;
+    void action.context;
+  });
+}
+
+export function TodaeSurfaces({ processor }: { processor: MessageProcessor }) {
+  const [surfaces, setSurfaces] = useState(() => [...processor.model.surfacesMap.values()]);
+  useEffect(() => {
+    const sync = () => setSurfaces([...processor.model.surfacesMap.values()]);
+    const created = processor.onSurfaceCreated(sync);
+    const deleted = processor.onSurfaceDeleted(sync);
+    return () => {
+      created.unsubscribe();
+      deleted.unsubscribe();
+    };
+  }, [processor]);
+  return surfaces.map((surface) => <A2uiSurface key={surface.id} surface={surface} />);
+}
+
+const processor = createTodaeProcessor();
+const capabilities = processor.getRendererCapabilities({ versions: ['1.0'] });
+const a2aMetadata = { a2uiRendererCapabilities: capabilities };
+const mcpInitializeCapabilities = { a2ui: { rendererCapabilities: capabilities } };
+const mcpCallMeta = { a2ui: { rendererCapabilities: capabilities } };
+
+processor.processMessages([
+  { version: '1.0', createSurface: { surfaceId: 'main', catalogId: catalog.id } },
+  {
+    version: '1.0',
+    updateComponents: {
+      surfaceId: 'main',
+      components: [
+        { id: 'root', component: 'Column', children: ['title', 'save'] },
+        { id: 'title', component: 'Text', text: { '@path': '/title' } },
+        { id: 'save-label', component: 'Text', text: 'Save' },
+        { id: 'save', component: 'Button', child: 'save-label', variant: 'primary', action: { event: { name: 'save' } } },
+      ],
+    },
+  },
+  { version: '1.0', updateDataModel: { surfaceId: 'main', path: '/', value: { title: 'Welcome' } } },
+]);
+```
+
+`a2aMetadata`는 A2A 메시지의 `message.metadata`입니다. `mcpInitializeCapabilities`는 MCP `initialize`의 `params.capabilities`입니다. `mcpCallMeta`는 상태 없는 `tools/call`의 `params._meta`입니다. `catalog.id`는 기본 카탈로그 id입니다.
+
+`TextField`는 `label`로 `aria-label`을 둡니다. 보이는 라벨은 `htmlFor`가 필드 id인 `Label.Root`입니다. `number`는 와이어 문자열을 `Field.NumberInput`을 위해 읽고, 문자열로 다시 씁니다. 필터되는 `ChoicePicker`는 `useCombobox`와 `Field`, `OptionList`, `Popover`이며, [combobox](/recipes/combobox) 레시피입니다. Combobox export는 없습니다. 대응하지 않은 아이콘 이름은 그리지 않습니다. 세로 `Divider`도 같은 `Separator.Root`입니다. `spaceAround`와 `spaceEvenly`는 시작점에 모입니다.
+
+## 직접 만든 카탈로그
+
+`createComponentImplementation`과 Zod 스키마로 컴포넌트를 더합니다. `@a2ui/web_core/v1_0`의 `CommonSchemas`가 `DynamicString`과 `Action`을 줍니다. `derive`로 카탈로그에 새 id를 줍니다. `components`의 문자열은 그 항목을 유지합니다. 객체는 하나를 더하거나 바꿉니다. `toJson()`이 카탈로그 문서입니다. 새 id에 게시하거나 인라인 카탈로그로 넘기고, 그 id를 알립니다. `createSurface.catalogId`는 새 id여야 합니다.
+
+```tsx
+import { z } from 'zod';
+import { CommonSchemas } from '@a2ui/web_core/v1_0';
+
+const ProfileApi = {
+  name: 'Profile',
+  schema: z.object({ username: CommonSchemas.DynamicString, onEdit: CommonSchemas.Action }),
+};
+
+const profile = createComponentImplementation(ProfileApi, ({ props }) => (
+  <Button.Root variant="secondary" onClick={() => props.onEdit()}>{props.username}</Button.Root>
+));
+
+const profileCatalog = catalog.derive({
+  catalogId: 'https://example.com/a2ui/profile.json',
+  components: [...catalog.components.keys(), profile],
+});
+```
+
+prop을 바꾸면 같은 수정에서 id도 바꿉니다. Zod 스키마, `toJson()`, `supportedCatalogIds`가 그 id를 함께 가리켜야 합니다.

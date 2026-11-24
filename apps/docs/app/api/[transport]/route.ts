@@ -256,7 +256,7 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'get_guide',
-    'A guide page: get-started, build-on-todae, tokens, css-layers, composition, platform or mcp. Same reads as get_docs_page (section, stubs). Prefer search_docs when you do not know the topic.',
+    'A guide page: get-started, build-on-todae, tokens, css-layers, composition, platform, mcp or a2ui. Same reads as get_docs_page (section, stubs). a2ui returns the whole page, the basic-catalog mapping and the example, in one call. Prefer search_docs when you do not know the topic.',
     { topic: z.enum(GUIDE_TOPICS), ...pageRead },
     async ({ topic, section, includeCode: code, offset: from }) => {
       try {
