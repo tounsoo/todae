@@ -1,9 +1,9 @@
 name: Docs deploy
 
 # Builds the docs site on GitHub's runners and hands Vercel the finished output, so Vercel runs no build.
-# Pull requests and main get preview deployments; docs-stable, which only release.yml moves, deploys to
-# production. Without the VERCEL_TOKEN secret, and on pull requests from forks, which get no secrets, the
-# Gate job explains why and the deploy is skipped, not failed.
+# Ready pull requests and main get preview deployments; a draft skips. docs-stable, which only release.yml
+# moves, deploys to production. Without the VERCEL_TOKEN secret, and on pull requests from forks, which get
+# no secrets, the Gate job explains why and the deploy is skipped, not failed.
 #
 # The token never shares a job with the repository's code. Settings and Deploy hold it and run only the
 # Vercel CLI from npm, with no checkout. Build runs the install and the build, which run every dependency's
@@ -12,9 +12,10 @@ permissions:
   contents: read
 
 on:
-  # Drafts get a preview too. ready_for_review is left out because it changes no code.
+  # A draft gets no preview. Gate skips it, and the job still passes. ready_for_review is
+  # here so marking a draft ready deploys at once: that event changes no code, so synchronize does not run.
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
     # A Markdown-only change starts no deploy. ci.yml runs on every change, but .github/scripts/change-class.sh
     # names these same files markdown, and on those it runs only Changes, Forbidden paths, rule-checker and Checks. It counts
     # the pinned pstack copy the same way, so the weekly pstack update builds no preview.
@@ -69,6 +70,8 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
           REPOSITORY: ${{ github.repository }}
           REF: ${{ github.ref }}
+          # Raw draft flag. On a push or workflow_dispatch the pull request is absent, so this is empty.
+          DRAFT: ${{ github.event.pull_request.draft }}
         run: |
           set -euo pipefail
           skip() {
@@ -84,6 +87,10 @@ jobs:
             case "$HEAD_REF" in
               bench-record/*|changesets-ghcommit-temp/*) skip "Branch $HEAD_REF gets no docs preview." ;;
             esac
+            # Draft pushes deploy nothing. Marking the pull request ready fires ready_for_review with draft false.
+            if [ "$DRAFT" = true ]; then
+              skip "This pull request is a draft, so nothing was deployed. Mark it ready for review to deploy a preview."
+            fi
           fi
           [ "$HAS_TOKEN" = true ] || skip "The VERCEL_TOKEN repository secret isn't set, so nothing was deployed. CONTRIBUTING.md (Deploy the docs) says how to add it."
           if [ "$REF" = refs/heads/docs-stable ] && [ "$EVENT_NAME" != pull_request ]; then
