@@ -1,7 +1,7 @@
 # 0015. Threads read a pinned pstack copy that a weekly workflow updates
 
 - **Date:** 2026-11-12
-- **Status:** Active
+- **Status:** Superseded by [0018](0018-drop-pstack-for-matt-skills.md), 2026-11-25
 - **Source:** Ben, 2026-11-12: "Daily action", then "For now, use github action weekly".
 
 ## Decision

@@ -1,11 +1,12 @@
 @AGENTS.md
 
-@.claude/pstack-models.md
-
 ## Claude only
 
-- Skills and agents from the pstack-claude plugin have the `pstack:` prefix. This repo vendors the plugin in `.agents/pstack/plugin`, so drop the prefix and read `$pstack/skills/<name>/SKILL.md`. `$pstack` is the folder `sh .agents/pstack/check.sh` prints. A `<plugin>` path means that folder. Duet threads follow `.claude/thread-start.md` for the rest of that setup.
-- `Agent` has no `readonly` parameter. Where a skill spawns a subagent with `readonly: true`, tell it in its prompt not to edit files, commit or push.
-- GitHub work uses the GitHub MCP tools, not `gh` or the `watch-pr` script.
-- Fable runs only where `.claude/pstack-models.md` names it or where Ben approves it in his own message in that run.
-- Duet threads: nothing in `.claude/` loads by itself, and the `@` imports above do not expand. Read `AGENTS.md`, then `.claude/pstack-models.md`, then `.claude/thread-start.md`. pstack comes from the pinned copy in `.agents/pstack/`.
+- Work happens in T3 Code threads (Claude Code) on a branch named `t3/<slug>`, one pull request per thread. `AGENTS.md` has the rest of the flow under **How work happens**.
+- A thread opens a ready pull request into `main`, gets `Checks` and `rule-checker` green, and has a Gemini 4 Neon review subagent review it, for at most three rounds.
+- Mike merges only on Ben's word. Threads never merge or force-push, and do not edit `AGENTS.md` or `CLAUDE.md` outside a pull request Ben approves.
+- Threads may use `gh` and the GitHub MCP tools.
+- Use Matt Pocock's skills: `tdd`, `diagnosing-bugs`, `code-review`, `pr`, `grill-with-docs`, and `to-spec` / `to-tickets`.
+- Prove a change with `.claude/skills/verify/SKILL.md` before opening a pull request and before each push of new work.
+- `Agent` has no `readonly` parameter. When a subagent must not write, say in its prompt not to edit files, commit or push.
+- Thread and subagent briefs use `.claude/task-prompt.md`.

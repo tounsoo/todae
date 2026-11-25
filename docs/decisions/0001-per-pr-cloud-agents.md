@@ -1,7 +1,7 @@
 # 0001. New coding goes to one plain cloud agent per PR
 
 - **Date:** 2026-11-01
-- **Status:** Active (experiment, about one week per the Projects index description)
+- **Status:** Superseded by [0018](0018-drop-pstack-for-matt-skills.md), 2026-11-25
 - **Source:** Todae row, "Last decision" property: https://app.notion.com/p/405a49024aae81f0bdc4e3197cbf363f
 
 ## Decision
