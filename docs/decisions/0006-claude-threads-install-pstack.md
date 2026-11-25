@@ -1,7 +1,7 @@
 # 0006. Claude threads install pstack at thread start
 
 - **Date:** 2026-11-02
-- **Status:** Partly superseded by [0015](0015-pinned-pstack-copy.md), 2026-11-12, and by [0016](0016-shared-agent-rules-live-in-home.md), 2026-11-16: threads read a pinned copy, and the shared review and CI playbooks are read from tounsoo/home. The model sheet is `.claude/pstack-models.md`
+- **Status:** Superseded by [0018](0018-drop-pstack-for-matt-skills.md), 2026-11-25
 - **Source:** Ben's decisions of 2026-11-02 in the clean-slate `.claude` plan, and his choice of the latest pstack for every thread.
 
 ## Decision

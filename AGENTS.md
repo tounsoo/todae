@@ -1,12 +1,24 @@
 # Agent notes
 
-This file is for anyone changing todae, including agents. It holds the rules that are specific to this repo. Shared rules live in Ben's home repo, [tounsoo/home](https://github.com/tounsoo/home) (private). Use `/agent/repos/home` when that directory exists (a Cursor cloud environment). When it does not, use `~/repos/home` (a local Claude or Cursor session). Clone `https://github.com/tounsoo/home.git` there when `~/repos/home` is missing. When neither directory is available, read the same files through the GitHub MCP tools (owner `tounsoo`, repo `home`, branch `main`). Read them before opening or driving a pull request:
+This file is for anyone changing todae, including agents. It holds the rules that are specific to this repo.
 
-- `AGENTS.md` there: the memory split, the learnings ladder, and how Cursor and Claude find pstack. A todae fact in this file overrides home.
-- `CLAUDE.md` there: the Claude-only lines. This repo's `CLAUDE.md` adapts them for the pinned pstack copy.
+## How work happens
+
+- Coding happens in T3 Code threads (Claude Code) on Ben's machine. Each thread works on a branch named `t3/<slug>` and does one pull request.
+- A thread opens its pull request into `main` ready for review, gets the required checks green, and then has a Gemini 4 Neon review subagent review it, for at most three rounds.
+- Mike, Ben's engineering lead bot, merges only on Ben's word. Threads never merge, force-push or rebase pushed history, and they do not edit `AGENTS.md` or `CLAUDE.md` outside a pull request Ben approves.
+- Threads may use `gh` and the GitHub MCP tools.
+- Threads use Matt Pocock's skills (mattpocock-skills v1.3.2), always with the `mattpocock-skills:` prefix: `mattpocock-skills:tdd`, `mattpocock-skills:diagnosing-bugs`, `mattpocock-skills:code-review`, `mattpocock-skills:pr`, `mattpocock-skills:prototype`, `mattpocock-skills:codebase-design`, `mattpocock-skills:grilling`, `mattpocock-skills:domain-modeling` and `mattpocock-skills:research`. Claude Code also has a built-in `code-review`, so write the prefix. The verify skill is this repo's own `.claude/skills/verify/`. [0018](docs/decisions/0018-drop-pstack-for-matt-skills.md) records the switch.
+- Ben or Mike types the rest of Matt's skills as `/mattpocock-skills:<name>`: `grill-with-docs`, `to-spec`, `to-tickets`, `wayfinder`, `retro`, `implement`, `implement-spec`, `triage`, `setup-matt-pocock-skills` and `grill-me`. A thread does not invoke them and does not claim it did.
+- A Cursor cloud agent is a fallback only.
+
+## Shared rules
+
+Shared rules live in Ben's home repo, [tounsoo/home](https://github.com/tounsoo/home) (private). Use `/agent/repos/home` when that directory exists (a Cursor cloud environment). When it does not, use `~/repos/home` (a local session). Clone `https://github.com/tounsoo/home.git` there when `~/repos/home` is missing. When neither directory is available, read the same files with `gh` or the GitHub MCP tools (owner `tounsoo`, repo `home`, branch `main`). Read them before opening or driving a pull request:
+
+- `AGENTS.md` there: the memory split and the learnings ladder. A todae fact in this file overrides home.
 - `standards/git.md` and `standards/pull-requests.md`
 - `playbooks/review-before-pr.md` and `playbooks/waiting-on-ci.md`. The **Repo lines** below fill those in ([0016](docs/decisions/0016-shared-agent-rules-live-in-home.md)).
-- `pstack.pin.json` records the Cursor pstack pin and a pstack-claude pin. Threads in this repo read the pinned copy in `.agents/pstack/` ([0015](docs/decisions/0015-pinned-pstack-copy.md)). Home's pstack-claude pin is a newer commit, and these threads stay on the copy `pin.json` names.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, commands, and pull requests. [ARCHITECTURE.md](ARCHITECTURE.md) records how the design system is built. Read it before adding or changing a component, hook, recipe, token or docs page. Dated decisions are in [docs/decisions](docs/decisions/README.md). A pull request that changes a decision or a spec also edits that decision's file. A design-system rule still belongs in `ARCHITECTURE.md`, updated in that same pull request.
 
@@ -18,7 +30,7 @@ Use Node 24. `.nvmrc` names only that major version. CI reads that file, and `ac
 
 Build the package with `pnpm build:ds`. [Build the design system](CONTRIBUTING.md#build-the-design-system) says what that writes. [Check your change](CONTRIBUTING.md#check-your-change) lists every command, and which change class skips which jobs. The [rule table](#rule-table) names each check. Run `pnpm build:ds` before `pnpm test` in a fresh checkout, because the docs unit tests import the built package.
 
-The blocking check name is `Checks`. `Token consumers` is informational (`continue-on-error: true`) and lists the components that read a changed token. [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
+The required checks are `Checks` and `rule-checker`. `Token consumers` is informational (`continue-on-error: true`) and lists the components that read a changed token. [Changesets](CONTRIBUTING.md#changesets) version and publish `@tounsoo/todae`. [Releases](ARCHITECTURE.md#releases) records the same rules.
 
 ## Repo lines
 
@@ -28,11 +40,11 @@ These fill the **Repo lines** in home's `playbooks/review-before-pr.md` and `pla
 - Checks, in the order [Check your change](CONTRIBUTING.md#check-your-change) lists. The [rule table](#rule-table) names each check. Claude proves the change with `node .claude/skills/verify/verify.mjs run` and puts `node .claude/skills/verify/verify.mjs body` under Verification. Cursor drives the docs site with `.cursor/skills/verify/SKILL.md`.
 - Dependents to pass as context: importers of a changed export; CSS that uses a changed token, custom property or selector; tokens that alias a changed token; the English and Korean docs pages that describe the changed behavior; the tests that cover it.
 - Push builds a preview: yes, once the pull request is ready for review. A draft gets none: Gate skips the deploy with a notice and the job still passes, and marking the pull request ready deploys one at once. A push to a ready pull request deploys one too. Push only after a clean round.
-- Drafts: allowed. Mark a draft ready after a clean round. `Checks` fails on a draft on purpose. The error says the pull request is a draft and that marking it ready runs the checks. That failure is the mark-ready signal. A `Checks` conclusion from while the pull request was a draft does not count as done.
-- Required check name: `Checks`. Informational: `Token consumers`. When its failure is the only one, treat the pull request as clean and mention the failure in the report. A Vercel preview is a commit status. Mention a pending or failed preview in the report. An `unstable` state that the preview alone causes counts as clean.
+- Drafts: a T3 thread opens its pull request ready for review, not as a draft, because `Checks` fails on a draft on purpose. The error says the pull request is a draft and that marking it ready runs the checks. A `Checks` conclusion from while a pull request was a draft does not count as done.
+- Required checks, from the ruleset: `Checks` and `rule-checker`. Informational: `Token consumers`. When its failure is the only one, treat the pull request as clean and mention the failure in the report. A Vercel preview is a commit status. Mention a pending or failed preview in the report. An `unstable` state that the preview alone causes counts as clean.
 - After merging `origin/main`: run `pnpm schema` and commit `packages/design-system/schema/components.json` when it changed. Stamp a translation with `pnpm --filter docs i18n:stamp ko <slug>` only after the Korean matches the English. The script requires the locale and at least one slug. `.agents/playbooks/docs-translation.md` says when.
-- After a conflict-free merge of `origin/main`, run the checks in the first step of the review round, push, and mark the pull request ready when it is still a draft.
-- A pull request another session already watches stays untouched: no push, comment, ready or resolve. Tell Ben. A request only to check on a pull request reads its state with the GitHub MCP tools, using home's status rules plus the lines above, and leaves the pull request unchanged.
+- After a conflict-free merge of `origin/main`, run the checks in the first step of the review round and push.
+- A pull request another session already watches stays untouched: no push, comment, ready or resolve. Tell Ben. A request only to check on a pull request reads its state with `gh` or the GitHub MCP tools, using home's status rules plus the lines above, and leaves the pull request unchanged.
 - Pull request body: [`.github/pull_request_template.md`](.github/pull_request_template.md). It keeps the three sections from home's `standards/pull-requests.md` and adds Why, What changed and Scope. Unverified checks and Remaining risks say `None` only when that is true. Verification starts with the tested commit, the full SHA the checks ran on.
 
 The columns, the weeds log and the suppression baseline follow home's [self-correcting standard](https://github.com/tounsoo/home/blob/main/standards/self-correcting.md). `pnpm check:self` checks them.
@@ -101,8 +113,7 @@ A change classed `markdown` runs Changes, Forbidden paths, rule-checker and Chec
 - A design token changes only when Ben approves that change in his own message. Follow `.agents/playbooks/tokens.md`.
 - An English docs page and its Korean twin change together. Follow `.agents/playbooks/docs-translation.md`.
 - Cursor's verify skill is `.cursor/skills/verify/SKILL.md` ([0005](docs/decisions/0005-verify-procedure.md)). Claude's is `.claude/skills/verify/SKILL.md` and ends in PASS, FAIL or BLOCKED ([0007](docs/decisions/0007-claude-verify-and-pr-template.md)). Run the one for the tool in use on the commit that ends each review round, before a pull request opens and before each push of new work.
-- The Claude model sheet is `.claude/pstack-models.md`. The pinned copy's skills read it. A change to a role's model or effort goes there, with Ben's yes. Cursor's installed pstack reads the user sheet home describes (`~/.cursor/rules/pstack-models.mdc`, written by `/setup-pstack`).
-- Briefs use `.claude/task-prompt.md`.
+- Thread and subagent briefs use `.claude/task-prompt.md`.
 - `.agents/playbooks/` holds the playbooks that are about this repo: `changesets.md`, `docs-translation.md` and `tokens.md`. Open each one whose `when` line fits the task.
 - Git follows home's `standards/git.md`. This repo's base branch is `main`.
 - A change to `.claude/`, `.agents/`, `AGENTS.md`, `CLAUDE.md`, or the `.claude/**` entry in the `ignores` list in `eslint.config.mjs`, needs Ben's yes. Home's `standards/git.md` covers the shared half of that rule.
@@ -110,4 +121,4 @@ A change classed `markdown` runs Changes, Forbidden paths, rule-checker and Chec
 ## Where the tools look
 
 - Cursor reads this file. Its docs-site skill stays at `.cursor/skills/verify/`. Graft's rule, hooks and MCP config stay in `.cursor/`.
-- Claude reads `CLAUDE.md`, which imports this file and `.claude/pstack-models.md`. A Duet thread then follows `.claude/thread-start.md`, because a thread loads nothing in `.claude/` by itself and an `@` import does not expand.
+- Claude reads `CLAUDE.md`, which imports this file. A T3 Code thread loads both from the checkout it runs in.
