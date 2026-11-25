@@ -6,7 +6,7 @@
 - A thread opens a ready pull request into `main`, gets `Checks` and `rule-checker` green, and has a Gemini 4 Neon review subagent review it, for at most three rounds.
 - Mike merges only on Ben's word. Threads never merge or force-push, and do not edit `AGENTS.md` or `CLAUDE.md` outside a pull request Ben approves.
 - Threads may use `gh` and the GitHub MCP tools.
-- Use Matt Pocock's skills: `tdd`, `diagnosing-bugs`, `code-review`, `pr`, `grill-with-docs`, and `to-spec` / `to-tickets`.
+- Call Matt Pocock's skills with the prefix, such as `mattpocock-skills:tdd`, `mattpocock-skills:diagnosing-bugs`, `mattpocock-skills:code-review` (not the built-in `code-review`) and `mattpocock-skills:pr`. `AGENTS.md` lists the rest, and the ones only Ben or Mike types.
 - Prove a change with `.claude/skills/verify/SKILL.md` before opening a pull request and before each push of new work.
 - `Agent` has no `readonly` parameter. When a subagent must not write, say in its prompt not to edit files, commit or push.
 - Thread and subagent briefs use `.claude/task-prompt.md`.

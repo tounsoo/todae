@@ -8,7 +8,8 @@ This file is for anyone changing todae, including agents. It holds the rules tha
 - A thread opens its pull request into `main` ready for review, gets the required checks green, and then has a Gemini 4 Neon review subagent review it, for at most three rounds.
 - Mike, Ben's engineering lead bot, merges only on Ben's word. Threads never merge, force-push or rebase pushed history, and they do not edit `AGENTS.md` or `CLAUDE.md` outside a pull request Ben approves.
 - Threads may use `gh` and the GitHub MCP tools.
-- Threads use Matt Pocock's skills (mattpocock-skills v1.3.2): `tdd`, `diagnosing-bugs`, `code-review`, `pr`, `grill-with-docs`, and `to-spec` / `to-tickets`. [0018](docs/decisions/0018-drop-pstack-for-matt-skills.md) records the switch.
+- Threads use Matt Pocock's skills (mattpocock-skills v1.3.2), always with the `mattpocock-skills:` prefix: `mattpocock-skills:tdd`, `mattpocock-skills:diagnosing-bugs`, `mattpocock-skills:code-review`, `mattpocock-skills:pr`, `mattpocock-skills:prototype`, `mattpocock-skills:codebase-design`, `mattpocock-skills:grilling`, `mattpocock-skills:domain-modeling` and `mattpocock-skills:research`. Claude Code also has a built-in `code-review`, so write the prefix. The verify skill is this repo's own `.claude/skills/verify/`. [0018](docs/decisions/0018-drop-pstack-for-matt-skills.md) records the switch.
+- Ben or Mike types the rest of Matt's skills as `/mattpocock-skills:<name>`: `grill-with-docs`, `to-spec`, `to-tickets`, `wayfinder`, `retro`, `implement`, `implement-spec`, `triage`, `setup-matt-pocock-skills` and `grill-me`. A thread does not invoke them and does not claim it did.
 - A Cursor cloud agent is a fallback only.
 
 ## Shared rules
