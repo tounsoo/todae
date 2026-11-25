@@ -16,3 +16,10 @@ The switch happens in two steps, so previews never stop:
 ## Why
 
 The repository is public, so GitHub Actions minutes on standard runners cost nothing, while every Vercel build counts against the plan's build minutes. Keeping Vercel as the host, rather than moving to a static host such as Cloudflare, keeps the MCP server and the link preview routes working without porting them, and keeps preview URLs, deployment protection and the verify skills' Vercel checks as they are.
+
+## Amendment
+
+- **Date:** 2026-11-25
+- **Source:** Ben approved the docs follow-up after #508.
+
+A draft gets no preview. Gate skips the deploy with a notice and the job still passes, and marking the pull request ready deploys one at once. A push to a ready pull request deploys one too. Pull requests that are ready for review, and `main`, still get preview deployments.
