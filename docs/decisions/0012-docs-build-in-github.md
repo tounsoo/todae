@@ -6,7 +6,7 @@
 
 ## Decision
 
-`.github/workflows/docs-deploy.yml` builds the docs site with `vercel build` on GitHub's runners and uploads the output with `vercel deploy --prebuilt`. Pull requests from this repository and `main` get preview deployments, and `docs-stable` deploys to production, as before. Vercel still hosts everything, including the docs MCP server and the link preview card routes, which need a server. Pull requests from forks get no preview, since building them with the deploy token would hand their code the token.
+`.github/workflows/docs-deploy.yml` builds the docs site with `vercel build` on GitHub's runners and uploads the output with `vercel deploy --prebuilt`. Pull requests from this repository that are ready for review, and `main`, get preview deployments, and `docs-stable` deploys to production, as before. A draft gets no preview until it is marked ready, as the [2026-11-25 amendment](#amendment) records. Vercel still hosts everything, including the docs MCP server and the link preview card routes, which need a server. Pull requests from forks get no preview, since building them with the deploy token would hand their code the token.
 
 The switch happens in two steps, so previews never stop:
 
