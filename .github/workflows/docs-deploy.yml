@@ -17,8 +17,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     # A Markdown-only change starts no deploy. ci.yml runs on every change, but .github/scripts/change-class.sh
-    # names these same files markdown, and on those it runs only Changes, Forbidden paths, rule-checker and Checks. It counts
-    # the pinned pstack copy the same way, so the weekly pstack update builds no preview.
+    # names these same files markdown, and on those it runs only Changes, Forbidden paths, rule-checker and Checks.
     paths:
       - '**'
       - '!**.md'
@@ -29,15 +28,8 @@ on:
       - '**/*-body.md'
       - '.audit/**'
       - 'apps/docs/app/**'
-      # Last, so no pattern above brings a file of the copy back.
-      - '!.agents/pstack/plugin/**'
-      - '!.agents/pstack/pin.json'
   push:
     branches: [main, docs-stable]
-    # Merging a pstack update changes nothing the docs build reads, so it deploys nothing.
-    paths-ignore:
-      - '.agents/pstack/plugin/**'
-      - '.agents/pstack/pin.json'
   # Redeploys a branch by hand. Run on docs-stable, it deploys production.
   workflow_dispatch:
 

@@ -7,20 +7,12 @@ under_audit() {
 	[ "${1#.audit/}" != "$1" ]
 }
 
-# The pinned pstack copy is upstream's folder word for word: .agents/pstack/check.sh and pstack-upstream.sh
-# fail on any other change to it, so a file named like a scratch body or a PNG may sit there.
-pstack_copy() {
-	[ "${1#.agents/pstack/plugin/}" != "$1" ]
-}
-
 scratch_body() {
-	pstack_copy "$1" && return 1
 	local base="${1##*/}"
 	[[ "$base" == *-body.md ]]
 }
 
 png_file() {
-	pstack_copy "$1" && return 1
 	local base="${1##*/}"
 	[[ "${base,,}" == *.png ]]
 }
@@ -60,7 +52,7 @@ scan() {
 		fi
 		joined="$joined$shown"
 	done
-	printf 'forbidden-paths: drop %s. Do not add or edit a path under .audit/, a *-body.md file, or a PNG outside the pinned pstack copy. A new file under .claude/ must end in .md, .json, or .mjs.\n' "$joined" >&2
+	printf 'forbidden-paths: drop %s. Do not add or edit a path under .audit/, a *-body.md file, or a PNG. A new file under .claude/ must end in .md, .json, or .mjs.\n' "$joined" >&2
 	return 1
 }
 
@@ -136,8 +128,8 @@ self_test() {
 	check 'loose png' 1 'screenshot.PNG' '' A screenshot.PNG
 	check 'png delete' 0 '' '' D apps/docs/visual/baselines/light/en/home.png
 	check 'png-like name' 0 '' '' A notes/png.md
-	check 'edit claude markdown' 0 '' '' M .claude/skills/poteto-mode/SKILL.md
-	check 'edit claude script' 0 '' '' M .claude/skills/poteto-mode/scripts/resume.mjs
+	check 'edit claude markdown' 0 '' '' M .claude/skills/verify/SKILL.md
+	check 'edit claude script' 0 '' '' M .claude/skills/verify/verify.mjs
 	check 'edit claude json' 0 '' '' M .claude/settings.json
 	check 'edit claude type change' 0 '' '' T .claude/settings.json
 	check 'new claude markdown' 0 '' '' A .claude/skills/example/SKILL.md
@@ -149,9 +141,8 @@ self_test() {
 	check 'new claude shell' 1 '.claude/tools/extra.sh' '' A .claude/tools/extra.sh
 	check 'new claude uppercase md' 1 '.claude/notes.MD' '' A .claude/notes.MD
 	check 'edit claude log' 0 '' '' M .claude/debug.log
-	check 'pstack copy body' 0 '' '' A .agents/pstack/plugin/skills/x/pr-body.md
-	check 'pstack copy png' 0 '' '' A .agents/pstack/plugin/skills/x/shot.png
-	check 'pstack folder png' 1 '.agents/pstack/shot.png' '' A .agents/pstack/shot.png
+	check 'agents body' 1 '.agents/x/pr-body.md' '' A .agents/x/pr-body.md
+	check 'agents png' 1 '.agents/shot.png' '' A .agents/shot.png
 	check 'mixed' 1 '.audit/x' 'settings.json' M .claude/settings.json A .audit/x M packages/design-system/src/index.ts
 }
 

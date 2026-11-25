@@ -86,8 +86,6 @@ Tier: T0
 | token-api | No public token is removed, renamed or retyped | `pnpm tokens:api:check` | #279 | seeded |
 | token-consumers | Report components that read a changed token | `packages/design-system/scripts/token-consumers.ts` | #287 | seeded |
 | firefox-quarantine | Known Firefox browser failures warn in CI | `packages/design-system/scripts/firefox-quarantine.ts` | #369 | seeded |
-| pstack-pin | The vendored pstack copy matches its pin | `.agents/pstack/check.sh` | #457 | seeded |
-| pstack-upstream | The pin is on upstream's default branch | `.github/scripts/pstack-upstream.sh` | #457 | seeded |
 | change-class | The diff is classed all, prose or markdown | `.github/scripts/classify-diff.sh` | #298 | seeded |
 | docs-axe | axe on the built docs site | `apps/docs/playwright.config.ts` | #189 | seeded |
 | docs-peek | Behavior tests on the built docs site | `apps/docs/playwright.peek.config.ts` | #293 | seeded |
@@ -96,7 +94,6 @@ Tier: T0
 | checks | The Checks aggregate | `.github/workflows/ci.yml` | #241 | seeded |
 | release | The release workflow | `.github/workflows/release.yml` | #171 | seeded |
 | docs-deploy | Docs deploy | `.github/workflows/docs-deploy.yml` | #398 | seeded |
-| pstack-update | The weekly pstack update | `.github/workflows/pstack-update.yml` | #457 | seeded |
 | self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
 
 ## CI jobs

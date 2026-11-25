@@ -4,11 +4,7 @@ set -euo pipefail
 # Markdown that no tool or page reads. docs-deploy.yml leaves the same files out with its paths filter.
 # A changeset, the package README and changelog, a *-body.md file and anything under .audit/ still count,
 # so a scratch file still reaches Forbidden paths' full check.
-# The pinned pstack copy and its pin count too, whatever their type: only agents read them, eslint.config.mjs
-# leaves the copy out, and no build or test reads it. Forbidden paths still runs its check on them
-# (.agents/pstack/check.sh).
 is_markdown() {
-	[[ "$1" == .agents/pstack/plugin/* || "$1" == .agents/pstack/pin.json ]] && return 0
 	[[ "$1" == *.md ]] || return 1
 	# Next builds .md files under the docs app's routes as pages.
 	[[ "$1" == apps/docs/app/* ]] && return 1
@@ -76,7 +72,7 @@ self_test() {
 	check changelog all 'packages/design-system/CHANGELOG.md'
 	check 'package readme' all 'packages/design-system/README.md'
 	check 'root markdown' markdown 'README.md'
-	check 'nested markdown' markdown 'docs/decisions/0012-docs-build-in-github.md' '.claude/pstack-models.md'
+	check 'nested markdown' markdown 'docs/decisions/0012-docs-build-in-github.md' '.claude/task-prompt.md'
 	check 'markdown plus page' all 'README.md' 'apps/docs/app/(en)/page.mdx'
 	check 'markdown plus source' all 'README.md' 'packages/design-system/src/index.ts'
 	check 'changeset with markdown' all 'README.md' '.changeset/brave-lions-sing.md'
@@ -85,14 +81,6 @@ self_test() {
 	check 'audit note' all '.audit/notes.md'
 	check 'mdx is not markdown' all 'apps/docs/components/Intro.mdx'
 	check 'markdown docs page' all 'apps/docs/app/(en)/slider/page.md'
-	check 'pstack copy' markdown \
-		'.agents/pstack/pin.json' \
-		'.agents/pstack/plugin/skills/poteto-mode/SKILL.md' \
-		'.agents/pstack/plugin/skills/poteto-mode/scripts/orch/orch.ts' \
-		'.agents/pstack/plugin/skills/poteto-mode/scripts/watch-pr/watch-pr'
-	check 'pstack copy body file' markdown '.agents/pstack/plugin/pr-body.md'
-	check 'pstack scripts' all '.agents/pstack/check.sh'
-	check 'pstack copy plus source' all '.agents/pstack/pin.json' 'packages/design-system/src/index.ts'
 }
 
 if [ "${1:-}" = "--self-test" ]; then
