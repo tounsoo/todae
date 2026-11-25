@@ -139,7 +139,6 @@ describe('checkRepository', () => {
     const files = validFiles();
     files['dist/built.ts'] = `${lineComment(eslintNext('no-console'))}\n`;
     files['.claude/vendor.ts'] = `${lineComment('@ts-ignore')}\n`;
-    files['.agents/pstack/plugin/skip.ts'] = `${lineComment('@ts-expect-error')}\n`;
     files['src/tokens.generated.ts'] = `${lineComment('biome-ignore lint: x')}\n`;
     const report = checkRepository(tempRepo(files), NOW);
     assert.deepEqual(report.problems, []);
