@@ -20,11 +20,11 @@ This map lists the files each common change touches. [`GLOSSARY.md`](GLOSSARY.md
 | --- | --- |
 | Component | `src/components/<Name>.tsx`, `<Name>.module.css` when it draws anything, `<Name>.test.tsx`, a meta and a `parts.test.tsx` case for each part (next row), and an export in `src/index.ts`. Add the bench case to a group in `apps/bench/app/cases/*.tsx`; `apps/bench/app/coverage.ts` fails the typecheck without one. Run `pnpm schema`. |
 | Compound part | `src/components/<Name>.<Part>.meta.ts`, one per part, and a case for the part in the hand list in `src/components/parts.test.tsx`. `src/metaCoverage.test.ts` fails on a part with no meta. |
-| Server entry | `src/server/<slug>.ts`, then the slug in four lists: `entries` in `vite.config.ts`, `exports` in `package.json`, the server-entry list in `src/entries.test.ts`, and `paths` in `apps/docs/tsconfig.json`. |
+| Server entry | `src/server/<slug>.ts`, then the slug in the four lists that [Server entries](ARCHITECTURE.md#component-api) names: `vite.config.ts`, `package.json`, `src/entries.test.ts` and `apps/docs/tsconfig.json`. |
 | Client wrapper | `src/components/<Name>.client.tsx`, exported from `src/index.ts`, while the server entry keeps exporting `<Name>.tsx`. |
-| Tokens | Only with Ben's yes in his own message (`.agents/playbooks/tokens.md`). `tokens/components/<slug>.json`, listed in the contract set's `sources` in `tokens/resolver.json`. A sheet whose token root is not its name goes in `ownRoots` in `stylelint.config.mjs`. Run `pnpm tokens` and commit the generated files. |
+| Tokens | Only with Ben's yes in his own message (`.agents/playbooks/tokens.md`). `tokens/components/<slug>.json`, listed in the contract set's `sources` in `tokens/resolver.json`. A sheet whose token root is not its name goes in `ownRoots` in the root `stylelint.config.mjs`. Run `pnpm tokens` and commit the generated files. |
 | Hook | `src/hooks/use<Name>.ts`, `use<Name>.meta.ts`, `use<Name>.test.tsx`, an export in `src/index.ts`, and a case in `apps/bench/app/cases/hooks.tsx`. Run `pnpm schema`. |
-| Docs page | `app/(en)/<slug>/page.mdx` and its Korean twin `app/ko/<slug>/page.mdx` in the same pull request. A hook or helper page goes under `utilities/`. List the slug in `lib/i18n/englishPages.ts` and `components/siteGroups.ts`, add each prop's `en` and `ko` text to `lib/i18n/props/ko.json`, then run `pnpm --filter docs i18n:stamp ko <slug>` once the Korean matches (`.agents/playbooks/docs-translation.md`). |
+| Docs page | `app/(en)/<slug>/page.mdx` and its Korean twin `app/ko/<slug>/page.mdx` in the same pull request. A hook or helper page goes under `utilities/`, so its slug is `utilities/use-<name>`. List the slug in `lib/i18n/englishPages.ts` and `components/siteGroups.ts`, and add each prop's `en` and `ko` text to `lib/i18n/props/ko.json`. Once the Korean matches, run `pnpm --filter docs i18n:stamp ko <slug>` and commit the change it makes to `lib/i18n/sources/ko.json` (`.agents/playbooks/docs-translation.md`). |
 | Docs example | One file per example in `examples/<slug>/<Name><What>.tsx`, with a `.module.css` beside it when it needs layout CSS ([0009](docs/decisions/0009-docs-example-files.md)). A page shows it with `<Example of={…} />`. |
 | Recipe | `app/(en)/recipes/<slug>/page.mdx`, its twin `app/ko/recipes/<slug>/page.mdx`, and its examples in `examples/recipes/<slug>/`. A recipe is not a package export, so it touches nothing in `packages/design-system`. |
 | Browser test | `src/browser/<slug>.browser.test.tsx` for the package, or `apps/docs/test/*.browser.test.tsx` for a docs demo. Use one for real layout, focus or the top layer ([Tests](ARCHITECTURE.md#tests)). |
@@ -33,7 +33,7 @@ This map lists the files each common change touches. [`GLOSSARY.md`](GLOSSARY.md
 
 ### Files to copy
 
-These are the current files to copy for each kind of change. ARCHITECTURE warns not to copy an exception into new code; these follow the rules.
+These are the current files to copy for each kind of change. [ARCHITECTURE](ARCHITECTURE.md) warns not to copy an exception into new code, so start from these. If one has moved, update this table in the same pull request.
 
 | Change | Copy |
 | --- | --- |

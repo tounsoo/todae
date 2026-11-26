@@ -6,7 +6,7 @@ Todae is a low-level React design system that companies build their own design s
 
 **Component**:
 An export whose markup, props and behavior Todae can fix without knowing the product's data, routing or layout. Anything that carries Todae tokens or styles is a **Component**.
-_Avoid_: widget, primitive
+_Avoid_: primitive
 
 **Hook**:
 Exported behavior with no markup, for a **Recipe** or a product's own markup to use.
@@ -21,7 +21,6 @@ The object a **Component** is exported as, holding its **Parts**, such as `Menu`
 
 **Part**:
 One member of a **Namespace**, such as `Menu.Item`. Every **Component** has a `Root` part.
-_Avoid_: subcomponent, slot (a **Slot** is a token term)
 
 **Variant**:
 A different look of the same **Component**, chosen with a prop, such as `Loader.Root variant="dots"`. A look that only redraws an existing component is a **Variant**, not a new **Component**.
@@ -39,7 +38,6 @@ A component that sets a value for everything inside it, such as the theme, densi
 
 **Server entry**:
 A server-safe entry, `@tounsoo/todae/<slug>`, that a Server Component can import. It has no `'use client'`, no hooks and no context.
-_Avoid_: RSC entry
 
 **Client wrapper**:
 The `*.client` version of a **Component** that the **Main entry** exports when the component also has a **Server entry**, adding what needs a client **Provider** or hooks.
@@ -63,20 +61,19 @@ A raw scale value, such as a gray step or a font size.
 
 **Appearance**:
 Light or dark. Appearance tokens hold the semantic colors for each.
-_Avoid_: theme (a **Theme** is the whole set of token values), color mode
+_Avoid_: theme (a **Theme** is the whole set of token values)
 
 **Density**:
 The spacing setting: compact, comfortable or spacious. Density tokens hold the spacing for each.
 
 **Contract token**:
 A **Token** a **Component** reads, named for that component, such as `badge.info.bg`.
-_Avoid_: component variable
 
 **Token root**:
 The first segment of a **Contract token**'s name, which says which **Component** owns it, such as `badge`.
 
 **Slot**:
-A named group in the token resolver that fixes a **Component**'s token shape, such as Button's states.
+A named group in the token resolver that fixes a **Component**'s token shape, such as Button's states. An icon slot, such as `Button.Icon`, is a **Part**, not a token slot.
 
 **Tone**:
 A named color role a **Component** takes. Status tones are `info`, `success`, `warning` and `critical`. Category tones are `category-1` to `category-8`, numbered, not named for hues.
@@ -116,16 +113,16 @@ A Markdown file that names the version bump and the changelog line for a change 
 
 **Decision**:
 A dated record of a choice and why, in `docs/decisions/`. A design-system rule also goes in `ARCHITECTURE.md`.
-_Avoid_: ADR folder (there is no `docs/adr/`), RFC
+_Avoid_: `docs/adr/` (decisions live only in `docs/decisions/`)
 
 **Change class**:
-How CI sorts a pull request's diff: `all`, `prose` (docs pages only) or `markdown` (Markdown only). The class decides which jobs run.
+How CI sorts a pull request's diff: `all`, `prose` (only docs `page.mdx` files and their translation stamps) or `markdown` (only Markdown that no tool reads). The class decides which jobs run; [Check your change](CONTRIBUTING.md#check-your-change) has the details.
 
 **Rule table**:
 The list in `AGENTS.md` of each rule, the check that enforces it and its status.
 
 **Weeds log**:
-The log of mistakes that reached review, kept to spot the ones that repeat.
+The log of mistakes that were caught, by review, by Ben or in production, kept to spot the ones that repeat.
 
 **Verify**:
 The repo's own procedure that proves a change on the commit it was tested at and ends in PASS, FAIL or BLOCKED.

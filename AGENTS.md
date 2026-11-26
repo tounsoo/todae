@@ -22,7 +22,7 @@ Shared rules live in Ben's home repo, [tounsoo/home](https://github.com/tounsoo/
 
 [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, commands, and pull requests. [ARCHITECTURE.md](ARCHITECTURE.md) records how the design system is built. Read it before adding or changing a component, hook, recipe, token or docs page. Dated decisions are in [docs/decisions](docs/decisions/README.md). A pull request that changes a decision or a spec also edits that decision's file. A design-system rule still belongs in `ARCHITECTURE.md`, updated in that same pull request.
 
-ADRs are `docs/decisions/`, not `docs/adr/`; the glossary is [GLOSSARY.md](GLOSSARY.md), and [Where a change goes](CONTRIBUTING.md#where-a-change-goes) maps the files each change touches and names the ones to copy.
+ADRs are `docs/decisions/`, not `docs/adr/`. The glossary is [GLOSSARY.md](GLOSSARY.md), and [Where a change goes](CONTRIBUTING.md#where-a-change-goes) lists the files each change touches and the ones to copy.
 
 ## Set up
 
