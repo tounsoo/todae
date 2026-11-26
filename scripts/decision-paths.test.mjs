@@ -116,6 +116,30 @@ describe('checkDecisions', () => {
     assert.deepEqual(checkDecisions(root), []);
   });
 
+  it('checks a live path that shares a sentence with a removal word', () => {
+    const root = tempRepo({
+      ...layout,
+      'docs/decisions/0099-sample.md': decision(
+        'Active',
+        'The old runner no longer runs; use `.agents/new.mjs`. Read `.agents/next.mjs` now that the pin is gone from home: `.agents/pin.json` stays. `.agents/old.mjs` and `.agents/older.mjs` are removed.',
+      ),
+    });
+    assert.deepEqual(
+      checkDecisions(root).map((problem) => /names `([^`]+)`/.exec(problem)?.[1]),
+      ['.agents/new.mjs', '.agents/next.mjs', '.agents/pin.json'],
+    );
+  });
+
+  it('reports a link it cannot decode instead of crashing', () => {
+    const root = tempRepo({
+      ...layout,
+      'docs/decisions/0099-sample.md': decision('Active', 'See [the note](0098-%E0%A4%A.md).'),
+    });
+    assert.deepEqual(checkDecisions(root), [
+      'docs/decisions/0099-sample.md:9: links to `0098-%E0%A4%A.md`, which is not a valid URI. Fix the link.',
+    ]);
+  });
+
   it('does not treat commands, identifiers, branches, ignored output or home paths as repo paths', () => {
     const root = tempRepo({
       ...layout,

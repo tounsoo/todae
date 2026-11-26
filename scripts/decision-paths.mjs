@@ -1,15 +1,17 @@
 // Every repo path that a live decision names must exist in the checkout.
 // A decision is live while its Status starts with Active or Partly superseded, because it still gives current
 // guidance. A Superseded decision is history and may keep paths that are gone.
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 
 export const DECISIONS_DIR = 'docs/decisions';
 
 const DECISION_FILE = /^\d{4}-[\w-]+\.md$/;
 const STATUS_LINE = /^- \*\*Status:\*\* (.*)$/;
-// A sentence that says a path is gone records history, so its paths are not checked.
-const REMOVAL = /\b(?:removed|deleted|gone|no longer)\b/i;
+// A clause that ends by saying its paths are gone ("... `x.mjs` and `y.json` are removed.") records history, so its
+// paths are not checked. Only that ending counts, so a removal word elsewhere does not hide a live path.
+const REMOVAL = /\b(?:is|are|was|were)\s+(?:now\s+)?(?:removed|deleted|gone)\s*[.!?]?\s*$/i;
 const FIX =
   'Amend the decision: mark it "Partly superseded by [NNNN](NNNN-slug.md)" and rewrite or strike (~~path~~) the dead path, or restore the file if it should still exist.';
 
@@ -37,9 +39,13 @@ export function checkDecisions(root) {
     if (kind === 'Superseded') continue;
     lines.forEach((line, index) => {
       if (index === statusIndex) return;
-      for (const sentence of sentences(line)) {
-        if (REMOVAL.test(sentence.replace(/`[^`]*`/g, ''))) continue;
-        for (const ref of namedPaths(sentence, roots)) {
+      for (const clause of clauses(line)) {
+        if (REMOVAL.test(clause.replace(/`[^`]*`/g, ''))) continue;
+        for (const ref of namedPaths(clause, roots)) {
+          if (ref.problem) {
+            problems.push(`${rel}:${index + 1}: ${ref.problem}`);
+            continue;
+          }
           const target = ref.link ? path.resolve(dir, ref.path) : path.resolve(root, ref.path);
           if (existsSync(target)) continue;
           problems.push(
@@ -84,13 +90,16 @@ function checkIndex(root, statuses) {
   return problems;
 }
 
-function sentences(raw) {
-  // Struck-through text is history too.
+// Splits a line into sentences and then into clauses at ; and :, ignoring those marks inside code spans and link
+// targets. Struck-through text is dropped, because it is history too.
+function clauses(raw) {
   const line = raw.replace(/~~.*?~~/g, '');
-  const masked = line.replace(/`[^`]*`/g, (code) => code.replace(/[.!?]/g, '\u0000'));
+  const masked = line
+    .replace(/`[^`]*`/g, (code) => code.replace(/[.!?;:]/g, '\u0000'))
+    .replace(/\]\([^)]*\)/g, (link) => link.replace(/[.!?;:]/g, '\u0000'));
   const parts = [];
   let start = 0;
-  const boundary = /[.!?](?=\s)/g;
+  const boundary = /[.!?](?=\s)|[;:]/g;
   let match;
   while ((match = boundary.exec(masked)) !== null) {
     parts.push(line.slice(start, match.index + 1));
@@ -113,7 +122,14 @@ function namedPaths(sentence, roots) {
     if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('#')) continue;
     const file = target.split('#')[0] ?? '';
     if (file === '') continue;
-    found.push({ shown: target, path: decodeURI(file), link: true });
+    let decoded;
+    try {
+      decoded = decodeURI(file);
+    } catch {
+      found.push({ problem: `links to \`${target}\`, which is not a valid URI. Fix the link.` });
+      continue;
+    }
+    found.push({ shown: target, path: decoded, link: true });
   }
   return found;
 }
@@ -143,6 +159,36 @@ function rootEntries(root) {
       if (line !== '' && !line.startsWith('#') && !/[*/!?[]/.test(line)) ignored.add(line);
     }
   }
-  const entries = new Set(readdirSync(root).filter((name) => !ignored.has(name)));
+  const entries = new Set((trackedTopLevel(root) ?? readdirSync(root)).filter((name) => !ignored.has(name)));
   return { entries, ignored };
+}
+
+// Top-level names git tracks, so an untracked local folder does not make a path count on one machine and not in
+// CI. Outside a git checkout (the tests' scratch folders) this returns null and the caller lists the folder.
+function trackedTopLevel(root) {
+  try {
+    const out = execFileSync('git', ['ls-files', '-z'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const top = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (realpathSync(top) !== realpathSync(root)) {
+      return null;
+    }
+    return [
+      ...new Set(
+        out
+          .split('\0')
+          .filter(Boolean)
+          .map((file) => file.split('/')[0] ?? ''),
+      ),
+    ];
+  } catch {
+    return null;
+  }
 }

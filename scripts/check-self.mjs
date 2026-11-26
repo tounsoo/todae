@@ -10,7 +10,7 @@ if (report.problems.length > 0) {
 
 const decisions = checkDecisions(process.cwd());
 if (decisions.length > 0) {
-  console.error('decision-paths: a live decision names a repo path that does not exist:');
+  console.error('decision-paths: docs/decisions is not valid:');
   for (const problem of decisions) console.error(`- ${problem}`);
 }
 

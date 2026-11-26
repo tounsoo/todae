@@ -21,6 +21,6 @@ The review, CI, git and pull request rules had a copy in this repo that drifted 
 ## Amendment
 
 - **Date:** 2026-11-26
-- **Source:** Ben approved the decision path check on 2026-11-26, after the agent-legibility review found this decision still Active and still naming pstack paths that #511 to #514 took out.
+- **Source:** Ben approved this amendment, the path check and its rule-table row on 2026-11-26 (through Mike), after the agent-legibility review found this decision still Active and still naming pstack paths that #511 to #514 took out.
 
 [0018](0018-drop-pstack-for-matt-skills.md) replaced pstack with Matt Pocock's skills, so the struck text no longer applies: the model sheet, the pinned copy, its pin and its anchor check are gone. `AGENTS.md` is still the source of the repo's own instructions, the shared rules are still read from home, and `.agents/playbooks/` still holds the three repo playbooks.

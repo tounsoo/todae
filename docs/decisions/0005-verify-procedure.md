@@ -21,6 +21,6 @@ The docs site is the reader-facing check for a docs change, and a unit test does
 ## Amendment
 
 - **Date:** 2026-11-26
-- **Source:** Ben approved the decision path check on 2026-11-26, after the agent-legibility review found this decision still Active and still naming pstack paths that #511 to #514 took out.
+- **Source:** Ben approved this amendment, the path check and its rule-table row on 2026-11-26 (through Mike), after the agent-legibility review found this decision still Active and still naming pstack paths that #511 to #514 took out.
 
 [0018](0018-drop-pstack-for-matt-skills.md) replaced pstack with Matt Pocock's skills, so the struck text no longer applies: threads read no pinned pstack copy, and the reflect and correct steps were pstack's. The verify procedure, Claude's own verify skill at `.claude/skills/verify/`, and the three pull request sections still stand.
