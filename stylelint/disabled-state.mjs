@@ -3,7 +3,10 @@ import stylelint from 'stylelint';
 const ruleName = 'todae/disabled-state';
 
 const messages = stylelint.utils.ruleMessages(ruleName, {
-  opacity: 'Unexpected opacity on a disabled state.',
+  opacity:
+    'Unexpected opacity on a disabled state. A disabled look comes from color tokens, so a theme sets it in one place. ' +
+    'Remove it and set color, background-color and border-color from the disabled tokens, such as ' +
+    'var(--todae-<component>-fg-disabled), -bg-disabled and -border-disabled.',
   cursor: (value) => `Unexpected cursor "${value}" on a disabled state. Use not-allowed or inherit.`,
 });
 

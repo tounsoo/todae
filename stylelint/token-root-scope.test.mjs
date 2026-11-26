@@ -92,3 +92,13 @@ test('the project config rejects a foreign root at error severity', async () => 
   assert.equal(report.warnings[0].rule, ruleName);
   assert.equal(report.warnings[0].severity, 'error');
 });
+
+test('a rejection lists the roots the sheet may read and names the config file to change', async () => {
+  const result = await stylelint.lint({ code: '.a { color: var(--todae-dialog-bg); }', codeFilename: field, config });
+  assert.equal(
+    result.results[0].warnings[0].text,
+    'Unexpected token root "dialog" in Field. Field may read field, option, space, overlay, focus. ' +
+      'Use a token from one of those roots, or add "dialog" to Field in ownRoots, coreReads or sharedRoots ' +
+      'in stylelint.config.mjs. (todae/token-root-scope)',
+  );
+});

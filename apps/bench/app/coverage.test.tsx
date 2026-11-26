@@ -25,7 +25,10 @@ function publicParts(): string[] {
 
 describe('bench coverage', () => {
   it('has an entry for every public part, and only for those', () => {
-    expect(Object.keys(COVERAGE).sort()).toEqual(publicParts());
+    expect(
+      Object.keys(COVERAGE).sort(),
+      'Add an entry for each new public part to the case file in apps/bench/app/cases/ it belongs to (cases, { via }, or { skip }), and remove the entry of a part the package no longer exports. Run pnpm build:ds first, since this reads the built package',
+    ).toEqual(publicParts());
   });
 
   it('puts each part in one case file', () => {
