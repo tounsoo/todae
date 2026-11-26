@@ -71,6 +71,11 @@ describe('package entries', () => {
     expect(readFileSync(join(import.meta.dirname, '../tsconfig.build.json'), 'utf8')).toContain('"include": ["src"]');
   });
 
+  it('keeps only .ts files in src/server, which the build and these tests read', () => {
+    const other = readdirSync(join(import.meta.dirname, 'server')).filter((file) => !file.endsWith('.ts'));
+    expect(other, 'Name each server entry src/server/<name>.ts, or move these files out of src/server').toEqual([]);
+  });
+
   it('lists every src/server file in package.json exports, and nothing else', () => {
     const exported = Object.keys(pkg.exports).filter((key) => !otherExports.includes(key)).map((key) => key.slice(2));
     const missing = serverEntries.filter((name) => !exported.includes(name));
