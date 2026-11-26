@@ -1,5 +1,4 @@
 ---
-extends:
 when: Changing, adding or translating a docs page under apps/docs on todae.
 ---
 

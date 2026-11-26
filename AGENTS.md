@@ -94,6 +94,7 @@ Tier: T0
 | checks | The Checks aggregate | `.github/workflows/ci.yml` | #241 | seeded |
 | release | The release workflow | `.github/workflows/release.yml` | #171 | seeded |
 | docs-deploy | Docs deploy | `.github/workflows/docs-deploy.yml` | #398 | seeded |
+| decision-paths | A live decision names only repo paths that exist, and the decisions index matches each status | `scripts/decision-paths.mjs`, `pnpm check:self` | #511 | seeded |
 | self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
 
 ## CI jobs

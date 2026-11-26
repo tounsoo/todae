@@ -1,5 +1,4 @@
 ---
-extends:
 when: Any change on todae that touches a design token, the token source in packages/design-system/tokens, or the generated token files.
 ---
 

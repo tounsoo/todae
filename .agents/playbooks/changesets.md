@@ -1,5 +1,4 @@
 ---
-extends:
 when: A todae pull request that changes what @tounsoo/todae ships, or that trips the changeset check.
 ---
 
