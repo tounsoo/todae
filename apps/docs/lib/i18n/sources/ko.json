@@ -155,9 +155,9 @@
     "# Composition": "654c6a27af86",
     "## Placing something new": "7535f6400597",
     "## Components": "c1a7ce81bb89",
-    "## Recipes": "0ccacf69fdb0",
+    "## Recipes": "2e94768d9dbe",
     "## Hook": "4c2a5e2fd3a4",
-    "## Never": "683d91a3b1f8",
+    "## Never": "95cabcac594a",
     "(section order)": "5f36e5fc4a2e"
   },
   "contents": {
@@ -270,7 +270,7 @@
     "## Counter": "76d4100641e2",
     "## Row": "34fb1d21484e",
     "## Custom controls": "edafb0ec7ed8",
-    "## Icons": "4a52c267d4a7",
+    "## Icons": "d927f9665563",
     "## Accessible composition": "421616bf383e",
     "## When to use": "d57fe8233a0b",
     "### Field.Root": "b7b667157199",
@@ -1178,7 +1178,7 @@
   },
   "utilities/strings-provider": {
     "(top)": "548a881a988e",
-    "# StringsProvider": "f839eb817fff",
+    "# StringsProvider": "c6ba8986d3ff",
     "## Strings": "22fc837bbac6",
     "## Accessible composition": "afe1283aa175",
     "## When to use": "d57fe8233a0b",

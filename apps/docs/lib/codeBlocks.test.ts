@@ -1,15 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { exampleSource } from './exampleSource.mjs';
 import { codeBlocks } from './mdxAst';
 
 const APP = join(process.cwd(), 'app');
 const EXAMPLES = join(process.cwd(), 'examples');
-const LANGUAGES = new Set(['tsx', 'ts', 'css', 'json', 'sh']);
-
-// Pages whose code blocks don't follow the conventions yet. Bring them in line, then remove them here.
-const PENDING = new Set(['composition', 'field', 'utilities/strings-provider']);
+// `text` is for a block that is not code, such as the list of patterns under Composition's Never.
+const LANGUAGES = new Set(['tsx', 'ts', 'css', 'json', 'sh', 'text']);
 
 function pages(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -27,14 +25,15 @@ function blocks(): { name: string; lang: string; body: string }[] {
       const text = readFileSync(join(EXAMPLES, file), 'utf8');
       return file.endsWith('.css') ? { name: `examples/${file}`, lang: 'css', body: text } : { name: `examples/${file}`, lang: 'tsx', body: exampleSource(text) };
     });
-  return [...examples, ...pages(APP)
-    .filter((path) => !PENDING.has(relative(APP, path).split(sep).slice(1, -1).join('/')))
-    .flatMap((path) =>
+  return [
+    ...examples,
+    ...pages(APP).flatMap((path) =>
       codeBlocks(readFileSync(path, 'utf8')).code.map((source, index) => {
         const [fence = '', ...lines] = source.split('\n');
         return { name: `${relative(APP, path)} #${index + 1}`, lang: fence.replace(/^`+/, '').trim(), body: lines.slice(0, -1).join('\n') };
       }),
-    )];
+    ),
+  ];
 }
 
 describe('docs code blocks', () => {
@@ -45,15 +44,18 @@ describe('docs code blocks', () => {
   });
 
   it('name a language', () => {
-    expect(all.filter(({ lang }) => !LANGUAGES.has(lang)).map(({ name }) => name)).toEqual([]);
+    const bad = all.filter(({ lang }) => !LANGUAGES.has(lang)).map(({ name }) => name);
+    expect(bad, `Give each of these fences (page #block, counted from 1) one of ${[...LANGUAGES].join(', ')} after the backticks, in the English page and its Korean twin`).toEqual([]);
   });
 
   it('indent with spaces', () => {
-    expect(all.filter(({ body }) => /^\t/m.test(body)).map(({ name }) => name)).toEqual([]);
+    const bad = all.filter(({ body }) => /^\t/m.test(body)).map(({ name }) => name);
+    expect(bad, 'Indent these blocks (page #block, counted from 1) with two spaces per level instead of tabs, in the English page and its Korean twin').toEqual([]);
   });
 
   it('mark left-out content with an ellipsis, not three dots', () => {
     // `...` followed by a name, call or literal is a spread or rest.
-    expect(all.filter(({ body }) => /\.\.\.(?![\w({[])/.test(body)).map(({ name }) => name)).toEqual([]);
+    const bad = all.filter(({ body }) => /\.\.\.(?![\w({[])/.test(body)).map(({ name }) => name);
+    expect(bad, 'Write left-out content in these blocks (page #block, counted from 1) as … (U+2026), in the English page and its Korean twin').toEqual([]);
   });
 });

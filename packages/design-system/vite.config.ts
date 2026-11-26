@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { defineConfig, type Plugin } from 'vitest/config';
@@ -9,34 +10,16 @@ if (process.env.VITEST) pinTestLocale();
 // Forward slashes on every platform, as in Vite's module ids.
 const src = (path: string) => normalizePath(fileURLToPath(new URL(`./src/${path}`, import.meta.url)));
 
-const entries = {
+// Every file in src/server is a server-safe entry: no hooks, no context, no 'use client'.
+// package.json exports and apps/docs/tsconfig.json paths list the same names; entries.test.ts checks they agree.
+const serverEntries = readdirSync(fileURLToPath(new URL('./src/server', import.meta.url)))
+  .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+  .map((file) => file.slice(0, -'.ts'.length))
+  .sort();
+
+const entries: Record<string, string> = {
   index: src('index.ts'),
-  // Server-safe parts: no hooks, no context, no 'use client'.
-  stack: src('server/stack.ts'),
-  text: src('server/text.ts'),
-  label: src('server/label.ts'),
-  badge: src('server/badge.ts'),
-  card: src('server/card.ts'),
-  'data-list': src('server/data-list.ts'),
-  'empty-state': src('server/empty-state.ts'),
-  message: src('server/message.ts'),
-  breadcrumbs: src('server/breadcrumbs.ts'),
-  grid: src('server/grid.ts'),
-  pagination: src('server/pagination.ts'),
-  link: src('server/link.ts'),
-  disclosure: src('server/disclosure.ts'),
-  separator: src('server/separator.ts'),
-  prose: src('server/prose.ts'),
-  table: src('server/table.ts'),
-  progress: src('server/progress.ts'),
-  meter: src('server/meter.ts'),
-  loader: src('server/loader.ts'),
-  skeleton: src('server/skeleton.ts'),
-  slider: src('server/slider.ts'),
-  code: src('server/code.ts'),
-  'code-block': src('server/code-block.ts'),
-  kbd: src('server/kbd.ts'),
-  'visually-hidden': src('server/visually-hidden.ts'),
+  ...Object.fromEntries(serverEntries.map((name) => [name, src(`server/${name}.ts`)])),
 };
 
 function emitPackageCss(): Plugin {

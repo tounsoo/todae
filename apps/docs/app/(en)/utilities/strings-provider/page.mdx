@@ -9,17 +9,17 @@ export const description = "StringsProvider sets the text Todae writes by itself
 
 ```tsx
 const korean: Partial<Strings> = {
-	close: '닫기',
-	dismiss: '닫기',
-	removeChip: (label) => `${label} 삭제`,
-	moreChips: (count) => `${count}개 더 있음`,
-	characterLimit: (max) => `최대 ${max}자`,
-	charactersLeft: (remaining) => `${remaining}자 남음`,
-	characterLimitReached: '글자 수 한도에 도달했습니다',
+  close: '닫기',
+  dismiss: '닫기',
+  removeChip: (label) => `${label} 삭제`,
+  moreChips: (count) => `${count}개 더 있음`,
+  characterLimit: (max) => `최대 ${max}자`,
+  charactersLeft: (remaining) => `${remaining}자 남음`,
+  characterLimitReached: '글자 수 한도에 도달했습니다',
 }
 
 <StringsProvider strings={korean}>
-	<App />
+  <App />
 </StringsProvider>
 ```
 
@@ -27,9 +27,9 @@ A nested provider changes only the keys it passes:
 
 ```tsx
 <StringsProvider strings={korean}>
-	<StringsProvider strings={{ close: '취소' }}>
-		{/* close is 취소 here; every other key is still Korean. */}
-	</StringsProvider>
+  <StringsProvider strings={{ close: '취소' }}>
+    {/* close is 취소 here; every other key is still Korean. */}
+  </StringsProvider>
 </StringsProvider>
 ```
 
