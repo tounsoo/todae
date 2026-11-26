@@ -29,6 +29,7 @@ import {
   planTypes,
   readWorkflow,
   redact,
+  runsPart,
   renderBody,
   routesFor,
   sameSiteFetch,
@@ -136,12 +137,13 @@ describe('planFor', () => {
       'docs-peek',
       'drive',
     ]);
+    assert.ok(!steps.includes('docs-browser'), 'browser runs the docs browser tests as a part');
     assert.equal(new Set(steps).size, steps.length);
   });
 
   test('a lone fernway need is still ordered after the build it needs', () => {
     const { steps } = planFor(['examples/fernway/a.ts']);
-    assert.deepEqual(steps, ['build-ds', 'fernway', 'ssr-smoke', 'check-self', 'forbidden-paths']);
+    assert.deepEqual(steps, ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths']);
   });
 
   test('markdown alone runs the jobs CI runs on Markdown, and an empty diff plans nothing', () => {
@@ -158,15 +160,10 @@ describe('planFor', () => {
   });
 
   test('tokens plan the token checks before unit tests', () => {
-    assert.deepEqual(planFor(['packages/design-system/tokens/a.json']).steps, [
-      'tokens-check',
-      'tokens-api-check',
-      'changeset',
-      'build-ds',
-      'unit',
-      'check-self',
-      'forbidden-paths',
-    ]);
+    const { steps } = planFor(['packages/design-system/tokens/a.json']);
+    assert.equal(steps[0], 'tokens-api-check');
+    assert.ok(steps.indexOf('tokens-check') < steps.indexOf('unit'));
+    assert.deepEqual(steps.filter((id) => id !== 'tokens-api-check'), planTypes(['component']).steps);
   });
 
   test('a step that a planned step runs as a part is not planned again', () => {
@@ -199,6 +196,19 @@ describe('plans match CI', () => {
     const problems = workflowGaps(changed);
     assert.equal(problems.length, 1);
     assert.match(problems[0], /build job runs "pnpm brand-new-check", which no CI_RUNS entry in verify\.mjs names; add one/);
+  });
+
+  test('a second command in a run block needs its own entry', () => {
+    const changed = structuredClone(workflow);
+    const step = changed.jobs.docs.steps.find((item) => item.run === 'pnpm --filter docs test:axe');
+    step.run = 'pnpm --filter docs test:axe\npnpm --filter docs test:brand-new';
+    const problems = workflowGaps(changed);
+    assert.equal(problems.length, 1, problems.join('\n'));
+    assert.match(problems[0], /docs job runs "pnpm --filter docs test:brand-new", which no CI_RUNS entry/);
+  });
+
+  test("the docs browser line in Fernway's block is its own run", () => {
+    assert.ok(blockingRuns(workflow).some((item) => item.job === 'fernway' && item.run.startsWith('pnpm --filter docs test:browser')));
   });
 
   test('a CI command that is gone fails', () => {
@@ -251,7 +261,9 @@ describe('plans match CI', () => {
 
   test('a docs plan runs axe and peek on the built site after its build', () => {
     const steps = plan('docs');
-    for (const id of ['typecheck', 'lint', 'docs-unit', 'docs-build', 'docs-axe', 'docs-peek', 'drive']) assert.ok(steps.includes(id), id);
+    for (const id of ['typecheck', 'lint', 'check-self', 'docs-unit', 'docs-browser', 'docs-build', 'docs-axe', 'docs-peek', 'drive']) {
+      assert.ok(covers(steps, id), id);
+    }
     assert.ok(steps.indexOf('docs-build') < steps.indexOf('docs-axe'));
     assert.ok(steps.indexOf('docs-build') < steps.indexOf('docs-peek'));
     assert.deepEqual(STEPS['docs-axe'].cmd, ['pnpm', '--filter', 'docs', 'test:axe']);
@@ -264,11 +276,18 @@ describe('plans match CI', () => {
     for (const part of STEPS.check.parts) assert.ok(pieces.includes(STEPS[part].cmd.join(' ')), part);
   });
 
+  test('a recursive script runs a workspace script as a part, and only one the package has', () => {
+    const packages = new Map([['docs', { scripts: { 'test:browser': 'vitest' } }]]);
+    assert.ok(runsPart('pnpm -r --if-present test:browser', ['pnpm', '--filter', 'docs', 'test:browser'], packages));
+    assert.ok(!runsPart('pnpm -r --if-present test:browser', ['pnpm', '--filter', 'fernway-example', 'test:browser'], packages));
+    assert.ok(!runsPart('pnpm -r --if-present test', ['pnpm', '--filter', 'docs', 'test:browser'], packages));
+  });
+
   test('the Playwright hint names and installs every browser the tests launch', () => {
     const config = readFileSync(path.join(repoRoot, 'packages/design-system/vitest.browser.config.ts'), 'utf8');
     const launched = [...new Set([...config.matchAll(/browser: '(\w+)'/g)].map((match) => match[1]))];
     assert.deepEqual(launched.sort(), ['chromium', 'firefox', 'webkit']);
-    for (const id of ['browser', 'docs-axe', 'docs-peek']) {
+    for (const id of ['browser', 'docs-browser', 'docs-axe', 'docs-peek']) {
       const reason = STEPS[id].blockedReason;
       for (const name of launched) {
         assert.match(reason, new RegExp(name, 'i'), `${id} hint leaves out ${name}`);
@@ -282,7 +301,8 @@ describe('forbidden-paths step', () => {
   test("an old bash, such as macOS's 3.2, is BLOCKED with the fix, not FAIL", () => {
     const step = STEPS['forbidden-paths'];
     assert.match('forbidden-paths.sh needs bash 4 or newer; this bash is 3.2.57(1)-release', step.blockedWhen);
-    assert.match('line 17: ${base,,}: bad substitution', step.blockedWhen);
+    // A real substitution bug under a new bash still fails.
+    assert.doesNotMatch('line 17: ${base,,}: bad substitution', step.blockedWhen);
     assert.match(step.blockedReason, /bash 4 or newer/);
   });
 });

@@ -54,8 +54,8 @@ export const CHANGE_TYPES = [
     id: 'tokens',
     label: 'Design tokens',
     match: under('packages/design-system/tokens/'),
-    steps: ['tokens-check', 'tokens-api-check', 'changeset', 'unit', 'check-self', 'forbidden-paths'],
-    proof: "token checks, the changeset check and unit tests; the token change needs Ben's approval",
+    steps: ['tokens-api-check', 'check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'fernway', 'forbidden-paths'],
+    proof: "the token API check and everything a package change runs, since built tokens reach every component; the token change needs Ben's approval",
   },
   {
     id: 'component',
@@ -68,15 +68,15 @@ export const CHANGE_TYPES = [
     id: 'docs',
     label: 'Docs app',
     match: under('apps/docs/'),
-    steps: ['typecheck', 'lint', 'docs-unit', 'docs-build', 'docs-axe', 'docs-peek', 'drive', 'check-self', 'forbidden-paths'],
-    proof: 'docs typecheck, tests, build, axe and peek, and the touched routes driven in English and Korean',
+    steps: ['check', 'docs-unit', 'docs-browser', 'docs-build', 'docs-axe', 'docs-peek', 'drive', 'forbidden-paths'],
+    proof: 'pnpm check, the docs unit and browser tests, the docs build, axe and peek, and the touched routes driven in English and Korean',
   },
   {
     id: 'example',
     label: 'Examples',
     match: under('examples/'),
-    steps: ['build-ds', 'fernway', 'ssr-smoke', 'check-self', 'forbidden-paths'],
-    proof: 'the design system builds, and the Fernway example and the SSR smoke app build against it',
+    steps: ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths'],
+    proof: 'pnpm check, and the Fernway example and the SSR smoke app build against the built design system',
   },
   {
     id: 'agent',
@@ -119,8 +119,8 @@ export const CHANGE_TYPES = [
     id: 'other',
     label: 'Everything else',
     match: () => true,
-    steps: ['check', 'unit', 'forbidden-paths'],
-    proof: 'pnpm check and unit tests; nothing narrower proves an unclassified file',
+    steps: ['check', 'changeset', 'unit', 'forbidden-paths'],
+    proof: 'pnpm check, the changeset check and unit tests; nothing narrower proves an unclassified file',
   },
 ];
 
@@ -167,6 +167,16 @@ export const STEPS = {
     label: 'Browser tests',
     cmd: ['pnpm', 'test:browser'],
     needs: ['build-ds'],
+    // The root script runs each workspace's test:browser, the docs app's included.
+    parts: ['docs-browser'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
+  'docs-browser': {
+    id: 'docs-browser',
+    label: 'Docs browser tests',
+    cmd: ['pnpm', '--filter', 'docs', 'test:browser'],
+    needs: ['build-ds'],
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
@@ -206,7 +216,7 @@ export const STEPS = {
       '[ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "forbidden-paths.sh needs bash 4 or newer; this bash is $BASH_VERSION" >&2; exit 2; }; set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
     ],
     // macOS ships bash 3.2, and the script lowercases with ${name,,}, which bash 4 added.
-    blockedWhen: /needs bash 4 or newer|bad substitution/,
+    blockedWhen: /needs bash 4 or newer/,
     blockedReason: 'forbidden-paths.sh needs bash 4 or newer, which CI has. Install one, such as brew install bash, and put it first on PATH.',
   },
   'verify-self-test': {
@@ -235,7 +245,7 @@ export const CI_RUNS = [
     job: 'static',
     run: 'pnpm changeset status --since="origin/$BASE_REF"',
     steps: ['changeset'],
-    types: ['tokens', 'component'],
+    types: ['tokens', 'component', 'other'],
     differs: 'runs against the plan base, the merge base with origin/main',
   },
   { job: 'static', run: 'pnpm tokens:check', steps: ['tokens-check'], types: ['tokens', 'component'] },
@@ -243,39 +253,53 @@ export const CI_RUNS = [
     job: 'static',
     run: 'pnpm schema && git diff --exit-code',
     steps: ['schema'],
-    types: ['component'],
+    types: ['tokens', 'component'],
     differs: 'requires no change anywhere under packages/design-system/schema, new files included',
   },
-  { job: 'static', run: 'pnpm check', steps: ['check'], types: ['component', 'ci', 'other'] },
+  { job: 'static', run: 'pnpm check', steps: ['check'], types: ['tokens', 'component', 'docs', 'example', 'ci', 'other'] },
   { job: 'static', run: 'node .github/scripts/pinned-actions.mjs', steps: ['pinned-actions'], types: ['ci'] },
   { job: 'build', run: 'pnpm build:ds', steps: ['build-ds'], types: ['tokens', 'component', 'example', 'ci', 'other'] },
-  { job: 'build', run: 'pnpm publish:check', steps: ['publish-check'], types: ['component'] },
-  { job: 'build', run: 'pnpm ssr:smoke', steps: ['ssr-smoke'], types: ['component', 'example'] },
+  { job: 'build', run: 'pnpm publish:check', steps: ['publish-check'], types: ['tokens', 'component'] },
+  { job: 'build', run: 'pnpm ssr:smoke', steps: ['ssr-smoke'], types: ['tokens', 'component', 'example'] },
   { job: 'build', run: 'pnpm test', steps: ['unit'], types: ['tokens', 'component', 'ci', 'other'] },
   { job: 'fernway', run: 'fc-match sans-serif:bold', steps: [], why: "sets the CI container's sans-serif font" },
-  { job: 'fernway', run: 'pnpm build:ds', steps: ['build-ds'], types: ['component', 'example'] },
+  { job: 'fernway', run: 'pnpm build:ds', steps: ['build-ds'], types: ['tokens', 'component', 'example'] },
   {
     job: 'fernway',
     run: 'pnpm --filter @tounsoo/todae test:browser --project chromium',
     steps: ['browser'],
-    types: ['component'],
-    differs: "pnpm test:browser runs every browser project of the package and the docs app, these Chromium ones included",
+    types: ['tokens', 'component'],
+    differs: 'pnpm test:browser runs every browser project of the package, Chromium included',
+  },
+  {
+    job: 'fernway',
+    run: 'pnpm --filter docs test:browser --project chromium --project scroll-lock',
+    steps: ['docs-browser'],
+    types: ['tokens', 'component', 'docs'],
+    differs: "runs every docs browser project, these two included; pnpm test:browser runs it as a part",
   },
   { job: 'fernway', run: 'pnpm install --frozen-lockfile --offline', steps: [], why: "relinks the todae-tokens bin in CI's install, made before dist existed" },
-  { job: 'fernway', run: 'pnpm --filter fernway-example build', steps: ['fernway'], types: ['component', 'example'] },
+  { job: 'fernway', run: 'pnpm --filter fernway-example build', steps: ['fernway'], types: ['tokens', 'component', 'example'] },
   { job: 'engines', run: 'fc-match sans-serif:bold', steps: [], why: "sets the CI container's sans-serif font" },
   {
     job: 'engines',
     run: 'pnpm test:browser --project firefox',
     steps: ['browser'],
-    types: ['component'],
-    differs: 'pnpm test:browser runs Firefox too, with file parallelism and without the quarantine, so it is stricter than CI',
+    types: ['tokens', 'component'],
+    differs:
+      'pnpm test:browser runs Firefox too, but with file parallelism and without the quarantine, so a local Firefox failure may be one CI would not fail on',
+  },
+  {
+    job: 'engines',
+    run: 'scripts/firefox-quarantine.ts',
+    steps: [],
+    why: 'turns quarantined Firefox failures into warnings; there is no quarantine here',
   },
   {
     job: 'engines',
     run: 'pnpm --filter @tounsoo/todae test:browser --project webkit',
     steps: ['browser'],
-    types: ['component'],
+    types: ['tokens', 'component'],
     differs: 'pnpm test:browser runs every browser project, WebKit included',
   },
   { job: 'docs', run: 'pnpm build:ds', steps: ['build-ds'], types: ['docs'] },
@@ -336,13 +360,20 @@ export function ciGaps() {
   return problems;
 }
 
-// The run lines of every job that the Checks job needs, from the parsed ci.yml.
+// A line of a run block that runs a tool, as opposed to shell plumbing such as set, export or a heredoc.
+const COMMAND_LINE = /^(?:pnpm|npx|npm|node|bash|sh|git|corepack)\s/;
+
+// The commands of every job that the Checks job needs, from the parsed ci.yml. A run block gives each of
+// its command lines, so a second command in a block needs its own entry. A block with no command line,
+// such as the font setup, is one run.
 export function blockingRuns(workflow) {
   const jobs = workflow?.jobs ?? {};
   const out = [];
   for (const job of jobs.checks?.needs ?? []) {
     for (const step of jobs[job]?.steps ?? []) {
-      if (typeof step.run === 'string') out.push({ job, run: step.run.trim(), always: jobs[job].if === undefined });
+      if (typeof step.run !== 'string') continue;
+      const lines = step.run.split('\n').map((line) => line.trim()).filter((line) => COMMAND_LINE.test(line));
+      for (const run of lines.length ? lines : [step.run.trim()]) out.push({ job, run, always: jobs[job].if === undefined });
     }
   }
   return out;
@@ -1335,6 +1366,18 @@ function workspacePackages() {
   return packages;
 }
 
+// True when a root package script runs the part's command: as one of its && commands, or, for
+// `pnpm -r --if-present <script>`, as that script of a workspace package that has it.
+export function runsPart(script, partCmd, packages) {
+  const text = partCmd.join(' ');
+  if (script.split('&&').some((piece) => piece.trim() === text)) return true;
+  const recursive = /^pnpm -r(?: --if-present)? (\S+)$/.exec(script.trim());
+  const [program, filter, name, run] = partCmd;
+  return Boolean(
+    recursive && program === 'pnpm' && filter === '--filter' && run === recursive[1] && partCmd.length === 4 && packages.get(name)?.scripts?.[run],
+  );
+}
+
 // The parsed .github/workflows/ci.yml, read with the yaml package the repo installs.
 export function readWorkflow(file = path.join(root, '.github/workflows/ci.yml')) {
   const { parse } = createRequire(path.join(root, 'package.json'))('yaml');
@@ -1393,10 +1436,11 @@ async function selfTest() {
     }
   }
   for (const [id, step] of Object.entries(STEPS)) {
-    const script = rootManifest.scripts?.[step.cmd?.[1]] ?? '';
     for (const part of step.parts ?? []) {
-      const partCmd = STEPS[part]?.cmd?.join(' ');
-      expect(partCmd && script.split('&&').some((piece) => piece.trim() === partCmd), `STEPS.${id} says it runs ${part}, but the ${step.cmd[1]} script has no "${partCmd}"`);
+      expect(
+        runsPart(rootManifest.scripts?.[step.cmd?.[1]] ?? '', STEPS[part]?.cmd ?? [], packages),
+        `STEPS.${id} says it runs ${part}, but the ${step.cmd[1]} script does not run "${STEPS[part]?.cmd?.join(' ')}"`,
+      );
     }
   }
   problems.push(...ciGaps());
