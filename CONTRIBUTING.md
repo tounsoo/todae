@@ -12,6 +12,42 @@ Todae is a pnpm workspace:
 - `apps/docs` is the Next.js 15 docs site. It renders live MDX examples from the library and serves the docs MCP server.
 - `examples/fernway` is a small Vite app that themes Todae for a made-up company with tokens only. Its [README](examples/fernway/README.md) says how to run it.
 
+## Where a change goes
+
+This map lists the files each common change touches. [`GLOSSARY.md`](GLOSSARY.md) defines the terms. [`ARCHITECTURE.md`](ARCHITECTURE.md) has the rules and why. Package paths are relative to `packages/design-system`, and docs paths to `apps/docs`. `<Name>` is the PascalCase namespace, such as `EmptyState`, and `<slug>` is its kebab-case URL and entry name, such as `empty-state`.
+
+| Change | Files to touch |
+| --- | --- |
+| Component | `src/components/<Name>.tsx`, `<Name>.module.css` when it draws anything, `<Name>.test.tsx`, a meta and a `parts.test.tsx` case for each part (next row), and an export in `src/index.ts`. Add the bench case to a group in `apps/bench/app/cases/*.tsx`; `apps/bench/app/coverage.ts` fails the typecheck without one. Run `pnpm schema`. |
+| Compound part | `src/components/<Name>.<Part>.meta.ts`, one per part, and a case for the part in the hand list in `src/components/parts.test.tsx`. `src/metaCoverage.test.ts` fails on a part with no meta. |
+| Server entry | `src/server/<slug>.ts`, then the slug in four lists: `entries` in `vite.config.ts`, `exports` in `package.json`, the server-entry list in `src/entries.test.ts`, and `paths` in `apps/docs/tsconfig.json`. |
+| Client wrapper | `src/components/<Name>.client.tsx`, exported from `src/index.ts`, while the server entry keeps exporting `<Name>.tsx`. |
+| Tokens | Only with Ben's yes in his own message (`.agents/playbooks/tokens.md`). `tokens/components/<slug>.json`, listed in the contract set's `sources` in `tokens/resolver.json`. A sheet whose token root is not its name goes in `ownRoots` in `stylelint.config.mjs`. Run `pnpm tokens` and commit the generated files. |
+| Hook | `src/hooks/use<Name>.ts`, `use<Name>.meta.ts`, `use<Name>.test.tsx`, an export in `src/index.ts`, and a case in `apps/bench/app/cases/hooks.tsx`. Run `pnpm schema`. |
+| Docs page | `app/(en)/<slug>/page.mdx` and its Korean twin `app/ko/<slug>/page.mdx` in the same pull request. A hook or helper page goes under `utilities/`. List the slug in `lib/i18n/englishPages.ts` and `components/siteGroups.ts`, add each prop's `en` and `ko` text to `lib/i18n/props/ko.json`, then run `pnpm --filter docs i18n:stamp ko <slug>` once the Korean matches (`.agents/playbooks/docs-translation.md`). |
+| Docs example | One file per example in `examples/<slug>/<Name><What>.tsx`, with a `.module.css` beside it when it needs layout CSS ([0009](docs/decisions/0009-docs-example-files.md)). A page shows it with `<Example of={…} />`. |
+| Recipe | `app/(en)/recipes/<slug>/page.mdx`, its twin `app/ko/recipes/<slug>/page.mdx`, and its examples in `examples/recipes/<slug>/`. A recipe is not a package export, so it touches nothing in `packages/design-system`. |
+| Browser test | `src/browser/<slug>.browser.test.tsx` for the package, or `apps/docs/test/*.browser.test.tsx` for a docs demo. Use one for real layout, focus or the top layer ([Tests](ARCHITECTURE.md#tests)). |
+| Decision | `docs/decisions/NNNN-short-slug.md` from `template.md`, with the next number, and a line at the top of the list in `docs/decisions/README.md`. Amend an existing decision in its own file. A design-system rule also goes in `ARCHITECTURE.md`. |
+| Changeset | `.changeset/<name>.md` from `pnpm changeset`, for any change to what the package ships ([Changesets](#changesets), `.agents/playbooks/changesets.md`). |
+
+### Files to copy
+
+These are the current files to copy for each kind of change. ARCHITECTURE warns not to copy an exception into new code; these follow the rules.
+
+| Change | Copy |
+| --- | --- |
+| Small server-safe component | `src/components/Badge.tsx`, `Badge.Root.meta.ts`, `Badge.test.tsx`, `Badge.module.css` and `src/server/badge.ts` |
+| Compound client component | `src/components/Alert.tsx`, `Alert.module.css`, `Alert.test.tsx` and the `Alert.*.meta.ts` files |
+| Client wrapper | `src/components/Breadcrumbs.client.tsx` with `src/server/breadcrumbs.ts` |
+| Hook | `src/hooks/useClipboard.ts`, `useClipboard.meta.ts` and `useClipboard.test.tsx`; its page is `app/(en)/utilities/use-clipboard` |
+| Component tokens | `tokens/components/badge.json` |
+| Docs page | `app/(en)/badge/page.mdx` or `app/(en)/alert/page.mdx`, with `app/ko/badge` or `app/ko/alert` |
+| Recipe page | `app/(en)/recipes/avatar-group/page.mdx` with `app/ko/recipes/avatar-group` and `examples/recipes/avatar-group/` |
+| Docs example | `examples/badge/BadgeTones.tsx`, or `examples/avatar/AvatarSizes.tsx` with `AvatarSizes.module.css` |
+| Browser test | `src/browser/empty-state.browser.test.tsx` |
+| Decision | `docs/decisions/template.md`; [0017](docs/decisions/0017-critical-button-variant.md) for a new decision, [0012](docs/decisions/0012-docs-build-in-github.md) for one with an amendment |
+
 ## Set up
 
 You need:
