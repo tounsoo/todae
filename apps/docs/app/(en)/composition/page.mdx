@@ -50,15 +50,15 @@ Desktop (`presentation="popover"`). The closed control is a real Field. Spread `
 const cb = useCombobox({ presentation: 'popover' })
 
 <Field.Group>
-	<Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
-	<Field.Root {...cb.getAnchorProps()}>
-		<Field.Icon><Search /></Field.Icon>
-		<Field.ChipInput {...cb.getChipInputProps()} />
-		<Field.Icon><ChevronDown /></Field.Icon>
-	</Field.Root>
+  <Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
+  <Field.Root {...cb.getAnchorProps()}>
+    <Field.Icon><Search /></Field.Icon>
+    <Field.ChipInput {...cb.getChipInputProps()} />
+    <Field.Icon><ChevronDown /></Field.Icon>
+  </Field.Root>
 </Field.Group>
 <Popover.Root {...cb.getPopoverProps()}>
-	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
+  <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
 </Popover.Root>
 ```
 
@@ -70,18 +70,18 @@ Touch (`presentation="sheet"`). The closed control is `Button.Root`. Search Fiel
 const cb = useCombobox({ presentation: 'sheet' })
 
 <Field.Group>
-	<Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
-	<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
+  <Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
+  <Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
 </Field.Group>
 <BottomSheet.Root {...cb.getSheetProps()}>
-	<Field.Group>
-		<Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
-		<Field.Root id={cb.ids.input}>
-			<Field.Icon><Search /></Field.Icon>
-			<Field.TextInput {...cb.getInputProps()} />
-		</Field.Root>
-	</Field.Group>
-	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
+  <Field.Group>
+    <Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
+    <Field.Root id={cb.ids.input}>
+      <Field.Icon><Search /></Field.Icon>
+      <Field.TextInput {...cb.getInputProps()} />
+    </Field.Root>
+  </Field.Group>
+  <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
 </BottomSheet.Root>
 ```
 
@@ -105,7 +105,7 @@ No Trigger sugar component. No `Combobox.*` chrome. See [Combobox](/recipes/comb
 
 ## Never
 
-```
+```text
 Field.Root
   └─ Field.Button.Root          nested compound namespaces
 

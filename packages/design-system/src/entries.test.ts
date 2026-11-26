@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build as esbuild } from 'esbuild';
@@ -29,6 +29,19 @@ const pkg = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json')
   exports: Record<string, { types: string; default: string } | string>;
 };
 
+// Every file in src/server is a server-safe entry; vite.config.ts builds each one.
+const serverEntries = readdirSync(join(import.meta.dirname, 'server'))
+  .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+  .map((file) => file.slice(0, -'.ts'.length))
+  .sort();
+// Exports that are not server entries.
+const otherExports = ['.', './todae.css', './dist/todae.css', './schema/components.json', './tokens.json', './tokens-builder', './package.json'];
+const docsPathMap = (
+  JSON.parse(readFileSync(join(import.meta.dirname, '../../../apps/docs/tsconfig.json'), 'utf8')) as { compilerOptions: { paths: Record<string, string[]> } }
+).compilerOptions.paths;
+const docsPaths = Object.keys(docsPathMap);
+const docsOther = ['@tounsoo/todae', '@tounsoo/todae/todae.css', '@tounsoo/todae/schema/components.json', '@tounsoo/todae/tokens.json', '@tounsoo/todae/tokens-builder'];
+
 /** Every file a built module pulls in, following relative imports. */
 function closure(file: string, seen = new Set<string>()): Set<string> {
   if (seen.has(file)) return seen;
@@ -45,9 +58,9 @@ describe('package entries', () => {
     expect(read('index.js').startsWith('"use client";')).toBe(true);
   });
 
-  it.each(['stack', 'text', 'label', 'badge', 'card', 'data-list', 'empty-state', 'message', 'breadcrumbs', 'grid', 'pagination', 'link', 'disclosure', 'separator', 'prose', 'table', 'progress', 'meter', 'loader', 'skeleton', 'slider', 'code', 'code-block', 'kbd', 'visually-hidden'])('ships %s as a server-safe entry', (name) => {
+  it.each(serverEntries)('ships %s as a server-safe entry', (name) => {
     const entry = pkg.exports[`./${name}`];
-    expect(entry).toEqual({ types: `./dist/server/${name}.d.ts`, default: `./dist/${name}.js` });
+    expect(entry, `package.json exports["./${name}"] for src/server/${name}.ts`).toEqual({ types: `./dist/server/${name}.d.ts`, default: `./dist/${name}.js` });
     for (const file of closure(`${name}.js`)) {
       const code = read(file);
       expect(code, file).not.toMatch(/use client/);
@@ -56,6 +69,39 @@ describe('package entries', () => {
       for (const [, spec] of code.matchAll(/from\s+["']([^."'][^"']*)["']/g)) expect(spec, file).toBe('react/jsx-runtime');
     }
     expect(readFileSync(join(import.meta.dirname, '../tsconfig.build.json'), 'utf8')).toContain('"include": ["src"]');
+  });
+
+  it('keeps only .ts files in src/server, which the build and these tests read', () => {
+    const other = readdirSync(join(import.meta.dirname, 'server')).filter((file) => !file.endsWith('.ts'));
+    expect(other, 'Name each server entry src/server/<name>.ts, or move these files out of src/server').toEqual([]);
+  });
+
+  it('lists every src/server file in package.json exports, and nothing else', () => {
+    const exported = Object.keys(pkg.exports).filter((key) => !otherExports.includes(key)).map((key) => key.slice(2));
+    const missing = serverEntries.filter((name) => !exported.includes(name));
+    const extra = exported.filter((name) => !serverEntries.includes(name));
+    expect(
+      { missing, extra },
+      'packages/design-system/package.json exports must list each src/server/<name>.ts as "./<name>": ' +
+        '{ "types": "./dist/server/<name>.d.ts", "default": "./dist/<name>.js" }. Add the missing names; remove the extra ones, ' +
+        'or add a new non-server export to `otherExports` in src/entries.test.ts.',
+    ).toEqual({ missing: [], extra: [] });
+  });
+
+  it('lists every src/server file in the docs tsconfig paths, and nothing else', () => {
+    const listed = docsPaths.filter((key) => !docsOther.includes(key)).map((key) => key.slice('@tounsoo/todae/'.length));
+    const missing = serverEntries.filter((name) => !listed.includes(name));
+    const extra = listed.filter((name) => !serverEntries.includes(name));
+    expect(
+      { missing, extra },
+      'apps/docs/tsconfig.json compilerOptions.paths must map each src/server/<name>.ts as ' +
+        '"@tounsoo/todae/<name>": ["../../packages/design-system/src/server/<name>.ts"]. Add the missing names; remove the extra ones, ' +
+        'or add a new non-server path to `docsOther` in src/entries.test.ts.',
+    ).toEqual({ missing: [], extra: [] });
+    for (const name of serverEntries) {
+      const target = docsPathMap[`@tounsoo/todae/${name}`];
+      if (target) expect(target, `apps/docs/tsconfig.json path for @tounsoo/todae/${name}`).toEqual([`../../packages/design-system/src/server/${name}.ts`]);
+    }
   });
 
   it('declares the todae layer order before any layer is used', () => {

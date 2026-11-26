@@ -23,6 +23,7 @@ import {
   Calendar,
   Chip,
   ChipList,
+  Coachmark,
   Code,
   CodeBlock,
   Contents,
@@ -39,6 +40,7 @@ import {
   Kbd,
   Label,
   Link,
+  Mention,
   Menu,
   Meter,
   Nav,
@@ -66,11 +68,29 @@ import {
   VisuallyHidden,
   composeRefs,
   createToaster,
+  defineMentionSource,
   usePopover,
   useTooltip,
 } from '../index.js';
+import * as api from '../index.js';
 
 afterEach(cleanup);
+
+// A namespace such as Chip is PascalCase; a constant such as DEFAULT_STRINGS is upper snake case.
+// The same test metaCoverage.test.ts uses, so a new part needs a case here as it needs a meta there.
+const isNamespace = (name: string, value: unknown) =>
+  /^[A-Z][a-z]/.test(name) && typeof value === 'object' && value !== null && !Array.isArray(value);
+const exportedParts = Object.entries(api).flatMap(([name, value]) =>
+  isNamespace(name, value) ? Object.keys(value as object).map((part) => `${name}.${part}`) : [],
+);
+
+// Parts the `cases` list leaves out, each with the reason. A part that renders an element belongs in `cases`.
+const coveredElsewhere: Record<string, string> = {
+  'Form.Summary': "renders only after a failed submit; describe('Form.Summary') below covers it",
+  'Menu.Root': 'renders no element, only context, so it takes no native attributes or ref',
+  'Menu.Submenu': 'renders no element, only context, so it takes no native attributes or ref',
+  'Drilldown.Root': 'renders no element, only context, so it takes no native attributes or ref',
+};
 
 // Every exported part takes native attributes and a ref, so a company can wrap it.
 // The ref is untyped so one case table covers parts with different element types.
@@ -96,6 +116,23 @@ function TooltipCase({ p }: { p: Native }) {
     <Tooltip.Root {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']}>
       Tip
     </Tooltip.Root>
+  );
+}
+
+const mentionSource = defineMentionSource({ char: '@', label: 'People', options: [{ value: 'a', label: 'A' }] });
+
+function CoachmarkCase({ p, part }: { p: Native; part: 'Root' | 'Title' | 'Description' | 'Footer' | 'Close' }) {
+  const target = useRef<HTMLButtonElement>(null);
+  const Part = Coachmark[part === 'Root' ? 'Title' : part] as (props: Native & { children?: ReactNode }) => ReactNode;
+  return (
+    <>
+      <button type="button" ref={target}>
+        t
+      </button>
+      <Coachmark.Root targetRef={target} defaultOpen aria-label="c" {...(part === 'Root' ? p : {})}>
+        {part === 'Root' ? 'c' : <Part {...p}>c</Part>}
+      </Coachmark.Root>
+    </>
   );
 }
 
@@ -515,6 +552,30 @@ const cases: Case[] = [
       </Menu.Content>
     </Menu.Root>
   )],
+  ['Menu.SubmenuTrigger', (p) => (
+    <Menu.Root defaultOpen>
+      <Menu.Content aria-label="m">
+        <Menu.Submenu>
+          <Menu.SubmenuTrigger {...p}>s</Menu.SubmenuTrigger>
+          <Menu.SubmenuContent aria-label="s" />
+        </Menu.Submenu>
+      </Menu.Content>
+    </Menu.Root>
+  )],
+  ['Menu.SubmenuContent', (p) => (
+    <Menu.Root defaultOpen>
+      <Menu.Content aria-label="m">
+        <Menu.Submenu defaultOpen>
+          <Menu.SubmenuTrigger>s</Menu.SubmenuTrigger>
+          <Menu.SubmenuContent {...p} aria-label="s" />
+        </Menu.Submenu>
+      </Menu.Content>
+    </Menu.Root>
+  )],
+  ['Mention.Root', (p) => <Mention.Root {...p} source={mentionSource} id="a">@A</Mention.Root>],
+  ...(['Root', 'Title', 'Description', 'Footer', 'Close'] as const).map(
+    (part): Case => [`Coachmark.${part}`, (p) => <CoachmarkCase p={p} part={part} />],
+  ),
   ['Tabs.Root', (p) => <Tabs.Root {...p} defaultValue="a" />],
   [
     'Tabs.List',
@@ -839,6 +900,22 @@ const cases: Case[] = [
 ];
 
 describe('every exported part', () => {
+  it('has a case for every namespace part the package exports', () => {
+    const covered = new Set(cases.map(([name]) => name).concat(Object.keys(coveredElsewhere)));
+    const missing = exportedParts.filter((name) => !covered.has(name));
+    expect(
+      missing,
+      `Add a [name, render] case to the \`cases\` list in src/components/parts.test.tsx for each of: ${missing.join(', ')}. ` +
+        'A part that cannot render on its own here goes in `coveredElsewhere` with the test that covers it.',
+    ).toEqual([]);
+  });
+
+  it('names only exported parts', () => {
+    const exported = new Set(exportedParts);
+    const unknown = [...cases.map(([name]) => name.replace(/ .*$/, '')), ...Object.keys(coveredElsewhere)].filter((name) => !exported.has(name));
+    expect(unknown, `Remove or rename these entries in src/components/parts.test.tsx, which the package no longer exports: ${unknown.join(', ')}`).toEqual([]);
+  });
+
   it.each(cases)('%s forwards native attributes and a ref', (name, part) => {
     const ref = createRef<HTMLElement>();
     render(<>{part({ 'data-testid': name, ref })}</>);
