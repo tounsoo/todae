@@ -43,7 +43,7 @@ A server-safe entry, `@tounsoo/todae/<slug>`, that a Server Component can import
 The `*.client` version of a **Component** that the **Main entry** exports when the component also has a **Server entry**, adding what needs a client **Provider** or hooks.
 
 **Meta**:
-The hand-written description of one **Part** or **Hook**: its name, description and props. The **Component schema** is built from every **Meta**.
+The hand-written description of one exported **Part**, **Hook**, **Provider** or helper function: its name, description and props. The **Component schema** is built from every **Meta**.
 
 **Component schema**:
 The committed JSON list of every **Meta**, shipped with the package and read by the docs props tables and the **Docs MCP server**.
