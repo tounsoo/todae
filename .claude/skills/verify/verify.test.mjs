@@ -9,9 +9,14 @@ import { fileURLToPath } from 'node:url';
 
 import {
   CHANGE_TYPES,
+  CI_RUNS,
   SHARED_ROUTES,
   STEPS,
   UsageError,
+  blockingRuns,
+  ciGaps,
+  covers,
+  expandNeeds,
   checkPage,
   childEnv,
   checkPath,
@@ -22,13 +27,18 @@ import {
   pairLocales,
   parseBase,
   planFor,
+  planTypes,
+  readWorkflow,
   redact,
+  runsPart,
   renderBody,
   routesFor,
   sameSiteFetch,
   skippedResults,
   startTime,
   verdictOf,
+  withBase,
+  workflowGaps,
 } from './verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -58,15 +68,46 @@ describe('classification', () => {
     assert.deepEqual(ids(['apps/docs/app/(en)/button/page.mdx']), ['docs']);
     assert.deepEqual(ids(['AGENTS.md']), ['agent']);
     assert.deepEqual(ids(['CLAUDE.md']), ['agent']);
-    assert.deepEqual(ids(['README.md']), ['prose']);
-    assert.deepEqual(ids(['docs/decisions/001.md']), ['prose']);
-    assert.deepEqual(ids(['.changeset/brave-owls.md']), ['prose']);
+    assert.deepEqual(ids(['README.md']), ['markdown']);
+    assert.deepEqual(ids(['docs/decisions/001.md']), ['markdown']);
     assert.deepEqual(ids(['scripts/README.md']), ['ci']);
+  });
+
+  // CI runs every job on these, so they are not the Markdown that CI's markdown class skips.
+  test('a changeset, a pull request body and an audit note are not markdown', () => {
+    assert.deepEqual(ids(['.changeset/brave-owls.md']), ['other']);
+    assert.deepEqual(ids(['pr-body.md']), ['other']);
+    assert.deepEqual(ids(['notes/pr-body.md']), ['other']);
+    assert.deepEqual(ids(['.audit/notes.md']), ['other']);
+    assert.deepEqual(ids(['docs/notes.mdx']), ['other']);
+  });
+
+  test("the markdown type holds the files change-class.sh classes markdown, and no others", () => {
+    const files = [
+      'README.md',
+      'CONTRIBUTING.md',
+      'docs/decisions/0012-docs-build-in-github.md',
+      'apps/docs/TRANSLATING.md',
+      'scripts/README.md',
+      '.claude/task-prompt.md',
+      '.changeset/brave-owls.md',
+      '.audit/notes.md',
+      'pr-body.md',
+      'notes/pr-body.md',
+      'docs/notes.mdx',
+      'LICENSE',
+    ];
+    for (const file of files) {
+      const ci = execFileSync('bash', ['.github/scripts/change-class.sh'], { cwd: repoRoot, input: `${file}\n`, encoding: 'utf8' }).trim();
+      // A file an earlier type takes, such as scripts/README.md for ci, never reaches the markdown type.
+      const reaches = CHANGE_TYPES.find((type) => type.id === 'markdown').match(file);
+      assert.equal(reaches, ci === 'markdown', `${file}: change-class.sh says ${ci}, but the markdown type ${reaches ? 'matches' : 'does not match'} it`);
+    }
   });
 
   test('a diff yields each hit type once, in registry order', () => {
     const files = ['README.md', 'apps/docs/a.ts', 'packages/design-system/src/a.ts', 'packages/design-system/tokens/b.json', 'apps/docs/b.ts'];
-    assert.deepEqual(ids(files), ['tokens', 'component', 'docs', 'prose']);
+    assert.deepEqual(ids(files), ['tokens', 'component', 'docs', 'markdown']);
     assert.deepEqual(ids([]), []);
   });
 
@@ -79,30 +120,214 @@ describe('planFor', () => {
   test('build-ds precedes publish-check and fernway, and steps are de-duplicated across types', () => {
     const { types, steps } = planFor(['examples/fernway/a.ts', 'packages/design-system/src/a.ts', 'apps/docs/lib/a.ts']);
     assert.deepEqual(types, ['component', 'docs', 'example']);
-    assert.deepEqual(steps, ['typecheck', 'lint', 'stylelint', 'schema', 'build-ds', 'unit', 'browser', 'publish-check', 'docs-unit', 'docs-build', 'drive', 'fernway']);
+    assert.deepEqual(steps, [
+      'check',
+      'schema',
+      'tokens-check',
+      'changeset',
+      'build-ds',
+      'unit',
+      'browser',
+      'publish-check',
+      'ssr-smoke',
+      'fernway',
+      'forbidden-paths',
+      'docs-unit',
+      'docs-build',
+      'docs-axe',
+      'docs-peek',
+      'drive',
+    ]);
+    assert.ok(!steps.includes('docs-browser'), 'browser runs the docs browser tests as a part');
     assert.equal(new Set(steps).size, steps.length);
   });
 
   test('a lone fernway need is still ordered after the build it needs', () => {
     const { steps } = planFor(['examples/fernway/a.ts']);
-    assert.deepEqual(steps, ['build-ds', 'fernway']);
+    assert.deepEqual(steps, ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths']);
   });
 
-  test('prose alone plans no steps, and an empty diff plans nothing', () => {
-    assert.deepEqual(planFor(['README.md']), { types: ['prose'], steps: [] });
+  test('markdown alone runs the jobs CI runs on Markdown, and an empty diff plans nothing', () => {
+    assert.deepEqual(planFor(['README.md']), { types: ['markdown'], steps: ['check-self', 'forbidden-paths'] });
     assert.deepEqual(planFor([]), { types: [], steps: [] });
   });
 
-  test('an agent change runs the verify self-test and its tests', () => {
-    assert.deepEqual(planFor(['.claude/skills/verify/verify.mjs']).steps, ['verify-self-test', 'verify-tests']);
+  test('an agent change runs the verify self-test, its tests and the rule table check', () => {
+    assert.deepEqual(planFor(['.claude/skills/verify/verify.mjs']).steps, ['verify-self-test', 'verify-tests', 'check-self', 'forbidden-paths']);
   });
 
   test('tests that import the built package run after the build, even when no type asks for the build', () => {
-    assert.deepEqual(planFor(['package.json']).steps, ['check', 'build-ds', 'unit']);
+    assert.deepEqual(planFor(['package.json']).steps, ['check', 'changeset', 'build-ds', 'unit', 'pinned-actions', 'forbidden-paths']);
   });
 
   test('tokens plan the token checks before unit tests', () => {
-    assert.deepEqual(planFor(['packages/design-system/tokens/a.json']).steps, ['tokens-check', 'tokens-api-check', 'build-ds', 'unit']);
+    const { steps } = planFor(['packages/design-system/tokens/a.json']);
+    assert.equal(steps[0], 'tokens-api-check');
+    assert.ok(steps.indexOf('tokens-check') < steps.indexOf('unit'));
+    assert.deepEqual(steps.filter((id) => id !== 'tokens-api-check'), planTypes(['component']).steps);
+  });
+
+  test('a step that a planned step runs as a part is not planned again', () => {
+    const { steps } = planFor(['package.json', 'AGENTS.md']);
+    assert.ok(steps.includes('check'));
+    assert.ok(!steps.includes('check-self'), steps.join(', '));
+  });
+});
+
+// The plans must run what the jobs Checks needs run, so verify can't pass a commit those jobs fail.
+describe('plans match CI', () => {
+  const workflow = readWorkflow();
+
+  test('every run line of a blocking ci.yml job is in CI_RUNS, and every CI_RUNS entry is in ci.yml', () => {
+    assert.deepEqual(workflowGaps(workflow), []);
+  });
+
+  test("each change type's plan runs every step its CI_RUNS entries list", () => {
+    assert.deepEqual(ciGaps(), []);
+  });
+
+  test('the blocking jobs are the ones Checks needs', () => {
+    const jobs = new Set(blockingRuns(workflow).map((item) => item.job));
+    assert.deepEqual([...jobs].sort(), [...workflow.jobs.checks.needs].sort());
+  });
+
+  test('a new CI command fails and names the fix', () => {
+    const changed = structuredClone(workflow);
+    changed.jobs.build.steps.push({ run: 'pnpm brand-new-check' });
+    const problems = workflowGaps(changed);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /build job runs "pnpm brand-new-check", which no CI_RUNS entry in verify\.mjs names; add one/);
+  });
+
+  test('a second command in a run block needs its own entry', () => {
+    const changed = structuredClone(workflow);
+    const step = changed.jobs.docs.steps.find((item) => item.run === 'pnpm --filter docs test:axe');
+    step.run = 'pnpm --filter docs test:axe\npnpm --filter docs test:brand-new';
+    const problems = workflowGaps(changed);
+    assert.equal(problems.length, 1, problems.join('\n'));
+    assert.match(problems[0], /docs job runs "pnpm --filter docs test:brand-new", which no CI_RUNS entry/);
+  });
+
+  test("the docs browser line in Fernway's block is its own run", () => {
+    assert.ok(blockingRuns(workflow).some((item) => item.job === 'fernway' && item.run.startsWith('pnpm --filter docs test:browser')));
+  });
+
+  test('a CI command that is gone fails', () => {
+    const changed = structuredClone(workflow);
+    changed.jobs.build.steps = changed.jobs.build.steps.filter((step) => step.run !== 'pnpm ssr:smoke');
+    assert.match(workflowGaps(changed).join('\n'), /CI_RUNS names "pnpm ssr:smoke" in the build job, which ci\.yml no longer runs there/);
+  });
+
+  test('a CI command that no longer matches its step fails', () => {
+    const changed = structuredClone(workflow);
+    const step = changed.jobs['rule-checker'].steps.find((item) => item.run === 'pnpm check:self');
+    step.run = 'pnpm check:self --strict';
+    assert.match(workflowGaps(changed).join('\n'), /runs "pnpm check:self --strict", but STEPS\.check-self runs "pnpm check:self"/);
+  });
+
+  test('a plan that drops a step CI runs fails and names the fix', () => {
+    const component = CHANGE_TYPES.find((type) => type.id === 'component');
+    const saved = component.steps;
+    component.steps = saved.filter((id) => id !== 'ssr-smoke');
+    try {
+      assert.match(ciGaps().join('\n'), /the component plan leaves out ssr-smoke, which CI's build job runs as "pnpm ssr:smoke"; add 'ssr-smoke' to CHANGE_TYPES\.component\.steps/);
+    } finally {
+      component.steps = saved;
+    }
+  });
+
+  test('a job that runs on every change lists every change type', () => {
+    for (const entry of CI_RUNS.filter((item) => ['rule-checker', 'forbidden-paths'].includes(item.job))) {
+      assert.deepEqual(entry.types, CHANGE_TYPES.map((type) => type.id), entry.run);
+    }
+  });
+
+  const plan = (id) => planTypes([id]).steps;
+
+  test('a component plan runs the checks CI requires of a package change', () => {
+    const steps = plan('component');
+    for (const id of ['typecheck', 'lint', 'stylelint', 'check-self', 'schema', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'tokens-check', 'changeset']) {
+      assert.ok(covers(steps, id), `component plan leaves out ${id}: ${steps.join(', ')}`);
+    }
+    assert.deepEqual(STEPS['ssr-smoke'].cmd, ['pnpm', 'ssr:smoke']);
+    assert.deepEqual(STEPS['tokens-check'].cmd, ['pnpm', '--filter', '@tounsoo/todae', 'tokens:check', '--base', '{base}']);
+    assert.deepEqual(STEPS['check-self'].cmd, ['pnpm', 'check:self']);
+    assert.deepEqual(STEPS.changeset.cmd, ['pnpm', 'changeset', 'status', '--since={base}']);
+  });
+
+  test('an agent plan runs the rule table check beside the verify tests', () => {
+    const steps = plan('agent');
+    for (const id of ['verify-self-test', 'verify-tests', 'check-self']) assert.ok(steps.includes(id), id);
+  });
+
+  test('a docs plan runs axe and peek on the built site after its build', () => {
+    const steps = plan('docs');
+    for (const id of ['typecheck', 'lint', 'check-self', 'docs-unit', 'docs-browser', 'docs-build', 'docs-axe', 'docs-peek', 'drive']) {
+      assert.ok(covers(steps, id), id);
+    }
+    assert.ok(steps.indexOf('docs-build') < steps.indexOf('docs-axe'));
+    assert.ok(steps.indexOf('docs-build') < steps.indexOf('docs-peek'));
+    assert.deepEqual(STEPS['docs-axe'].cmd, ['pnpm', '--filter', 'docs', 'test:axe']);
+    assert.deepEqual(STEPS['docs-peek'].cmd, ['pnpm', '--filter', 'docs', 'test:peek']);
+  });
+
+  test("check's parts are commands its package script runs", () => {
+    const script = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).scripts.check;
+    const pieces = script.split('&&').map((piece) => piece.trim());
+    for (const part of STEPS.check.parts) assert.ok(pieces.includes(STEPS[part].cmd.join(' ')), part);
+  });
+
+  test('a recursive script runs a workspace script as a part, and only one the package has', () => {
+    const packages = new Map([['docs', { scripts: { 'test:browser': 'vitest' } }]]);
+    assert.ok(runsPart('pnpm -r --if-present test:browser', ['pnpm', '--filter', 'docs', 'test:browser'], packages));
+    assert.ok(!runsPart('pnpm -r --if-present test:browser', ['pnpm', '--filter', 'fernway-example', 'test:browser'], packages));
+    assert.ok(!runsPart('pnpm -r --if-present test', ['pnpm', '--filter', 'docs', 'test:browser'], packages));
+  });
+
+  test('the Playwright hint names and installs every browser the tests launch', () => {
+    const config = readFileSync(path.join(repoRoot, 'packages/design-system/vitest.browser.config.ts'), 'utf8');
+    const launched = [...new Set([...config.matchAll(/browser: '(\w+)'/g)].map((match) => match[1]))];
+    assert.deepEqual(launched.sort(), ['chromium', 'firefox', 'webkit']);
+    for (const id of ['browser', 'docs-browser', 'docs-axe', 'docs-peek']) {
+      const reason = STEPS[id].blockedReason;
+      for (const name of launched) {
+        assert.match(reason, new RegExp(name, 'i'), `${id} hint leaves out ${name}`);
+      }
+      assert.match(reason, /playwright install --with-deps chromium firefox webkit\.$/);
+    }
+  });
+});
+
+describe('forbidden-paths step', () => {
+  test("an old bash, such as macOS's 3.2, is BLOCKED with the fix, not FAIL", () => {
+    const step = STEPS['forbidden-paths'];
+    assert.match('forbidden-paths.sh needs bash 4 or newer; this bash is 3.2.57(1)-release', step.blockedWhen);
+    // A real substitution bug under a new bash still fails.
+    assert.doesNotMatch('line 17: ${base,,}: bad substitution', step.blockedWhen);
+    assert.doesNotMatch('forbidden-paths: notes/x.md says forbidden-paths.sh needs bash 4 or newer', step.blockedWhen);
+    assert.match(step.blockedReason, /bash 4 or newer/);
+  });
+});
+
+describe('expandNeeds', () => {
+  test('adds needs at any depth, each before what needs it', () => {
+    assert.deepEqual(expandNeeds(['docs-axe']), ['build-ds', 'docs-build', 'docs-axe']);
+    assert.deepEqual(expandNeeds(['docs-peek', 'docs-axe']), ['build-ds', 'docs-build', 'docs-peek', 'docs-axe']);
+  });
+});
+
+describe('withBase', () => {
+  test('puts the plan base into the command', () => {
+    assert.deepEqual(withBase(['pnpm', 'changeset', 'status', '--since={base}'], BASE), ['pnpm', 'changeset', 'status', `--since=${BASE}`]);
+  });
+
+  test('leaves a command without {base} alone, even with no base', () => {
+    assert.deepEqual(withBase(['pnpm', 'test'], null), ['pnpm', 'test']);
+  });
+
+  test('refuses anything but a full SHA', () => {
+    assert.throws(() => withBase(['git', 'diff', '{base}...HEAD'], 'main; rm -rf /'), /plan base/);
+    assert.throws(() => withBase(['git', 'diff', '{base}...HEAD'], null), /plan base/);
   });
 });
 
@@ -374,7 +599,7 @@ describe('renderBody', () => {
     base: BASE,
     results: [
       { id: 'typecheck', command: 'pnpm typecheck', status: 'passed' },
-      { id: 'browser', command: 'pnpm test:browser', status: 'blocked', reason: 'Playwright Chromium is not installed.' },
+      { id: 'browser', command: 'pnpm test:browser', status: 'blocked', reason: STEPS.browser.blockedReason },
       { id: 'drive', command: 'node drive', status: 'passed' },
     ],
     drive: { source: 'git-head', pages: [{ path: '/button', ok: true }, { path: '/ko/button', ok: true }] },
@@ -389,7 +614,7 @@ describe('renderBody', () => {
         'Verdict: BLOCKED',
         '',
         '- `pnpm typecheck`: passed',
-        '- `pnpm test:browser`: blocked. Playwright Chromium is not installed.',
+        '- `pnpm test:browser`: blocked. Playwright Chromium, Firefox or WebKit is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit.',
         '- Drive: `/button`, `/ko/button` returned 200 with their h1.',
         '',
       ].join('\n'),

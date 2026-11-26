@@ -29,18 +29,26 @@ A run ends in one of three verdicts. The exit code carries it.
 
 `plan` maps each changed file to the first type that matches it, then lists the steps those types need. Read the plan before the run, so the proof fits the change.
 
+Each plan runs the commands that the jobs `Checks` needs in `.github/workflows/ci.yml` run for that type's files, so a run can't pass a commit those jobs would fail for them. Every type runs `pnpm check:self` (the `rule-checker` job) and the forbidden-paths check on the diff from the plan base, because CI runs both on every change. `forbidden-paths.sh` needs bash 4 or newer, as CI has. With the bash 3.2 that macOS ships, that step is `BLOCKED` with the fix.
+
 | Type | Files | Proof |
 | --- | --- | --- |
-| `tokens` | `packages/design-system/tokens/` | `pnpm tokens:check`, `pnpm tokens:api:check` and the unit tests. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
-| `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build and `pnpm publish:check`. |
-| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, and a drive of the touched routes in English and Korean. |
-| `example` | `examples/` | the package build and the Fernway example build. |
-| `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test and `verify.test.mjs`. Review covers the rest. |
-| `ci` | `.github/`, root config, `scripts/` | `pnpm check` and the unit tests. The CI run on the pull request head is the rest of the proof, so cite its link. |
-| `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
-| `other` | anything else | `pnpm check` and the unit tests. |
+| `tokens` | `packages/design-system/tokens/` | `pnpm tokens:api:check` and everything `component` runs, since the built tokens reach every component. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
+| `component` | the rest of `packages/design-system/` | `pnpm check` (lint, typecheck, Stylelint, the self-tests and `pnpm check:self`), `pnpm schema` with no diff, the token check against the plan base (`tokens:check --base <base>`, as the Token API job runs it, so `name-grandfather.json` may only shrink), the changeset check, unit tests, `pnpm test:browser` (the package in Chromium, Firefox and WebKit, and the docs demos), the package build, `pnpm publish:check`, `pnpm ssr:smoke` and the Fernway example build. |
+| `docs` | `apps/docs/` | `pnpm check`, the docs unit tests, the docs browser tests, the docs build, axe (`pnpm --filter docs test:axe`) and peek (`pnpm --filter docs test:peek`) on that build, and a drive of the touched routes in English and Korean. `pnpm check` is there because lint, typecheck and the Cursor verify self-test read docs files. |
+| `example` | `examples/` | `pnpm check`, the package build, the Fernway example build and `pnpm ssr:smoke`. |
+| `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test, `verify.test.mjs` and `pnpm check:self`, since `AGENTS.md` holds the rule table. Review covers the rest. |
+| `ci` | `.github/`, root config, `scripts/` | `pnpm check`, the changeset check (which checks `.changeset/config.json`), the unit tests and the pinned-actions check. The CI run on the pull request head is the rest of the proof, so cite its link. |
+| `markdown` | Markdown no tool or page reads: the files `.github/scripts/change-class.sh` classes `markdown` | `pnpm check:self` and the forbidden-paths check, the jobs CI runs on such a change. Review is the rest. |
+| `other` | anything else, such as a changeset, a `*-body.md` file or MDX outside the docs app | `pnpm check`, the changeset check and the unit tests. |
 
-The unit, docs and browser tests, the publish check and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. `run --only` adds that build too.
+The `markdown` type is named for `change-class.sh`'s `markdown` class and holds the same files, which `verify.test.mjs` checks. That script's `prose` class is something else: docs pages, which CI still builds and tests, and which this helper types as `docs`.
+
+The changeset check runs `node .github/scripts/changeset-exempt.mjs <base>` and, when that does not exempt the change, `pnpm changeset status --since=<base>`, as the Static job does, with the plan base for CI's `origin/main`.
+
+The unit, docs and browser tests, the publish check, the SSR smoke test and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. Axe and peek run after the docs build, which they serve. `run --only` adds those needs too, at any depth, so `--only docs-axe` also runs the docs build and the package build.
+
+The browser tests, axe and peek launch Chromium, Firefox and WebKit. When Playwright is missing any of them, the step is `BLOCKED` with the install command, `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit`. The package and the docs app pin the same Playwright, so that one install serves both. Locally `pnpm test:browser` runs Firefox with file parallelism and without the quarantine CI applies, so a local Firefox failure may be one that CI's Engines job would not fail on. Rerun it with `pnpm --filter @tounsoo/todae test:browser --project firefox --no-file-parallelism` before you treat it as real, and check `packages/design-system/scripts/firefox-quarantine.ts`.
 
 A passing step for one type does not prove another. A unit test does not show a docs page, and a page that renders does not show a failing test is fixed.
 
@@ -114,4 +122,17 @@ Cleanup stops only the server this helper started. It reads `.verify/scratch/cla
 
 ## Keeping it honest
 
-`pnpm test` runs `verify.test.mjs`, and `self-test` checks that the scripts and folders the helper reads still exist. When a package script, a docs route layout, or the Node pin changes, update `verify.mjs` and this page in the same pull request.
+`pnpm test` runs `verify.test.mjs`, and `self-test` checks that the scripts and folders the helper reads still exist.
+
+`CI_RUNS` in `verify.mjs` lists each command of the jobs `Checks` needs (each line of a run block that starts with a tool such as `pnpm`, `node`, `bash` or `git`), the steps that run the same command here, and the change types whose files can fail it. A line with no local step, such as CI's own diff class, says why. `self-test` and `verify.test.mjs` read `ci.yml` and fail, naming the fix, when:
+
+- a blocking job runs a line `CI_RUNS` does not name, or `CI_RUNS` names a line `ci.yml` no longer runs,
+- a step runs a different command from CI's line and the entry does not say why,
+- a job that runs on every change has an entry that leaves out a change type,
+- a type's plan leaves out a step one of its entries lists.
+
+So a change to `ci.yml` that adds, drops or edits a command fails the verify tests until `CI_RUNS`, the plans and this page match it.
+
+The tests can't derive which change types a command applies to. CI's `if` conditions only split Markdown from the rest, so nearly every job runs on every other change, and a plan that ran all of them would make each change pay for every job. So each entry's `types` is a judgement of whose files can fail that command, and review checks it. Only a job that runs on every change, `rule-checker` and Forbidden paths, is held to every type by the tests.
+
+When a package script, a docs route layout, a CI job or the Node pin changes, update `verify.mjs` and this page in the same pull request.
