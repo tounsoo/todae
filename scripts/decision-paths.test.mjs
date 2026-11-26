@@ -110,7 +110,7 @@ describe('checkDecisions', () => {
       ),
       'docs/decisions/0099-sample.md': decision(
         'Active',
-        'The pinned copy in `.agents/pstack/` is removed. ~~`.claude/pstack-models.md`~~ Claude verifies with `.claude/skills/verify/` and [0098](0098-old.md).',
+        'The pinned copy in `.agents/pstack/` is removed. ~~Read `.claude/pstack-models.md`. Run `.agents/pstack/check.sh`.~~ Claude verifies with `.claude/skills/verify/` and [0098](0098-old.md).',
       ),
     });
     assert.deepEqual(checkDecisions(root), []);

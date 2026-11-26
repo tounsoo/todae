@@ -84,7 +84,9 @@ function checkIndex(root, statuses) {
   return problems;
 }
 
-function sentences(line) {
+function sentences(raw) {
+  // Struck-through text is history too.
+  const line = raw.replace(/~~.*?~~/g, '');
   const masked = line.replace(/`[^`]*`/g, (code) => code.replace(/[.!?]/g, '\u0000'));
   const parts = [];
   let start = 0;
@@ -95,8 +97,7 @@ function sentences(line) {
     start = match.index + 1;
   }
   parts.push(line.slice(start));
-  // Struck-through text is history too.
-  return parts.map((part) => part.replace(/~~.*?~~/g, ''));
+  return parts;
 }
 
 function namedPaths(sentence, roots) {
