@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { execFile, spawn } from 'node:child_process';
-import { closeSync, existsSync, openSync, readFileSync, readdirSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import net from 'node:net';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -36,41 +37,53 @@ const under = (prefix) => (file) => file.startsWith(prefix);
 const oneOf = (...names) => (file) => names.includes(file);
 const anyOf = (...matchers) => (file) => matchers.some((match) => match(file));
 
+// The Markdown no tool or page reads. These are the files .github/scripts/change-class.sh classes `markdown`, and
+// verify.test.mjs checks the two agree. (change-class.sh's `prose` is something else: docs pages, which CI builds.)
+const isMarkdown = (file) =>
+  file.endsWith('.md') &&
+  !file.startsWith('apps/docs/app/') &&
+  !file.startsWith('.changeset/') &&
+  !file.startsWith('.audit/') &&
+  !['packages/design-system/README.md', 'packages/design-system/CHANGELOG.md'].includes(file) &&
+  !file.endsWith('-body.md');
+
+// Each plan runs the commands CI_RUNS below says the type's files can fail. verify.test.mjs reads
+// .github/workflows/ci.yml and fails when a plan leaves one out.
 export const CHANGE_TYPES = [
   {
     id: 'tokens',
     label: 'Design tokens',
     match: under('packages/design-system/tokens/'),
-    steps: ['tokens-check', 'tokens-api-check', 'unit'],
-    proof: "token checks and unit tests; the token change needs Ben's approval",
+    steps: ['tokens-check', 'tokens-api-check', 'changeset', 'unit', 'check-self', 'forbidden-paths'],
+    proof: "token checks, the changeset check and unit tests; the token change needs Ben's approval",
   },
   {
     id: 'component',
     label: 'Design system package',
     match: under('packages/design-system/'),
-    steps: ['typecheck', 'lint', 'stylelint', 'schema', 'unit', 'browser', 'build-ds', 'publish-check'],
-    proof: 'unit and browser tests, schema with no diff, build and publish checks',
+    steps: ['check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'fernway', 'forbidden-paths'],
+    proof: 'pnpm check, schema with no diff, token and changeset checks, unit and browser tests, build, publish and SSR checks, and the Fernway build',
   },
   {
     id: 'docs',
     label: 'Docs app',
     match: under('apps/docs/'),
-    steps: ['typecheck', 'lint', 'docs-unit', 'docs-build', 'drive'],
-    proof: 'docs typecheck, tests and build, and the touched routes driven in English and Korean',
+    steps: ['typecheck', 'lint', 'docs-unit', 'docs-build', 'docs-axe', 'docs-peek', 'drive', 'check-self', 'forbidden-paths'],
+    proof: 'docs typecheck, tests, build, axe and peek, and the touched routes driven in English and Korean',
   },
   {
     id: 'example',
     label: 'Examples',
     match: under('examples/'),
-    steps: ['build-ds', 'fernway'],
-    proof: 'the design system builds and the Fernway example builds against it',
+    steps: ['build-ds', 'fernway', 'ssr-smoke', 'check-self', 'forbidden-paths'],
+    proof: 'the design system builds, and the Fernway example and the SSR smoke app build against it',
   },
   {
     id: 'agent',
     label: 'Agent instructions and skills',
     match: anyOf(under('.claude/'), under('.agents/'), oneOf('CLAUDE.md', 'AGENTS.md')),
-    steps: ['verify-self-test', 'verify-tests'],
-    proof: 'the verify self-test and its tests; the rest is review',
+    steps: ['verify-self-test', 'verify-tests', 'check-self', 'forbidden-paths'],
+    proof: 'the verify self-test and its tests, and the rule table check; the rest is review',
   },
   {
     id: 'ci',
@@ -92,30 +105,45 @@ export const CHANGE_TYPES = [
         '.changeset/config.json',
       ),
     ),
-    steps: ['check', 'unit'],
-    proof: 'pnpm check and unit tests here; the CI run on the pull request head is the rest of the proof',
+    steps: ['check', 'unit', 'pinned-actions', 'forbidden-paths'],
+    proof: 'pnpm check, unit tests and the pinned-actions check here; the CI run on the pull request head is the rest of the proof',
   },
   {
-    id: 'prose',
-    label: 'Prose',
-    match: (file) => /\.mdx?$/.test(file),
-    steps: [],
-    proof: 'review only; no command proves prose',
+    id: 'markdown',
+    label: 'Markdown no tool reads',
+    match: isMarkdown,
+    steps: ['check-self', 'forbidden-paths'],
+    proof: "the rule table and forbidden-paths checks, the jobs CI runs on Markdown alone; review is the rest",
   },
   {
     id: 'other',
     label: 'Everything else',
     match: () => true,
-    steps: ['check', 'unit'],
+    steps: ['check', 'unit', 'forbidden-paths'],
     proof: 'pnpm check and unit tests; nothing narrower proves an unclassified file',
   },
 ];
 
+// The browser tests launch Chromium, Firefox and WebKit. The package and the docs app pin the same Playwright,
+// so one install serves both.
+const PLAYWRIGHT_MISSING = /Executable doesn't exist|playwright install|browserType\.launch/i;
+const PLAYWRIGHT_INSTALL =
+  'Playwright Chromium, Firefox or WebKit is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit.';
+
+// `{base}` in a command is the plan's base commit.
 export const STEPS = {
   typecheck: { id: 'typecheck', label: 'Typecheck every package', cmd: ['pnpm', 'typecheck'] },
   lint: { id: 'lint', label: 'ESLint', cmd: ['pnpm', 'lint'] },
   stylelint: { id: 'stylelint', label: 'Stylelint', cmd: ['pnpm', 'stylelint'] },
-  check: { id: 'check', label: 'Lint, typecheck, stylelint and the Cursor self-test', cmd: ['pnpm', 'check'] },
+  'check-self': { id: 'check-self', label: 'Rule table, weeds log and suppressions', cmd: ['pnpm', 'check:self'] },
+  // The check script runs these parts and more, so a plan with check needs none of them on their own.
+  // verify.test.mjs checks each part's command is in the script.
+  check: {
+    id: 'check',
+    label: 'Lint, typecheck, stylelint, the self-tests and the rule table',
+    cmd: ['pnpm', 'check'],
+    parts: ['lint', 'typecheck', 'stylelint', 'check-self'],
+  },
   unit: { id: 'unit', label: 'Unit tests', cmd: ['pnpm', 'test'], needs: ['build-ds'] },
   'docs-unit': { id: 'docs-unit', label: 'Docs unit tests', cmd: ['pnpm', '--filter', 'docs', 'test'], needs: ['build-ds'] },
   schema: {
@@ -127,23 +155,56 @@ export const STEPS = {
   },
   'tokens-check': { id: 'tokens-check', label: 'Token check', cmd: ['pnpm', 'tokens:check'] },
   'tokens-api-check': { id: 'tokens-api-check', label: 'Token API check', cmd: ['pnpm', 'tokens:api:check'] },
+  changeset: {
+    id: 'changeset',
+    label: 'A package change carries a changeset',
+    unless: ['node', '.github/scripts/changeset-exempt.mjs', '{base}'],
+    unlessReason: 'changeset-exempt.mjs found the change ships nothing, so it needs no changeset',
+    cmd: ['pnpm', 'changeset', 'status', '--since={base}'],
+  },
   browser: {
     id: 'browser',
     label: 'Browser tests',
     cmd: ['pnpm', 'test:browser'],
     needs: ['build-ds'],
-    blockedWhen: /Executable doesn't exist|playwright install|browserType\.launch/i,
-    blockedReason:
-      'Playwright Chromium is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium.',
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
   },
   'build-ds': { id: 'build-ds', label: 'Build the design system', cmd: ['pnpm', 'build:ds'] },
   'publish-check': { id: 'publish-check', label: 'Publish checks', cmd: ['pnpm', 'publish:check'], needs: ['build-ds'] },
+  'ssr-smoke': { id: 'ssr-smoke', label: 'SSR smoke test of the packed package', cmd: ['pnpm', 'ssr:smoke'], needs: ['build-ds'] },
   'docs-build': { id: 'docs-build', label: 'Build the docs site', cmd: ['pnpm', '--filter', 'docs', 'build'], needs: ['build-ds'] },
+  'docs-axe': {
+    id: 'docs-axe',
+    label: 'axe on the built docs site',
+    cmd: ['pnpm', '--filter', 'docs', 'test:axe'],
+    needs: ['docs-build'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
+  'docs-peek': {
+    id: 'docs-peek',
+    label: 'Behavior tests on the built docs site',
+    cmd: ['pnpm', '--filter', 'docs', 'test:peek'],
+    needs: ['docs-build'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
   fernway: {
     id: 'fernway',
     label: 'Build the Fernway example',
     cmd: ['pnpm', '--filter', 'fernway-example', 'build'],
     needs: ['build-ds'],
+  },
+  'pinned-actions': { id: 'pinned-actions', label: 'Remote actions are pinned', cmd: ['node', '.github/scripts/pinned-actions.mjs'] },
+  'forbidden-paths': {
+    id: 'forbidden-paths',
+    label: 'No forbidden paths in the diff',
+    cmd: [
+      'bash',
+      '-c',
+      'set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
+    ],
   },
   'verify-self-test': {
     id: 'verify-self-test',
@@ -158,6 +219,165 @@ export const STEPS = {
   drive: { id: 'drive', label: 'Drive the touched docs routes in English and Korean', drive: true },
 };
 
+const ALL_TYPES = CHANGE_TYPES.map((type) => type.id);
+
+// Every command a job that Checks needs in .github/workflows/ci.yml runs, the steps here that run it, and the
+// change types whose files can fail it. `run` is text from the job's run line. An entry with no steps says why.
+// `differs` says why a step's command is not CI's run line word for word. A job with no `if` runs on every
+// change, so its entries list every type. verify.test.mjs reads ci.yml and fails on a run line no entry
+// names, on an entry no run line has, and on a type whose plan leaves out a step its entries list.
+export const CI_RUNS = [
+  { job: 'changes', run: 'bash .github/scripts/classify-diff.sh', steps: [], why: 'CI classes its diff for its own jobs; the plan classes each file' },
+  {
+    job: 'static',
+    run: 'pnpm changeset status --since="origin/$BASE_REF"',
+    steps: ['changeset'],
+    types: ['tokens', 'component'],
+    differs: 'runs against the plan base, the merge base with origin/main',
+  },
+  { job: 'static', run: 'pnpm tokens:check', steps: ['tokens-check'], types: ['tokens', 'component'] },
+  {
+    job: 'static',
+    run: 'pnpm schema && git diff --exit-code',
+    steps: ['schema'],
+    types: ['component'],
+    differs: 'requires no change anywhere under packages/design-system/schema, new files included',
+  },
+  { job: 'static', run: 'pnpm check', steps: ['check'], types: ['component', 'ci', 'other'] },
+  { job: 'static', run: 'node .github/scripts/pinned-actions.mjs', steps: ['pinned-actions'], types: ['ci'] },
+  { job: 'build', run: 'pnpm build:ds', steps: ['build-ds'], types: ['tokens', 'component', 'example', 'ci', 'other'] },
+  { job: 'build', run: 'pnpm publish:check', steps: ['publish-check'], types: ['component'] },
+  { job: 'build', run: 'pnpm ssr:smoke', steps: ['ssr-smoke'], types: ['component', 'example'] },
+  { job: 'build', run: 'pnpm test', steps: ['unit'], types: ['tokens', 'component', 'ci', 'other'] },
+  { job: 'fernway', run: 'fc-match sans-serif:bold', steps: [], why: "sets the CI container's sans-serif font" },
+  { job: 'fernway', run: 'pnpm build:ds', steps: ['build-ds'], types: ['component', 'example'] },
+  {
+    job: 'fernway',
+    run: 'pnpm --filter @tounsoo/todae test:browser --project chromium',
+    steps: ['browser'],
+    types: ['component'],
+    differs: "pnpm test:browser runs every browser project of the package and the docs app, these Chromium ones included",
+  },
+  { job: 'fernway', run: 'pnpm install --frozen-lockfile --offline', steps: [], why: "relinks the todae-tokens bin in CI's install, made before dist existed" },
+  { job: 'fernway', run: 'pnpm --filter fernway-example build', steps: ['fernway'], types: ['component', 'example'] },
+  { job: 'engines', run: 'fc-match sans-serif:bold', steps: [], why: "sets the CI container's sans-serif font" },
+  {
+    job: 'engines',
+    run: 'pnpm test:browser --project firefox',
+    steps: ['browser'],
+    types: ['component'],
+    differs: 'pnpm test:browser runs Firefox too, with file parallelism and without the quarantine, so it is stricter than CI',
+  },
+  {
+    job: 'engines',
+    run: 'pnpm --filter @tounsoo/todae test:browser --project webkit',
+    steps: ['browser'],
+    types: ['component'],
+    differs: 'pnpm test:browser runs every browser project, WebKit included',
+  },
+  { job: 'docs', run: 'pnpm build:ds', steps: ['build-ds'], types: ['docs'] },
+  { job: 'docs', run: 'pnpm --filter docs build', steps: ['docs-build'], types: ['docs'] },
+  { job: 'docs', run: 'pnpm --filter docs test:axe', steps: ['docs-axe'], types: ['docs'] },
+  { job: 'docs', run: 'pnpm --filter docs test:peek', steps: ['docs-peek'], types: ['docs'] },
+  {
+    job: 'token-api',
+    run: 'pnpm --filter @tounsoo/todae tokens:check --base',
+    steps: ['tokens-check'],
+    types: ['tokens'],
+    differs: 'checks the snapshot against the working tree, which the plan commits',
+  },
+  {
+    job: 'token-api',
+    run: 'scripts/check-token-api.ts --base',
+    steps: ['tokens-api-check'],
+    types: ['tokens'],
+    differs: 'pnpm tokens:api:check compares origin/main with HEAD',
+  },
+  {
+    job: 'forbidden-paths',
+    run: 'bash .github/scripts/forbidden-paths.sh',
+    steps: ['forbidden-paths'],
+    types: ALL_TYPES,
+    differs: 'diffs the plan base against HEAD',
+  },
+  { job: 'rule-checker', run: 'pnpm check:self', steps: ['check-self'], types: ALL_TYPES },
+];
+
+// True when the plan's steps run `id`, by itself or as a part of a step such as check.
+export function covers(steps, id) {
+  return steps.some((step) => step === id || STEPS[step]?.parts?.includes(id));
+}
+
+// Problems with CI_RUNS against the change types, with no workflow file needed.
+export function ciGaps() {
+  const problems = [];
+  for (const entry of CI_RUNS) {
+    for (const id of entry.steps) if (!STEPS[id]) problems.push(`CI_RUNS ${entry.job} "${entry.run}" names unknown step ${id}`);
+    if (entry.steps.length === 0 && !entry.why) problems.push(`CI_RUNS ${entry.job} "${entry.run}" runs no step and gives no why`);
+    for (const typeId of entry.types ?? []) {
+      const type = CHANGE_TYPES.find((item) => item.id === typeId);
+      if (!type) {
+        problems.push(`CI_RUNS ${entry.job} "${entry.run}" names unknown change type ${typeId}`);
+        continue;
+      }
+      const { steps } = planTypes([typeId]);
+      for (const id of entry.steps) {
+        if (!covers(steps, id)) {
+          problems.push(
+            `the ${typeId} plan leaves out ${id}, which CI's ${entry.job} job runs as "${entry.run}"; add '${id}' to CHANGE_TYPES.${typeId}.steps, or take ${typeId} off that CI_RUNS entry if its files cannot fail it`,
+          );
+        }
+      }
+    }
+  }
+  return problems;
+}
+
+// The run lines of every job that the Checks job needs, from the parsed ci.yml.
+export function blockingRuns(workflow) {
+  const jobs = workflow?.jobs ?? {};
+  const out = [];
+  for (const job of jobs.checks?.needs ?? []) {
+    for (const step of jobs[job]?.steps ?? []) {
+      if (typeof step.run === 'string') out.push({ job, run: step.run.trim(), always: jobs[job].if === undefined });
+    }
+  }
+  return out;
+}
+
+// Problems with CI_RUNS against the parsed ci.yml.
+export function workflowGaps(workflow) {
+  const problems = [];
+  const runs = blockingRuns(workflow);
+  if (runs.length === 0) problems.push('ci.yml has no checks job, or the jobs it needs run nothing');
+  const used = new Set();
+  for (const { job, run, always } of runs) {
+    const hits = CI_RUNS.filter((entry) => entry.job === job && run.includes(entry.run));
+    const head = oneLine(run).slice(0, 80);
+    if (hits.length === 0) {
+      problems.push(`CI's ${job} job runs "${head}", which no CI_RUNS entry in verify.mjs names; add one with the steps that run it here, or with no steps and a why`);
+      continue;
+    }
+    if (hits.length > 1) problems.push(`CI's ${job} job runs "${head}", which ${hits.length} CI_RUNS entries match; make their run text tell them apart`);
+    for (const entry of hits) {
+      used.add(entry);
+      if (entry.steps.length === 1 && !entry.differs) {
+        const cmd = STEPS[entry.steps[0]]?.cmd?.join(' ');
+        if (cmd !== run) {
+          problems.push(`CI's ${job} job runs "${head}", but STEPS.${entry.steps[0]} runs "${cmd}"; run the same command, or say in the entry's differs why not`);
+        }
+      }
+      if (always && entry.steps.length && ALL_TYPES.some((id) => !entry.types?.includes(id))) {
+        problems.push(`CI's ${job} job runs on every change, so its CI_RUNS entry "${entry.run}" must list every change type`);
+      }
+    }
+  }
+  for (const entry of CI_RUNS) {
+    if (!used.has(entry)) problems.push(`CI_RUNS names "${entry.run}" in the ${entry.job} job, which ci.yml no longer runs there; remove or update the entry`);
+  }
+  return problems;
+}
+
 export function typeOf(file) {
   return CHANGE_TYPES.find((type) => type.match(file));
 }
@@ -167,8 +387,21 @@ export function classify(files) {
   return CHANGE_TYPES.filter((type) => hit.has(type.id)).map((type) => type.id);
 }
 
+// The command with `{base}` replaced by the plan's base commit. Only a full SHA goes in, so a shell step
+// such as forbidden-paths can't be handed anything else.
+export function withBase(cmd, base) {
+  if (!cmd.some((part) => part.includes('{base}'))) return cmd;
+  if (!SHA_PATTERN.test(base ?? '')) throw new Blocked('the step needs the plan base, which did not resolve to a commit');
+  return cmd.map((part) => part.replaceAll('{base}', base));
+}
+
 export function planFor(files) {
-  const types = classify(files);
+  return planTypes(classify(files));
+}
+
+// The steps for these change types, each after the steps it needs. A step that another planned step runs
+// as one of its parts, such as check-self inside check, is left out.
+export function planTypes(types) {
   const wanted = [];
   for (const id of types) {
     for (const step of CHANGE_TYPES.find((type) => type.id === id).steps) {
@@ -181,7 +414,7 @@ export function planFor(files) {
     for (const need of STEPS[id].needs ?? []) emit(need);
     steps.push(id);
   };
-  wanted.forEach(emit);
+  wanted.filter((id) => !wanted.some((other) => STEPS[other].parts?.includes(id))).forEach(emit);
   return { types, steps };
 }
 
@@ -566,7 +799,7 @@ function printPlan(plan) {
   say('');
   say('Steps');
   if (plan.steps.length === 0) say('- none; review only');
-  plan.steps.forEach((id, index) => say(`${index + 1}. ${id}: ${commandText(STEPS[id])}`));
+  plan.steps.forEach((id, index) => say(`${index + 1}. ${id}: ${commandText(STEPS[id], plan.base)}`));
   if (plan.steps.includes('drive')) {
     say('');
     say('Routes to drive');
@@ -574,7 +807,7 @@ function printPlan(plan) {
   }
 }
 
-const commandText = (step) => (step.drive ? 'text-only HTTP drive of the routes below' : step.cmd.join(' '));
+const commandText = (step, base) => (step.drive ? 'text-only HTTP drive of the routes below' : withBase(step.cmd, base).join(' '));
 
 async function doctor() {
   const checks = [];
@@ -819,13 +1052,28 @@ function stampNow() {
   return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 }
 
-async function executeStep(step, number, dir) {
+async function executeStep(step, number, dir, base) {
   const started = Date.now();
-  const command = step.cmd.join(' ');
+  const cmd = withBase(step.cmd, base);
+  const command = cmd.join(' ');
   const logFile = path.join(dir, `${String(number).padStart(2, '0')}-${step.id}.log`);
   const result = { id: step.id, label: step.label, command, status: 'failed', exit: null, ms: 0, log: path.relative(root, logFile) };
-  const run = await capture(step.cmd);
-  let transcript = `$ ${command}\n${run.output}`;
+  let transcript = '';
+  if (step.unless) {
+    const unless = withBase(step.unless, base);
+    const skip = await capture(unless);
+    transcript += `$ ${unless.join(' ')}\n${skip.output}\n[exit ${skip.exit}]\n\n`;
+    if (skip.exit === 0) {
+      result.status = 'passed';
+      result.exit = 0;
+      result.reason = step.unlessReason;
+      result.ms = Date.now() - started;
+      await writeFile(logFile, redact(`${transcript.trimEnd()}\n\n[passed, ${result.ms} ms]\n`));
+      return result;
+    }
+  }
+  const run = await capture(cmd);
+  transcript += `$ ${command}\n${run.output}`;
   result.exit = run.exit;
   if (run.missing || run.exit === 127) {
     result.status = 'blocked';
@@ -993,14 +1241,14 @@ async function run(flags) {
       for (const id of steps) {
         number += 1;
         const step = STEPS[id];
-        say(`step ${number}/${steps.length}: ${step.drive ? 'drive' : step.cmd.join(' ')}`);
+        say(`step ${number}/${steps.length}: ${step.drive ? 'drive' : withBase(step.cmd, plan.base).join(' ')}`);
         let result;
         if (step.drive) {
           const driven = await executeDrive(step, number, dir, flags, plan.routes);
           result = driven.result;
           drive = driven.drive;
         } else {
-          result = await executeStep(step, number, dir);
+          result = await executeStep(step, number, dir, plan.base);
         }
         say(`  ${result.status}${result.reason ? `: ${oneLine(result.reason)}` : ''} (${result.ms} ms)`);
         results.push(result);
@@ -1084,7 +1332,13 @@ function workspacePackages() {
   return packages;
 }
 
-function selfTest() {
+// The parsed .github/workflows/ci.yml, read with the yaml package the repo installs.
+export function readWorkflow(file = path.join(root, '.github/workflows/ci.yml')) {
+  const { parse } = createRequire(path.join(root, 'package.json'))('yaml');
+  return parse(readFileSync(file, 'utf8'));
+}
+
+async function selfTest() {
   const problems = [];
   const expect = (ok, message) => {
     if (!ok) problems.push(message);
@@ -1113,12 +1367,17 @@ function selfTest() {
   }
 
   const packages = workspacePackages();
+  const bin = (name) => existsSync(path.join(root, 'node_modules/.bin', name));
   for (const [id, step] of Object.entries(STEPS)) {
     expect(step.id === id, `STEPS.${id} has id ${step.id}`);
     for (const need of step.needs ?? []) expect(STEPS[need], `STEPS.${id} needs unknown step ${need}`);
+    for (const part of step.parts ?? []) expect(STEPS[part], `STEPS.${id} has unknown part ${part}`);
     if (step.drive) continue;
     expect(Array.isArray(step.cmd) && step.cmd.every((part) => typeof part === 'string') && step.cmd.length > 0, `STEPS.${id} has no cmd`);
-    const [program, ...rest] = step.cmd;
+    for (const cmd of [step.cmd, step.unless].filter(Boolean)) checkCmd(id, cmd);
+  }
+  function checkCmd(id, cmd) {
+    const [program, ...rest] = cmd;
     if (program === 'node') {
       const script = rest.find((part) => !part.startsWith('-'));
       expect(script && existsSync(path.join(root, script)), `STEPS.${id} runs ${script}, which does not exist`);
@@ -1127,8 +1386,21 @@ function selfTest() {
       expect(manifest, `STEPS.${id} filters on ${rest[1]}, which is not a workspace package`);
       if (rest[2] !== 'exec') expect(manifest?.scripts?.[rest[2]], `${rest[1]} has no ${rest[2]} script, which STEPS.${id} runs`);
     } else if (program === 'pnpm') {
-      expect(rootManifest.scripts?.[rest[0]], `package.json has no ${rest[0]} script, which STEPS.${id} runs`);
+      expect(rootManifest.scripts?.[rest[0]] || bin(rest[0]), `package.json has no ${rest[0]} script and no such bin is installed, which STEPS.${id} runs`);
     }
+  }
+  for (const [id, step] of Object.entries(STEPS)) {
+    const script = rootManifest.scripts?.[step.cmd?.[1]] ?? '';
+    for (const part of step.parts ?? []) {
+      const partCmd = STEPS[part]?.cmd?.join(' ');
+      expect(partCmd && script.split('&&').some((piece) => piece.trim() === partCmd), `STEPS.${id} says it runs ${part}, but the ${step.cmd[1]} script has no "${partCmd}"`);
+    }
+  }
+  problems.push(...ciGaps());
+  try {
+    problems.push(...workflowGaps(readWorkflow()));
+  } catch (error) {
+    problems.push(`.github/workflows/ci.yml could not be read with the yaml package: ${error.message}`);
   }
   for (const type of CHANGE_TYPES) {
     expect(typeof type.match === 'function', `CHANGE_TYPES.${type.id} has no match function`);
@@ -1237,7 +1509,17 @@ async function main(argv) {
   throw new UsageError(USAGE);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+// argv[1] may reach this file through a symlink, as macOS's /var does for /private/var, while
+// import.meta.url is the real path, so compare real paths.
+const realArgv = () => {
+  try {
+    return realpathSync(process.argv[1] ?? '');
+  } catch {
+    return '';
+  }
+};
+
+if (import.meta.url === pathToFileURL(realArgv()).href) {
   main(process.argv.slice(2)).then(
     (code) => {
       process.exitCode = code;

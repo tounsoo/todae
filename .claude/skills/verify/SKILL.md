@@ -29,18 +29,26 @@ A run ends in one of three verdicts. The exit code carries it.
 
 `plan` maps each changed file to the first type that matches it, then lists the steps those types need. Read the plan before the run, so the proof fits the change.
 
+Each plan runs the commands that the jobs `Checks` needs in `.github/workflows/ci.yml` run for that type's files, so a run can't pass a commit those jobs would fail for them. Every type runs `pnpm check:self` (the `rule-checker` job) and the forbidden-paths check on the diff from the plan base, because CI runs both on every change.
+
 | Type | Files | Proof |
 | --- | --- | --- |
-| `tokens` | `packages/design-system/tokens/` | `pnpm tokens:check`, `pnpm tokens:api:check` and the unit tests. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
-| `component` | the rest of `packages/design-system/` | typecheck, lint, Stylelint, `pnpm schema` with no diff, unit tests, browser tests, the package build and `pnpm publish:check`. |
-| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, and a drive of the touched routes in English and Korean. |
-| `example` | `examples/` | the package build and the Fernway example build. |
-| `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test and `verify.test.mjs`. Review covers the rest. |
-| `ci` | `.github/`, root config, `scripts/` | `pnpm check` and the unit tests. The CI run on the pull request head is the rest of the proof, so cite its link. |
-| `prose` | other Markdown and MDX, changesets | none. Review is the proof. |
-| `other` | anything else | `pnpm check` and the unit tests. |
+| `tokens` | `packages/design-system/tokens/` | `pnpm tokens:check`, `pnpm tokens:api:check`, the changeset check and the unit tests. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
+| `component` | the rest of `packages/design-system/` | `pnpm check` (lint, typecheck, Stylelint, the self-tests and `pnpm check:self`), `pnpm schema` with no diff, `pnpm tokens:check`, the changeset check, unit tests, browser tests in Chromium, Firefox and WebKit, the package build, `pnpm publish:check`, `pnpm ssr:smoke` and the Fernway example build. |
+| `docs` | `apps/docs/` | typecheck, lint, the docs unit tests, the docs build, axe (`pnpm --filter docs test:axe`) and peek (`pnpm --filter docs test:peek`) on that build, and a drive of the touched routes in English and Korean. |
+| `example` | `examples/` | the package build, the Fernway example build and `pnpm ssr:smoke`. |
+| `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test, `verify.test.mjs` and `pnpm check:self`, since `AGENTS.md` holds the rule table. Review covers the rest. |
+| `ci` | `.github/`, root config, `scripts/` | `pnpm check`, the unit tests and the pinned-actions check. The CI run on the pull request head is the rest of the proof, so cite its link. |
+| `markdown` | Markdown no tool or page reads: the files `.github/scripts/change-class.sh` classes `markdown` | `pnpm check:self` and the forbidden-paths check, the jobs CI runs on such a change. Review is the rest. |
+| `other` | anything else, such as a changeset, a `*-body.md` file or MDX outside the docs app | `pnpm check` and the unit tests. |
 
-The unit, docs and browser tests, the publish check and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. `run --only` adds that build too.
+The `markdown` type is named for `change-class.sh`'s `markdown` class and holds the same files, which `verify.test.mjs` checks. That script's `prose` class is something else: docs pages, which CI still builds and tests, and which this helper types as `docs`.
+
+The changeset check runs `node .github/scripts/changeset-exempt.mjs <base>` and, when that does not exempt the change, `pnpm changeset status --since=<base>`, as the Static job does, with the plan base for CI's `origin/main`.
+
+The unit, docs and browser tests, the publish check, the SSR smoke test and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. Axe and peek run after the docs build, which they serve. `run --only` adds those needs too.
+
+The browser tests, axe and peek launch Chromium, Firefox and WebKit. When Playwright is missing any of them, the step is `BLOCKED` with the install command, `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit`. The package and the docs app pin the same Playwright, so that one install serves both. Locally `pnpm test:browser` runs Firefox without the quarantine CI applies, so a quarantined Firefox failure fails here.
 
 A passing step for one type does not prove another. A unit test does not show a docs page, and a page that renders does not show a failing test is fixed.
 
@@ -114,4 +122,15 @@ Cleanup stops only the server this helper started. It reads `.verify/scratch/cla
 
 ## Keeping it honest
 
-`pnpm test` runs `verify.test.mjs`, and `self-test` checks that the scripts and folders the helper reads still exist. When a package script, a docs route layout, or the Node pin changes, update `verify.mjs` and this page in the same pull request.
+`pnpm test` runs `verify.test.mjs`, and `self-test` checks that the scripts and folders the helper reads still exist.
+
+`CI_RUNS` in `verify.mjs` lists each run line of the jobs `Checks` needs, the steps that run the same command here, and the change types whose files can fail it. A line with no local step, such as CI's own diff class, says why. `self-test` and `verify.test.mjs` read `ci.yml` and fail, naming the fix, when:
+
+- a blocking job runs a line `CI_RUNS` does not name, or `CI_RUNS` names a line `ci.yml` no longer runs,
+- a step runs a different command from CI's line and the entry does not say why,
+- a job that runs on every change has an entry that leaves out a change type,
+- a type's plan leaves out a step one of its entries lists.
+
+So a change to `ci.yml` that adds, drops or edits a command fails the verify tests until `CI_RUNS`, the plans and this page match it. The test does not decide which types a new command applies to; the entry's `types` says that, and review checks it.
+
+When a package script, a docs route layout, a CI job or the Node pin changes, update `verify.mjs` and this page in the same pull request.
