@@ -98,3 +98,13 @@ test('the project config rejects a numeric line-height at error severity', async
   assert.equal(report.warnings[0].rule, ruleName);
   assert.equal(report.warnings[0].severity, 'error');
 });
+
+test('a pill or hairline rejection names the token to use instead', async () => {
+  const texts = async (code) => (await stylelint.lint({ code, codeFilename: file, config })).results[0].warnings.map((w) => w.text);
+  assert.deepEqual(await texts('.a { border-radius: 9999px; }'), [
+    'Unexpected pill length "9999px". Use the component\'s radius token, such as var(--todae-avatar-radius), which points at #/radius/full/$value in packages/design-system/tokens/components/avatar.json. A new token needs Ben\'s approval (.agents/playbooks/tokens.md). (todae/no-raw-literal)',
+  ]);
+  assert.deepEqual(await texts('.a { border: 1px solid; }'), [
+    'Unexpected hairline "1px". Use the component\'s border-width token, such as var(--todae-card-border-width), which points at #/border/width/$value in packages/design-system/tokens/components/card.json. A new token needs Ben\'s approval (.agents/playbooks/tokens.md). (todae/no-raw-literal)',
+  ]);
+});

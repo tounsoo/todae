@@ -4,11 +4,13 @@ import { forcedColorsQuery, insideForcedColors } from './forced-colors.mjs';
 const ruleName = 'todae/no-raw-literal';
 
 const messages = stylelint.utils.ruleMessages(ruleName, {
-  pill: (raw) => `Unexpected pill length "${raw}".`,
+  pill: (raw) =>
+    `Unexpected pill length "${raw}". Use the component's radius token, such as var(--todae-avatar-radius), which points at #/radius/full/$value in packages/design-system/tokens/components/avatar.json. A new token needs Ben's approval (.agents/playbooks/tokens.md).`,
   leading: (raw) => `Unexpected line-height "${raw}". Use 1 or a token.`,
   fade: (raw) => `Unexpected opacity "${raw}". Use 0, 1, or a token.`,
   easing: (raw) => `Unexpected easing "${raw}". Use a token. linear stays allowed.`,
-  hairline: 'Unexpected hairline "1px".',
+  hairline:
+    'Unexpected hairline "1px". Use the component\'s border-width token, such as var(--todae-card-border-width), which points at #/border/width/$value in packages/design-system/tokens/components/card.json. A new token needs Ben\'s approval (.agents/playbooks/tokens.md).',
 });
 
 // 1 centres a glyph in its box. Any other number is text leading.

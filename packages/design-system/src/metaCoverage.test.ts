@@ -23,6 +23,9 @@ describe('meta coverage', () => {
         missing.push(name);
       }
     }
-    expect(missing).toEqual([]);
+    expect(
+      missing,
+      'Add a <Name>.<Part>.meta.ts (or <name>.meta.ts for a hook or function) beside its source, such as packages/design-system/src/components/Chip.Root.meta.ts or packages/design-system/src/hooks/useClipboard.meta.ts, that exports `meta` with that name, then run pnpm schema',
+    ).toEqual([]);
   });
 });

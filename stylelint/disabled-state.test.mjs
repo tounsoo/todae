@@ -54,3 +54,13 @@ test('the project config rejects disabled opacity at error severity', async () =
   assert.equal(report.warnings[0].rule, ruleName);
   assert.equal(report.warnings[0].severity, 'error');
 });
+
+test('an opacity rejection says why and names the disabled color tokens', async () => {
+  const result = await stylelint.lint({ code: '.a:disabled { opacity: 0.5; }', codeFilename: file, config });
+  assert.equal(
+    result.results[0].warnings[0].text,
+    'Unexpected opacity on a disabled state. A disabled look comes from color tokens, so a theme sets it in one place. ' +
+      'Remove it and set color, background-color and border-color from the disabled tokens, such as ' +
+      'var(--todae-<component>-fg-disabled), -bg-disabled and -border-disabled. (todae/disabled-state)',
+  );
+});

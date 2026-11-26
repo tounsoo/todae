@@ -78,7 +78,10 @@ describe('docs locales', () => {
   afterEach(cleanup);
 
   it('can fall back to every English page', () => {
-    expect(Object.keys(ENGLISH_PAGES).sort()).toEqual(slugs(join(APP, '(en)')).sort());
+    expect(
+      Object.keys(ENGLISH_PAGES).sort(),
+      "Add a line for each new apps/docs/app/(en)/<slug> page to ENGLISH_PAGES in apps/docs/lib/i18n/englishPages.ts, or remove the line of a page that is gone",
+    ).toEqual(slugs(join(APP, '(en)')).sort());
   });
 
   it('keeps each translation in step with its English page', () => {
@@ -105,7 +108,10 @@ describe('docs locales', () => {
         if (!existsSync(file)) continue;
         const english = readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8');
         const translation = withPage(`${locale}/${slug}`, () => shape(readFileSync(file, 'utf8')));
-        expect(translation, `${locale}/${slug}`).toEqual(withPage(`en/${slug}`, () => shape(english)));
+        expect(
+          translation,
+          `Make apps/docs/app/${locale}/${slug}/page.mdx match apps/docs/app/(en)/${slug}/page.mdx in the parts listed (imports, code, tags, examples, props tables, links, sections); a translation changes prose only`,
+        ).toEqual(withPage(`en/${slug}`, () => shape(english)));
       }
     }
     // Reads every English and translated page: its time grows with the docs.
@@ -529,7 +535,10 @@ describe('docs locales', () => {
       const sources = Object.fromEntries(
         Object.entries(translations).map(([component, props]) => [component, Object.fromEntries(Object.entries(props).map(([prop, entry]) => [prop, entry.en]))]),
       );
-      expect(sources, `${locale} prop translations`).toEqual(english);
+      expect(
+        sources,
+        `Update apps/docs/lib/i18n/props/${locale}.json so each component's props match the English descriptions from the *.meta.ts files: add or remove props, and when the English changed, set "en" to the new English and translate "${locale}" again`,
+      ).toEqual(english);
       for (const props of Object.values(translations)) for (const entry of Object.values(props)) expect(entry[locale]).toBeTruthy();
     }
   });
