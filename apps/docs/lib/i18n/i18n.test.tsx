@@ -80,7 +80,7 @@ describe('docs locales', () => {
   it('can fall back to every English page', () => {
     expect(
       Object.keys(ENGLISH_PAGES).sort(),
-      "Add a line for each new app/(en)/<slug> page to ENGLISH_PAGES in lib/i18n/englishPages.ts, or remove the line of a page that is gone",
+      "Add a line for each new apps/docs/app/(en)/<slug> page to ENGLISH_PAGES in apps/docs/lib/i18n/englishPages.ts, or remove the line of a page that is gone",
     ).toEqual(slugs(join(APP, '(en)')).sort());
   });
 
@@ -110,7 +110,7 @@ describe('docs locales', () => {
         const translation = withPage(`${locale}/${slug}`, () => shape(readFileSync(file, 'utf8')));
         expect(
           translation,
-          `Make app/${locale}/${slug}/page.mdx match app/(en)/${slug}/page.mdx in the parts listed (imports, code, tags, examples, props tables, links, sections); a translation changes prose only`,
+          `Make apps/docs/app/${locale}/${slug}/page.mdx match apps/docs/app/(en)/${slug}/page.mdx in the parts listed (imports, code, tags, examples, props tables, links, sections); a translation changes prose only`,
         ).toEqual(withPage(`en/${slug}`, () => shape(english)));
       }
     }
@@ -537,7 +537,7 @@ describe('docs locales', () => {
       );
       expect(
         sources,
-        `Update lib/i18n/props/${locale}.json so each component's props match the English descriptions from the *.meta.ts files: add or remove props, and when the English changed, set "en" to the new English and translate "${locale}" again`,
+        `Update apps/docs/lib/i18n/props/${locale}.json so each component's props match the English descriptions from the *.meta.ts files: add or remove props, and when the English changed, set "en" to the new English and translate "${locale}" again`,
       ).toEqual(english);
       for (const props of Object.values(translations)) for (const entry of Object.values(props)) expect(entry[locale]).toBeTruthy();
     }

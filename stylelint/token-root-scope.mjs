@@ -5,8 +5,8 @@ const ruleName = 'todae/token-root-scope';
 const messages = stylelint.utils.ruleMessages(ruleName, {
   rejected: (root, sheet, allowed) =>
     `Unexpected token root "${root}" in ${sheet}. ${sheet} may read ${[...allowed].join(', ')}. ` +
-    `Use a token from one of those roots, or add "${root}" to ${sheet} in ownRoots, coreReads or sharedRoots ` +
-    'in stylelint.config.mjs.',
+    `Use a token from one of those roots. If ${sheet} must read ${root} tokens, give ${sheet} an ownRoots entry ` +
+    `in stylelint.config.mjs that lists its own roots and "${root}", since an entry replaces the default.`,
 });
 
 const TOKEN = /var\(--todae-([a-z0-9]+)-/g;

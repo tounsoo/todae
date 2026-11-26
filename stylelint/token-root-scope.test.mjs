@@ -98,7 +98,7 @@ test('a rejection lists the roots the sheet may read and names the config file t
   assert.equal(
     result.results[0].warnings[0].text,
     'Unexpected token root "dialog" in Field. Field may read field, option, space, overlay, focus. ' +
-      'Use a token from one of those roots, or add "dialog" to Field in ownRoots, coreReads or sharedRoots ' +
-      'in stylelint.config.mjs. (todae/token-root-scope)',
+      'Use a token from one of those roots. If Field must read dialog tokens, give Field an ownRoots entry ' +
+      'in stylelint.config.mjs that lists its own roots and "dialog", since an entry replaces the default. (todae/token-root-scope)',
   );
 });
