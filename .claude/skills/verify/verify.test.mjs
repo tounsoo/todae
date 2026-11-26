@@ -16,6 +16,7 @@ import {
   blockingRuns,
   ciGaps,
   covers,
+  expandNeeds,
   checkPage,
   childEnv,
   checkPath,
@@ -156,7 +157,7 @@ describe('planFor', () => {
   });
 
   test('tests that import the built package run after the build, even when no type asks for the build', () => {
-    assert.deepEqual(planFor(['package.json']).steps, ['check', 'build-ds', 'unit', 'pinned-actions', 'forbidden-paths']);
+    assert.deepEqual(planFor(['package.json']).steps, ['check', 'changeset', 'build-ds', 'unit', 'pinned-actions', 'forbidden-paths']);
   });
 
   test('tokens plan the token checks before unit tests', () => {
@@ -249,7 +250,7 @@ describe('plans match CI', () => {
       assert.ok(covers(steps, id), `component plan leaves out ${id}: ${steps.join(', ')}`);
     }
     assert.deepEqual(STEPS['ssr-smoke'].cmd, ['pnpm', 'ssr:smoke']);
-    assert.deepEqual(STEPS['tokens-check'].cmd, ['pnpm', 'tokens:check']);
+    assert.deepEqual(STEPS['tokens-check'].cmd, ['pnpm', '--filter', '@tounsoo/todae', 'tokens:check', '--base', '{base}']);
     assert.deepEqual(STEPS['check-self'].cmd, ['pnpm', 'check:self']);
     assert.deepEqual(STEPS.changeset.cmd, ['pnpm', 'changeset', 'status', '--since={base}']);
   });
@@ -303,7 +304,15 @@ describe('forbidden-paths step', () => {
     assert.match('forbidden-paths.sh needs bash 4 or newer; this bash is 3.2.57(1)-release', step.blockedWhen);
     // A real substitution bug under a new bash still fails.
     assert.doesNotMatch('line 17: ${base,,}: bad substitution', step.blockedWhen);
+    assert.doesNotMatch('forbidden-paths: notes/x.md says forbidden-paths.sh needs bash 4 or newer', step.blockedWhen);
     assert.match(step.blockedReason, /bash 4 or newer/);
+  });
+});
+
+describe('expandNeeds', () => {
+  test('adds needs at any depth, each before what needs it', () => {
+    assert.deepEqual(expandNeeds(['docs-axe']), ['build-ds', 'docs-build', 'docs-axe']);
+    assert.deepEqual(expandNeeds(['docs-peek', 'docs-axe']), ['build-ds', 'docs-build', 'docs-peek', 'docs-axe']);
   });
 });
 

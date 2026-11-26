@@ -105,8 +105,8 @@ export const CHANGE_TYPES = [
         '.changeset/config.json',
       ),
     ),
-    steps: ['check', 'unit', 'pinned-actions', 'forbidden-paths'],
-    proof: 'pnpm check, unit tests and the pinned-actions check here; the CI run on the pull request head is the rest of the proof',
+    steps: ['check', 'changeset', 'unit', 'pinned-actions', 'forbidden-paths'],
+    proof: 'pnpm check, the changeset check, unit tests and the pinned-actions check here; the CI run on the pull request head is the rest of the proof',
   },
   {
     id: 'markdown',
@@ -153,7 +153,12 @@ export const STEPS = {
     afterCmd: ['git', 'status', '--porcelain', '--', 'packages/design-system/schema'],
     afterReason: 'pnpm schema changed packages/design-system/schema; commit the regenerated files and run verify again',
   },
-  'tokens-check': { id: 'tokens-check', label: 'Token check', cmd: ['pnpm', 'tokens:check'] },
+  // --base also checks that name-grandfather.json only shrinks, as CI's Token API job does.
+  'tokens-check': {
+    id: 'tokens-check',
+    label: 'Token check against the plan base',
+    cmd: ['pnpm', '--filter', '@tounsoo/todae', 'tokens:check', '--base', '{base}'],
+  },
   'tokens-api-check': { id: 'tokens-api-check', label: 'Token API check', cmd: ['pnpm', 'tokens:api:check'] },
   changeset: {
     id: 'changeset',
@@ -216,7 +221,7 @@ export const STEPS = {
       '[ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "forbidden-paths.sh needs bash 4 or newer; this bash is $BASH_VERSION" >&2; exit 2; }; set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
     ],
     // macOS ships bash 3.2, and the script lowercases with ${name,,}, which bash 4 added.
-    blockedWhen: /needs bash 4 or newer/,
+    blockedWhen: /^forbidden-paths\.sh needs bash 4 or newer/m,
     blockedReason: 'forbidden-paths.sh needs bash 4 or newer, which CI has. Install one, such as brew install bash, and put it first on PATH.',
   },
   'verify-self-test': {
@@ -245,10 +250,16 @@ export const CI_RUNS = [
     job: 'static',
     run: 'pnpm changeset status --since="origin/$BASE_REF"',
     steps: ['changeset'],
-    types: ['tokens', 'component', 'other'],
+    types: ['tokens', 'component', 'ci', 'other'],
     differs: 'runs against the plan base, the merge base with origin/main',
   },
-  { job: 'static', run: 'pnpm tokens:check', steps: ['tokens-check'], types: ['tokens', 'component'] },
+  {
+    job: 'static',
+    run: 'pnpm tokens:check',
+    steps: ['tokens-check'],
+    types: ['tokens', 'component'],
+    differs: "adds Token API's --base, which runs the same check and also requires name-grandfather.json to only shrink",
+  },
   {
     job: 'static',
     run: 'pnpm schema && git diff --exit-code',
@@ -311,7 +322,7 @@ export const CI_RUNS = [
     run: 'pnpm --filter @tounsoo/todae tokens:check --base',
     steps: ['tokens-check'],
     types: ['tokens'],
-    differs: 'checks the snapshot against the working tree, which the plan commits',
+    differs: 'passes the plan base, the merge base with origin/main, for the pull request base',
   },
   {
     job: 'token-api',
@@ -341,6 +352,7 @@ export function ciGaps() {
   for (const entry of CI_RUNS) {
     for (const id of entry.steps) if (!STEPS[id]) problems.push(`CI_RUNS ${entry.job} "${entry.run}" names unknown step ${id}`);
     if (entry.steps.length === 0 && !entry.why) problems.push(`CI_RUNS ${entry.job} "${entry.run}" runs no step and gives no why`);
+    if (entry.steps.length && !entry.types?.length) problems.push(`CI_RUNS ${entry.job} "${entry.run}" runs steps but lists no change type`);
     for (const typeId of entry.types ?? []) {
       const type = CHANGE_TYPES.find((item) => item.id === typeId);
       if (!type) {
@@ -1222,10 +1234,25 @@ function reportMarkdown(report) {
 
 const blockedResult = (id, command, reason) => ({ id, label: id, command, status: 'blocked', exit: null, ms: 0, reason });
 
-export function skippedResults(planned, ran) {
+// The command as a report shows it: with the base put in when there is one.
+const shownCmd = (cmd, base) => (SHA_PATTERN.test(base ?? '') ? withBase(cmd, base) : cmd).join(' ');
+
+// The steps with every step they need, however deep, each need before what needs it.
+export function expandNeeds(ids) {
+  const out = [];
+  const visit = (id) => {
+    if (out.includes(id)) return;
+    for (const need of STEPS[id]?.needs ?? []) visit(need);
+    out.push(id);
+  };
+  ids.forEach(visit);
+  return out;
+}
+
+export function skippedResults(planned, ran, base) {
   return planned
     .filter((id) => !ran.includes(id))
-    .map((id) => blockedResult(id, STEPS[id].drive ? 'drive' : STEPS[id].cmd.join(' '), 'not run: --only left it out of this run'));
+    .map((id) => blockedResult(id, STEPS[id].drive ? 'drive' : shownCmd(STEPS[id].cmd, base), 'not run: --only left it out of this run'));
 }
 
 async function run(flags) {
@@ -1256,11 +1283,11 @@ async function run(flags) {
       let steps = plan.steps;
       if (flags.only) {
         const only = flags.only.split(',').map((item) => item.trim()).filter(Boolean);
-        for (const id of [...only]) for (const need of STEPS[id]?.needs ?? []) if (!only.includes(need)) only.push(need);
+        for (const id of expandNeeds(only)) if (!only.includes(id)) only.push(id);
         const unknown = only.filter((id) => !steps.includes(id));
         if (unknown.length) throw new UsageError(`--only names steps that are not in the plan: ${unknown.join(', ')}`);
         steps = steps.filter((id) => only.includes(id));
-        results.push(...skippedResults(plan.steps, steps));
+        results.push(...skippedResults(plan.steps, steps, plan.base));
       }
       if (flags.base !== undefined) {
         const merge = await gitTry(['merge-base', 'origin/main', 'HEAD']);

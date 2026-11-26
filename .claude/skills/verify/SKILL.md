@@ -34,11 +34,11 @@ Each plan runs the commands that the jobs `Checks` needs in `.github/workflows/c
 | Type | Files | Proof |
 | --- | --- | --- |
 | `tokens` | `packages/design-system/tokens/` | `pnpm tokens:api:check` and everything `component` runs, since the built tokens reach every component. A token change also needs Ben's approval, as `.agents/playbooks/tokens.md` says. |
-| `component` | the rest of `packages/design-system/` | `pnpm check` (lint, typecheck, Stylelint, the self-tests and `pnpm check:self`), `pnpm schema` with no diff, `pnpm tokens:check`, the changeset check, unit tests, `pnpm test:browser` (the package in Chromium, Firefox and WebKit, and the docs demos), the package build, `pnpm publish:check`, `pnpm ssr:smoke` and the Fernway example build. |
+| `component` | the rest of `packages/design-system/` | `pnpm check` (lint, typecheck, Stylelint, the self-tests and `pnpm check:self`), `pnpm schema` with no diff, the token check against the plan base (`tokens:check --base <base>`, as the Token API job runs it, so `name-grandfather.json` may only shrink), the changeset check, unit tests, `pnpm test:browser` (the package in Chromium, Firefox and WebKit, and the docs demos), the package build, `pnpm publish:check`, `pnpm ssr:smoke` and the Fernway example build. |
 | `docs` | `apps/docs/` | `pnpm check`, the docs unit tests, the docs browser tests, the docs build, axe (`pnpm --filter docs test:axe`) and peek (`pnpm --filter docs test:peek`) on that build, and a drive of the touched routes in English and Korean. `pnpm check` is there because lint, typecheck and the Cursor verify self-test read docs files. |
 | `example` | `examples/` | `pnpm check`, the package build, the Fernway example build and `pnpm ssr:smoke`. |
 | `agent` | `.claude/`, `.agents/`, `CLAUDE.md`, `AGENTS.md` | the verify self-test, `verify.test.mjs` and `pnpm check:self`, since `AGENTS.md` holds the rule table. Review covers the rest. |
-| `ci` | `.github/`, root config, `scripts/` | `pnpm check`, the unit tests and the pinned-actions check. The CI run on the pull request head is the rest of the proof, so cite its link. |
+| `ci` | `.github/`, root config, `scripts/` | `pnpm check`, the changeset check (which checks `.changeset/config.json`), the unit tests and the pinned-actions check. The CI run on the pull request head is the rest of the proof, so cite its link. |
 | `markdown` | Markdown no tool or page reads: the files `.github/scripts/change-class.sh` classes `markdown` | `pnpm check:self` and the forbidden-paths check, the jobs CI runs on such a change. Review is the rest. |
 | `other` | anything else, such as a changeset, a `*-body.md` file or MDX outside the docs app | `pnpm check`, the changeset check and the unit tests. |
 
@@ -46,7 +46,7 @@ The `markdown` type is named for `change-class.sh`'s `markdown` class and holds 
 
 The changeset check runs `node .github/scripts/changeset-exempt.mjs <base>` and, when that does not exempt the change, `pnpm changeset status --since=<base>`, as the Static job does, with the plan base for CI's `origin/main`.
 
-The unit, docs and browser tests, the publish check, the SSR smoke test and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. Axe and peek run after the docs build, which they serve. `run --only` adds those needs too.
+The unit, docs and browser tests, the publish check, the SSR smoke test and the docs build use the built package, as CI's jobs do, so the plan runs `pnpm build:ds` before them. Axe and peek run after the docs build, which they serve. `run --only` adds those needs too, at any depth, so `--only docs-axe` also runs the docs build and the package build.
 
 The browser tests, axe and peek launch Chromium, Firefox and WebKit. When Playwright is missing any of them, the step is `BLOCKED` with the install command, `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit`. The package and the docs app pin the same Playwright, so that one install serves both. Locally `pnpm test:browser` runs Firefox with file parallelism and without the quarantine CI applies, so a local Firefox failure may be one that CI's Engines job would not fail on. Rerun it with `pnpm --filter @tounsoo/todae test:browser --project firefox --no-file-parallelism` before you treat it as real, and check `packages/design-system/scripts/firefox-quarantine.ts`.
 
