@@ -278,6 +278,15 @@ describe('plans match CI', () => {
   });
 });
 
+describe('forbidden-paths step', () => {
+  test("an old bash, such as macOS's 3.2, is BLOCKED with the fix, not FAIL", () => {
+    const step = STEPS['forbidden-paths'];
+    assert.match('forbidden-paths.sh needs bash 4 or newer; this bash is 3.2.57(1)-release', step.blockedWhen);
+    assert.match('line 17: ${base,,}: bad substitution', step.blockedWhen);
+    assert.match(step.blockedReason, /bash 4 or newer/);
+  });
+});
+
 describe('withBase', () => {
   test('puts the plan base into the command', () => {
     assert.deepEqual(withBase(['pnpm', 'changeset', 'status', '--since={base}'], BASE), ['pnpm', 'changeset', 'status', `--since=${BASE}`]);
