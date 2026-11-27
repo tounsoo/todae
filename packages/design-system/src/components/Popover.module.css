@@ -27,7 +27,8 @@
     margin: 0;
     /* The slide is layout, not a transform, so a tooltip anchored inside
        stays by its trigger's box. Only the margin on the anchor's side moves
-       the box: the start one under the anchor, the end one over it. */
+       the box: the start one under the anchor, the end one over it. A
+       submenu beside its anchor doesn't slide. */
     margin-block: calc(-1 * var(--_popover-slide));
     padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
     width: max-content;
@@ -182,9 +183,10 @@
       inset-inline-start: auto;
       position-area: span-self-block-end self-inline-end;
       margin-block-start: calc(-1 * (var(--todae-popover-padding-y) + var(--todae-popover-border-width)));
+      /* A submenu doesn't slide: WebKit placed one that flipped to the start
+         side off its menu when this margin read the slide. */
       margin-block-end: 0;
-      /* A submenu slides in from the menu it sits beside. */
-      margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width) - var(--_popover-slide));
+      margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width));
       position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
     }
   }

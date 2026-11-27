@@ -23,7 +23,7 @@ The surface is the top-layer hit target: `position: fixed; inset: unset; pointer
 
 The surface fades in while it grows from 96% (`popover.motion.scale`) out of the corner of its trigger, and fades and shrinks back as it closes, with the `popover.motion.*` duration and easing tokens. Menu opens and closes the same way, and the field pickers open the same way and go at once as they close. It moves the same way in Safari. While it closes it stays drawn but is inert, so no press or focus lands in it, and content that resets on close, such as a Drilldown, resets once the fade ends. A tooltip whose trigger is inside waits for the growth to settle before it opens, since it is placed against the trigger's unscaled box. Under reduced motion it only fades.
 
-A brand can also slide it in from its trigger: `popover.motion.offset` (0 by default) is how far toward the trigger it starts as it opens and ends as it closes, and a submenu slides in from the menu it sits beside. It moves by layout, not a transform, so a tooltip inside stays by its trigger. Under reduced motion it doesn't slide.
+A brand can also slide it in from its trigger: `popover.motion.offset` (0 by default) is how far toward the trigger it starts as it opens and ends as it closes; a submenu beside its menu only fades and grows. It moves by layout, not a transform, so a tooltip inside stays by its trigger. Under reduced motion it doesn't slide.
 
 ## Examples
 
