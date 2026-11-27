@@ -128,8 +128,12 @@ describe('planFor', () => {
       'build-ds',
       'unit',
       'browser',
+      'browser-firefox',
+      'browser-webkit',
+      'docs-browser',
       'publish-check',
       'ssr-smoke',
+      'relink',
       'fernway',
       'forbidden-paths',
       'docs-unit',
@@ -138,13 +142,28 @@ describe('planFor', () => {
       'docs-peek',
       'drive',
     ]);
-    assert.ok(!steps.includes('docs-browser'), 'browser runs the docs browser tests as a part');
     assert.equal(new Set(steps).size, steps.length);
   });
 
   test('a lone fernway need is still ordered after the build it needs', () => {
     const { steps } = planFor(['examples/fernway/a.ts']);
-    assert.deepEqual(steps, ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths']);
+    assert.deepEqual(steps, ['check', 'build-ds', 'relink', 'fernway', 'ssr-smoke', 'forbidden-paths']);
+  });
+
+  // A fresh worktree's install ran before dist existed, so Fernway's todae-tokens bin was missing and its
+  // build failed with "todae-tokens: command not found" until the relink CI also runs.
+  test('fernway relinks the bins after the package build, as CI does', () => {
+    assert.deepEqual(expandNeeds(['fernway']), ['build-ds', 'relink', 'fernway']);
+    assert.deepEqual(STEPS.relink.cmd, ['pnpm', 'install', '--frozen-lockfile', '--offline']);
+  });
+
+  // pnpm test:browser ran every engine at once, Firefox with file parallelism and no quarantine, so a local
+  // run failed where CI's Engines jobs passed. Each step is now one of CI's commands.
+  test('a package change runs each engine as its own CI command', () => {
+    const { steps } = planFor(['packages/design-system/src/a.ts']);
+    for (const id of ['browser', 'browser-firefox', 'browser-webkit', 'docs-browser']) assert.ok(steps.includes(id), id);
+    assert.ok(!steps.some((id) => STEPS[id].cmd?.join(' ') === 'pnpm test:browser'));
+    assert.match(STEPS['browser-firefox'].cmd.join(' '), /--project firefox --no-file-parallelism .*firefox-quarantine\.ts --results "\$BROWSER_RESULTS" --vitest-exit "\$status"/);
   });
 
   test('markdown alone runs the jobs CI runs on Markdown, and an empty diff plans nothing', () => {
@@ -288,13 +307,22 @@ describe('plans match CI', () => {
     const config = readFileSync(path.join(repoRoot, 'packages/design-system/vitest.browser.config.ts'), 'utf8');
     const launched = [...new Set([...config.matchAll(/browser: '(\w+)'/g)].map((match) => match[1]))];
     assert.deepEqual(launched.sort(), ['chromium', 'firefox', 'webkit']);
-    for (const id of ['browser', 'docs-browser', 'docs-axe', 'docs-peek']) {
+    for (const id of ['browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'docs-axe', 'docs-peek']) {
       const reason = STEPS[id].blockedReason;
       for (const name of launched) {
         assert.match(reason, new RegExp(name, 'i'), `${id} hint leaves out ${name}`);
       }
       assert.match(reason, /playwright install --with-deps chromium firefox webkit\.$/);
     }
+  });
+
+  // Playwright's Firefox failed to start on macOS 27 ("Could not find profile folder"), and the helper called
+  // that "not installed". Only a missing browser is BLOCKED; a launch failure is a FAIL with its log.
+  test('a browser that is installed but fails to start is not reported as missing', () => {
+    const missing = STEPS.browser.blockedWhen;
+    assert.match("browserType.launch: Executable doesn't exist at /x/firefox", missing);
+    assert.match('Please run the following command to download new browsers:\n    npx playwright install', missing);
+    assert.doesNotMatch('Error: browserType.launch: Failed to launch the browser process.\n[err] Could not find profile folder.', missing);
   });
 });
 

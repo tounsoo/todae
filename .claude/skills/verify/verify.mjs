@@ -54,14 +54,14 @@ export const CHANGE_TYPES = [
     id: 'tokens',
     label: 'Design tokens',
     match: under('packages/design-system/tokens/'),
-    steps: ['tokens-api-check', 'check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'fernway', 'forbidden-paths'],
+    steps: ['tokens-api-check', 'check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'build-ds', 'publish-check', 'ssr-smoke', 'relink', 'fernway', 'forbidden-paths'],
     proof: "the token API check and everything a package change runs, since built tokens reach every component; the token change needs Ben's approval",
   },
   {
     id: 'component',
     label: 'Design system package',
     match: under('packages/design-system/'),
-    steps: ['check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'fernway', 'forbidden-paths'],
+    steps: ['check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'build-ds', 'publish-check', 'ssr-smoke', 'relink', 'fernway', 'forbidden-paths'],
     proof: 'pnpm check, schema with no diff, token and changeset checks, unit and browser tests, build, publish and SSR checks, and the Fernway build',
   },
   {
@@ -75,7 +75,7 @@ export const CHANGE_TYPES = [
     id: 'example',
     label: 'Examples',
     match: under('examples/'),
-    steps: ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths'],
+    steps: ['check', 'build-ds', 'relink', 'fernway', 'ssr-smoke', 'forbidden-paths'],
     proof: 'pnpm check, and the Fernway example and the SSR smoke app build against the built design system',
   },
   {
@@ -125,8 +125,9 @@ export const CHANGE_TYPES = [
 ];
 
 // The browser tests launch Chromium, Firefox and WebKit. The package and the docs app pin the same Playwright,
-// so one install serves both.
-const PLAYWRIGHT_MISSING = /Executable doesn't exist|playwright install|browserType\.launch/i;
+// so one install serves both. Only a missing browser is BLOCKED: one that is installed and fails to start is a
+// FAIL, with Playwright's own launch log, so it isn't mistaken for a missing install.
+const PLAYWRIGHT_MISSING = /Executable doesn't exist|npx playwright install/i;
 const PLAYWRIGHT_INSTALL =
   'Playwright Chromium, Firefox or WebKit is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit.';
 
@@ -167,25 +168,49 @@ export const STEPS = {
     unlessReason: 'changeset-exempt.mjs found the change ships nothing, so it needs no changeset',
     cmd: ['pnpm', 'changeset', 'status', '--since={base}'],
   },
+  // The browser steps run the commands CI's Fernway and Engines jobs run, one engine each, so a local run
+  // fails on what CI fails on. On macOS, playwright.host.ts gives each engine CI's Linux behavior.
   browser: {
     id: 'browser',
-    label: 'Browser tests',
-    cmd: ['pnpm', 'test:browser'],
+    label: 'Package browser tests in Chromium',
+    cmd: ['pnpm', '--filter', '@tounsoo/todae', 'test:browser', '--project', 'chromium'],
     needs: ['build-ds'],
-    // The root script runs each workspace's test:browser, the docs app's included.
-    parts: ['docs-browser'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
+  'browser-firefox': {
+    id: 'browser-firefox',
+    label: 'Package browser tests in Firefox, with the quarantine',
+    // CI's Engines (firefox) step: one file at a time, and the quarantine turns a known failure into a warning.
+    cmd: [
+      'bash',
+      '-c',
+      'set -uo pipefail; mkdir -p .verify/scratch; export BROWSER_RESULTS="$PWD/.verify/scratch/firefox-results.json"; rm -f "$BROWSER_RESULTS"; cd packages/design-system; pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts; status=$?; node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status"',
+    ],
+    needs: ['build-ds'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
+  'browser-webkit': {
+    id: 'browser-webkit',
+    label: 'Package browser tests in WebKit',
+    cmd: ['pnpm', '--filter', '@tounsoo/todae', 'test:browser', '--project', 'webkit'],
+    needs: ['build-ds'],
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
   'docs-browser': {
     id: 'docs-browser',
     label: 'Docs browser tests',
-    cmd: ['pnpm', '--filter', 'docs', 'test:browser'],
+    cmd: ['pnpm', '--filter', 'docs', 'test:browser', '--project', 'chromium', '--project', 'scroll-lock'],
     needs: ['build-ds'],
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
   'build-ds': { id: 'build-ds', label: 'Build the design system', cmd: ['pnpm', 'build:ds'] },
+  // pnpm links a package's bin only when its target exists. A fresh install ran before dist did, so the
+  // todae-tokens bin Fernway runs is missing until this relinks it, as CI's Fernway job does.
+  relink: { id: 'relink', label: 'Relink the workspace bins', cmd: ['pnpm', 'install', '--frozen-lockfile', '--offline'], needs: ['build-ds'] },
   'publish-check': { id: 'publish-check', label: 'Publish checks', cmd: ['pnpm', 'publish:check'], needs: ['build-ds'] },
   'ssr-smoke': { id: 'ssr-smoke', label: 'SSR smoke test of the packed package', cmd: ['pnpm', 'ssr:smoke'], needs: ['build-ds'] },
   'docs-build': { id: 'docs-build', label: 'Build the docs site', cmd: ['pnpm', '--filter', 'docs', 'build'], needs: ['build-ds'] },
@@ -209,7 +234,7 @@ export const STEPS = {
     id: 'fernway',
     label: 'Build the Fernway example',
     cmd: ['pnpm', '--filter', 'fernway-example', 'build'],
-    needs: ['build-ds'],
+    needs: ['build-ds', 'relink'],
   },
   'pinned-actions': { id: 'pinned-actions', label: 'Remote actions are pinned', cmd: ['node', '.github/scripts/pinned-actions.mjs'] },
   'forbidden-paths': {
@@ -278,38 +303,35 @@ export const CI_RUNS = [
     run: 'pnpm --filter @tounsoo/todae test:browser --project chromium',
     steps: ['browser'],
     types: ['tokens', 'component'],
-    differs: 'pnpm test:browser runs every browser project of the package, Chromium included',
   },
   {
     job: 'fernway',
     run: 'pnpm --filter docs test:browser --project chromium --project scroll-lock',
     steps: ['docs-browser'],
     types: ['tokens', 'component', 'docs'],
-    differs: "runs every docs browser project, these two included; pnpm test:browser runs it as a part",
   },
-  { job: 'fernway', run: 'pnpm install --frozen-lockfile --offline', steps: [], why: "relinks the todae-tokens bin in CI's install, made before dist existed" },
+  { job: 'fernway', run: 'pnpm install --frozen-lockfile --offline', steps: ['relink'], types: ['tokens', 'component', 'example'] },
   { job: 'fernway', run: 'pnpm --filter fernway-example build', steps: ['fernway'], types: ['tokens', 'component', 'example'] },
   { job: 'engines', run: 'fc-match sans-serif:bold', steps: [], why: "sets the CI container's sans-serif font" },
   {
     job: 'engines',
     run: 'pnpm test:browser --project firefox',
-    steps: ['browser'],
+    steps: ['browser-firefox'],
     types: ['tokens', 'component'],
-    differs:
-      'pnpm test:browser runs Firefox too, but with file parallelism and without the quarantine, so a local Firefox failure may be one CI would not fail on',
+    differs: 'runs the same line and the quarantine in one bash step from the repo root, with the results file under .verify/scratch',
   },
   {
     job: 'engines',
     run: 'scripts/firefox-quarantine.ts',
-    steps: [],
-    why: 'turns quarantined Firefox failures into warnings; there is no quarantine here',
+    steps: ['browser-firefox'],
+    types: ['tokens', 'component'],
+    differs: 'runs in the same bash step as the Firefox tests, and writes no job summary',
   },
   {
     job: 'engines',
     run: 'pnpm --filter @tounsoo/todae test:browser --project webkit',
-    steps: ['browser'],
+    steps: ['browser-webkit'],
     types: ['tokens', 'component'],
-    differs: 'pnpm test:browser runs every browser project, WebKit included',
   },
   { job: 'docs', run: 'pnpm build:ds', steps: ['build-ds'], types: ['docs'] },
   { job: 'docs', run: 'pnpm --filter docs build', steps: ['docs-build'], types: ['docs'] },
@@ -1456,7 +1478,7 @@ async function selfTest() {
       const manifest = packages.get(rest[1]);
       expect(manifest, `STEPS.${id} filters on ${rest[1]}, which is not a workspace package`);
       if (rest[2] !== 'exec') expect(manifest?.scripts?.[rest[2]], `${rest[1]} has no ${rest[2]} script, which STEPS.${id} runs`);
-    } else if (program === 'pnpm') {
+    } else if (program === 'pnpm' && rest[0] !== 'install') {
       expect(rootManifest.scripts?.[rest[0]] || bin(rest[0]), `package.json has no ${rest[0]} script and no such bin is installed, which STEPS.${id} runs`);
     }
   }
