@@ -169,10 +169,12 @@ describe('package README agent guide', () => {
   });
 
   it('reads the bullet across wrapped lines', async () => {
-    const wrapped = README.replace(MCP_BULLET, (bullet) => bullet.replace(' Then call `get_example`', '\n  Then call `get_examples`'));
+    // If only the first line counted, the flow would end at get_docs_page, and the argument would go unchecked.
+    const wrapped = README.replace(MCP_BULLET, (bullet) => bullet.replace(' Then call `get_example`', '\n  Then call `get_example`'));
     expect(wrapped).not.toBe(README);
-    const problems = await readmeProblems(wrapped);
-    expect(problems.some((problem) => problem.includes('`get_examples`, which'))).toBe(true);
-    expect(problems.some((problem) => problem.includes('ends its reading flow at `get_docs_page`'))).toBe(true);
+    expect(await readmeProblems(wrapped)).toEqual([]);
+    const badArgument = wrapped.replace(MCP_BULLET, (bullet) => bullet.replace('`get_example` with', '`get_example` (`pageSlug: tooltip`) with'));
+    expect(badArgument).not.toBe(wrapped);
+    expect(await readmeProblems(badArgument)).toEqual([expect.stringContaining('passes `pageSlug` to `get_example`')]);
   });
 });
