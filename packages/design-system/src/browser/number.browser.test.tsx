@@ -134,7 +134,7 @@ describe('Field.NumberInput in a browser', () => {
     const onSubmit = vi.fn();
     render(<Quantity onSubmit={onSubmit} withForm={withForm} initial={3} />);
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}9');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}9');
     input().form!.requestSubmit();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
     expect([...onSubmit.mock.calls[0]![0].entries()]).toEqual([['quantity', '9']]);
@@ -144,7 +144,7 @@ describe('Field.NumberInput in a browser', () => {
     const onSubmit = vi.fn();
     const { unmount } = render(<Quantity onSubmit={onSubmit} withForm={false} initial={7} required />);
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}{Backspace}');
     input().form!.requestSubmit();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(onSubmit).not.toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe('Field.NumberInput in a browser', () => {
       </form>,
     );
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}70');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}70');
     input().form!.requestSubmit();
     await waitFor(() => expect(sent).toHaveBeenCalledWith('50'));
     expect(input().value).toBe('50');
@@ -215,7 +215,7 @@ describe('Field.NumberInput in a browser', () => {
     }
     const { rerender } = render(<Resettable cancel />);
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}1,5');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}1,5');
     await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(input().value).toBe('1,5');
@@ -249,7 +249,7 @@ describe('Field.NumberInput in a browser', () => {
     expect(input().value, trace()).toBe('5');
     await userEvent.keyboard('{PageUp}');
     expect(input().value, trace()).toBe('55');
-    await userEvent.keyboard('{Control>}a{/Control}37{Tab}');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}37{Tab}');
     expect(input().value, trace()).toBe('35');
     expect(input().getAttribute('aria-valuenow')).toBe('35');
   });
@@ -280,12 +280,12 @@ describe('Field.NumberInput in a browser', () => {
       render(<Quantity onSubmit={onSubmit} withForm={withForm} locale="de" />);
       await userEvent.click(input());
       await userEvent.keyboard('5{Tab}{Shift>}{Tab}{/Shift}');
-      await userEvent.keyboard('{Control>}a{/Control}1.5{Enter}');
+      await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}1.5{Enter}');
       expect(onSubmit, `Form.Root: ${withForm}`).not.toHaveBeenCalled();
       expect(input().value).toBe('1.5');
       expect(input().getAttribute('aria-invalid')).toBe('true');
       if (withForm) await screen.findByText('Enter a valid value');
-      await userEvent.keyboard('{Control>}a{/Control}1,5{Enter}');
+      await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}1,5{Enter}');
       expect(onSubmit).toHaveBeenCalledOnce();
       expect([...onSubmit.mock.calls[0]![0].entries()]).toEqual([['quantity', '1.5']]);
     }
@@ -304,7 +304,7 @@ describe('Field.NumberInput in a browser', () => {
     expect(input().value).toBe('ㅎ');
     expect(input().getAttribute('aria-invalid')).toBe('true');
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}');
     await session.send('Input.imeSetComposition', { text: '5', selectionStart: 1, selectionEnd: 1 });
     expect(input().value).toBe('5');
     await session.send('Input.insertText', { text: '5' });
@@ -455,7 +455,7 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
       </form>
     );
   }
-  const replace = (text: string) => userEvent.keyboard(`{Control>}a{/Control}${text}`);
+  const replace = (text: string) => userEvent.keyboard(`{ControlOrMeta>}a{/ControlOrMeta}${text}`);
   const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
 
   it('Enter: one commit, one send', async () => {
@@ -613,7 +613,7 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     const { unmount } = render(<Shadowed />, { container });
     const field = container.querySelector<HTMLInputElement>('[role=spinbutton]')!;
     await userEvent.click(field);
-    await userEvent.keyboard('{Control>}a{/Control}9');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}9');
     container.querySelector('form')!.requestSubmit();
     await waitFor(() => expect(sent).toEqual(['9']));
     expect(told).toEqual([9]);
@@ -626,7 +626,7 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     const told: (number | null)[] = [];
     render(<Page sent={sent} told={told} initial={7} required validate />);
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}{Backspace}');
     input().form!.requestSubmit();
     await settle();
     expect(sent).toEqual([]);
@@ -664,7 +664,7 @@ describe('Field.NumberInput and a submit that waits for the commit, in a browser
     await settle();
     expect(sent).toEqual(['7']);
     expect(told).toEqual([7]);
-    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}{Backspace}');
     input().form!.requestSubmit();
     await settle();
     expect(sent).toEqual(['7']);
@@ -990,7 +990,7 @@ describe('a held submit is sent after the commit, in a browser', () => {
     const sent: (string | null)[] = [];
     render(<Quantity initial={3} onSubmit={(data) => sent.push(data.get('quantity') as string | null)} withForm={false} />);
     await userEvent.click(input());
-    await userEvent.keyboard('{Control>}a{/Control}7');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}7');
     const form = input().form!;
     form.requestSubmit();
     form.requestSubmit();

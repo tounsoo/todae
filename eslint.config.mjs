@@ -80,6 +80,21 @@ export default tseslint.config(
     rules: { '@typescript-eslint/no-explicit-any': 'off' },
   },
   {
+    // A browser test presses real keys in a real browser. Select all, copy, paste, undo and redo are Meta on
+    // macOS and Control elsewhere, so {Control>}a selected nothing on a Mac and 33 tests failed there.
+    files: ['**/*.browser.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...['Literal[value=/\\{\\/?Control>?\\}/]', 'TemplateElement[value.raw=/\\{\\/?Control>?\\}/]'].map((selector) => ({
+          selector,
+          message:
+            'Press {ControlOrMeta>}…{/ControlOrMeta}, which Playwright sends as Meta on macOS and Control elsewhere. Keep {Control>} only for a test of the Control key itself, with an eslint-disable comment that says so.',
+        })),
+      ],
+    },
+  },
+  {
     // TypeScript already checks undefined names.
     files: ['**/*.{ts,tsx}'],
     rules: { 'no-undef': 'off' },

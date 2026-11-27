@@ -68,10 +68,10 @@ async function paste(text: string) {
   const target = document.activeElement as HTMLElement;
   scratch.focus();
   scratch.select();
-  await userEvent.keyboard('{Control>}c{/Control}');
+  await userEvent.keyboard('{ControlOrMeta>}c{/ControlOrMeta}');
   scratch.remove();
   target.focus();
-  await userEvent.keyboard('{Control>}v{/Control}');
+  await userEvent.keyboard('{ControlOrMeta>}v{/ControlOrMeta}');
 }
 
 // An IME composition through the browser's own IME path: each step's text, then the commit, or a cancel without one.
@@ -219,7 +219,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await userEvent.keyboard('{End}');
     await session().send('Input.insertText', { text: '123456' });
     expect(input().value).toBe('123456');
-    await userEvent.keyboard('{Control>}a{/Control}');
+    await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}');
     await session().send('Input.insertText', { text: '482-913' });
     expect(input().value).toBe('482913');
   });
@@ -240,7 +240,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await userEvent.keyboard('{Home}{ArrowRight}{ArrowRight}9');
     expect(input().value).toBe('129456');
     expect(active()).toEqual([3]);
-    await userEvent.keyboard('{Control>}z{/Control}');
+    await userEvent.keyboard('{ControlOrMeta>}z{/ControlOrMeta}');
     expect(input().value).toBe('123456');
   });
 
@@ -644,9 +644,9 @@ describe('Field.OneTimeCode in a browser', () => {
     expect(events.at(-2)).toBe('change:AB');
   });
 
-  const undo = () => userEvent.keyboard('{Control>}z{/Control}');
+  const undo = () => userEvent.keyboard('{ControlOrMeta>}z{/ControlOrMeta}');
 
-  const redo = () => userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
+  const redo = () => userEvent.keyboard('{ControlOrMeta>}{Shift>}z{/Shift}{/ControlOrMeta}');
 
   chromiumIt('undoes a finished composition back to the code before it, or leaves the code, and reports no code the person did not see', async () => {
     const onValueChange = vi.fn();
@@ -859,7 +859,7 @@ describe('Field.OneTimeCode in a browser', () => {
     await vi.waitFor(() => expect(marked()).toEqual([0]));
     await userEvent.keyboard('9');
     expect(inner.value).toBe('923456');
-    await userEvent.keyboard('{Control>}z{/Control}');
+    await userEvent.keyboard('{ControlOrMeta>}z{/ControlOrMeta}');
     expect(inner.value).toBe('123456');
     view.unmount();
     host.remove();
