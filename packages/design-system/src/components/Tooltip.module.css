@@ -16,8 +16,8 @@
        trigger down, the start margin one under it up. */
     /* The far margin gives the same back, so the margin box a position try
        measures stays where it rests through the slide. */
-    margin-block-start: var(--_tooltip-slide);
-    margin-block-end: calc(-1 * var(--_tooltip-slide));
+    margin-block-start: var(--_tooltip-slide, 0px);
+    margin-block-end: calc(-1 * var(--_tooltip-slide, 0px));
     width: max-content;
     max-width: var(--todae-tooltip-max-width);
     padding: var(--todae-tooltip-padding-y) var(--todae-tooltip-padding-x);
@@ -84,8 +84,8 @@
     bottom: unset;
     top: calc(anchor(bottom) + var(--todae-tooltip-offset));
     justify-self: anchor-center;
-    margin-block-start: calc(-1 * var(--_tooltip-slide));
-    margin-block-end: var(--_tooltip-slide);
+    margin-block-start: calc(-1 * var(--_tooltip-slide, 0px));
+    margin-block-end: var(--_tooltip-slide, 0px);
   }
 
   @supports (position-try-fallbacks: flip-block) {

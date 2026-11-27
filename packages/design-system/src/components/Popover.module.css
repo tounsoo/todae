@@ -31,8 +31,8 @@
        submenu beside its anchor doesn't slide. */
     /* The far margin gives the same back, so the margin box a position try
        measures stays where it rests through the slide. */
-    margin-block-start: calc(-1 * var(--_popover-slide));
-    margin-block-end: var(--_popover-slide);
+    margin-block-start: calc(-1 * var(--_popover-slide, 0px));
+    margin-block-end: var(--_popover-slide, 0px);
     padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
     width: max-content;
     max-height: var(--todae-popover-max-height);
@@ -110,8 +110,8 @@
     top: unset;
     bottom: calc(anchor(top) + var(--todae-popover-offset));
     inset-inline-start: anchor(self-start);
-    margin-block-start: var(--_popover-slide);
-    margin-block-end: calc(-1 * var(--_popover-slide));
+    margin-block-start: var(--_popover-slide, 0px);
+    margin-block-end: calc(-1 * var(--_popover-slide, 0px));
   }
 
   @supports (position-try-fallbacks: flip-block) {
@@ -133,8 +133,8 @@
       top: auto;
       inset-inline-start: auto;
       position-area: self-block-end span-self-inline-end;
-      margin-block-start: calc(var(--todae-popover-offset) - var(--_popover-slide));
-      margin-block-end: var(--_popover-slide);
+      margin-block-start: calc(var(--todae-popover-offset) - var(--_popover-slide, 0px));
+      margin-block-end: var(--_popover-slide, 0px);
       position-try-fallbacks:
         flip-block,
         --todae-popover-fit,
@@ -189,9 +189,9 @@
       inset-inline-start: auto;
       position-area: span-self-block-end self-inline-end;
       margin-block-start: calc(-1 * (var(--todae-popover-padding-y) + var(--todae-popover-border-width)));
-      /* A submenu doesn't slide: WebKit placed one that flipped to the start
-         side off its menu when this margin read the slide. */
       margin-block-end: 0;
+      /* A submenu doesn't slide: WebKit placed one that flipped to the start
+         side off its menu when this inline margin read --_popover-slide. */
       margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width));
       position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
     }
