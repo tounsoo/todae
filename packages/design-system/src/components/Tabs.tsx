@@ -87,7 +87,7 @@ const TabsContext = /* @__PURE__ */ createContext<TabsContextValue | null>(null)
 
 // Panels read only the selection, so arrowing through the list, which moves
 // the tab stop, does not render them.
-type TabsPanelContextValue = { baseId: string; value: string };
+type TabsPanelContextValue = { baseId: string; value: string; switched: boolean };
 
 const TabsPanelContext = /* @__PURE__ */ createContext<TabsPanelContextValue | null>(null);
 
@@ -112,6 +112,14 @@ function Root({
 }: TabsRootProps) {
   const baseId = useDomId();
   const [value, select] = useControlledState(valueProp, defaultValue ?? '', onValueChange);
+  // Whether the selection has changed since mount, so only a panel switched
+  // to fades in, never the one the page first shows.
+  const [shown, setShown] = useState(value);
+  const [switched, setSwitched] = useState(false);
+  if (value !== shown) {
+    setShown(value);
+    setSwitched(true);
+  }
   // The tab stop is the selected tab, except while focus moves inside the
   // list: then it is the focused tab. Leaving the list returns it to the
   // selected tab, so focus always enters on the selected tab.
@@ -130,7 +138,7 @@ function Root({
     () => ({ baseId, value, select, orientation, activation, roving, leave, release }),
     [activation, baseId, leave, orientation, release, roving, select, value],
   );
-  const panelCtx = useMemo(() => ({ baseId, value }), [baseId, value]);
+  const panelCtx = useMemo(() => ({ baseId, value, switched }), [baseId, switched, value]);
   return (
     <TabsContext.Provider value={ctx}>
       <TabsPanelContext.Provider value={panelCtx}>
@@ -355,6 +363,7 @@ function Panel({ value, children, keepMounted = false, className, ...props }: Ta
       id={panelId(ctx.baseId, value)}
       aria-labelledby={tabId(ctx.baseId, value)}
       hidden={!selected}
+      data-todae-switched={selected && ctx.switched ? '' : undefined}
       className={cx(styles.panel, className)}
     >
       {selected || keepMounted ? children : null}

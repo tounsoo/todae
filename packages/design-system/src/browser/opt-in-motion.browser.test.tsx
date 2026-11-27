@@ -114,6 +114,36 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     expect(getComputedStyle(content).transform).toBe('none');
   });
 
+  it('slides back toward its trigger as it closes, staying inert', async () => {
+    if (server.browser !== 'chromium') return;
+    function Closing() {
+      const [open, setOpen] = useState(true);
+      const popover = usePopover({ open, onOpenChange: setOpen });
+      return (
+        <Themed style={{ ...slow, ['--_todae-popover-motion-duration-exit' as string]: '600ms', ['--_todae-popover-motion-offset' as string]: '12px' }}>
+          <Button.Root {...popover.getTriggerProps()}>Open</Button.Root>
+          <Button.Root onClick={() => setOpen(false)}>Close it</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Slide">
+            <div style={{ inlineSize: 160, blockSize: 80 }}>Body</div>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    render(<Closing />);
+    const content = screen.getByRole('dialog', { name: 'Slide' });
+    await waitFor(() => expect(content.hasAttribute('data-todae-settled')).toBe(true), { timeout: 3000 });
+    const rest = gap(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Close it' }));
+    await waitFor(() => expect(content.hasAttribute('data-todae-exiting')).toBe(true));
+    const gaps: number[] = [];
+    while (content.hasAttribute('data-todae-exiting')) {
+      await frame();
+      if (content.matches(':popover-open')) gaps.push(gap(false));
+    }
+    expect(Math.min(...gaps)).toBeLessThan(rest - 2);
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(rest - 12.5);
+  });
+
   it('holds still under reduced motion, and still fades', async () => {
     await reduce();
     render(<Slide style={{ ...slow, ['--_todae-popover-motion-offset' as string]: '12px' }} />);
@@ -124,7 +154,8 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
       return gap(false);
     });
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
-    expect(running.some((p) => p.startsWith('margin'))).toBe(false);
+    // The slide is the registered --_popover-slide length; under reduce it never changes.
+    expect(running.some((p) => p.includes('slide') || p.startsWith('margin'))).toBe(false);
     if (server.browser === 'chromium') expect(running).toContain('opacity');
   });
 });
@@ -201,8 +232,16 @@ describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
   it('holds still under reduced motion', async () => {
     await reduce();
     await openCold({ ...slow, ['--_todae-tooltip-motion-offset' as string]: '8px' });
-    const gaps = (await sample(() => gap('A'))).filter((g) => !Number.isNaN(g));
+    const tip = screen.getByRole('tooltip', { name: 'Tip A' });
+    const running: string[] = [];
+    const gaps = (
+      await sample(() => {
+        running.push(...props(tip));
+        return gap('A');
+      })
+    ).filter((g) => !Number.isNaN(g));
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
+    expect(running.some((p) => p.includes('slide'))).toBe(false);
   });
 });
 
@@ -273,6 +312,14 @@ describe('Tabs panel fade (tabs.motion.panel.duration)', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Beta' }));
     expect(props(panel())).toEqual([]);
     expect(getComputedStyle(panel()).opacity).toBe('1');
+  });
+
+  it('never fades the panel the page first shows', async () => {
+    render(<Sections style={{ ['--_todae-tabs-motion-panel-duration' as string]: '600ms' }} />);
+    await frame();
+    const first = screen.getByRole('tabpanel', { name: 'Alpha' });
+    expect(props(first)).toEqual([]);
+    expect(getComputedStyle(first).opacity).toBe('1');
   });
 
   it.each(['no-preference', 'reduce'] as const)('fades the new panel in by opacity alone when a brand sets it, %s', async (motion) => {
@@ -376,7 +423,9 @@ describe('Menu checkmarks (selection.motion)', () => {
     await settledMenu();
     await userEvent.keyboard('{ArrowDown}');
     await frame();
-    expect(props(screen.getByRole('menu'), { subtree: true }).filter((p) => p !== 'opacity' && p !== 'scale')).toEqual([]);
+    // Nothing on any item itself transitions, only a check or dot inside.
+    for (const item of screen.getByRole('menu').querySelectorAll('[role^="menuitem"]')) expect(props(item)).toEqual([]);
+    expect(props(screen.getByRole('menu'), { subtree: true })).toEqual([]);
   });
 });
 
@@ -410,6 +459,29 @@ describe('OptionList checkmarks (selection.motion)', () => {
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
     await frame();
     expect(props(check('Pear')!)).toEqual(['opacity']);
+  });
+
+  it('hides the check at once as the pick moves on', async () => {
+    render(<Fruit />);
+    await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
+    await Promise.all(check('Pear')!.getAnimations().map((a) => a.finished));
+    await userEvent.click(screen.getByRole('option', { name: 'Apple' }));
+    await frame();
+    expect(props(check('Pear')!)).toEqual([]);
+    expect(getComputedStyle(check('Pear')!).visibility).toBe('hidden');
+  });
+
+  it('draws a picked check at rest when the list shows again, as a popover opens', async () => {
+    render(<Fruit />);
+    await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
+    await Promise.all(check('Pear')!.getAnimations().map((a) => a.finished));
+    const list = screen.getByRole('listbox');
+    list.style.display = 'none';
+    await frame();
+    list.style.display = '';
+    await frame();
+    expect(props(check('Pear')!)).toEqual([]);
+    expect(getComputedStyle(check('Pear')!).opacity).toBe('1');
   });
 
   it('moves the highlight at once', async () => {

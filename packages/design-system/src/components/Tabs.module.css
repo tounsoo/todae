@@ -191,8 +191,9 @@
     transition: opacity var(--todae-tabs-motion-panel-duration) var(--todae-tabs-motion-easing);
   }
 
+  /* Only a panel switched to, never the one the page first shows. */
   @starting-style {
-    .panel {
+    .panel[data-todae-switched] {
       opacity: 0;
     }
   }

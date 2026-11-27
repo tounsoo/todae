@@ -24,9 +24,9 @@
     border-radius: var(--todae-tooltip-radius);
     box-shadow: var(--todae-tooltip-shadow);
     /* It fades in by opacity alone, as usePopoverSync marks it data-entered,
-       standing in for @starting-style as on Popover. It never moves, since it
-       sits by a trigger that may sit in many places, and it closes at once.
-       A brand can slide it in from its trigger with tooltip.motion.offset. */
+       standing in for @starting-style as on Popover. By default it doesn't
+       move, and it closes at once. A brand can slide a cold tip in from its
+       trigger with tooltip.motion.offset, by layout. */
     transition:
       opacity var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter),
       --_tooltip-slide var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
