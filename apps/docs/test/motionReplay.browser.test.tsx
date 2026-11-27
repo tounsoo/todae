@@ -352,7 +352,7 @@ describe('Opt-in motion', () => {
     screen.getByRole('switch', { name: copy.optIn }).click();
     await frame();
     const region = screen.getByRole('region', { name: copy.title });
-    // The layer sits on the provider around the replay and the preview it wraps.
+    // The layer is the plain element around the replay and the preview it wraps.
     const layer = region.parentElement!;
     expect(getComputedStyle(layer).getPropertyValue('--todae-menu-item-check-motion-duration').trim()).toBe('160ms');
   });
