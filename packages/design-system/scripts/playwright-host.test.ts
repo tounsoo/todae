@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { classicScrollbarsOnHost, firefoxOnHost, webkitOnHost } from '../../../../playwright.host';
+import { classicScrollbarsOnHost, firefoxOnHost, webkitOnHost } from '../../../playwright.host';
 
-const repo = join(import.meta.dirname, '../../../..');
+const repo = join(import.meta.dirname, '../../..');
 const wrapper = join(repo, 'scripts/macos-browser.sh');
 
 describe('playwright.host.ts', () => {

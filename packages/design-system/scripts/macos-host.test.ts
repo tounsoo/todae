@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ENGINES, macosEntry, macosOnly } from '../../../../browser.host';
-import { firefoxQuarantine } from '../../scripts/firefox-quarantine';
+import { ENGINES, macosEntry, macosOnly } from '../../../browser.host';
+import { firefoxQuarantine } from './firefox-quarantine';
 
-const repo = join(import.meta.dirname, '../../../..');
+const repo = join(import.meta.dirname, '../../..');
 
 // A test whose name it.each, describe.each or a template literal builds is not in its file as it is: a
 // quoted name holds %s or %i, and a template literal holds ${...}. Each such name, as a matcher for the names

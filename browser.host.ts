@@ -22,7 +22,7 @@
 //
 // Add an entry only for a failure that happens the same way on origin/main on a Mac, passes in CI, and comes
 // from one of the macOS behaviors above. ISSUE_367 is the one exception, and says so. A test that fails because of the code is a bug, not an entry here.
-// packages/design-system/src/test/macosHost.test.ts fails on an entry that names no test.
+// packages/design-system/scripts/macos-host.test.ts fails on an entry that names no test.
 
 /** The engines the browser tests run in. */
 export const ENGINES = ['chromium', 'firefox', 'webkit'] as const;
