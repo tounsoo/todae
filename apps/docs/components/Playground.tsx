@@ -254,7 +254,10 @@ export function Playground({ locale }: { locale: Locale }) {
   const Rail = narrow ? 'div' : 'aside';
   const resolved = useResolvedAppearance(appearance);
   const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
-  const overrides: ThemeOverride = { ...preset?.[resolved], ...edits[resolved] };
+  // Everything the stage applies in one appearance. The JSON and the token package export the same,
+  // so a new kind of setting added here reaches both.
+  const themeFor = (side: 'light' | 'dark'): ThemeOverride => ({ ...preset?.[side], ...edits[side] });
+  const overrides = themeFor(resolved);
   const paths = LAYERS[layer].filter((path) => path.includes(filter.trim().toLowerCase()));
   const changed = Object.keys(edits.light).length + Object.keys(edits.dark).length;
 
@@ -274,8 +277,8 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
-  const exportLight = { ...preset?.light, ...edits.light };
-  const exportDark = { ...preset?.dark, ...edits.dark };
+  const exportLight = themeFor('light');
+  const exportDark = themeFor('dark');
   // One flat set when light and dark are the same, such as plain Todae with no edits.
   const exportJson = `${JSON.stringify(
     JSON.stringify(exportLight) === JSON.stringify(exportDark) ? exportLight : { light: exportLight, dark: exportDark },
@@ -287,9 +290,26 @@ export function Playground({ locale }: { locale: Locale }) {
     void clipboard.copy(exportJson);
   }
 
+  // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
+  const [downloaded, setDownloaded] = useState<{ json: string; fileName: string } | null>(null);
+  async function downloadPackage() {
+    // Loaded on demand: the package reads Todae's whole token catalog.
+    const { playgroundPackage } = await import('./playground/tokenPackage');
+    const name = preset?.id ?? 'theme';
+    const result = playgroundPackage({ name, presetName: preset?.name ?? name, light: exportLight, dark: exportDark });
+    const url = URL.createObjectURL(new Blob([result.zip as BlobPart], { type: 'application/zip' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = result.fileName;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    setDownloaded({ json: exportJson, fileName: result.fileName });
+  }
+
   // The result shows only for the JSON it was for, so it clears once the theme changes.
   const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
-  const copyStatus = clipboard.text === exportJson ? copyResult : null;
+  const downloadStatus = downloaded?.json === exportJson ? t.downloaded.replace('{file}', downloaded.fileName) : null;
+  const copyStatus = clipboard.text === exportJson ? copyResult : downloadStatus;
   const copyStatusLine = copyStatus ? <p className="pg-hint">{copyStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
   if (!narrow && sheetOpen) setSheetOpen(false);
@@ -347,6 +367,9 @@ export function Playground({ locale }: { locale: Locale }) {
         {t.reset}
       </Button.Root>
       <Button.Root onClick={exportOverrides}>{t.export}</Button.Root>
+      <Button.Root variant="secondary" className="pg-download" onClick={() => void downloadPackage()}>
+        {t.downloadPackage}
+      </Button.Root>
     </div>
   );
 

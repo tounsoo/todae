@@ -43,6 +43,8 @@ const tokenPath = z.string().trim().min(1).max(120);
 const contextName = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
 const oklch = z.tuple([z.number().min(0).max(1), z.number().min(0).max(0.5), z.number().min(0).max(360)]);
 const colorMap = z.record(tokenPath, oklch);
+/** Token values by path, each a DTCG `$value` or a `$ref` alias; the token build checks each against its type. */
+const tokenValues = z.record(tokenPath, z.union([z.number(), z.string(), z.array(z.unknown()), z.record(z.string(), z.unknown())]));
 const version = z.string().trim().regex(VERSION_RE, 'Use a version such as 0.2.0');
 
 function ok(data: unknown) {
@@ -237,12 +239,14 @@ function registerTools(server: McpServer) {
   );
   server.tool(
     'scaffold_design_system',
-    'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. When the draft fits, returns tokenFiles and otherFiles, the shape build_tokens takes, plus whether those files build. A draft over the 40000 character budget comes back one file at a time. The first next call is this tool again, with the original arguments plus cursor.offset, and cursor.char when a file continues. Pass that call as it is. Save the files yourself; nothing is written to your machine.',
+    'Draft the starter files of a design system on Todae, laid out like the Fernway example: a company resolver, token files for replaced appearance colors, core values (core: radius, font, space, motion and any other core token, by path), contract values (contract: component tokens such as button.base.radius, card.shadow or motion.popup.duration.enter, by path), new button variants (copies of secondary, which contract paths under button.<variant>. change) and densities (copies of comfortable), and TypeScript declarations for them. A core or contract value is a DTCG $value, such as {"value":0.5,"unit":"rem"}, ["Inter","sans-serif"], {"value":200,"unit":"ms"} or [0.2,0,0,1], or an alias such as {"$ref":"#/radius/lg/$value"}; list_tokens gives each path\'s type. When the draft fits, returns tokenFiles and otherFiles, the shape build_tokens takes, plus whether those files build. A draft over the 40000 character budget comes back one file at a time. The first next call is this tool again, with the original arguments plus cursor.offset, and cursor.char when a file continues. Pass that call as it is. Save the files yourself; nothing is written to your machine.',
     {
       name: contextName,
       colors: z.object({ light: colorMap, dark: colorMap }).optional(),
       buttonVariants: z.array(contextName).max(8).optional(),
       densities: z.array(contextName).max(8).optional(),
+      core: tokenValues.optional(),
+      contract: tokenValues.optional(),
       offset,
       char: z.number().int().min(0).optional(),
     },
