@@ -2284,6 +2284,19 @@ describe('repeating events', () => {
     const cue = within(holiday).getByText('Repeats');
     expect(cue.checkVisibility()).toBe(true);
     expect(cue.getAttribute('aria-hidden')).not.toBe('true');
+
+    // In the month, the bar reads repeats right after the title too, then its range, and shows Repeats a space apart.
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(readAfterDate('Monday, November 16, 2026')).toContain('Holiday, repeats, November 16, 2026');
+    const bar = dayButton('Monday, November 16, 2026').querySelector<HTMLElement>('[data-bar]:has([class*="repeats"])');
+    expect(bar?.querySelector('[class*="repeats"]')?.textContent).toMatch(/^\s+Repeats$/);
+  });
+
+  it('marks today in the locale digits, as the grid writes the day it covers', () => {
+    render(<EventCalendarExample locale="fa-IR" anchor={Temporal.Now.plainDateISO()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    const mark = document.querySelector('[class*="dateMark"]');
+    expect(mark?.textContent).toBe(new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(Temporal.Now.plainDateISO().day));
   });
 
   it('loads the series start and its weekdays when a later occurrence edits all events', async () => {

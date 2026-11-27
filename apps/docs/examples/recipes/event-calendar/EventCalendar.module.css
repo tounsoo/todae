@@ -617,6 +617,7 @@
   .barLabel,
   .cue,
   .cueEnd,
+  .monthBar .repeats,
   .chip,
   .more {
     position: absolute;
