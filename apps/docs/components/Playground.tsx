@@ -32,6 +32,7 @@ import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from '
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
+import { MOTION_CHOICES, withMotion, type MotionChoice } from './playground/motion';
 import { PRESETS, type ThemePreset } from './playground/presets';
 import { ICON_LIBRARIES } from './iconLibraries';
 import { Preview } from './playground/Preview';
@@ -241,6 +242,8 @@ export function Playground({ locale }: { locale: Locale }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
+  // The preset's own motion, or one feel in its place, to compare motion across presets.
+  const [motion, setMotion] = useState<MotionChoice>('preset');
   // Todae's own glyphs, or one of three icon libraries for the preview's icons and glyphs.
   const [iconsId, setIconsId] = useState('todae');
   const [layer, setLayer] = useState<Layer>('semantic');
@@ -254,7 +257,8 @@ export function Playground({ locale }: { locale: Locale }) {
   const Rail = narrow ? 'div' : 'aside';
   const resolved = useResolvedAppearance(appearance);
   const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
-  const overrides: ThemeOverride = { ...preset?.[resolved], ...edits[resolved] };
+  const presetFor = (mode: 'light' | 'dark') => withMotion(preset?.[mode] ?? {}, motion);
+  const overrides: ThemeOverride = { ...presetFor(resolved), ...edits[resolved] };
   const paths = LAYERS[layer].filter((path) => path.includes(filter.trim().toLowerCase()));
   const changed = Object.keys(edits.light).length + Object.keys(edits.dark).length;
 
@@ -266,7 +270,7 @@ export function Playground({ locale }: { locale: Locale }) {
     const next: Partial<Record<ThemeOverrideKey, string>> = {};
     for (const path of LAYERS[layer]) next[path] = style.getPropertyValue(cssVarName(path)).trim();
     setComputed(next);
-  }, [layer, resolved, density, presetId, edits]);
+  }, [layer, resolved, density, presetId, motion, edits]);
 
   function valueFor(path: ThemeOverrideKey): string {
     const typed = overrides[path];
@@ -274,8 +278,8 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
-  const exportLight = { ...preset?.light, ...edits.light };
-  const exportDark = { ...preset?.dark, ...edits.dark };
+  const exportLight = { ...presetFor('light'), ...edits.light };
+  const exportDark = { ...presetFor('dark'), ...edits.dark };
   // One flat set when light and dark are the same, such as plain Todae with no edits.
   const exportJson = `${JSON.stringify(
     JSON.stringify(exportLight) === JSON.stringify(exportDark) ? exportLight : { light: exportLight, dark: exportDark },
@@ -323,7 +327,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {paths.length === 0 ? <p className="pg-empty">{t.noMatch}</p> : null}
                 {paths.map((path) => (
                   <TokenField
-                    key={`${presetId}:${resolved}:${path}`}
+                    key={`${presetId}:${resolved}:${motion}:${path}`}
                     path={path}
                     value={valueFor(path)}
                     edited={edits[resolved][path] !== undefined}
@@ -419,6 +423,22 @@ export function Playground({ locale }: { locale: Locale }) {
             onValueChange={(next) => next && setDensity(next as Density)}
           >
             {DENSITIES.map((value) => (
+              <ToggleGroup.Item key={value} value={value} lang="en">
+                {value}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup.Root>
+        </div>
+        <div>
+          <span className="pg-heading" id="pg-motion">
+            {t.motion}
+          </span>
+          <ToggleGroup.Root
+            aria-labelledby="pg-motion"
+            value={motion}
+            onValueChange={(next) => next && setMotion(next as MotionChoice)}
+          >
+            {MOTION_CHOICES.map((value) => (
               <ToggleGroup.Item key={value} value={value} lang="en">
                 {value}
               </ToggleGroup.Item>
