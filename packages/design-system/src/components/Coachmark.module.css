@@ -77,6 +77,7 @@
       transition:
         opacity var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter),
         scale var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter),
+        --_popover-slide var(--todae-coachmark-motion-duration-enter) var(--todae-coachmark-motion-easing-enter),
         inset var(--todae-coachmark-motion-duration-move) var(--todae-coachmark-motion-easing-move);
     }
   }

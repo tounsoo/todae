@@ -26,7 +26,12 @@
         "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/$value" } }
       },
       "check": {
-        "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+        "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "motion": {
+          "$description": "How a check item's check and a radio item's dot grow in as they are chosen. 0ms by default, so they show at once; a brand opts in.",
+          "duration": { "$type": "duration", "$value": { "value": 0, "unit": "ms" } },
+          "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+        }
       },
       "indicator": {
         "scale": { "$type": "number", "$value": 1 },

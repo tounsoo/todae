@@ -48,7 +48,10 @@ describe('native element component styles', () => {
       /prefers-reduced-motion: reduce\) \{[^@]*\.progress::-webkit-progress-value,\s*\.meter::-webkit-meter-optimum-value,\s*\.meter::-webkit-meter-suboptimum-value,\s*\.meter::-webkit-meter-even-less-good-value \{\s*transition: none;/,
     );
     expect(sheet('Loader')).toMatch(/prefers-reduced-motion: reduce\) \{\s*progress\.root,\s*progress\.root\[data-variant='dots'\] \{\s*animation: none;/);
-    expect(sheet('Skeleton')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root \{\s*animation: none;/);
+    // Both Skeleton variants hold still, and a held shimmer is the plain block.
+    expect(sheet('Skeleton')).toMatch(
+      /prefers-reduced-motion: reduce\) \{\s*\.root,\s*\.root\[data-variant='shimmer'\] \{\s*animation: none;\s*\}\s*\.root\[data-variant='shimmer'\] \{\s*background: var\(--todae-skeleton-bg\);/,
+    );
   });
 
   it('glide the progress and meter fills to a new value with the fill motion tokens', () => {
@@ -69,7 +72,9 @@ describe('native element component styles', () => {
   it('keep progress, spinner and skeleton visible in forced colors', () => {
     expect(sheet('Progress')).toMatch(/forced-colors: active\) \{\s*\.root \{\s*forced-color-adjust: none;/);
     expect(sheet('Loader')).toMatch(/forced-colors: active\) \{\s*progress\.root \{\s*forced-color-adjust: none;/);
-    expect(sheet('Skeleton')).toMatch(/forced-colors: active\) \{\s*\.root \{\s*forced-color-adjust: none;\s*background: GrayText;/);
+    expect(sheet('Skeleton')).toMatch(
+      /forced-colors: active\) \{\s*\.root,\s*\.root\[data-variant='shimmer'\] \{\s*forced-color-adjust: none;\s*background: GrayText;/,
+    );
   });
 
   it('draw the spinner in the text color, so it shows inside a primary button', () => {

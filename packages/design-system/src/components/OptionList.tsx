@@ -281,11 +281,12 @@ function OptionListOption({
         })}
         onClick={composeHandlers(onClick, () => ctx.select(value, true))}
       >
-        {selected ? (
-          <span className={styles.check} data-todae-glyph="" aria-hidden="true">
-            {glyphOr(check, <CheckGlyph />)}
-          </span>
-        ) : null}
+        {/* The box is always there, so the check grows in only as the option
+            is picked, as Menu's does, not each time a list that holds it
+            shows. Only a selected option draws the glyph. */}
+        <span className={styles.check} data-todae-glyph="" aria-hidden="true">
+          {selected ? glyphOr(check, <CheckGlyph />) : null}
+        </span>
         {stacked ? <span className={styles.copy}>{children}</span> : children}
       </div>
     </OptionPartContext.Provider>

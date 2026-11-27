@@ -20,15 +20,47 @@
     }
   }
 
+  /* A band sweeps across the block from the inline start, by the position of
+     a background layer, so the block itself never moves. */
+  .root[data-variant='shimmer'] {
+    background:
+      linear-gradient(to right, transparent, var(--todae-skeleton-shimmer-color), transparent) no-repeat,
+      var(--todae-skeleton-bg);
+    background-size: 50% 100%, auto;
+    animation-name: todae-skeleton-shimmer;
+  }
+
+  .root[data-variant='shimmer']:dir(rtl) {
+    animation-direction: reverse;
+  }
+
+  /* From just past the start edge to just past the end edge: a layer half
+     as wide sits at (block - layer) times the percentage. */
+  @keyframes todae-skeleton-shimmer {
+    from {
+      background-position: -100% 0, 0 0;
+    }
+    to {
+      background-position: 200% 0, 0 0;
+    }
+  }
+
+  /* Under reduced motion both hold still, as the plain block. */
   @media (prefers-reduced-motion: reduce) {
-    .root {
+    .root,
+    .root[data-variant='shimmer'] {
       animation: none;
+    }
+
+    .root[data-variant='shimmer'] {
+      background: var(--todae-skeleton-bg);
     }
   }
 
   /* Forced colors would paint the block in the page color, so it would vanish. */
   @media (forced-colors: active) {
-    .root {
+    .root,
+    .root[data-variant='shimmer'] {
       forced-color-adjust: none;
       background: GrayText;
     }
