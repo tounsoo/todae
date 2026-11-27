@@ -23,6 +23,7 @@ import {
   classify,
   driveSite,
   importGraph,
+  nodeIcu,
   isOurServer,
   pairLocales,
   parseBase,
@@ -323,6 +324,19 @@ describe('plans match CI', () => {
     assert.match("browserType.launch: Executable doesn't exist at /x/firefox", missing);
     assert.match('Please run the following command to download new browsers:\n    npx playwright install', missing);
     assert.doesNotMatch('Error: browserType.launch: Failed to launch the browser process.\n[err] Could not find profile folder.', missing);
+  });
+});
+
+describe('nodeIcu', () => {
+  // The Air's Homebrew node@24: its system ICU wrote ko dates as 2026/10/13, and five date tests failed there.
+  test("a node that links the system ICU is a problem that names the fix", () => {
+    const result = nodeIcu({ icu_gyp_path: 'tools/icu/icu-system.gyp' }, { icu: '79.1', cldr: '49.0' });
+    assert.equal(result.ok, false);
+    assert.match(result.detail, /system ICU 79\.1, CLDR 49\.0.*nodejs\.org, nvm or fnm/);
+  });
+
+  test('an official build, with its own ICU, passes', () => {
+    assert.equal(nodeIcu({ icu_gyp_path: 'tools/icu/icu-generic.gyp' }, { icu: '78.3', cldr: '48.0' }).ok, true);
   });
 });
 

@@ -875,6 +875,21 @@ function printPlan(plan) {
 
 const commandText = (step, base) => (step.drive ? 'text-only HTTP drive of the routes below' : withBase(step.cmd, base).join(' '));
 
+// CI runs the official Node build, which bundles its own ICU and CLDR. Homebrew's node links the system ICU
+// instead, whose CLDR writes dates differently: on the Air, ko's short date came out 2026/10/13 for CI's
+// 2026. 10. 13., and five date tests failed there only. The tests pin the locale and time zone, not the CLDR.
+export function nodeIcu(variables = {}, versions = {}) {
+  const system = /icu-system/.test(variables.icu_gyp_path ?? '') || variables.node_use_system_icu === true;
+  const which = `ICU ${versions.icu ?? '?'}, CLDR ${versions.cldr ?? '?'}`;
+  if (system) {
+    return {
+      ok: false,
+      detail: `this node links the system ${which}, as Homebrew's does, not the ICU an official Node build bundles, which CI runs; install Node from nodejs.org, nvm or fnm and put it first on PATH`,
+    };
+  }
+  return { ok: true, detail: `bundled ${which}, as the official Node build CI runs has` };
+}
+
 async function doctor() {
   const checks = [];
   const record = (name, ok, detail) => checks.push({ name, ok, detail });
@@ -883,6 +898,8 @@ async function doctor() {
   const wantNode = /\d+/.exec(await read('.nvmrc'))?.[0];
   const haveNode = process.versions.node.split('.')[0];
   record('node', Boolean(wantNode) && wantNode === haveNode, `running ${process.versions.node}, .nvmrc wants ${wantNode ?? 'a number'}`);
+  const icu = nodeIcu(process.config.variables, process.versions);
+  record('node ICU', icu.ok, icu.detail);
 
   let packageManager = '';
   try {

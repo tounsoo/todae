@@ -67,6 +67,7 @@ That runs `next dev` for `apps/docs` on port 3322 and writes its pid to `.verify
 `run` runs doctor first and stops before any step when doctor fails. Doctor checks that:
 
 - the Node major version matches `.nvmrc`,
+- that Node bundles its own ICU, as the official build CI runs does. Homebrew's `node` links the system ICU, whose CLDR writes dates differently (Korean short dates came out `2026/10/13` for CI's `2026. 10. 13.`), so date tests fail on it alone. Install Node from nodejs.org, nvm or fnm and put it first on `PATH`,
 - `pnpm --version` matches `packageManager` in the root `package.json`,
 - `node_modules` exists,
 - `git status --porcelain` is empty,
