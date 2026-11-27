@@ -29,7 +29,10 @@
        stays by its trigger's box. Only the margin on the anchor's side moves
        the box: the start one under the anchor, the end one over it. A
        submenu beside its anchor doesn't slide. */
-    margin-block: calc(-1 * var(--_popover-slide));
+    /* The far margin gives the same back, so the margin box a position try
+       measures stays where it rests through the slide. */
+    margin-block-start: calc(-1 * var(--_popover-slide));
+    margin-block-end: var(--_popover-slide);
     padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
     width: max-content;
     max-height: var(--todae-popover-max-height);
@@ -107,6 +110,8 @@
     top: unset;
     bottom: calc(anchor(top) + var(--todae-popover-offset));
     inset-inline-start: anchor(self-start);
+    margin-block-start: var(--_popover-slide);
+    margin-block-end: calc(-1 * var(--_popover-slide));
   }
 
   @supports (position-try-fallbacks: flip-block) {
@@ -129,6 +134,7 @@
       inset-inline-start: auto;
       position-area: self-block-end span-self-inline-end;
       margin-block-start: calc(var(--todae-popover-offset) - var(--_popover-slide));
+      margin-block-end: var(--_popover-slide);
       position-try-fallbacks:
         flip-block,
         --todae-popover-fit,

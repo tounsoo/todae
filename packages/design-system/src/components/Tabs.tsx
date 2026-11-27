@@ -114,12 +114,9 @@ function Root({
   const [value, select] = useControlledState(valueProp, defaultValue ?? '', onValueChange);
   // Whether the selection has changed since mount, so only a panel switched
   // to fades in, never the one the page first shows.
-  const [shown, setShown] = useState(value);
+  const [initial] = useState(value);
   const [switched, setSwitched] = useState(false);
-  if (value !== shown) {
-    setShown(value);
-    setSwitched(true);
-  }
+  if (!switched && value !== initial) setSwitched(true);
   // The tab stop is the selected tab, except while focus moves inside the
   // list: then it is the focused tab. Leaving the list returns it to the
   // selected tab, so focus always enters on the selected tab.

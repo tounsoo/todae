@@ -137,6 +137,8 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     await waitFor(() => expect(content.hasAttribute('data-todae-exiting')).toBe(true));
     const gaps: number[] = [];
     while (content.hasAttribute('data-todae-exiting')) {
+      // It takes no press or focus while it leaves.
+      expect(content.inert).toBe(true);
       await frame();
       if (content.matches(':popover-open')) gaps.push(gap(false));
     }
@@ -445,7 +447,6 @@ describe('OptionList checkmarks (selection.motion)', () => {
   const check = (name: string) => screen.getByRole('option', { name }).querySelector('[data-todae-glyph]');
 
   it('grows the check in as an option is picked', async () => {
-    if (server.browser !== 'chromium') return;
     render(<Fruit />);
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
     await frame();
@@ -453,7 +454,6 @@ describe('OptionList checkmarks (selection.motion)', () => {
   });
 
   it('only fades the check in under reduced motion', async () => {
-    if (server.browser !== 'chromium') return;
     await reduce();
     render(<Fruit />);
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));

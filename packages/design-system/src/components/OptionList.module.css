@@ -133,6 +133,10 @@
     .option:not([data-selected]) > [data-todae-glyph].check {
       scale: 0.5;
     }
+
+    .option[data-selected] > [data-todae-glyph].check {
+      scale: 1;
+    }
   }
 
   .check > :is(svg, img) {
