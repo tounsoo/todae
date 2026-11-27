@@ -120,6 +120,26 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.6 0.25 350)');
   });
 
+  it('keeps a preset’s own motion, or swaps it for a picked feel on the stage and in the JSON', () => {
+    render(<Playground locale="en" />);
+    const scale = () => stage().style.getPropertyValue('--todae-popover-motion-scale');
+    const exported = () => JSON.parse(screen.getByRole('region', { name: 'Overrides' }).textContent ?? '');
+    expect(screen.getByRole('button', { name: 'preset' }).getAttribute('aria-pressed')).toBe('true');
+    // Graphite has no motion of its own.
+    expect(scale()).toBe('');
+    fireEvent.click(screen.getByLabelText('Y2K Chrome'));
+    expect(scale()).toBe('0.85');
+    expect(exported().light['popover.motion.scale']).toBe(0.85);
+    fireEvent.click(screen.getByRole('button', { name: 'standard' }));
+    expect(scale()).toBe('');
+    expect(exported().light['popover.motion.scale']).toBeUndefined();
+    // Its colors stay; only the motion changes.
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.56 0.18 305)');
+    fireEvent.click(screen.getByRole('button', { name: 'springy' }));
+    expect(scale()).toBe('0.9');
+    expect(exported().dark['popover.motion.scale']).toBe(0.9);
+  });
+
   it('shows the preview and Todae’s own text in the page’s language', () => {
     render(<Playground locale="ko" />);
     const preview = within(screen.getByRole('region', { name: '미리보기' }));
@@ -129,6 +149,7 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(preview.getByRole('cell', { name: '₩2,690,000' })).toBeTruthy();
     expect(preview.queryByRole('dialog', { name: '새 청구서' })).toBeNull();
     expect(screen.getByRole('region', { name: '오버라이드' })).toBeTruthy();
+    expect(screen.getByText('모션 (motion)')).toBeTruthy();
     // Names Todae writes itself come from StringsProvider.
     expect(preview.getByRole('navigation', { name: '이동 경로' })).toBeTruthy();
     expect(preview.getAllByRole('button', { name: '닫기' })).toHaveLength(2);

@@ -5,7 +5,7 @@ import {
   type ThemeOverride,
 } from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
-import { MOTION_CHOICES, MOTION_FEELS, PRESET_MOTION, SURFACES, isMotionKey, withMotion } from './motion';
+import { MOTION_CHOICES, MOTION_FEELS, PRESET_MOTION, isMotionKey, withMotion } from './motion';
 import fernwayContract from '../../../../examples/fernway/tokens/contract.json';
 import fernwayCore from '../../../../examples/fernway/tokens/core.json';
 import { PRESETS } from './presets';
@@ -57,6 +57,20 @@ const FEELS = [
 ];
 
 const KEYS = new Set<string>(THEME_OVERRIDE_KEYS);
+
+// The enter curves that may overshoot: each surface grows or rises into a resting place.
+const OVERSHOOT_ALLOWED = ['popover.motion.easing.enter', 'dialog.motion.easing.enter', 'toast.motion.easing.enter'];
+
+// Todae's core duration scale and what each role points at (tokens/core.json and tokens/components/motion.json).
+const CORE = { fast: 160, normal: 200, moderate: 240, slow: 280, slower: 300 } as const;
+type Step = keyof typeof CORE;
+const ROLES: Record<string, readonly [enter: Step, exit: Step]> = {
+  reveal: ['normal', 'normal'],
+  popup: ['moderate', 'normal'],
+  window: ['slow', 'normal'],
+  panel: ['slow', 'moderate'],
+  notice: ['normal', 'fast'],
+};
 const durationMs = (value: unknown) => {
   const { value: n, unit } = value as ThemeDurationValue;
   return unit === 's' ? n * 1000 : n;
@@ -87,10 +101,28 @@ describe.each(FEELS)('%s', (_name, override) => {
       if (!Array.isArray(value)) continue;
       const [, y1, , y2] = value as number[];
       const overshoots = y1! < 0 || y1! > 1 || y2! < 0 || y2! > 1;
-      if (overshoots) expect(SURFACES.map((s) => `${s}.motion.easing.enter`), key).toContain(key);
+      if (overshoots) expect(OVERSHOOT_ALLOWED, key).toContain(key);
       expect(y1!, key).toBeLessThanOrEqual(1.5);
       expect(y2!, key).toBeLessThanOrEqual(1.5);
       expect(Math.min(y1!, y2!), key).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('keeps the core duration scale in order, from fast to slower', () => {
+    const steps = (Object.keys(CORE) as Step[]).map((step) =>
+      durationMs(override[`motion.duration.${step}` as keyof ThemeOverride] ?? { value: CORE[step], unit: 'ms' }),
+    );
+    for (let i = 1; i < steps.length; i++) expect(steps[i], `step ${i}`).toBeGreaterThanOrEqual(steps[i - 1]!);
+  });
+
+  // ARCHITECTURE.md, Motion: an exit is as long as its enter or shorter.
+  it('keeps each role’s exit as long as its enter or shorter', () => {
+    const core = (step: Step) =>
+      durationMs(override[`motion.duration.${step}` as keyof ThemeOverride] ?? { value: CORE[step], unit: 'ms' });
+    for (const [role, [enterStep, exitStep]] of Object.entries(ROLES)) {
+      const enter = override[`motion.${role}.duration.enter` as keyof ThemeOverride];
+      const exit = override[`motion.${role}.duration.exit` as keyof ThemeOverride];
+      expect(exit ? durationMs(exit) : core(exitStep), role).toBeLessThanOrEqual(enter ? durationMs(enter) : core(enterStep));
     }
   });
 
@@ -130,8 +162,9 @@ describe('motion personalities', () => {
     for (const other of [...Object.values(PRESET_MOTION), ...Object.values(MOTION_FEELS)]) expect(FERNWAY).not.toEqual(other);
   });
 
-  it('list the picker’s options with the preset’s own first', () => {
-    expect(MOTION_CHOICES).toEqual(['preset', ...Object.keys(MOTION_FEELS)]);
-    expect(MOTION_CHOICES).toContain('standard');
+  it('list the picker’s options with the preset’s own first, then Todae’s', () => {
+    expect(MOTION_CHOICES.slice(0, 2)).toEqual(['preset', 'standard']);
+    expect(new Set(MOTION_CHOICES).size).toBe(MOTION_CHOICES.length);
+    expect(MOTION_CHOICES).toEqual(expect.arrayContaining(['snappy', 'calm', 'springy']));
   });
 });

@@ -142,6 +142,7 @@ export const PRESET_MOTION: Record<PresetId, ThemeOverride> = {
   riso: feel({
     moderate: 260,
     slow: 300,
+    slower: 340,
     roles: { popup: [260, 200], window: [300, 220], panel: [300, 240], notice: [260, 180] },
     enter: [0.6, 0, 0.2, 1],
     exit: [0.7, 0, 0.84, 0],
@@ -153,6 +154,7 @@ export const PRESET_MOTION: Record<PresetId, ThemeOverride> = {
   'y2k-chrome': feel({
     moderate: 280,
     slow: 320,
+    slower: 360,
     roles: { popup: [280, 180], window: [320, 200], notice: [300, 160] },
     surfaceEnter: [0.3, 1.4, 0.5, 1],
     popoverScale: 0.85,
@@ -201,6 +203,7 @@ export const MOTION_FEELS: Record<MotionFeelId, ThemeOverride> = {
   springy: feel({
     moderate: 280,
     slow: 320,
+    slower: 360,
     roles: { popup: [280, 180], window: [320, 200], notice: [300, 160] },
     surfaceEnter: [0.34, 1.36, 0.64, 1],
     popoverScale: 0.9,
