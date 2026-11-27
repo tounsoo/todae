@@ -440,6 +440,14 @@ describe('Menu checkmarks (menu.item.check.motion.duration)', () => {
     await frame();
     expect(props(indicator('Grid'))).toEqual(['opacity']);
     expect(getComputedStyle(indicator('Grid')).scale).toBe('none');
+    // The radio dot only fades too.
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'By date' }));
+    await frame();
+    const dot = indicator('By date')
+      .getAnimations({ subtree: true })
+      .filter((a): a is CSSTransition => a instanceof CSSTransition && (a.effect as KeyframeEffect | null)?.pseudoElement === '::before');
+    expect(dot.map((a) => a.transitionProperty)).toEqual(['opacity']);
+    expect(getComputedStyle(indicator('By date'), '::before').scale).toBe('none');
   });
 
   it('moves the keyboard highlight at once', async () => {
