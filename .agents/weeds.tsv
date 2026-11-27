@@ -33,3 +33,8 @@ date	class	ref	caught_by	note
 2026-11-18	month-today-mark-overlap	#488	review	The today circle was absolute and reserved no row, so it covered that day's bars and at a narrow width hid the event.
 2026-11-23	ci-apt-install	#505	ben	The apt check matched a whole line, so a semicolon, a path, a quoted sentence, or workflow_call slipped through.
 2026-11-23	ci-apt-install	#505	ben	The apt check took the program as the last path segment, so npx @playwright/test install --with-deps read as test and was missed.
+2026-11-27	local-verify-env	#518	ben	Local verify on the Air was BLOCKED on forbidden-paths (bash 3.2) and named the sandbox temp path; CI passed.
+2026-11-27	local-verify-env	#522	ben	Local verify on the Air failed on scroll-lock (overlay scrollbars), EventCalendar 1px, Firefox peek launch and pageMetadata timeouts; CI passed.
+2026-11-27	local-verify-env	#523	ben	Local verify on the Air failed on the same scroll-lock, EventCalendar and pageMetadata cases, and axe hit a busy port 3100; CI passed.
+2026-11-27	local-verify-env	#524	ben	Local verify on the Air failed on scroll-lock and EventCalendar, and peek reported Firefox as not installed; CI passed.
+2026-11-27	local-verify-env	#525	ben	Local verify on the Air failed on Firefox launch, Control-key shortcuts, WebKit focus, ICU date formats and the pinned-actions temp path; CI passed.

@@ -42,7 +42,8 @@ function shellScripts() {
   const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
   return files.filter((file) => {
     if (file.endsWith('.sh')) return true;
-    if (file.includes('.') && !file.endsWith('.bash')) return false;
+    const name = file.slice(file.lastIndexOf('/') + 1);
+    if (name.includes('.') && !file.endsWith('.bash')) return false;
     try {
       return /^#!.*\b(?:ba)?sh\b/.test(readFileSync(join(root, file), 'utf8').split('\n', 1)[0]);
     } catch {

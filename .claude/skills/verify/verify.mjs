@@ -186,7 +186,7 @@ export const STEPS = {
     cmd: [
       'bash',
       '-c',
-      'set -uo pipefail; mkdir -p .verify/scratch; export BROWSER_RESULTS="$PWD/.verify/scratch/firefox-results.json"; rm -f "$BROWSER_RESULTS"; cd packages/design-system; pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts; status=$?; node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status"',
+      'set -uo pipefail; mkdir -p .verify/scratch; export BROWSER_RESULTS="$PWD/.verify/scratch/firefox-results.json"; rm -f "$BROWSER_RESULTS"; cd packages/design-system || exit 2; pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts; status=$?; node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status"',
     ],
     needs: ['build-ds'],
     blockedWhen: PLAYWRIGHT_MISSING,

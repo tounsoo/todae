@@ -21,7 +21,7 @@
 //   two pixels off on a Mac only. Pinning a font in the page would change what the tests read, so it is not done.
 //
 // Add an entry only for a failure that happens the same way on origin/main on a Mac, passes in CI, and comes
-// from one of the macOS behaviors above. A test that fails because of the code is a bug, not an entry here.
+// from one of the macOS behaviors above. ISSUE_367 is the one exception, and says so. A test that fails because of the code is a bug, not an entry here.
 // packages/design-system/src/test/macosHost.test.ts fails on an entry that names no test.
 
 /** The engines the browser tests run in. */
@@ -39,13 +39,14 @@ export interface MacosEntry {
 }
 
 const HOME_END = 'macOS Home and End leave the caret where it is; Linux moves it to the start or end of the line.';
-const FOCUS =
-  "macOS WebKit, as Safari, does not focus a button it clicks and skips links on Tab unless Safari's tab-to-links setting is on, which Playwright cannot turn on; Linux WebKit does both.";
+const WEBKIT_CLICK_FOCUS = 'macOS WebKit does not focus a button it clicks, as Safari does not, so focus has no button to go back to; Linux WebKit focuses it.';
+const WEBKIT_TAB_LINKS = "macOS WebKit skips links on Tab unless Safari's tab-to-links setting is on, which Playwright cannot turn on; Linux WebKit stops on them.";
 const TEXT_DRAG = "A drag of a text control's selection is a native macOS drag, which Playwright's synthetic mouse does not start.";
 const UNDO = 'macOS WebKit undoes the typed word and the inserted pick as one step, as Safari does; Linux WebKit undoes the pick alone.';
 const FONT_METRICS = "macOS measures text in SF Pro with CoreText's fractional line heights; CI's Linux uses Liberation Sans rounded to whole pixels.";
-// Not one of the macOS behaviors above: the same test is on the Firefox quarantine for issue 367, and its Chromium
-// run fails the same way on a Mac only, on origin/main as well. Its cause is not known yet. It comes off with 367.
+// The one entry that is not a macOS behavior above, named so it can't pass for one: the test is on the Firefox
+// quarantine for issue 367, and its Chromium run fails the same way on a Mac only, on origin/main as well. Its
+// cause is not known yet. It comes off with the quarantine entry when 367 is fixed.
 const ISSUE_367 = 'Issue 367: a right-to-left tab list scrolled by arrow keys ends under its start arrow; on a Mac Chromium fails it too.';
 
 export const macosOnly: readonly MacosEntry[] = [
@@ -65,73 +66,73 @@ export const macosOnly: readonly MacosEntry[] = [
     file: 'packages/design-system/src/browser/coachmark.browser.test.tsx',
     test: 'Coachmark in a browser > moves focus in, cycles Tab between the popup and the target, and returns focus on Escape',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/combobox.browser.test.tsx',
     test: 'useCombobox reset reopening a dialog > returns focus to what had it when reset reopened the dialog',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/composites.browser.test.tsx',
     test: 'Field.Picker with a swatch in a browser > opens the picker, reports a picked color, and closes on Escape back to the button',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/composites.browser.test.tsx',
     test: 'Field.Picker with a swatch in a browser > leaves the field to a text input beside it (swatch first)',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/composites.browser.test.tsx',
     test: 'Field.Picker with a swatch in a browser > leaves the field to a text input beside it (swatch last)',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/composites.browser.test.tsx',
     test: 'Field.Picker beside a Field.DateInput in a browser > opens a calendar on the date, picks a date from the keyboard, and returns focus to the button',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/composites.browser.test.tsx',
     test: 'Field.Picker beside a Field.DateInput in a browser > closes on Escape without picking, and reports why it closed',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/content.browser.test.tsx',
     test: 'content parts in a browser > lets a container component style a Link.Root inside it, as Pagination does',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/content.browser.test.tsx',
     test: 'content parts in a browser > hides visually hidden text from the screen but keeps it in the page',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/drilldown-focus.browser.test.tsx',
     test: 'Drilldown focus and surface reset in a browser > leaves focus on a control outside the views that set a controlled stack',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/form.browser.test.tsx',
     test: 'Form in a browser > focuses the control from a summary link, with the keyboard too',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/layout.browser.test.tsx',
     test: 'Pagination in a browser > keeps focus on the control the user pressed, at the ends too',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/mentions.browser.test.tsx',
@@ -143,13 +144,13 @@ export const macosOnly: readonly MacosEntry[] = [
     file: 'packages/design-system/src/browser/nav.browser.test.tsx',
     test: 'Nav in a browser > is a Tab stop per link and toggle, and opens a branch from the keyboard',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/nav.browser.test.tsx',
     test: 'Nav in a browser > draws the focus ring inside the row, so a narrow scroll area keeps it whole',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/number.browser.test.tsx',
@@ -185,67 +186,67 @@ export const macosOnly: readonly MacosEntry[] = [
     file: 'packages/design-system/src/browser/overlays.browser.test.tsx',
     test: 'BottomSheet in a browser > gives focus back to its trigger once the exit motion ends',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/stacking.browser.test.tsx',
     test: 'stacked overlays in a browser > closes the innermost overlay first on Escape, then restores focus',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/temporal-inputs.browser.test.tsx',
     test: 'Field.Picker with times in a browser > picks a time from the list with the keyboard and gives focus back to the button',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/temporal-inputs.browser.test.tsx',
     test: 'Field.Picker with times in a browser > beside a calendar with closeOnPick off, picks a date, then a time, and closes on the time',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
     test: 'Text.Root lines > shows the tip of the first cut text a focused element holds, and hides it on blur',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
     test: 'Text.Root lines > keeps a focus-held tip open when the pointer leaves',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
     test: 'Text.Root lines > takes the first Escape for a tip opened by focus, as a visible tip must be dismissable',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
     test: 'Text.Root lines > shows no tip when a click focuses a link that holds cut text',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
     test: 'Text.Root lines > shows no tip from an aria-activedescendant host, and looks past an element that cannot take focus',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_TAB_LINKS,
   },
   {
     file: 'packages/design-system/src/browser/toast.browser.test.tsx',
     test: 'Toast with a modal dialog > keeps toasts inside a dialog of your own until it closes after open turns false',
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/toast.browser.test.tsx',
     test: "Toast with a modal dialog > keeps the dialog's own focus to return to, not a toast's",
     engines: ['webkit'],
-    reason: FOCUS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/drilldown-motion.browser.test.tsx',
@@ -274,4 +275,15 @@ export function macosEntry(platform: string, browser: string, filepath: string, 
   return macosOnly.find(
     (entry) => (file === entry.file || file.endsWith(`/${entry.file}`)) && entry.test === test && (entry.engines as readonly string[]).includes(browser),
   );
+}
+
+interface TestContext {
+  task: { file: { filepath: string }; fullTestName?: string };
+  skip(note: string): never;
+}
+
+/** A browser setup's beforeEach: skips a listed test, with its reason, when the browsers run on macOS. `server` is Vitest's. */
+export function skipOnMacosHost(context: TestContext, server: { platform: string; browser: string }): void {
+  const entry = macosEntry(server.platform, server.browser, context.task.file.filepath, context.task.fullTestName);
+  if (entry) context.skip(`macOS host: ${entry.reason}`);
 }

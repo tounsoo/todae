@@ -86,10 +86,12 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': [
         'error',
-        ...['Literal[value=/\\{\\/?Control>?\\}/]', 'TemplateElement[value.raw=/\\{\\/?Control>?\\}/]'].map((selector) => ({
+        // Control with a, c, v, x, y or z, Shift or not. A shortcut a product binds to Control itself, such as
+        // CommandPalette's Control+K, stays Control.
+        ...['Literal[value=/\\{Control>\\}(\\{Shift>\\})?[acvxyz]/]', 'TemplateElement[value.raw=/\\{Control>\\}(\\{Shift>\\})?[acvxyz]/]'].map((selector) => ({
           selector,
           message:
-            'Press {ControlOrMeta>}…{/ControlOrMeta}, which Playwright sends as Meta on macOS and Control elsewhere. Keep {Control>} only for a test of the Control key itself, with an eslint-disable comment that says so.',
+            'Select all, cut, copy, paste, undo and redo are Meta on macOS. Press {ControlOrMeta>}…{/ControlOrMeta}, which Playwright sends as Meta on macOS and Control elsewhere.',
         })),
       ],
     },
