@@ -1,12 +1,14 @@
 import type { ThemeCubicBezierValue, ThemeOverride } from '@tounsoo/todae';
 
 // Motion feels, made only from motion tokens Todae already ships. A feel
-// retimes the five motion roles, the slower steps of the core duration scale
-// and the core curves, and sets how far a popover grows and a dialog or toast
-// travels. Overshoot goes only on the enter curve of a surface that appears;
-// the core curves stay plain, since hover, selection and tab changes read them.
-// Under prefers-reduced-motion Todae's CSS still drops every slide, rise and
-// grow, so a feel can only change how long fades take.
+// retimes the five motion roles and the slower steps of the core duration
+// scale, sets the curves of the things that appear and go, and sets how far a
+// popover grows and a dialog or toast travels. It leaves the core curves and
+// the fast and normal steps alone or shorter, since hover fades, checkbox and
+// switch changes and the tab indicator read them. Overshoot goes on the enter
+// curve of a popover, dialog or toast. Under prefers-reduced-motion Todae's
+// CSS still drops each slide, rise and grow, so there a feel changes how long
+// fades take and nothing more.
 
 const ms = (value: number) => ({ value, unit: 'ms' }) as const;
 const rem = (value: number) => ({ value, unit: 'rem' }) as const;
@@ -19,8 +21,9 @@ type Feel = {
   moderate?: number;
   slow?: number;
   slower?: number;
-  /** Enter and exit ms per role, in the order reveal, popup, window, panel, notice. */
+  /** Enter and exit ms for each role it retimes. */
   roles?: Partial<Record<'reveal' | 'popup' | 'window' | 'panel' | 'notice', readonly [enter: number, exit: number]>>;
+  /** The enter and exit curves of every surface that appears and goes. */
   enter?: ThemeCubicBezierValue;
   exit?: ThemeCubicBezierValue;
   /** Enter curve for popovers, dialogs and toasts, where a slight overshoot may land. */
@@ -41,8 +44,8 @@ function feel(f: Feel): ThemeOverride {
     out[`motion.${role}.duration.enter`] = ms(enter);
     out[`motion.${role}.duration.exit`] = ms(exit);
   }
-  if (f.enter) out['motion.easing.enter'] = f.enter;
-  if (f.exit) out['motion.easing.exit'] = f.exit;
+  for (const key of APPEARING.enter) if (f.enter) out[key] = f.enter;
+  for (const key of APPEARING.exit) if (f.exit) out[key] = f.exit;
   if (f.surfaceEnter) {
     for (const surface of SURFACES) out[`${surface}.motion.easing.enter`] = f.surfaceEnter;
   }
@@ -54,6 +57,44 @@ function feel(f: Feel): ThemeOverride {
 
 /** The surfaces whose enter curve may overshoot: each grows or rises into a resting place. */
 export const SURFACES = ['popover', 'dialog', 'toast'] as const;
+
+/**
+ * The curve of each thing that appears and goes. They all alias the core curves,
+ * which state changes read too, so a feel sets these instead.
+ */
+const APPEARING = {
+  enter: [
+    'alert',
+    'coachmark',
+    'conversation',
+    'dialog',
+    'disclosure',
+    'drawer',
+    'drilldown',
+    'field.error',
+    'message.actions',
+    'nav',
+    'popover',
+    'sheet',
+    'toast',
+    'tooltip',
+    'tree',
+  ].map((part) => `${part}.motion.easing.enter`),
+  exit: [
+    'coachmark',
+    'conversation',
+    'dialog',
+    'disclosure',
+    'drawer',
+    'drilldown',
+    'message.actions',
+    'nav',
+    'popover',
+    'sheet',
+    'toast',
+    'tree',
+  ].map((part) => `${part}.motion.easing.exit`),
+};
 
 export type PresetId = 'graphite' | 'porcelain' | 'acid' | 'bloom' | 'riso' | 'y2k-chrome' | 'anvil';
 

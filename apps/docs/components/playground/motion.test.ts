@@ -1,12 +1,11 @@
 import {
   THEME_OVERRIDE_KEYS,
   themeOverrideStyle,
-  type ThemeCubicBezierValue,
   type ThemeDurationValue,
   type ThemeOverride,
 } from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
-import { MOTION_CHOICES, MOTION_FEELS, PRESET_MOTION, SURFACES, isMotionKey, withMotion, type PresetId } from './motion';
+import { MOTION_CHOICES, MOTION_FEELS, PRESET_MOTION, SURFACES, isMotionKey, withMotion } from './motion';
 import fernwayContract from '../../../../examples/fernway/tokens/contract.json';
 import fernwayCore from '../../../../examples/fernway/tokens/core.json';
 import { PRESETS } from './presets';
@@ -75,19 +74,12 @@ describe.each(FEELS)('%s', (_name, override) => {
   });
 
   // Hover fades, checkbox and switch changes and the tab indicator read the
-  // fast and normal steps and the core curves: a feel never slows them or
-  // makes them spring, and never sets their own tokens.
+  // fast and normal steps and the core curves, so a feel does not slow those
+  // steps, leaves the core curves as they are, and does not set those tokens.
   it('leaves state changes as quick and plain as Todae’s', () => {
     expect(durationMs(override['motion.duration.fast'] ?? { value: 160, unit: 'ms' })).toBeLessThanOrEqual(160);
     expect(durationMs(override['motion.duration.normal'] ?? { value: 200, unit: 'ms' })).toBeLessThanOrEqual(200);
-    for (const key of ['motion.easing.enter', 'motion.easing.exit'] as const) {
-      const curve = override[key] as ThemeCubicBezierValue | undefined;
-      for (const y of curve ? [curve[1], curve[3]] : []) {
-        expect(y, key).toBeGreaterThanOrEqual(0);
-        expect(y, key).toBeLessThanOrEqual(1);
-      }
-    }
-    for (const [key] of entries) expect(key, key).not.toMatch(/^(selection|control|tabs|focus)\./);
+    for (const [key] of entries) expect(key, key).not.toMatch(/^(motion\.easing|selection|control|tabs|focus)\./);
   });
 
   it('overshoots only subtly, and only on a surface that appears', () => {
@@ -118,14 +110,14 @@ describe('motion personalities', () => {
   });
 
   it('give every preset a feel of its own', () => {
-    const feels = PRESETS.map((preset) => JSON.stringify(PRESET_MOTION[preset.id as PresetId]));
+    const feels = PRESETS.map((preset) => JSON.stringify(PRESET_MOTION[preset.id]));
     expect(feels.every((f) => f !== undefined)).toBe(true);
     expect(new Set(feels).size).toBe(PRESETS.length);
   });
 
   it('put each preset’s motion in both of its appearances', () => {
     for (const preset of PRESETS) {
-      const motion = PRESET_MOTION[preset.id as PresetId];
+      const motion = PRESET_MOTION[preset.id];
       for (const mode of ['light', 'dark'] as const) {
         const own = Object.fromEntries(Object.entries(preset[mode]).filter(([key]) => isMotionKey(key)));
         expect(own, `${preset.id} ${mode}`).toEqual(motion);
@@ -139,6 +131,7 @@ describe('motion personalities', () => {
   });
 
   it('list the picker’s options with the preset’s own first', () => {
-    expect(MOTION_CHOICES).toEqual(['preset', 'standard', 'snappy', 'calm', 'springy']);
+    expect(MOTION_CHOICES).toEqual(['preset', ...Object.keys(MOTION_FEELS)]);
+    expect(MOTION_CHOICES).toContain('standard');
   });
 });

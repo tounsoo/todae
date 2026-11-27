@@ -31,17 +31,12 @@
     }
   },
   "motion": {
-    "$description": "Fernway's motion is unhurried and warm: the slower steps stretch and the curves ease gently in and out. Fast and normal stay Todae's, so hovers and toggles still answer at once.",
+    "$description": "Fernway's motion is unhurried: the slower steps stretch. Fast, normal and the core curves stay Todae's, since hovers and toggles read them.",
     "duration": {
       "$type": "duration",
       "moderate": { "$value": { "value": 280, "unit": "ms" } },
       "slow": { "$value": { "value": 340, "unit": "ms" } },
       "slower": { "$value": { "value": 380, "unit": "ms" } }
-    },
-    "easing": {
-      "$type": "cubicBezier",
-      "enter": { "$value": [0.33, 1, 0.68, 1] },
-      "exit": { "$value": [0.32, 0, 0.67, 0] }
     }
   }
 }

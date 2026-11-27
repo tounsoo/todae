@@ -3,7 +3,7 @@ import { PRESET_MOTION, type PresetId } from './motion';
 
 /** A playground starting point: one override set per appearance, since Todae's accent flips between light and dark. */
 export type ThemePreset = {
-  id: string;
+  id: PresetId;
   /** A proper name, shown untranslated. */
   name: string;
   light: ThemeOverride;
