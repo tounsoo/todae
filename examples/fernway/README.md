@@ -4,9 +4,9 @@ Fernway is a made-up cabin-booking company. This app themes Todae for it with to
 
 ## What it changes
 
-- `tokens/core.json` extends Todae's `core` set: warm stone grays in place of Todae's cool ones, rounder radii, a humanist font stack and a heavier bold.
+- `tokens/core.json` extends Todae's `core` set: warm stone grays in place of Todae's cool ones, rounder radii, a humanist font stack, a heavier bold, and slower, gentler motion steps and curves.
 - `tokens/appearance/*.json` adds to Todae's `appearance` modifier: a forest green accent for light and dark, and Fernway's own `fernway.hero.*` colors.
-- `tokens/button.json` extends Todae's `button` set to make every button a pill, and `tokens/contract.json` extends the `contract` set to give cards a shadow and to set `Text.Root variant="label"` in mono capitals with wider letter spacing.
+- `tokens/button.json` extends Todae's `button` set to make every button a pill, and `tokens/contract.json` extends the `contract` set to give cards a shadow, to set `Text.Root variant="label"` in mono capitals with wider letter spacing, and to give Fernway its motion: each motion role a little slower, popovers that grow a little more, and dialogs that rise a touch past their place and settle back. Under reduced motion Todae still drops every rise and grow, so only the fades change.
 - `src/app.css` sets the wordmark and cabin names with `font-size: var(--todae-font-size-4)`. Text has no `size` prop, and changing `font.size.4` resizes every use of that step.
 - `tokens/button.soft.json` adds a `soft` button variant, declared to TypeScript in `src/todae.d.ts`.
 - `tokens/fernway.json` is a set of Fernway's own tokens, which `src/app.css` reads.

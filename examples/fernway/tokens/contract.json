@@ -19,5 +19,65 @@
         "text-transform": { "$type": "textTransform", "$value": "uppercase" }
       }
     }
+  },
+  "motion": {
+    "$description": "Each motion role a little slower than Todae's.",
+    "reveal": {
+      "duration": {
+        "$type": "duration",
+        "enter": { "$value": { "value": 240, "unit": "ms" } },
+        "exit": { "$value": { "value": 200, "unit": "ms" } }
+      }
+    },
+    "popup": {
+      "duration": {
+        "$type": "duration",
+        "enter": { "$value": { "value": 280, "unit": "ms" } },
+        "exit": { "$value": { "value": 200, "unit": "ms" } }
+      }
+    },
+    "window": {
+      "duration": {
+        "$type": "duration",
+        "enter": { "$value": { "value": 340, "unit": "ms" } },
+        "exit": { "$value": { "value": 240, "unit": "ms" } }
+      }
+    },
+    "panel": {
+      "duration": {
+        "$type": "duration",
+        "enter": { "$value": { "value": 340, "unit": "ms" } },
+        "exit": { "$value": { "value": 280, "unit": "ms" } }
+      }
+    },
+    "notice": {
+      "duration": {
+        "$type": "duration",
+        "enter": { "$value": { "value": 280, "unit": "ms" } },
+        "exit": { "$value": { "value": 200, "unit": "ms" } }
+      }
+    }
+  },
+  "popover": {
+    "motion": {
+      "scale": { "$type": "number", "$description": "Popovers grow a little more than Todae's.", "$value": 0.95 }
+    }
+  },
+  "dialog": {
+    "motion": {
+      "easing": {
+        "enter": {
+          "$type": "cubicBezier",
+          "$description": "A dialog rises a touch past its place and settles back, like a cabin door swinging to.",
+          "$value": [0.34, 1.15, 0.64, 1]
+        }
+      },
+      "offset": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
+    }
+  },
+  "toast": {
+    "motion": {
+      "offset": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride, ThemeShadowLayer } from '@tounsoo/todae';
+import { PRESET_MOTION, type PresetId } from './motion';
 
 /** A playground starting point: one override set per appearance, since Todae's accent flips between light and dark. */
 export type ThemePreset = {
@@ -64,9 +65,16 @@ const alpha = (color: ThemeColorValue, a: number): ThemeColorValue => ({ ...colo
 /** Pill-shaped buttons, chips and badges. */
 const PILLS: ThemeOverride = { 'button.base.radius': rem(99), 'chip.radius': rem(99), 'badge.radius': rem(99) };
 
-/** The same overrides in both appearances, plus each appearance's own. */
-function preset(id: string, name: string, shared: ThemeOverride, light: ThemeOverride, dark: ThemeOverride): ThemePreset {
-  return { id, name, light: { ...shared, ...light }, dark: { ...shared, ...dark } };
+/** The same overrides in both appearances, plus each appearance's own. Motion is the same in both. */
+function preset(
+  id: PresetId,
+  name: string,
+  shared: ThemeOverride,
+  light: ThemeOverride,
+  dark: ThemeOverride,
+): ThemePreset {
+  const motion = PRESET_MOTION[id];
+  return { id, name, light: { ...shared, ...motion, ...light }, dark: { ...shared, ...motion, ...dark } };
 }
 
 /** Acid's light primary button: chartreuse with ink type and an ink edge. */
