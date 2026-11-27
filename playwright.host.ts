@@ -14,7 +14,6 @@
 import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 export interface HostLaunchOptions {
   env?: Record<string, string | undefined>;
@@ -26,7 +25,9 @@ export interface HostLaunchOptions {
 /** The settings scripts/macos-browser.sh passes as Cocoa arguments: `AppleKeyboardUIMode 2` and the like. */
 export type CocoaDefaults = Record<string, string | number>;
 
-const wrapper = fileURLToPath(new URL('./scripts/macos-browser.sh', import.meta.url));
+// __dirname, not import.meta.url: Playwright loads apps/docs/playwright.peek.config.ts, and this file with it, as
+// CommonJS, where import.meta is a syntax error. Vite's config loader defines __dirname for each file it bundles.
+const wrapper = join(__dirname, 'scripts/macos-browser.sh');
 
 /** Whether this host needs the options below. Tests pass another platform. */
 export const isMac = (platform: NodeJS.Platform = process.platform) => platform === 'darwin';
