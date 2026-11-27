@@ -264,7 +264,7 @@ function OptionListOption({
   const stacked = Boolean(detailLineId);
   // A stacked option is named by both lines, title then detail, so its name
   // holds all the text it shows (WCAG 2.5.3, Label in Name).
-  const copyId = `${optionDomId(ctx.listId, value)}-copy`;
+  const labelId = `${optionDomId(ctx.listId, value)}-label`;
   return (
     <OptionPartContext.Provider value={part}>
       <div
@@ -275,7 +275,7 @@ function OptionListOption({
         aria-selected={selected}
         aria-disabled={disabled || unavailable || undefined}
         aria-label={named ? ariaLabel : undefined}
-        aria-labelledby={named ? labelledBy : stacked && title ? copyId : undefined}
+        aria-labelledby={named ? labelledBy : stacked && title ? labelId : undefined}
         aria-describedby={describedBy}
         data-selected={selected ? '' : undefined}
         data-highlighted={ctx.highlighted === value ? '' : undefined}
@@ -292,7 +292,7 @@ function OptionListOption({
           </span>
         ) : null}
         {stacked ? (
-          <span id={copyId} className={styles.copy}>
+          <span id={labelId} className={styles.copy}>
             {children}
           </span>
         ) : (
