@@ -323,6 +323,15 @@ describe('plans match CI', () => {
     }
   });
 
+  // On macOS, WebKit and the scroll-lock Chromium start through scripts/macos-browser.sh, and Playwright checks only
+  // that the wrapper exists. Its missing-browser line has to read as a missing install too.
+  test("the macOS browser wrapper's missing-browser line is BLOCKED with the install command", () => {
+    const script = readFileSync(path.join(repoRoot, 'scripts/macos-browser.sh'), 'utf8');
+    const line = /echo "(macos-browser\.sh: Executable doesn't exist at[^"]*)"/.exec(script)?.[1];
+    assert.ok(line, 'scripts/macos-browser.sh has no missing-browser line');
+    for (const id of ['browser-webkit', 'docs-browser', 'docs-peek']) assert.match(line.replace('$browser', '/x/Playwright'), STEPS[id].blockedWhen, id);
+  });
+
   // Playwright's Firefox failed to start on macOS 27 ("Could not find profile folder"), and the helper called
   // that "not installed". Only a missing browser is BLOCKED; a launch failure is a FAIL with its log.
   test('a browser that is installed but fails to start is not reported as missing', () => {

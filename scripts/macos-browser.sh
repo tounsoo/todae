@@ -9,6 +9,12 @@ if [ -z "${TODAE_BROWSER:-}" ]; then
 	exit 2
 fi
 browser="$TODAE_BROWSER"
+# Playwright checks only that this script exists, so a missing browser would fail below with bash's own error.
+# Say it the way Playwright does, so the verify helper reports it as a missing install, not a failure.
+if [ ! -x "$browser" ]; then
+	echo "macos-browser.sh: Executable doesn't exist at $browser; run npx playwright install" >&2
+	exit 1
+fi
 cocoa="${TODAE_COCOA_DEFAULTS:-}"
 unset TODAE_BROWSER TODAE_COCOA_DEFAULTS
 # The defaults are "-Key value" pairs with no spaces inside a key or a value, so word splitting is what's wanted.

@@ -86,9 +86,9 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': [
         'error',
-        // Control with a, c, v, x, y or z, Shift or not. A shortcut a product binds to Control itself, such as
-        // CommandPalette's Control+K, stays Control.
-        ...['Literal[value=/\\{Control>\\}(\\{Shift>\\})?[acvxyz]/]', 'TemplateElement[value.raw=/\\{Control>\\}(\\{Shift>\\})?[acvxyz]/]'].map((selector) => ({
+        // Control with a, c, v, x, y or z, in either case, with Shift held before or after it or not. A shortcut a
+        // product binds to Control itself, such as CommandPalette's Control+K, stays Control.
+        ...['Literal[value=/(\\{Control>\\}(\\{Shift>\\})?|\\{Shift>\\}\\{Control>\\})[acvxyz]/i]', 'TemplateElement[value.raw=/(\\{Control>\\}(\\{Shift>\\})?|\\{Shift>\\}\\{Control>\\})[acvxyz]/i]'].map((selector) => ({
           selector,
           message:
             'Select all, cut, copy, paste, undo and redo are Meta on macOS. Press {ControlOrMeta>}…{/ControlOrMeta}, which Playwright sends as Meta on macOS and Control elsewhere.',

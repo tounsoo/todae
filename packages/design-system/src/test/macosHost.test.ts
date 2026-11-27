@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ENGINES, macosEntry, macosOnly } from '../../../../browser.host';
+import { firefoxQuarantine } from '../../scripts/firefox-quarantine';
 
 const repo = join(import.meta.dirname, '../../../..');
 
@@ -38,6 +39,14 @@ describe('the macOS host list', () => {
       }
     }
     expect(macosEntry('darwin', 'webkit', '/elsewhere/other.browser.test.tsx', macosOnly[0]?.test)).toBeUndefined();
+  });
+
+  // firefox-quarantine.ts fails CI's Firefox run when a quarantined test is skipped, so the two lists never share
+  // a Firefox test. A quarantined test runs in Firefox on a Mac too, and the quarantine judges it there.
+  it('skips no Firefox test that the Firefox quarantine holds', () => {
+    const quarantined = new Set(firefoxQuarantine.map((entry) => `packages/design-system/${entry.file} ${entry.test}`));
+    const both = macosOnly.filter((entry) => entry.engines.includes('firefox') && quarantined.has(`${entry.file} ${entry.test}`));
+    expect(both).toEqual([]);
   });
 
   // A renamed or deleted test would leave an entry that skips nothing, and hide that the list is stale.

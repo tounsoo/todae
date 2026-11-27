@@ -10,8 +10,8 @@
 // - Home and End: on macOS they leave the caret where it is in WebKit and Firefox, as in Safari. Linux moves
 //   the caret to the start or end of the line.
 // - Focus in WebKit: macOS WebKit skips links on Tab unless Safari's "Press Tab to highlight each item" is on,
-//   which Playwright's WebKit has no way to turn on, and it does not focus a button it clicks, as Safari does not,
-//   so focus has no button to go back to. Linux WebKit stops on links and focuses a clicked button.
+//   which Playwright's WebKit has no way to turn on, and it does not focus a button or link it clicks, as Safari does
+//   not. Linux WebKit stops on links and focuses what it clicks.
 // - Undo in WebKit: macOS WebKit undoes typed text and text a script inserted after it as one step.
 // - Text drag: a drag of a text control's selection is a native macOS drag in Chromium and WebKit, which
 //   Playwright's synthetic mouse does not start. Linux starts it.
@@ -39,7 +39,7 @@ export interface MacosEntry {
 }
 
 const HOME_END = 'macOS Home and End leave the caret where it is; Linux moves it to the start or end of the line.';
-const WEBKIT_CLICK_FOCUS = 'macOS WebKit does not focus a button it clicks, as Safari does not, so focus has no button to go back to; Linux WebKit focuses it.';
+const WEBKIT_CLICK_FOCUS = 'macOS WebKit does not focus a button or link it clicks, as Safari does not, so focus is not where the test expects; Linux WebKit focuses it.';
 const WEBKIT_TAB_LINKS = "macOS WebKit skips links on Tab unless Safari's tab-to-links setting is on, which Playwright cannot turn on; Linux WebKit stops on them.";
 const TEXT_DRAG = "A drag of a text control's selection is a native macOS drag, which Playwright's synthetic mouse does not start.";
 const UNDO = 'macOS WebKit undoes the typed word and the inserted pick as one step, as Safari does; Linux WebKit undoes the pick alone.';
@@ -228,7 +228,7 @@ export const macosOnly: readonly MacosEntry[] = [
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
     test: 'Text.Root lines > shows no tip when a click focuses a link that holds cut text',
     engines: ['webkit'],
-    reason: WEBKIT_TAB_LINKS,
+    reason: WEBKIT_CLICK_FOCUS,
   },
   {
     file: 'packages/design-system/src/browser/text.browser.test.tsx',
