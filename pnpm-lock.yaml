@@ -173,8 +173,8 @@ importers:
         specifier: 4.1.12
         version: 4.1.12(playwright@1.64.1)(vite@6.4.5(@types/node@22.20.3)(yaml@2.9.1))(vitest@4.1.12)
       axe-core:
-        specifier: 4.13.0
-        version: 4.13.0
+        specifier: 4.14.1
+        version: 4.14.1
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -262,8 +262,8 @@ importers:
         specifier: 4.1.12
         version: 4.1.12(playwright@1.64.1)(vite@6.4.5(@types/node@22.20.3)(yaml@2.9.1))(vitest@4.1.12)
       axe-core:
-        specifier: 4.13.0
-        version: 4.13.0
+        specifier: 4.14.1
+        version: 4.14.1
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
@@ -1756,8 +1756,8 @@ packages:
     resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
     hasBin: true
 
-  axe-core@4.13.0:
-    resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
+  axe-core@4.14.1:
+    resolution: {integrity: sha512-FHfa+lmNjQZfJz1q8wKqIDwC6DExcHt/pkjNQb09a3NPjCKg2rhu5qb2S4r76ASyFNNtuFooJpZe37OgudVGtQ==}
     engines: {node: '>=4'}
 
   bail@2.0.2:
@@ -4911,7 +4911,7 @@ snapshots:
 
   astring@1.9.0: {}
 
-  axe-core@4.13.0: {}
+  axe-core@4.14.1: {}
 
   bail@2.0.2: {}
 

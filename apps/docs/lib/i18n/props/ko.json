@@ -1611,8 +1611,8 @@
   },
   "OptionList.OptionDetail": {
     "children": {
-      "en": "Detail text, announced as the option description.",
-      "ko": "상세 텍스트. 옵션의 설명으로 읽힙니다."
+      "en": "Detail text, read in the option name after the title.",
+      "ko": "상세 텍스트. 옵션 이름에서 제목 다음에 읽힙니다."
     }
   },
   "OptionList.Root": {
@@ -2881,8 +2881,8 @@
   },
   "Calendar.Grid": {
     "renderDay": {
-      "en": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show.",
-      "ko": "그리드가 그리는 각 날짜 버튼 안에 그립니다. 그 날의 날짜와, 보이는 달 밖인지, 오늘인지, 선택됐는지, 고를 수 없는지를 받아 호출됩니다. 버튼은 유일한 Tab 정지점으로 남고 이름은 전체 날짜 그대로이며, 내용은 그 날의 설명으로 읽힙니다. 내용은 상호작용하지 않습니다. 해가 보이는 동안에는 무시됩니다."
+      "en": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop. Its name is the full date, then the content, so it holds every word the day shows. The content is not interactive. Ignored while the years show.",
+      "ko": "그리드가 그리는 각 날짜 버튼 안에 그립니다. 그 날의 날짜와, 보이는 달 밖인지, 오늘인지, 선택됐는지, 고를 수 없는지를 받아 호출됩니다. 버튼은 유일한 Tab 정지점으로 남습니다. 이름은 전체 날짜 다음에 내용이 이어지므로, 날에 보이는 모든 낱말이 들어 있습니다. 내용은 상호작용하지 않습니다. 해가 보이는 동안에는 무시됩니다."
     },
     "showOutsideDays": {
       "en": "Draws the leading and trailing days as buttons, in the weekday color, and marks them outside. Off by default, and passing renderDay does not draw those days. Ignored while the years show.",

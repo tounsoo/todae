@@ -139,11 +139,6 @@ function optionName(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-function joinIds(...groups: (string | undefined)[]): string | undefined {
-  const ids = [...new Set(groups.flatMap((group) => group?.split(/\s+/) ?? []).filter(Boolean))];
-  return ids.length > 0 ? ids.join(' ') : undefined;
-}
-
 type OptionContent = {
   title: ReactNode[];
   details: ReactElement<OptionListOptionDetailProps>[];
@@ -192,7 +187,14 @@ function titleString(title: ReactNode[]): string {
 
 function OptionListOptionDetail({ id, className, ...props }: OptionListOptionDetailProps) {
   const part = useOptionPart();
-  return <span {...props} id={id ?? part.detailId} data-todae-option-detail="" className={cx(styles.detail, className)} />;
+  // The space keeps the title and the detail two words apart in the option's
+  // name and in its text, as they show on two lines.
+  return (
+    <>
+      {' '}
+      <span {...props} id={id ?? part.detailId} data-todae-option-detail="" className={cx(styles.detail, className)} />
+    </>
+  );
 }
 
 function OptionListOption({
@@ -255,11 +257,14 @@ function OptionListOption({
   }, [children, content.foreign]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
-  const describedId = direct ? directId : wrapped?.id;
+  const detailLineId = direct ? directId : wrapped?.id;
   const title = direct ? directTitle : (wrapped?.title ?? '');
   const named = ariaLabel != null || labelledBy != null;
   const part = useMemo(() => ({ detailId }), [detailId]);
-  const stacked = Boolean(describedId);
+  const stacked = Boolean(detailLineId);
+  // A stacked option is named by both lines, title then detail, so its name
+  // holds all the text it shows (WCAG 2.5.3, Label in Name).
+  const copyId = `${optionDomId(ctx.listId, value)}-copy`;
   return (
     <OptionPartContext.Provider value={part}>
       <div
@@ -269,9 +274,9 @@ function OptionListOption({
         role="option"
         aria-selected={selected}
         aria-disabled={disabled || unavailable || undefined}
-        aria-label={named ? ariaLabel : stacked && title ? title : undefined}
-        aria-labelledby={named ? labelledBy : undefined}
-        aria-describedby={joinIds(describedBy, describedId)}
+        aria-label={named ? ariaLabel : undefined}
+        aria-labelledby={named ? labelledBy : stacked && title ? copyId : undefined}
+        aria-describedby={describedBy}
         data-selected={selected ? '' : undefined}
         data-highlighted={ctx.highlighted === value ? '' : undefined}
         className={cx(styles.option, className)}
@@ -286,7 +291,13 @@ function OptionListOption({
             {glyphOr(check, <CheckGlyph />)}
           </span>
         ) : null}
-        {stacked ? <span className={styles.copy}>{children}</span> : children}
+        {stacked ? (
+          <span id={copyId} className={styles.copy}>
+            {children}
+          </span>
+        ) : (
+          children
+        )}
       </div>
     </OptionPartContext.Provider>
   );

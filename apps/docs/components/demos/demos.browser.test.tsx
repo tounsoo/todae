@@ -1,6 +1,5 @@
 import { cleanup, render, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import axe from 'axe-core';
 import type { ComponentType } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
@@ -8,7 +7,7 @@ import '../../app/globals.css';
 import { APPEARANCE_KEY } from '../appearanceScript';
 import { Example } from '../Example';
 import { Providers } from '../Providers';
-import { AXE_OPTIONS, describeViolations } from '../../test/axe';
+import { axeViolations } from '../../test/axeRun';
 import { clippedRings } from '../../test/clippedRings';
 import { paintedContrast } from '../../../../packages/design-system/src/test/paintedContrast';
 import { settle } from '../../../../packages/design-system/src/test/settle';
@@ -31,7 +30,7 @@ const demos = Object.entries(examples).map(([file, mod]) => {
 });
 
 async function violations(): Promise<string[]> {
-  return describeViolations(await axe.run(document.body, AXE_OPTIONS));
+  return axeViolations();
 }
 
 // Every check below runs once per appearance. axe's own rules barely depend on color, so the
@@ -268,7 +267,7 @@ for (const appearance of APPEARANCES) {
         await expectAccessible(appearance, { overlay: true });
         // The peek is inert, so axe skips it above. Check its content too.
         if (peek) peek.inert = false;
-        expect(describeViolations(await axe.run(peek ?? document.body, AXE_OPTIONS))).toEqual([]);
+        expect(await axeViolations(peek ?? document.body)).toEqual([]);
       });
     });
   });

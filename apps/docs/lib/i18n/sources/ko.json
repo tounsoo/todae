@@ -79,8 +79,8 @@
     "## Range and locale": "38c6da99f7fd",
     "## Ranges": "43bb93af773d",
     "## Temporal": "084d2fd73acf",
-    "## Day content": "f1298a2a9f6b",
-    "## Accessible composition": "157046c5d3e6",
+    "## Day content": "678dba15e7fd",
+    "## Accessible composition": "946280eee822",
     "## When to use": "dc61d42b00e9",
     "## Props": "1736b176a33c",
     "(section order)": "87972d371df9"
@@ -582,9 +582,9 @@
   "optionlist": {
     "(top)": "79fa29c40cf3",
     "# OptionList": "0f34c7cc527d",
-    "## Detail": "58e635bbfbad",
+    "## Detail": "410d87a4e0ca",
     "## Icons": "c64f640cde20",
-    "## Accessible composition": "e95c5b0be999",
+    "## Accessible composition": "51b1e805a5af",
     "## When to use": "f5fbfd42f51c",
     "## Props": "230671f0f6b1",
     "(section order)": "0ecd65585283"

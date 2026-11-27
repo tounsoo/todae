@@ -38,7 +38,16 @@ function Controlled({
 
 const grid = () => screen.getByRole('grid');
 const focusedDay = () => grid().querySelector<HTMLButtonElement>('[tabindex="0"]')!;
-const day = (name: string) => screen.getByRole('button', { name });
+/** A day button's name: it is named by its content, the date, and its number is hidden from that name. */
+const dayName = (day: Element) => {
+  const copy = day.cloneNode(true) as Element;
+  for (const hidden of copy.querySelectorAll('[aria-hidden="true"]')) hidden.remove();
+  return copy.textContent;
+};
+/** The day button for a date's full name. A day with content is named by the date, then that content, a space apart. */
+const day = (date: string) => screen.getByRole('button', { name: (name) => name === date || name.startsWith(`${date} `) });
+/** What a day or year button shows: a day's number, or a year. */
+const shown = (cell: Element) => (cell.querySelector('[aria-hidden="true"]') ?? cell).textContent;
 
 describe('Calendar', () => {
   it('is a named group with the month heading, month buttons and a grid of the month', () => {
@@ -76,7 +85,7 @@ describe('Calendar', () => {
   it('names the days and the month in its locale', () => {
     render(<Controlled locale="ko-KR" />);
     expect(screen.getByText('2026년 10월')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('2026년 10월 13일 화요일');
+    expect(dayName(focusedDay())).toBe('2026년 10월 13일 화요일');
   });
 
   it('picks a clicked date and reports it', () => {
@@ -93,9 +102,10 @@ describe('Calendar', () => {
 
   it('moves focus by day, week, week end, month and year from the keyboard', () => {
     render(<Controlled />);
+    // Each day is named by its date, then its note.
     const press = (key: string, shiftKey = false) => {
       fireEvent.keyDown(focusedDay(), { key, shiftKey });
-      return focusedDay().getAttribute('aria-label');
+      return dayName(focusedDay())?.replace(/ note$/, '');
     };
     focusedDay().focus();
     expect(press('ArrowRight')).toBe('Wednesday, October 14, 2026');
@@ -121,7 +131,7 @@ describe('Calendar', () => {
       </Calendar.Root>,
     );
     fireEvent.keyDown(focusedDay(), { key: 'ArrowRight' });
-    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, October 13, 2026');
+    expect(dayName(focusedDay())).toBe('Tuesday, October 13, 2026');
   });
 
   it('changes the month from the header without moving focus or the value', () => {
@@ -130,7 +140,7 @@ describe('Calendar', () => {
     next.focus();
     fireEvent.click(next);
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Friday, November 13, 2026');
+    expect(dayName(focusedDay())).toBe('Friday, November 13, 2026');
     expect(document.activeElement).toBe(next);
     fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
     fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
@@ -170,7 +180,7 @@ describe('Calendar', () => {
     render(<Controlled initial={date('2028-02-29')} />);
     fireEvent.click(screen.getByRole('button', { name: 'February 2028' }));
     fireEvent.click(within(grid()).getByRole('button', { name: '2029' }));
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, February 28, 2029');
+    expect(dayName(focusedDay())).toBe('Wednesday, February 28, 2029');
   });
 
   it('moves through the years from the keyboard, by year, row and page', () => {
@@ -215,7 +225,7 @@ describe('Calendar', () => {
     expect(screen.getByRole('button', { name: 'Previous years' }).getAttribute('aria-disabled')).toBe('true');
     expect(screen.getByRole('button', { name: 'Next years' }).getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(within(grid()).getByRole('button', { name: '2027' }));
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, June 30, 2027');
+    expect(dayName(focusedDay())).toBe('Wednesday, June 30, 2027');
     fireEvent.click(screen.getByRole('button', { name: 'June 2027' }));
     focusedDay().focus();
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
@@ -242,7 +252,7 @@ describe('Calendar', () => {
     expect(document.activeElement!.textContent).toBe('2025');
     // The year never moved past a bound, so neither did the month and day.
     fireEvent.click(document.activeElement!);
-    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, June 10, 2025');
+    expect(dayName(focusedDay())).toBe('Tuesday, June 10, 2025');
   });
 
   it('shows the days again when the header goes while the years show', () => {
@@ -278,13 +288,13 @@ describe('Calendar', () => {
     // 275760 starts the next page of years.
     if (year === '275760') fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
     fireEvent.click(within(grid()).getByRole('button', { name: year }));
-    expect(focusedDay().getAttribute('aria-label')).toBe(label);
+    expect(dayName(focusedDay())).toBe(label);
   });
 
   it('keeps the day of the month as far as the next month has it', () => {
     render(<Controlled initial={date('2026-01-31')} />);
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
-    expect(focusedDay().getAttribute('aria-label')).toBe('Saturday, February 28, 2026');
+    expect(dayName(focusedDay())).toBe('Saturday, February 28, 2026');
   });
 
   it('keeps focus and the month in min and max, and marks dates outside them', () => {
@@ -296,16 +306,16 @@ describe('Calendar', () => {
     fireEvent.click(next);
     expect(screen.getByText('October 2026')).toBeTruthy();
     fireEvent.keyDown(focusedDay(), { key: 'PageDown' });
-    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, October 20, 2026');
+    expect(dayName(focusedDay())).toBe('Tuesday, October 20, 2026');
     fireEvent.keyDown(focusedDay(), { key: 'PageUp' });
-    expect(focusedDay().getAttribute('aria-label')).toBe('Monday, October 5, 2026');
+    expect(dayName(focusedDay())).toBe('Monday, October 5, 2026');
     // Outside the range a day is disabled, as the keys never reach it.
     const outside = day('Sunday, October 4, 2026') as HTMLButtonElement;
     expect(outside.disabled).toBe(true);
     expect(outside.hasAttribute('aria-disabled')).toBe(false);
     fireEvent.click(outside);
     expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
-    expect(focusedDay().getAttribute('aria-label')).toBe('Monday, October 5, 2026');
+    expect(dayName(focusedDay())).toBe('Monday, October 5, 2026');
   });
 
   it('takes no focus on a later render after a key at a bound', () => {
@@ -389,7 +399,7 @@ describe('Calendar', () => {
     const today = Temporal.Now.plainDateISO();
     render(<Controlled initial={null} />);
     const current = grid().querySelector('[aria-current="date"]')!;
-    expect(current.textContent).toBe(String(today.day));
+    expect(shown(current)).toBe(String(today.day));
     expect(focusedDay()).toBe(current);
     expect(grid().querySelector('[aria-selected]')).toBeNull();
   });
@@ -416,7 +426,7 @@ describe('Calendar', () => {
   it('starts on defaultMonth without a value', () => {
     render(<Controlled initial={null} defaultMonth={Temporal.PlainYearMonth.from('2027-02')} />);
     expect(screen.getByText('February 2027')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Monday, February 1, 2027');
+    expect(dayName(focusedDay())).toBe('Monday, February 1, 2027');
   });
 
   it('follows a value set from outside to its month', () => {
@@ -437,7 +447,7 @@ describe('Calendar', () => {
     render(<Outside />);
     fireEvent.click(screen.getByRole('button', { name: 'set' }));
     expect(screen.getByText('March 2027')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, March 2, 2027');
+    expect(dayName(focusedDay())).toBe('Tuesday, March 2, 2027');
   });
 
   it('stays on a picked date that a controlling parent turns down', () => {
@@ -452,7 +462,7 @@ describe('Calendar', () => {
     fireEvent.click(day('Wednesday, November 4, 2026'));
     expect(onValueChange).toHaveBeenCalledWith(date('2026-11-04'));
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(dayName(focusedDay())).toBe('Wednesday, November 4, 2026');
     expect(focusedDay().closest('td')!.hasAttribute('aria-selected')).toBe(false);
   });
 
@@ -486,7 +496,7 @@ describe('Calendar', () => {
     expect(screen.getByText('December 2026')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'set' }));
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(dayName(focusedDay())).toBe('Wednesday, November 4, 2026');
     expect(focusedDay().closest('td')!.getAttribute('aria-selected')).toBe('true');
   });
 
@@ -511,7 +521,7 @@ describe('Calendar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
     fireEvent.click(screen.getByRole('button', { name: 'answer' }));
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Friday, November 20, 2026');
+    expect(dayName(focusedDay())).toBe('Friday, November 20, 2026');
   });
 
   it('keeps its own value when uncontrolled', () => {
@@ -628,7 +638,7 @@ describe('Calendar', () => {
     }
     const picked = day('Tuesday, October 13, 2026');
     expect(picked.textContent).toContain('2026-10-13');
-    expect(picked.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026');
+    expect(dayName(picked)).toBe('Tuesday, October 13, 2026 2026-10-13 in selected enabled other');
     const ruledOut = day('Saturday, October 17, 2026') as HTMLButtonElement;
     expect(ruledOut.disabled).toBe(false);
     expect(ruledOut.getAttribute('aria-disabled')).toBe('true');
@@ -665,9 +675,10 @@ describe('Calendar', () => {
         <Calendar.Grid renderDay={() => <span>note</span>} />
       </Calendar.Root>,
     );
+    // Each day is named by its date, then its note.
     const press = (key: string, shiftKey = false) => {
       fireEvent.keyDown(focusedDay(), { key, shiftKey });
-      return focusedDay().getAttribute('aria-label');
+      return dayName(focusedDay())?.replace(/ note$/, '');
     };
     focusedDay().focus();
     expect(focusedDay().textContent).toContain('note');
@@ -787,8 +798,8 @@ describe('Calendar', () => {
     const trailing = screen.getByRole('button', { name: fullDate('2026-10-03') });
     expect(leading.hasAttribute('data-outside')).toBe(true);
     expect(trailing.hasAttribute('data-outside')).toBe(true);
-    expect(leading.textContent).toBe('30');
-    expect(trailing.textContent).toBe('3');
+    expect(shown(leading)).toBe('30');
+    expect(shown(trailing)).toBe('3');
     expect(screen.queryByText('out')).toBeNull();
 
     seen.length = 0;
@@ -800,10 +811,10 @@ describe('Calendar', () => {
     expect(seen).toContain('2026-10-02 outside');
     expect(seen).toContain('2026-10-03 outside');
     expect(seen).toContain('2026-09-15 in');
-    expect(screen.getByRole('button', { name: fullDate('2026-08-30') }).textContent).toContain('out');
-    expect(screen.getByRole('button', { name: fullDate('2026-10-01') }).textContent).toContain('out');
-    expect(screen.getByRole('button', { name: fullDate('2026-09-15') }).textContent).toContain('in');
-    expect(screen.getByRole('button', { name: fullDate('2026-09-15') }).hasAttribute('data-outside')).toBe(false);
+    expect(day(fullDate('2026-08-30')).textContent).toContain('out');
+    expect(day(fullDate('2026-10-01')).textContent).toContain('out');
+    expect(day(fullDate('2026-09-15')).textContent).toContain('in');
+    expect(day(fullDate('2026-09-15')).hasAttribute('data-outside')).toBe(false);
   });
 
   it('presses an outside day only when showOutsideDays is set', () => {
@@ -821,21 +832,32 @@ describe('Calendar', () => {
         <Calendar.Grid showOutsideDays renderDay={() => 'note'} />
       </Calendar.Root>,
     );
-    fireEvent.click(screen.getByRole('button', { name: fullDate('2026-09-27') }));
+    fireEvent.click(day(fullDate('2026-09-27')));
     expect(onValueChange).toHaveBeenCalledWith(date('2026-09-27'));
   });
 
-  it('reads the day content as the description and keeps the date as the name', () => {
+  it('names a day with content by its date, then that content, and gives it no description', () => {
     render(
       <Calendar.Root aria-label="Start" locale="en-US" value={date('2026-10-13')} onValueChange={() => undefined}>
         <Calendar.Grid renderDay={(day) => (day.date.toString() === '2026-10-13' ? 'Review' : null)} />
       </Calendar.Root>,
     );
-    const named = screen.getByRole('button', { name: 'Tuesday, October 13, 2026', description: 'Review' });
-    expect(named.getAttribute('aria-describedby')).toMatch(/-day-2026-10-13$/);
-    const quiet = screen.getByRole('button', { name: 'Wednesday, October 14, 2026' });
-    expect(quiet.getAttribute('aria-describedby')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Wednesday, October 14, 2026', description: 'Review' })).toBeNull();
+    const named = screen.getByRole('button', { name: 'Tuesday, October 13, 2026 Review', description: '' });
+    expect(named.hasAttribute('aria-describedby')).toBe(false);
+    expect(named.hasAttribute('aria-label')).toBe(false);
+    expect(shown(named)).toBe('13');
+    const quiet = screen.getByRole('button', { name: 'Wednesday, October 14, 2026', description: '' });
+    expect(shown(quiet)).toBe('14');
+  });
+
+  it('shows the day in the locale digits its name uses', () => {
+    render(
+      <Calendar.Root aria-label="Start" locale="fa-IR" value={date('2026-10-13')} onValueChange={() => undefined}>
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    const name = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'full', calendar: 'gregory', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 9, 13)));
+    expect(shown(day(name))).toBe('۱۳');
   });
 
   it('tells renderDay which day is today inside the shown month', () => {

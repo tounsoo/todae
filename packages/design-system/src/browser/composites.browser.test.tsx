@@ -15,6 +15,14 @@ import { useField } from '../components/useField.js';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
 import { settle } from '../test/settle.js';
 
+/** A day button's name: it is named by its content, the date, and its number is hidden from that name. */
+function dayName(day: Element | null | undefined) {
+  if (!day) return null;
+  const copy = day.cloneNode(true) as Element;
+  for (const hidden of copy.querySelectorAll('[aria-hidden="true"]')) hidden.remove();
+  return copy.textContent;
+}
+
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
   return (
     <div data-appearance="light" data-density="comfortable" dir={dir}>
@@ -595,9 +603,9 @@ describe('Calendar in a browser', () => {
     );
     screen.getByRole('button', { name: 'Tuesday, October 13, 2026' }).focus();
     await userEvent.keyboard('{ArrowLeft}');
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
+    expect(dayName(document.activeElement)).toBe('Wednesday, October 14, 2026');
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 12, 2026');
+    expect(dayName(document.activeElement)).toBe('Monday, October 12, 2026');
     // The years swap them too.
     await userEvent.click(screen.getByRole('button', { name: 'October 2026' }));
     screen.getByRole('button', { name: '2026' }).focus();
@@ -629,7 +637,7 @@ describe('Calendar in a browser', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
   });
 
-  it('keeps one Tab stop and the date name when a day has content, and lets that day grow', async () => {
+  it('keeps one Tab stop and names the day by its date, then its content, and lets that day grow', async () => {
     render(
       <Themed>
         <Calendar.Root aria-label="Plain" locale="en-US" defaultValue={plainDate('2026-10-13')}>
@@ -650,15 +658,15 @@ describe('Calendar in a browser', () => {
     const plainGrid = screen.getByRole('group', { name: 'Plain' });
     const notedGrid = screen.getByRole('group', { name: 'Noted' });
     const plain = within(plainGrid).getByRole('button', { name: 'Tuesday, October 13, 2026' });
-    const noted = within(notedGrid).getByRole('button', { name: 'Tuesday, October 13, 2026' });
+    const noted = within(notedGrid).getByRole('button', { name: 'Tuesday, October 13, 2026 Review' });
     expect(noted.textContent).toContain('Review');
-    expect(noted.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026');
+    expect(dayName(noted)).toBe('Tuesday, October 13, 2026 Review');
     expect(noted.getBoundingClientRect().height).toBeGreaterThan(plain.getBoundingClientRect().height);
     const quiet = within(notedGrid).getByRole('button', { name: 'Wednesday, October 14, 2026' });
     expect(quiet.getBoundingClientRect().height).toBeCloseTo(plain.getBoundingClientRect().height, 0);
     noted.focus();
     await userEvent.keyboard('{ArrowRight}');
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
+    expect(dayName(document.activeElement)).toBe('Wednesday, October 14, 2026');
     expect(document.activeElement?.textContent).not.toContain('Review');
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
@@ -704,7 +712,7 @@ describe('Calendar in a browser', () => {
       render(<Themed>{root}</Themed>);
       await userEvent.click(screen.getByRole('button', { name: 'Monday, September 28, 2026' }));
       const stop = document.querySelector<HTMLButtonElement>('[data-todae-calendar-cell][tabindex="0"]');
-      expect(stop?.getAttribute('aria-label')).toBe('Monday, September 28, 2026');
+      expect(dayName(stop)).toBe('Monday, September 28, 2026');
       expect(document.activeElement).toBe(stop);
     }
   });
@@ -832,7 +840,7 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     await settle();
     const now = dialog.getBoundingClientRect();
     const shown = evening.getBoundingClientRect();
-    const scrolled = `${placed}; now top ${now.top}, bottom ${now.bottom}, scrollTop ${dialog.scrollTop} of ${dialog.scrollHeight - dialog.clientHeight}, time ${shown.top} to ${shown.bottom}, position-area ${getComputedStyle(dialog).getPropertyValue('position-area')}, focus ${document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.tagName}`;
+    const scrolled = `${placed}; now top ${now.top}, bottom ${now.bottom}, scrollTop ${dialog.scrollTop} of ${dialog.scrollHeight - dialog.clientHeight}, time ${shown.top} to ${shown.bottom}, position-area ${getComputedStyle(dialog).getPropertyValue('position-area')}, focus ${dayName(document.activeElement) ?? document.activeElement?.tagName}`;
     expect(shown.top, scrolled).toBeGreaterThan(now.top);
     expect(shown.bottom, scrolled).toBeLessThan(now.bottom);
     expect(now.top, scrolled).toBeGreaterThanOrEqual(0);
@@ -872,7 +880,7 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     render(<Start />);
     await userEvent.click(screen.getByRole('button', { name: 'Choose date' }));
     const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
-    await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026'));
+    await waitFor(() => expect(dayName(document.activeElement)).toBe('Tuesday, October 13, 2026'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}{Shift>}{Tab}{/Shift}');
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'October 2026' }));
     await userEvent.keyboard('{Enter}');
@@ -880,7 +888,7 @@ describe('Field.Picker beside a Field.DateInput in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement?.textContent).toBe('2026');
     await userEvent.keyboard('{ArrowLeft}{Enter}');
-    await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 13, 2025'));
+    await waitFor(() => expect(dayName(document.activeElement)).toBe('Monday, October 13, 2025'));
     expect(dialog.matches(':popover-open')).toBe(true);
     expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
   });
