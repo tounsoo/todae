@@ -995,6 +995,17 @@ function clockLabel(at: Temporal.ZonedDateTime, locale: string, withDay: boolean
   return withDay ? `${dayHeading(at.toPlainDate(), locale)}, ${time}` : time;
 }
 
+// The day number in the locale's digits, as Calendar.Grid writes the number the mark covers.
+const dayDigitFormats = new Map<string, Intl.NumberFormat>();
+function dayDigits(locale: string): Intl.NumberFormat {
+  let format = dayDigitFormats.get(locale);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, { useGrouping: false });
+    dayDigitFormats.set(locale, format);
+  }
+  return format;
+}
+
 function percent(fraction: number): string {
   return `${Math.round(fraction * 1e6) / 1e4}%`;
 }
@@ -1372,13 +1383,15 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
                     </span>
                   ) : null}
                   {index === bar.column ? <span className={styles.barLabel}>{bar.event.title}</span> : <VisuallyHidden.Root>{bar.event.title}</VisuallyHidden.Root>}
-                  <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
+                  {/* "repeats" follows the title, as the bar shows Repeats after it, and the range comes after. */}
                   {bar.event.repeats ? <VisuallyHidden.Root>, repeats</VisuallyHidden.Root> : null}
                   {bar.event.repeats && index === bar.column ? (
                     <span aria-hidden="true" className={styles.repeats}>
+                      {' '}
                       Repeats
                     </span>
                   ) : null}
+                  <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
                   {cutEnd ? (
                     <span aria-hidden="true" className={styles.cueEnd}>
                       …
@@ -1833,7 +1846,7 @@ export function EventCalendarExample({
                 <span className={styles.dateRow}>
                   {day.today ? (
                     <span className={styles.dateMark} aria-hidden="true">
-                      {day.date.day}
+                      {dayDigits(locale).format(day.date.day)}
                     </span>
                   ) : null}
                 </span>
