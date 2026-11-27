@@ -33,3 +33,7 @@ date	class	ref	caught_by	note
 2026-11-18	month-today-mark-overlap	#488	review	The today circle was absolute and reserved no row, so it covered that day's bars and at a narrow width hid the event.
 2026-11-23	ci-apt-install	#505	ben	The apt check matched a whole line, so a semicolon, a path, a quoted sentence, or workflow_call slipped through.
 2026-11-23	ci-apt-install	#505	ben	The apt check took the program as the last path segment, so npx @playwright/test install --with-deps read as test and was missed.
+2026-11-08	readme-claim-drift	a35f010a	ben	The package README said a tap never opens a tooltip and that the schema has every exact name, more than the code does.
+2026-11-09	readme-claim-drift	981e50ff	ben	The root README and platform page listed the exports that read Temporal without formatRelativeTime.
+2026-11-09	readme-claim-drift	bc1daea1	ben	The Temporal list in both READMEs and the platform page still left out formatDateRange after the first fix.
+2026-11-27	readme-mcp-guide	#520	ben	The package README said get_docs_page returns each example's code, so agents skipped get_example.
