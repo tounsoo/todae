@@ -178,6 +178,9 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(within(drawer).getByRole('button', { name: 'Mark paid' })).toBeTruthy();
   });
 
+  /** The invoice list's table: the stage's other table is the motion readout, named by its caption. */
+  const invoiceTable = () => within(stage()).getAllByRole('table').find((table) => table.querySelector('caption') === null)!;
+
   it('makes a new invoice only once the form holds a customer and an amount', async () => {
     render(<Playground locale="en" />);
     const preview = within(stage());
@@ -205,7 +208,8 @@ describe('Playground', { timeout: 15_000 }, () => {
     // The dialog plays its exit before it leaves.
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New invoice' })).toBeNull());
     // It starts as a draft, and the list is sorted newest first, so it leads.
-    const first = preview.getAllByRole('row')[1]!;
+    // The invoice list's rows, not the motion replay's readout above it.
+    const first = within(invoiceTable()).getAllByRole('row')[1]!;
     expect(within(first).getByRole('button', { name: 'INV-1046' })).toBeTruthy();
     expect(within(first).getByText('Draft')).toBeTruthy();
   });

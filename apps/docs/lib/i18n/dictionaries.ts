@@ -98,6 +98,39 @@ export type Dictionary = {
     | 'stage',
     string
   >;
+  /** The Playground stage's motion replay. Todae's part names in the readout stay in English. `{list}` values are comma-separated labels. */
+  motionLab: Record<
+    | 'title'
+    | 'lead'
+    | 'play'
+    | 'stop'
+    | 'slow'
+    | 'slowNote'
+    | 'optIn'
+    | 'optInHint'
+    | 'reduced'
+    | 'focusNote'
+    | 'menuHint'
+    | 'readout'
+    | 'part'
+    | 'enter'
+    | 'exit'
+    | 'none'
+    | 'off'
+    | 'popoverBody'
+    | 'tooltip'
+    | 'tip'
+    | 'tabs'
+    | 'tabLabels'
+    | 'steps'
+    | 'stepLabels'
+    | 'options'
+    | 'optionLabels'
+    | 'dialogTitle'
+    | 'dialogBody'
+    | 'toast',
+    string
+  >;
   /** Accessible names of scrollable code examples and tables, before the nearest heading. */
   regions: Record<'code' | 'table', string>;
   /** The button under a long code block that shows the rest of it, and hides it again. */
@@ -198,6 +231,37 @@ const en: Dictionary = {
     copied: 'Copied theme override JSON.',
     copyFailed: 'Could not copy. Clipboard permission was denied.',
     stage: 'Preview',
+  },
+  motionLab: {
+    title: 'Motion replay',
+    lead: 'Plays a popover, a tip, a tab panel, a step and a check together, then a dialog, then a toast, with the Motion feel and theme you picked. It plays once per press.',
+    play: 'Play motion',
+    stop: 'Stop',
+    slow: 'Slow motion (×4)',
+    slowNote: 'Slow motion plays each one four times as long as listed.',
+    optIn: 'Opt-in motion',
+    optInHint: 'Turns on the motions Todae ships at 0: popover and tip slides, the tab panel and step fades, and checks that grow in. Preview only: the JSON leaves them out.',
+    reduced: 'Your device asks for reduced motion, so everything here only fades: nothing slides, rises or grows.',
+    focusNote: 'The dialog takes focus while it shows and gives it back to Play motion.',
+    menuHint: 'To see the menu check, open More at the top of the preview and toggle Show drafts.',
+    readout: 'What each part plays',
+    part: 'Part',
+    enter: 'Enter',
+    exit: 'Exit',
+    none: 'None',
+    off: 'off',
+    popoverBody: 'A popover, anchored to its button.',
+    tooltip: 'Tooltip',
+    tip: 'A tooltip',
+    tabs: 'Range',
+    tabLabels: 'Day,Week,Month',
+    steps: 'Release',
+    stepLabels: 'Draft,Review,Send',
+    options: 'Plan',
+    optionLabels: 'Monthly,Yearly',
+    dialogTitle: 'Replaying motion',
+    dialogBody: 'This dialog closes by itself.',
+    toast: 'Motion replayed.',
   },
   regions: { code: 'Code example', table: 'Table' },
   codeFold: { show: 'Show all code', hide: 'Show less code' },
@@ -302,6 +366,37 @@ const ko: Dictionary = {
     copied: '테마 오버라이드 JSON을 복사했습니다.',
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
     stage: '미리보기',
+  },
+  motionLab: {
+    title: '모션 재생',
+    lead: '고른 모션 느낌과 테마로 팝오버, 툴팁, 탭 패널, 단계, 체크를 함께 재생한 뒤 다이얼로그, 토스트 순서로 재생합니다. 한 번 누르면 한 번만 재생됩니다.',
+    play: '모션 재생',
+    stop: '정지',
+    slow: '슬로 모션 (×4)',
+    slowNote: '슬로 모션에서는 각각 표의 네 배 길이로 재생됩니다.',
+    optIn: '옵트인 모션',
+    optInHint: 'Todae가 0으로 내보내는 모션을 켭니다. 팝오버와 툴팁의 슬라이드, 탭 패널과 단계의 페이드, 커지며 나타나는 체크입니다. 미리보기에만 적용되며 JSON에는 들어가지 않습니다.',
+    reduced: '기기가 동작 줄이기를 요청하고 있어, 여기서는 모두 페이드만 합니다. 미끄러지거나 떠오르거나 커지는 동작은 없습니다.',
+    focusNote: '다이얼로그는 보이는 동안 포커스를 가져가고, 닫히면 모션 재생 버튼에 돌려줍니다.',
+    menuHint: '메뉴 체크를 보려면 미리보기 맨 위의 더 보기를 열고 임시 저장 보기를 켜고 끄세요.',
+    readout: '각 부분이 재생하는 모션',
+    part: '부분',
+    enter: '등장',
+    exit: '퇴장',
+    none: '없음',
+    off: '꺼짐',
+    popoverBody: '버튼에 붙어 열리는 팝오버입니다.',
+    tooltip: '툴팁',
+    tip: '툴팁입니다',
+    tabs: '기간',
+    tabLabels: '일,주,월',
+    steps: '배포',
+    stepLabels: '초안,검토,발송',
+    options: '요금제',
+    optionLabels: '월간,연간',
+    dialogTitle: '모션 재생 중',
+    dialogBody: '이 다이얼로그는 저절로 닫힙니다.',
+    toast: '모션을 재생했습니다.',
   },
   regions: { code: '코드 예시', table: '표' },
   codeFold: { show: '코드 전체 보기', hide: '코드 접기' },

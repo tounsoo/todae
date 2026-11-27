@@ -8,6 +8,7 @@ import {
   CodeBlock,
   ColorPicker,
   COMPONENT_OVERRIDE_KEYS,
+  createToaster,
   Field,
   RAW_OVERRIDE_KEYS,
   ScrollArea,
@@ -35,7 +36,8 @@ import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
 import { MOTION_CHOICES, withMotion, type MotionChoice } from './playground/motion';
 import { PRESETS, type ThemePreset } from './playground/presets';
 import { ICON_LIBRARIES } from './iconLibraries';
-import { Preview } from './playground/Preview';
+import { MotionStage } from './playground/MotionStage';
+import { Preview, type PreviewToaster } from './playground/Preview';
 
 const LAYERS = {
   raw: RAW_OVERRIDE_KEYS,
@@ -237,6 +239,8 @@ function reserveBar(bar: HTMLElement | null) {
 export function Playground({ locale }: { locale: Locale }) {
   // Option values, layer names and preset names are Todae's own names and stay in English; the preview follows the locale.
   const t = DICTIONARIES[locale].playground;
+  const motionCopy = DICTIONARIES[locale].motionLab;
+  const [toaster] = useState<PreviewToaster>(() => createToaster());
   const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
   const codeId = useId();
   const stageRef = useRef<HTMLDivElement>(null);
@@ -514,7 +518,10 @@ export function Playground({ locale }: { locale: Locale }) {
         >
           {/* The preview is a product in the reader's language, so Todae's own text is too. */}
           <StringsProvider strings={TODAE_STRINGS[locale]}>
-            <Preview locale={locale} library={ICON_LIBRARIES.find((library) => library.id === iconsId)} />
+            {/* The replay lays slow motion and the opt-in motions over the preview too, but not over the stage's own tokens, so the editor and the JSON never show them. */}
+            <MotionStage overrides={overrides} toaster={toaster} copy={motionCopy}>
+              <Preview locale={locale} library={ICON_LIBRARIES.find((library) => library.id === iconsId)} toaster={toaster} />
+            </MotionStage>
           </StringsProvider>
         </ThemeProvider>
       </div>

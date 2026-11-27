@@ -33,6 +33,7 @@ import {
   Toast,
   Tree,
   type Glyphs,
+  type Toaster,
 } from '@tounsoo/todae';
 import { useId, useMemo, useReducer, useState } from 'react';
 import type { Locale } from '../../lib/i18n/config';
@@ -47,6 +48,9 @@ import { PREVIEW_COPY } from './previewCopy';
 import { SearchPalette, type PaletteCommand } from './SearchPalette';
 
 const NO_GLYPHS: Glyphs = {};
+
+/** The preview's toasts, which can carry an undo. The Playground passes one it shares with the motion replay, so their toasts stack in one region. */
+export type PreviewToaster = Toaster<{ onUndo?: () => void }>;
 
 type FileKey = 'exports/q3.csv' | 'exports/q2.csv' | 'contracts';
 const FILES: Record<FileKey, string> = {
@@ -65,7 +69,7 @@ const isFile = (value: string): value is FileKey => value in FILES;
  * invoices, open one, mark it paid and undo, or make a new one. Nothing leaves
  * the page, and a reload starts over.
  */
-export function Preview({ library, locale }: { library?: IconLibrary; locale: Locale }) {
+export function Preview({ library, locale, toaster: shared }: { library?: IconLibrary; locale: Locale; toaster?: PreviewToaster }) {
   const icons = library?.icons;
   const copy = PREVIEW_COPY[locale];
   const kit = useMemo(() => makeKit(copy, locale), [copy, locale]);
@@ -79,7 +83,8 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
       { kind: 'reminded', id: 'INV-1039', customer: 'Vandelay' },
     ]),
   );
-  const [toaster] = useState(() => createToaster<{ onUndo?: () => void }>());
+  const [own] = useState<PreviewToaster>(() => createToaster());
+  const toaster = shared ?? own;
   const [showDrafts, setShowDrafts] = useState(true);
   const [detail, setDetail] = useState<{ id: string; open: boolean } | null>(null);
   const [creating, setCreating] = useState(false);
