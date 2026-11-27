@@ -98,12 +98,55 @@ describe('overridesPackage', () => {
     expect(unsplit).toEqual([]);
     expect(at(parsed(files, 'core.json'), 'color.gray.900.$value')).toEqual({ colorSpace: 'oklch', components: [0.19, 0.01, 65] });
     expect(at(parsed(files, 'appearance/dark.json'), 'acme.color.gray.900.$value')).toEqual({ colorSpace: 'oklch', components: [0.2, 0.03, 300] });
-    const readers = rows.filter((row) => row.ref === 'color.gray.900' && row.context === 'dark');
+    const readers = rows.filter((row) => row.ref === 'color.gray.900' && row.context === 'dark' && row.cssValue === 'var(--todae-color-gray-900)');
     expect(readers.length).toBeGreaterThan(0);
     for (const reader of readers) {
       expect(at(parsed(files, 'appearance/dark.json'), `${reader.path}.$value`), reader.path).toEqual({ $ref: '#/acme/color/gray/900/$value' });
     }
+    // A relative color keeps its own alpha and reads the split token's channels.
+    expect(at(parsed(files, 'appearance/dark.json'), 'color.bg.transparent.$value')).toEqual({
+      colorSpace: 'oklch',
+      components: [0, 1, 2].map((index) => ({ $ref: `#/acme/color/gray/900/$value/components/${index}` })),
+      alpha: 0,
+    });
   });
+
+  it("keeps a preset's translucent scrim translucent when its grays split", () => {
+    const riso = PRESETS.find((preset) => preset.id === 'riso');
+    if (!riso) throw new Error('no Riso preset');
+    const { files } = exportOf(riso.light, riso.dark, 'riso');
+    for (const side of ['light', 'dark']) {
+      const scrim = at(parsed(files, `appearance/${side}.json`), 'color.bg.scrim.$value') as { alpha?: unknown } | undefined;
+      expect(scrim?.alpha, side).toMatchObject({ $ref: expect.stringMatching(/^#\/opacity\//) });
+    }
+    expect((at(parsed(files, 'appearance/dark.json'), 'color.bg.transparent.$value') as { alpha?: unknown }).alpha).toBe(0);
+  });
+
+  it('builds an edit made in one appearance only, wherever Todae declares the token', async () => {
+    const edits: [string, unknown][] = [
+      ['field.error.motion.duration.enter', { value: 300, unit: 'ms' }],
+      ['button.base.padding.x', { value: 2, unit: 'rem' }],
+      ['button.primary.ring.focus', { colorSpace: 'oklch', components: [0.5, 0.2, 250] }],
+      ['space.control.x', { value: 1, unit: 'rem' }],
+      ['space.1', { value: 0.5, unit: 'rem' }],
+      ['motion.duration.fast', { value: 90, unit: 'ms' }],
+    ];
+    for (const [path, value] of edits) {
+      const { files } = exportOf({ [path]: value }, {});
+      const built = await buildTokenFiles(files);
+      expect(built.ok ? '' : built.error, path).toBe('');
+    }
+  }, 120_000);
+
+  it('gives a one-sided contract edit the split core value in the other appearance', async () => {
+    const { files } = exportOf(
+      { 'radius.md': { value: 0.25, unit: 'rem' }, 'button.base.radius': { value: 2, unit: 'rem' } },
+      { 'radius.md': { value: 1, unit: 'rem' } },
+    );
+    expect(at(parsed(files, 'appearance/dark.json'), 'acme.button.base.radius.$value')).toEqual({ $ref: '#/acme/radius/md/$value' });
+    const built = await buildTokenFiles(files);
+    expect(built.ok ? '' : built.error).toBe('');
+  }, 60_000);
 
   it('carries every motion token the Playground can set, with no list of its own', async () => {
     // Motion tokens are read from the override keys, so tokens added later are covered too.

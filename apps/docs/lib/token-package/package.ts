@@ -111,9 +111,16 @@ function entryKey(entry: TokenEntry): string {
   return entry.kind === 'set' ? `set:${entry.name}` : `modifier:${entry.name}:${entry.context}`;
 }
 
-/** True when an entry comes after Todae's `appearance` modifier, so its tokens may read appearance tokens. */
+/**
+ * True when an entry's tokens may read appearance tokens: a set after Todae's
+ * `appearance` modifier, or an alias modifier such as `buttonVariant`. A scoped
+ * modifier such as `density` may not alias another scoped modifier.
+ */
 export function readsAppearance(entry: { kind: string; name: string }): boolean {
-  return rank(entry) > rank({ kind: 'modifier', name: 'appearance' });
+  if (rank(entry) <= rank({ kind: 'modifier', name: 'appearance' })) return false;
+  if (entry.kind === 'set') return true;
+  const known = TODAE_ENTRIES.find((candidate) => candidate.kind === 'modifier' && candidate.name === entry.name);
+  return known === undefined || known.extension.alias === true;
 }
 
 function rank(entry: { kind: string; name: string }): number {

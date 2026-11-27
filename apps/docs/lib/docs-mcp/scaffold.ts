@@ -25,12 +25,12 @@ export type ScaffoldOptions = {
   densities?: string[];
   /**
    * Core token values to replace, by path, such as `radius.md`, `font.family.sans` or
-   * `motion.duration.fast`. Each is a DTCG `$value`, or an alias such as `{ "$ref": "#/radius/lg/$value" }`.
+   * `motion.duration.fast`. Each is a DTCG `$value`. Core is declared on `:root`, so it takes no `$ref` alias.
    */
   core?: Record<string, unknown>;
   /**
    * Contract token values to replace, by path, such as `button.base.radius`, `card.shadow` or
-   * `motion.popup.duration.enter`, in the same form as `core`. A path under `button.<variant>.` for a
+   * `motion.popup.duration.enter`. Each is a DTCG `$value` or an alias such as `{ "$ref": "#/radius/full/$value" }`. A path under `button.<variant>.` for a
    * name in `buttonVariants` changes that new variant's copy of `secondary`.
    */
   contract?: Record<string, unknown>;

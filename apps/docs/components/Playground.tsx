@@ -286,13 +286,17 @@ export function Playground({ locale }: { locale: Locale }) {
     2,
   )}\n`;
 
+  // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
+  const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
+
   function exportOverrides() {
+    // Whichever export ran last owns the status line.
+    setDownloaded(null);
     void clipboard.copy(exportJson);
   }
 
-  // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
-  const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
   async function downloadPackage() {
+    clipboard.reset();
     try {
       // Loaded on demand: the package reads Todae's whole token catalog.
       const { playgroundPackage } = await import('./playground/tokenPackage');

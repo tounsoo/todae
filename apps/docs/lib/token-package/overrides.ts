@@ -40,15 +40,15 @@ export type OverridesPackage = {
   root: string;
   /**
    * Tokens that get one value in both appearances although the Playground
-   * showed them differently: tokens that read a split core token in a way the
-   * package cannot follow (another core token aliasing it, or a calc), which
-   * get its light value, and one-sided overrides whose Todae value the package
-   * cannot read back.
+   * showed them differently: a density token, a token whose Todae value reads
+   * a density token or a CSS value the package can't read back, and a core or
+   * density token that reads a split core token.
    */
   unsplit: string[];
 };
 
 const APPEARANCES = ['light', 'dark'] as const;
+type Side = (typeof APPEARANCES)[number];
 
 function same(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -58,16 +58,24 @@ function alias(path: string): { $ref: string } {
   return { $ref: `#/${path.split('.').join('/')}/$value` };
 }
 
-/** The file or files a catalog row's token goes to. */
+/** A relative color as Todae's appearance files write it: `oklch(from var(--origin) l c h / alpha)`. */
+const RELATIVE = /^oklch\(from var\((--todae-[a-z0-9-]+)\) l c h \/ (.+)\)$/;
+const VAR = /^var\((--todae-[a-z0-9-]+)\)$/;
+
+function isAppearance(entry: CatalogRow['entry']): boolean {
+  return entry.kind === 'modifier' && entry.name === 'appearance';
+}
+
+function isCore(entry: CatalogRow['entry']): boolean {
+  return entry.kind === 'set' && entry.name === 'core';
+}
+
+/** The file or files a token goes to: one for a set or a button variant, each context for a density token. */
 function targetsOf(found: readonly CatalogRow[]): TokenEntry[] {
   const { entry } = found[0] as CatalogRow;
   if (entry.kind === 'set') return [{ kind: 'set', name: entry.name }];
   if (entry.context !== undefined) return [{ kind: 'modifier', name: entry.name, context: entry.context }];
   return found.flatMap((row) => (row.context === null ? [] : [{ kind: 'modifier' as const, name: entry.name, context: row.context }]));
-}
-
-function isAppearance(entry: CatalogRow['entry']): boolean {
-  return entry.kind === 'modifier' && entry.name === 'appearance';
 }
 
 /**
@@ -86,28 +94,116 @@ function isAppearance(entry: CatalogRow['entry']): boolean {
  * A Playground override applies only in the appearance it is set for, while a
  * set declares a token once for both. So a set token whose light and dark
  * values differ is split: the package declares a token of its own,
- * `<name>.<path>` (the name without hyphens), in each appearance file with that
- * appearance's value, and the side with no override keeps Todae's value.
- * A contract token then reads that token. A core token cannot read an
- * appearance token, since core comes first, so it keeps its light value and
- * each token that aliases it reads the split token instead.
+ * `<root>.<path>`, in each appearance file with that appearance's value, and
+ * the side with no override keeps Todae's value. A contract token then reads
+ * that token. A core token cannot read an appearance token, since core comes
+ * first, so it keeps its light value and the tokens that read it read the
+ * split token instead. An appearance file may hold only a value, or an alias
+ * of a core or appearance token, so a token that cannot be split within that
+ * rule, such as a density token, gets one value and is listed in `unsplit`.
  */
 export function overridesPackage({ name, description, light, dark, catalog, parse }: OverridesPackageInput): OverridesPackage {
   const rows = new Map<string, CatalogRow[]>();
+  const byVar = new Map<string, string>();
   for (const row of catalog) {
     const list = rows.get(row.path);
     if (list) list.push(row);
     else rows.set(row.path, [row]);
+    byVar.set(row.cssVar, row.path);
   }
 
   const tokens: PackageToken[] = [];
   const skipped: string[] = [];
   const split: string[] = [];
   const unsplit = new Set<string>();
-  const paths = [...new Set([...Object.keys(light), ...Object.keys(dark)])].sort();
+  /** Core tokens split so far, which an appearance value reads as `<root>.<path>`. */
+  const splitCore = new Set<string>();
   const values = { light, dark };
-  const has = (side: 'light' | 'dark', path: string) => Object.hasOwn(values[side], path);
+  const has = (side: Side, path: string) => Object.hasOwn(values[side], path);
   const root = ownRoot(name);
+  const own = (path: string) => `${root}.${path}`;
+
+  /** The row of `path` that applies in an appearance. */
+  const rowIn = (path: string, side: Side): CatalogRow | undefined => {
+    const found = rows.get(path) ?? [];
+    return found.find((row) => row.context === side) ?? found.find((row) => row.context === null) ?? found[0];
+  };
+
+  /** An alias an appearance file may hold: of a core or appearance token, or of the split token that stands in for it. */
+  const legalAlias = (path: string, side: Side): unknown => {
+    const row = rowIn(path, side);
+    if (!row) return null;
+    if (isCore(row.entry)) return alias(splitCore.has(path) ? own(path) : path);
+    if (isAppearance(row.entry)) return alias(path);
+    return undefined;
+  };
+
+  /** A relative color of `origin` with its alpha kept, as a DTCG value, or null when the CSS is another shape. */
+  const relative = (row: CatalogRow, side: Side): unknown => {
+    const match = RELATIVE.exec(row.cssValue);
+    const origin = match ? byVar.get(match[1] as string) : undefined;
+    if (!match || !origin) return null;
+    const base = legalAlias(origin, side) as { $ref: string } | null | undefined;
+    if (!base) return null;
+    const css = (match[2] as string).trim();
+    const opacity = VAR.exec(css);
+    const alphaPath = opacity ? byVar.get(opacity[1] as string) : undefined;
+    const alpha = alphaPath ? alias(alphaPath) : Number.isFinite(Number(css)) ? Number(css) : null;
+    if (alpha === null) return null;
+    const prefix = base.$ref;
+    return { colorSpace: 'oklch', components: [0, 1, 2].map((index) => ({ $ref: `${prefix}/components/${index}` })), alpha };
+  };
+
+  /**
+   * Todae's value of a token in one appearance, in a form an appearance file may
+   * hold. Whole-value aliases are followed down to a core or appearance token or
+   * a value. Null when the chain reaches a density token or a CSS value it can't read.
+   */
+  const todaeIn = (path: string, side: Side): unknown => {
+    let row = rowIn(path, side);
+    for (let hop = 0; row && hop < 32; hop++) {
+      if (hop > 0) {
+        // An alias of a core or appearance token stays live; an overridden contract token is copied.
+        const direct = legalAlias(row.path, side);
+        if (direct !== undefined) return direct;
+        if (has(side, row.path)) return values[side][row.path];
+      }
+      if (row.entry.kind === 'modifier' && !isAppearance(row.entry) && row.entry.context === undefined) return null;
+      if (row.ref === null) return parse(row.path, row.cssValue) ?? null;
+      const target = rows.get(row.ref)?.[0];
+      if (!target || row.cssValue !== `var(${target.cssVar})`) return relative(row, side);
+      row = rowIn(row.ref, side);
+    }
+    return null;
+  };
+
+  /** Points the tokens that read a split core token at its split token, or lists them when they can't follow. */
+  const rewire = (path: string, cssVar: string) => {
+    const whole = `var(${cssVar})`;
+    for (const reader of catalog) {
+      if (reader.path === path) continue;
+      const aliases = reader.ref === path && reader.cssValue === whole;
+      const reads = aliases || reader.ref === path || reader.cssValue.includes(`${whole.slice(0, -1)})`) || reader.cssValue.includes(`${whole.slice(0, -1)},`);
+      if (!reads) continue;
+      if (isAppearance(reader.entry)) {
+        const side = reader.context as Side;
+        if (has(side, reader.path)) continue;
+        const value = aliases ? alias(own(path)) : relative(reader, side);
+        if (value === null) unsplit.add(reader.path);
+        else tokens.push({ path: reader.path, type: reader.type, value, entry: { kind: 'modifier', name: 'appearance', context: side } });
+      } else if (!readsAppearance(reader.entry) || !aliases) {
+        // A core or density token can't read an appearance token, and a set token reads it whole or not at all.
+        if (!has('light', reader.path) && !has('dark', reader.path)) unsplit.add(reader.path);
+      } else if (!has('light', reader.path) && !has('dark', reader.path)) {
+        tokens.push({ path: reader.path, type: reader.type, value: alias(own(path)), entry: rowEntry(reader) });
+      }
+    }
+  };
+
+  // Core first, so a later token's Todae value can read a split core token.
+  const paths = [...new Set([...Object.keys(light), ...Object.keys(dark)])].sort();
+  const coreFirst = (path: string) => (rows.get(path)?.[0] && isCore((rows.get(path)?.[0] as CatalogRow).entry) ? 0 : 1);
+  paths.sort((a, b) => coreFirst(a) - coreFirst(b));
 
   for (const path of paths) {
     const found = rows.get(path);
@@ -124,48 +220,31 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
       continue;
     }
     const targets = targetsOf(found);
-    // The side with no override keeps Todae's value: its alias, or its CSS value read back.
-    const todae = first.ref !== null ? alias(first.ref) : parse(path, first.cssValue);
-    const valueIn = (side: 'light' | 'dark') => (has(side, path) ? values[side][path] : todae);
-    const lightValue = valueIn('light');
-    const darkValue = valueIn('dark');
-    const unreadable = lightValue === null || lightValue === undefined || darkValue === null || darkValue === undefined;
-    if (unreadable || same(lightValue, darkValue)) {
-      if (unreadable) unsplit.add(path);
-      const value = has('light', path) ? light[path] : dark[path];
-      for (const target of targets) tokens.push({ path, type, value, entry: target });
+    const one = has('light', path) ? light[path] : dark[path];
+    if (has('light', path) && has('dark', path) && same(light[path], dark[path])) {
+      for (const target of targets) tokens.push({ path, type, value: one, entry: target });
+      continue;
+    }
+    const lightValue = has('light', path) ? light[path] : todaeIn(path, 'light');
+    const darkValue = has('dark', path) ? dark[path] : todaeIn(path, 'dark');
+    const splittable = isCore(entry) || readsAppearance(entry);
+    if (!splittable || lightValue === null || lightValue === undefined || darkValue === null || darkValue === undefined || same(lightValue, darkValue)) {
+      if (!same(lightValue, darkValue)) unsplit.add(path);
+      for (const target of targets) tokens.push({ path, type, value: one, entry: target });
       continue;
     }
 
-    const own = `${root}.${path}`;
     split.push(path);
-    tokens.push({ path: own, type, value: lightValue, entry: { kind: 'modifier', name: 'appearance', context: 'light' } });
-    tokens.push({ path: own, type, value: darkValue, entry: { kind: 'modifier', name: 'appearance', context: 'dark' } });
-    if (readsAppearance(entry)) {
-      for (const target of targets) tokens.push({ path, type, value: alias(own), entry: target });
+    tokens.push({ path: own(path), type, value: lightValue, entry: { kind: 'modifier', name: 'appearance', context: 'light' } });
+    tokens.push({ path: own(path), type, value: darkValue, entry: { kind: 'modifier', name: 'appearance', context: 'dark' } });
+    if (!isCore(entry)) {
+      for (const target of targets) tokens.push({ path, type, value: alias(own(path)), entry: target });
       continue;
     }
-
-    // A core token: keep light in core, and point each token that aliases it at the split token.
+    // A core token keeps light in core, and the tokens that read it read the split token.
     for (const target of targets) tokens.push({ path, type, value: lightValue, entry: target });
-    const reads = `var(${first.cssVar}`;
-    for (const reader of catalog) {
-      if (reader.path === path) continue;
-      if (reader.ref !== path) {
-        // A value that reads the token some other way, such as in a calc, cannot follow it.
-        if (reader.cssValue.includes(`${reads})`) || reader.cssValue.includes(`${reads},`)) unsplit.add(reader.path);
-        continue;
-      }
-      const readerType = reader.type;
-      if (isAppearance(reader.entry)) {
-        const side = reader.context as 'light' | 'dark';
-        if (!has(side, reader.path)) tokens.push({ path: reader.path, type: readerType, value: alias(own), entry: { kind: 'modifier', name: 'appearance', context: side } });
-      } else if (!readsAppearance(reader.entry)) {
-        unsplit.add(reader.path);
-      } else if (!has('light', reader.path) && !has('dark', reader.path)) {
-        tokens.push({ path: reader.path, type: readerType, value: alias(own), entry: rowEntry(reader) });
-      }
-    }
+    splitCore.add(path);
+    rewire(path, first.cssVar);
   }
 
   // Light's file before dark's, whichever token reaches an appearance first.
