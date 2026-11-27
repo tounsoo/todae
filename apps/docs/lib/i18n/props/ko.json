@@ -1784,6 +1784,10 @@
     }
   },
   "Skeleton.Root": {
+    "variant": {
+      "en": "pulse fades the block in and out; shimmer sweeps a band across it from the inline start. Both hold still under reduced motion. Sets data-variant.",
+      "ko": "pulse는 블록을 옅어졌다 짙어지게 하고, shimmer는 인라인 시작 쪽에서부터 띠를 훑고 지나가게 합니다. 둘 다 동작 줄이기에서는 멈춥니다. data-variant를 설정합니다."
+    },
     "children": {
       "en": "Elements that only give it a size; they are hidden.",
       "ko": "크기만 정하는 요소. 숨겨집니다."

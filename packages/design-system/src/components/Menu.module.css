@@ -98,12 +98,41 @@
     visibility: hidden;
   }
 
-  [role='menuitemradio'][aria-checked='true'] > .indicator::before {
+  [role='menuitemradio'] > .indicator::before {
     content: '';
     position: absolute;
     inset: calc(var(--todae-menu-item-indicator-dot-inset) * 1em);
     border-radius: 50%;
     background: var(--todae-menu-item-check-fg);
+    opacity: 0;
+  }
+
+  /* A check or dot grows in, as Checkbox's does, when a brand sets
+     menu.item.check.motion.duration (0ms by default, so it shows at once),
+     and goes at once; aria-checked says the state from the first frame. The
+     item's highlight never transitions, so keyboard moves stay instant. */
+  [role='menuitemcheckbox'] > [data-todae-glyph].indicator {
+    opacity: 0;
+  }
+
+  [role='menuitemcheckbox'][aria-checked='true'] > [data-todae-glyph].indicator,
+  [role='menuitemradio'][aria-checked='true'] > .indicator::before {
+    opacity: 1;
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-menu-item-check-motion-duration);
+    transition-timing-function: var(--todae-menu-item-check-motion-easing);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [role='menuitemcheckbox'] > [data-todae-glyph].indicator,
+    [role='menuitemradio'] > .indicator::before {
+      scale: 0.5;
+    }
+
+    [role='menuitemcheckbox'][aria-checked='true'] > [data-todae-glyph].indicator,
+    [role='menuitemradio'][aria-checked='true'] > .indicator::before {
+      scale: 1;
+    }
   }
 
   /* A submenu trigger's chevron, at the end of its line. It points down:

@@ -73,6 +73,7 @@ export type Dictionary = {
   playground: Record<
     | 'appearance'
     | 'density'
+    | 'motion'
     | 'icons'
     | 'rail'
     | 'title'
@@ -174,6 +175,7 @@ const en: Dictionary = {
   playground: {
     appearance: 'Appearance',
     density: 'Density',
+    motion: 'Motion',
     icons: 'Icons',
     rail: 'Theme controls',
     title: 'Playground',
@@ -277,6 +279,7 @@ const ko: Dictionary = {
   playground: {
     appearance: '외관 (appearance)',
     density: '밀도 (density)',
+    motion: '모션 (motion)',
     icons: '아이콘',
     rail: '테마 컨트롤',
     title: '플레이그라운드',

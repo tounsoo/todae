@@ -111,8 +111,8 @@ export type CalendarGridProps = Omit<ComponentPropsWithRef<'table'>, 'children' 
   showOutsideDays?: boolean;
   /**
    * Draws inside each day button the grid draws. The button stays the one Tab
-   * stop and keeps the full date as its name, and the content is read as the
-   * day's description. The content is not a link, a button, or an element with
+   * stop. Its name is the full date, then the content, so it holds every word
+   * the day shows. The content is not a link, a button, or an element with
    * a tabindex. That markup is invalid inside the day button, and this slot
    * gives it no keyboard path. Ignored while the years show.
    */

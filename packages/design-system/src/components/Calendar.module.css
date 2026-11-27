@@ -69,6 +69,8 @@
   .nav,
   .day,
   .year {
+    /* Holds the day's visually hidden date in its own box. */
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;

@@ -28,8 +28,9 @@ export async function runAxe(axe: typeof import('axe-core'), root: Element | Doc
     if (violation.id !== rule) continue;
     const kept: typeof violation.nodes = [];
     for (const node of violation.nodes) {
-      const target = node.target.join(' ');
-      const item = document.querySelector<HTMLElement>(target);
+      // A selector inside a shadow root or a frame is a nested array; the recheck reads only a plain one.
+      const target = node.target.length === 1 && typeof node.target[0] === 'string' ? node.target[0] : null;
+      const item = target ? document.querySelector<HTMLElement>(target) : null;
       const groups = item?.matches('[role="treeitem"][aria-expanded="true"]')
         ? [...item.querySelectorAll<HTMLElement>(':scope > [role="group"]')].filter((group) => !group.hidden)
         : [];
@@ -39,8 +40,8 @@ export async function runAxe(axe: typeof import('axe-core'), root: Element | Doc
       }
       for (const group of groups) group.hidden = true;
       try {
-        const row = await axe.run(item, { runOnly: [rule] });
-        if (row.violations.some((v) => v.nodes.some((n) => n.target.join(' ') === target))) kept.push(node);
+        const row = await axe.run(item, { runOnly: [rule], elementRef: true });
+        if (row.violations.some((v) => v.nodes.some((n) => n.element === item))) kept.push(node);
       } finally {
         for (const group of groups) group.hidden = false;
       }

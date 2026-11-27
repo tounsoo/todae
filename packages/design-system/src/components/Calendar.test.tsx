@@ -102,10 +102,9 @@ describe('Calendar', () => {
 
   it('moves focus by day, week, week end, month and year from the keyboard', () => {
     render(<Controlled />);
-    // Each day is named by its date, then its note.
     const press = (key: string, shiftKey = false) => {
       fireEvent.keyDown(focusedDay(), { key, shiftKey });
-      return dayName(focusedDay())?.replace(/ note$/, '');
+      return dayName(focusedDay());
     };
     focusedDay().focus();
     expect(press('ArrowRight')).toBe('Wednesday, October 14, 2026');

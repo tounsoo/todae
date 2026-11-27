@@ -79,8 +79,8 @@
     "## Range and locale": "38c6da99f7fd",
     "## Ranges": "43bb93af773d",
     "## Temporal": "084d2fd73acf",
-    "## Day content": "678dba15e7fd",
-    "## Accessible composition": "946280eee822",
+    "## Day content": "f1298a2a9f6b",
+    "## Accessible composition": "157046c5d3e6",
     "## When to use": "dc61d42b00e9",
     "## Props": "1736b176a33c",
     "(section order)": "87972d371df9"
@@ -509,15 +509,16 @@
     "(section order)": "c4cbb2773a28"
   },
   "loader": {
-    "(top)": "2c55b6c55b63",
+    "(top)": "f1b69d3e05eb",
     "# Loader and Skeleton": "249c7b4e5b25",
     "## Loader": "36304bac1e3a",
     "### Dots": "426f9f2c69ad",
-    "## Skeleton": "63326266db85",
+    "## Skeleton": "dfe43eb9b679",
+    "### Shimmer": "cdbc60aec6fd",
     "## Accessible composition": "d76cd550ca68",
     "## When to use": "450ef0ffce4b",
     "## Props": "beb45b8d5394",
-    "(section order)": "0a8b0f340b98"
+    "(section order)": "92f3e7b28a93"
   },
   "mcp": {
     "# MCP server": "eaf89d1168a7",
@@ -552,7 +553,7 @@
     "## Submenus": "93805bf5d7d3",
     "## Links": "ede13f3623cf",
     "## Context menus": "2d9cceca0184",
-    "## Icons": "a5742eeef7cd",
+    "## Icons": "6532e2a2879a",
     "## Accessible composition": "b31bba7789d0",
     "## When to use": "9a102c1309d4",
     "## Props": "aa5c6b3046f6",
@@ -583,7 +584,7 @@
     "(top)": "79fa29c40cf3",
     "# OptionList": "0f34c7cc527d",
     "## Detail": "410d87a4e0ca",
-    "## Icons": "c64f640cde20",
+    "## Icons": "0948797399bb",
     "## Accessible composition": "51b1e805a5af",
     "## When to use": "f5fbfd42f51c",
     "## Props": "230671f0f6b1",
@@ -602,13 +603,13 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "7912425efb51",
+    "# Native platform": "6b477e22f590",
     "## What Safari and Firefox do differently": "fb68583b26df",
     "(section order)": "838d852d6965"
   },
   "popover": {
     "(top)": "3e89bd45eeb2",
-    "# Popover": "9c4cecc2fb3c",
+    "# Popover": "19107ba2eb1b",
     "## Examples": "447a73474218",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "71f70ec143b8",
@@ -746,11 +747,11 @@
     "# Event calendar": "8f8fb5342aaa",
     "## The time lanes": "85ebbbe2078c",
     "## The event block": "f0dcc7d05a0c",
-    "## The month": "6979f55198c6",
+    "## The month": "4983c44edd31",
     "## Dragging": "6f2ec529aac1",
     "## Editing": "d7ca263639a7",
-    "## Repeating": "e4fad2e1ef9a",
-    "## Accessible composition": "13ad24621ae3",
+    "## Repeating": "537e4537342e",
+    "## Accessible composition": "c074c39fe139",
     "## When to use": "d504fd453481",
     "(section order)": "dcfed798dc94"
   },
@@ -847,12 +848,12 @@
     "(top)": "a19d294efb1e",
     "# Scheduler": "515351c560f5",
     "## The time axis": "9a2d242cb763",
-    "## Stages and talks": "0c9d817d794f",
+    "## Stages and talks": "77d8cca60b33",
     "## The rules": "30c66bc94469",
     "## Moving without dragging": "ef83b5f6f9fc",
     "## Dragging": "64a3050f4d4e",
     "## Undo and saving": "a3b619f56583",
-    "## Accessible composition": "e39b59e6519d",
+    "## Accessible composition": "c3044f611847",
     "## When to use": "238b83521806",
     "(section order)": "4a8a9a3a8d20"
   },
@@ -950,7 +951,7 @@
   "steps": {
     "(top)": "c686b86924ab",
     "# Steps": "a3f33f6f07ed",
-    "## Parts": "0579cf0e64d1",
+    "## Parts": "047868f3adf7",
     "## Variants": "74c247b04a06",
     "## Status words": "5e1bbccafcfa",
     "## Accessible composition": "7166254b7e2d",
@@ -978,7 +979,7 @@
   },
   "tabs": {
     "(top)": "25fccfe8fb48",
-    "# Tabs": "c3d918b6787d",
+    "# Tabs": "1c41d5992a56",
     "## Accessible composition": "5a77dc0a2eed",
     "## When to use": "7ad4ffcdaf0d",
     "## Props": "b49fd1369394",
@@ -1031,7 +1032,7 @@
     "## Status tones": "9db538465fa4",
     "## Category tones": "40d3a79f5387",
     "## Focus ring": "c4641c4527e8",
-    "## Motion": "57f3ed509321",
+    "## Motion": "098a9beb2e6d",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
     "(section order)": "5e228a1781f3"
@@ -1046,7 +1047,7 @@
   },
   "tooltip": {
     "(top)": "2a983f89762f",
-    "# Tooltip": "003ec5ede25e",
+    "# Tooltip": "2e758459aed0",
     "## Warm-up": "e6ccde403145",
     "## Examples": "01670f737427",
     "## What goes where": "91a9e7b39130",

@@ -2758,6 +2758,14 @@
       "type": "color"
     },
     {
+      "path": "menu.item.check.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "menu.item.check.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "menu.item.fg.default",
       "type": "color"
     },
@@ -3178,6 +3186,14 @@
       "type": "number"
     },
     {
+      "path": "option.check.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "option.check.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "option.check.radius",
       "type": "dimension"
     },
@@ -3368,6 +3384,10 @@
     {
       "path": "popover.motion.easing.exit",
       "type": "cubicBezier"
+    },
+    {
+      "path": "popover.motion.offset",
+      "type": "dimension"
     },
     {
       "path": "popover.motion.scale",
@@ -3766,6 +3786,10 @@
       "type": "dimension"
     },
     {
+      "path": "skeleton.shimmer.color",
+      "type": "color"
+    },
+    {
       "path": "slider.fill",
       "type": "color"
     },
@@ -4042,6 +4066,14 @@
       "type": "dimension"
     },
     {
+      "path": "steps.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "steps.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "table.border",
       "type": "color"
     },
@@ -4180,6 +4212,10 @@
     {
       "path": "tabs.motion.easing",
       "type": "cubicBezier"
+    },
+    {
+      "path": "tabs.motion.panel.duration",
+      "type": "duration"
     },
     {
       "path": "tabs.padding.x",
@@ -4532,6 +4568,10 @@
     {
       "path": "tooltip.motion.easing.enter",
       "type": "cubicBezier"
+    },
+    {
+      "path": "tooltip.motion.offset",
+      "type": "dimension"
     },
     {
       "path": "tooltip.offset",

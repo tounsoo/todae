@@ -97,6 +97,7 @@ Tier: T0
 | release | The release workflow | `.github/workflows/release.yml` | #171 | seeded |
 | docs-deploy | Docs deploy | `.github/workflows/docs-deploy.yml` | #398 | seeded |
 | decision-paths | A live decision names only repo paths that exist, and the decisions index matches each status | `scripts/decision-paths.mjs`, `pnpm check:self` | #511 | seeded |
+| readme-mcp-guide | The package README's MCP guide names registered tools and arguments, and its flow reaches example code | `apps/docs/app/api/[transport]/readme.test.ts` | 4bd77b92 | enforced |
 | self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
 
 ## CI jobs

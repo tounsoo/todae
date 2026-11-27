@@ -39,16 +39,26 @@ async function mismatches(): Promise<string[]> {
   return result.violations.flatMap((v) => v.nodes.map((n) => n.target.join(' ')));
 }
 
-/** The words on screen, in order, as one run of the name's words: what the axe rule asks of an explicit name. */
-const segmenter = new Intl.Segmenter(undefined, { granularity: 'word' });
-const words = (text: string) =>
-  [...segmenter.segment(text.toLocaleLowerCase())].filter((part) => part.isWordLike).map((part) => part.segment);
+/**
+ * Each piece of text on screen is in the name, in the order it shows. Pieces
+ * are runs of letters and digits, so punctuation and spaces don't count. A
+ * piece starts one of the name's words, and a number is not followed by more
+ * digits, so "1" matches the "1" of Korean "1일" and not the start of "10월":
+ * browsers' word segmenters disagree on whether "1일" is one word.
+ */
+const pieces = (text: string) => text.toLocaleLowerCase().split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function shownInName(shown: string, name: string) {
-  const want = words(shown);
-  const have = words(name);
-  let at = 0;
-  for (const word of have) if (word === want[at]) at += 1;
-  return at === want.length;
+  const have = pieces(name).join(' ');
+  let from = 0;
+  for (const piece of pieces(shown)) {
+    const find = new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])${escape(piece)}(?!\\p{N})`, 'gu');
+    find.lastIndex = from;
+    const match = find.exec(have);
+    if (!match) return false;
+    from = match.index + piece.length;
+  }
+  return true;
 }
 
 // axe's own text helpers, which its types leave out.
@@ -156,6 +166,25 @@ function DetailedList({ lang }: { lang: keyof typeof FRUIT }) {
   );
 }
 
+/** A company's own detail line around OptionList.OptionDetail, which the option finds after commit. */
+function AcmeDetail({ children }: { children: string }) {
+  return <OptionList.OptionDetail>{children}</OptionList.OptionDetail>;
+}
+
+function WrappedList({ lang }: { lang: keyof typeof FRUIT }) {
+  const [value, setValue] = useState<string | null>('pear');
+  return (
+    <OptionList.Root value={value} onValueChange={setValue} aria-label={lang === 'ko' ? '과일' : 'Fruit'}>
+      {FRUIT[lang].map((row) => (
+        <OptionList.Option key={row.value} value={row.value}>
+          {row.title}
+          <AcmeDetail>{row.detail}</AcmeDetail>
+        </OptionList.Option>
+      ))}
+    </OptionList.Root>
+  );
+}
+
 describe('an option with a detail line', () => {
   it.each(['en', 'ko'] as const)('passes label-content-name-mismatch in %s', async (lang) => {
     render(<DetailedList lang={lang} />);
@@ -165,6 +194,19 @@ describe('an option with a detail line', () => {
 
   axIt.each(['en', 'ko'] as const)('is named by its title, then its detail, in %s', async (lang) => {
     render(<DetailedList lang={lang} />);
+    await settle();
+    const options = await axNodes('option');
+    expect(options).toEqual(FRUIT[lang].map((row) => ({ name: `${row.title} ${row.detail}`, description: '' })));
+  });
+
+  it.each(['en', 'ko'] as const)('passes label-content-name-mismatch with a wrapped detail in %s', async (lang) => {
+    render(<WrappedList lang={lang} />);
+    await settle();
+    expect(await mismatches()).toEqual([]);
+  });
+
+  axIt.each(['en', 'ko'] as const)('is named by its title, then a wrapped detail, in %s', async (lang) => {
+    render(<WrappedList lang={lang} />);
     await settle();
     const options = await axNodes('option');
     expect(options).toEqual(FRUIT[lang].map((row) => ({ name: `${row.title} ${row.detail}`, description: '' })));

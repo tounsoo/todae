@@ -120,7 +120,7 @@ function useOptionPart(): OptionPartContextValue {
   return part;
 }
 
-/** Title text for typeahead and the option name. The detail line is not part of it. */
+/** Title text for typeahead and for the title an option with a detail is checked by. The detail line is not part of it. */
 function optionTitle(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
   if (
@@ -134,7 +134,7 @@ function optionTitle(node: Node): string {
   return [...node.childNodes].map(optionTitle).join('');
 }
 
-/** The option's name. Callers concatenate adjacent text first, then this collapses whitespace to match the row. */
+/** The title as the row shows it. Callers concatenate adjacent text first, then this collapses whitespace. */
 function optionName(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -264,7 +264,7 @@ function OptionListOption({
   const stacked = Boolean(detailLineId);
   // A stacked option is named by both lines, title then detail, so its name
   // holds all the text it shows (WCAG 2.5.3, Label in Name).
-  const labelId = `${optionDomId(ctx.listId, value)}-label`;
+  const labelId = `${optionDomId(ctx.listId, value)}_label`;
   return (
     <OptionPartContext.Provider value={part}>
       <div
@@ -286,11 +286,12 @@ function OptionListOption({
         })}
         onClick={composeHandlers(onClick, () => ctx.select(value, true))}
       >
-        {selected ? (
-          <span className={styles.check} data-todae-glyph="" aria-hidden="true">
-            {glyphOr(check, <CheckGlyph />)}
-          </span>
-        ) : null}
+        {/* The box is always there, so the check grows in only as the option
+            is picked, as Menu's does, not each time a list that holds it
+            shows. Only a selected option draws the glyph. */}
+        <span className={styles.check} data-todae-glyph="" aria-hidden="true">
+          {selected ? glyphOr(check, <CheckGlyph />) : null}
+        </span>
         {stacked ? (
           <span id={labelId} className={styles.copy}>
             {children}
