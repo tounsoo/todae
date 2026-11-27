@@ -146,6 +146,12 @@ describe('planFor', () => {
     assert.equal(new Set(steps).size, steps.length);
   });
 
+  test('a browser host file runs the browser tests', () => {
+    for (const file of ['playwright.host.ts', 'browser.host.ts', 'scripts/macos-browser.sh']) {
+      assert.deepEqual(planFor([file]).types, ['component'], file);
+    }
+  });
+
   test('a lone fernway need is still ordered after the build it needs', () => {
     const { steps } = planFor(['examples/fernway/a.ts']);
     assert.deepEqual(steps, ['check', 'build-ds', 'relink', 'fernway', 'ssr-smoke', 'forbidden-paths']);

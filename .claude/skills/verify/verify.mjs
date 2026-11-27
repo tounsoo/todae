@@ -60,7 +60,8 @@ export const CHANGE_TYPES = [
   {
     id: 'component',
     label: 'Design system package',
-    match: under('packages/design-system/'),
+    // The browser hosts set how every engine launches and which tests a Mac skips, so they run the browser tests.
+    match: anyOf(under('packages/design-system/'), oneOf('playwright.host.ts', 'browser.host.ts', 'scripts/macos-browser.sh')),
     steps: ['check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'build-ds', 'publish-check', 'ssr-smoke', 'relink', 'fernway', 'forbidden-paths'],
     proof: 'pnpm check, schema with no diff, token and changeset checks, unit and browser tests, build, publish and SSR checks, and the Fernway build',
   },
