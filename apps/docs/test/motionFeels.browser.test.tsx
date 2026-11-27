@@ -25,7 +25,11 @@ function stageOverrides(presetId: string, choice: MotionChoice): ThemeOverride {
 
 type Ran = { property: string; duration: number; easing: string; from: string };
 
-/** Every CSS transition that runs on `target()` from now until it has been still for a few frames. */
+/**
+ * Every CSS transition that runs on `target()` from now until it has been
+ * still for a few frames. A CSS animation counts too, named `animation:<name>`,
+ * so motion played some other way still shows up.
+ */
 async function transitionsOn(target: () => Element | null): Promise<Ran[]> {
   const seen = new Map<string, Ran>();
   const start = performance.now();
@@ -34,8 +38,14 @@ async function transitionsOn(target: () => Element | null): Promise<Ran[]> {
   while (performance.now() - start < 3000) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
     const el = target();
-    const running = el ? el.getAnimations().filter((a): a is CSSTransition => 'transitionProperty' in a) : [];
-    for (const transition of running) {
+    const running = el ? el.getAnimations() : [];
+    for (const animation of running) {
+      if (!('transitionProperty' in animation)) {
+        const name = `animation:${(animation as CSSAnimation).animationName ?? animation.id}`;
+        seen.set(name, { property: name, duration: 0, easing: '', from: '' });
+        continue;
+      }
+      const transition = animation as CSSTransition;
       const effect = transition.effect as KeyframeEffect;
       seen.set(transition.transitionProperty, {
         property: transition.transitionProperty,
@@ -91,24 +101,30 @@ async function dialogTransitions(overrides: ThemeOverride): Promise<Ran[]> {
 }
 
 const byProperty = (ran: Ran[]) => Object.fromEntries(ran.map((r) => [r.property, r]));
-const timing = ({ duration, easing }: Ran) => ({ duration, easing });
+/** The duration and curve `property` ran with, failing by name when it never ran. */
+function timing(ran: Record<string, Ran>, property: string) {
+  const run = ran[property];
+  expect(run, `${property} transition ran`).toBeDefined();
+  return { duration: run!.duration, easing: run!.easing };
+}
 
 // What each feel should play, written out from the feels' values rather than read from motion.ts.
 const TODAE_ENTER = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 const FEELS = [
-  { name: 'Graphite with standard', preset: 'graphite', choice: 'standard', popover: { duration: 240, easing: TODAE_ENTER, growsFrom: '0.96' }, dialog: { duration: 280, easing: TODAE_ENTER } },
-  { name: 'Graphite with snappy', preset: 'graphite', choice: 'snappy', popover: { duration: 160, easing: 'cubic-bezier(0, 0, 0.2, 1)', growsFrom: '0.98' }, dialog: { duration: 200, easing: 'cubic-bezier(0, 0, 0.2, 1)' } },
-  { name: 'Acid’s own hard cut', preset: 'acid', choice: 'preset', popover: { duration: 120, easing: 'cubic-bezier(0.1, 0.9, 0.2, 1)', growsFrom: null }, dialog: { duration: 140, easing: 'cubic-bezier(0.1, 0.9, 0.2, 1)' } },
-  { name: 'Graphite with springy', preset: 'graphite', choice: 'springy', popover: { duration: 280, easing: 'cubic-bezier(0.34, 1.36, 0.64, 1)', growsFrom: '0.9' }, dialog: { duration: 320, easing: 'cubic-bezier(0.34, 1.36, 0.64, 1)' } },
+  // On Y2K Chrome, whose own motion springs, so standard has to put Todae's back.
+  { name: 'Y2K Chrome with standard', preset: 'y2k-chrome', choice: 'standard', popover: { duration: 240, easing: TODAE_ENTER, growsFrom: '0.96' }, dialog: { duration: 280, easing: TODAE_ENTER, rises: true } },
+  { name: 'Graphite with snappy', preset: 'graphite', choice: 'snappy', popover: { duration: 160, easing: 'cubic-bezier(0, 0, 0.2, 1)', growsFrom: '0.98' }, dialog: { duration: 200, easing: 'cubic-bezier(0, 0, 0.2, 1)', rises: true } },
+  { name: 'Acid’s own hard cut', preset: 'acid', choice: 'preset', popover: { duration: 120, easing: 'cubic-bezier(0.1, 0.9, 0.2, 1)', growsFrom: null }, dialog: { duration: 140, easing: 'cubic-bezier(0.1, 0.9, 0.2, 1)', rises: false } },
+  { name: 'Graphite with springy', preset: 'graphite', choice: 'springy', popover: { duration: 280, easing: 'cubic-bezier(0.34, 1.36, 0.64, 1)', growsFrom: '0.9' }, dialog: { duration: 320, easing: 'cubic-bezier(0.34, 1.36, 0.64, 1)', rises: true } },
 ] as const;
 
 describe.each(FEELS)('$name', ({ preset, choice, popover, dialog }) => {
   describe('with no motion preference', () => {
     it('fades the popover in with the feel’s timing, and grows it only when the feel does', async () => {
       const ran = byProperty(await popoverTransitions(stageOverrides(preset, choice)));
-      expect(timing(ran.opacity!)).toEqual({ duration: popover.duration, easing: popover.easing });
+      expect(timing(ran, 'opacity')).toEqual({ duration: popover.duration, easing: popover.easing });
       if (popover.growsFrom) {
-        expect(timing(ran.scale!)).toEqual({ duration: popover.duration, easing: popover.easing });
+        expect(timing(ran, 'scale')).toEqual({ duration: popover.duration, easing: popover.easing });
         expect(ran.scale!.from).toBe(popover.growsFrom);
       } else {
         // Acid's popover starts at its full size: at most a transition from 1 that changes nothing.
@@ -118,10 +134,10 @@ describe.each(FEELS)('$name', ({ preset, choice, popover, dialog }) => {
 
     it('fades the dialog in with the feel’s timing, rising only when the feel moves it', async () => {
       const ran = byProperty(await dialogTransitions(stageOverrides(preset, choice)));
-      expect(timing(ran.opacity!)).toEqual({ duration: dialog.duration, easing: dialog.easing });
-      // Acid's dialog rises by 0, so nothing moves.
-      if (preset === 'acid') expect(ran.top).toBeUndefined();
-      else expect(timing(ran.top!)).toEqual({ duration: dialog.duration, easing: dialog.easing });
+      expect(timing(ran, 'opacity')).toEqual({ duration: dialog.duration, easing: dialog.easing });
+      // A feel with no rise moves the dialog by 0, so nothing moves.
+      if (dialog.rises) expect(timing(ran, 'top')).toEqual({ duration: dialog.duration, easing: dialog.easing });
+      else expect(ran.top).toBeUndefined();
     });
   });
 

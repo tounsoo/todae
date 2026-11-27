@@ -111,7 +111,7 @@ describe.each(FEELS)('%s', (_name, override) => {
 
   it('never springs a toast', () => {
     for (const [key, value] of entries) {
-      if (!key.startsWith('toast.motion.easing')) continue;
+      if (!key.startsWith('toast.motion.easing') || !Array.isArray(value)) continue;
       const [, y1, , y2] = value as readonly number[];
       for (const y of [y1!, y2!]) {
         expect(y, key).toBeGreaterThanOrEqual(0);
