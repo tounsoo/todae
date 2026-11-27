@@ -1,6 +1,8 @@
 import './temporal.js';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
+import { server } from 'vitest/browser';
+import { pinLinuxFontMetrics } from '../../../../browser.host';
 import { resetInputModality } from '../internal/inputModality.js';
 import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
 import { blurBeforeCleanup } from './focus.js';
@@ -10,6 +12,9 @@ import '../styles/todae.css';
 // one, or changes a token under one, reads the colors it lands on, so the fade
 // is off here; controls-motion.browser.test.tsx turns it back on to test it.
 document.documentElement.style.setProperty('--_todae-control-motion-duration', '0s');
+
+// On macOS, text gets the font metrics of CI's Linux runs. browser.host.ts at the repo root says why.
+pinLinuxFontMetrics(server.platform);
 
 afterEach(() => {
   blurBeforeCleanup();
