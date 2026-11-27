@@ -107,9 +107,10 @@
     opacity: 0;
   }
 
-  /* A check or dot grows in as Checkbox's does, on selection.motion, and goes
-     at once; aria-checked says the state from the first frame. The item's
-     highlight never transitions, so keyboard moves stay instant. */
+  /* A check or dot grows in, as Checkbox's does, when a brand sets
+     menu.item.check.motion.duration (0ms by default, so it shows at once),
+     and goes at once; aria-checked says the state from the first frame. The
+     item's highlight never transitions, so keyboard moves stay instant. */
   [role='menuitemcheckbox'] > [data-todae-glyph].indicator {
     opacity: 0;
   }
@@ -118,8 +119,8 @@
   [role='menuitemradio'][aria-checked='true'] > .indicator::before {
     opacity: 1;
     transition-property: opacity, scale;
-    transition-duration: var(--todae-selection-motion-duration);
-    transition-timing-function: var(--todae-selection-motion-easing);
+    transition-duration: var(--todae-menu-item-check-motion-duration);
+    transition-timing-function: var(--todae-menu-item-check-motion-easing);
   }
 
   @media (prefers-reduced-motion: no-preference) {

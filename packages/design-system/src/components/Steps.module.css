@@ -16,9 +16,11 @@
     column-gap: var(--todae-steps-marker-gap);
     align-items: start;
     color: var(--todae-steps-fg-pending);
-    /* A status change fades its colors, paint only, so nothing moves; the
-       glyph and the status word change at once, so the status never shows
-       through motion alone. It keeps fading under reduced motion. */
+    /* A status change fades its colors when a brand sets
+       steps.motion.duration (0ms by default, so they change at once), paint
+       only, so nothing moves; the glyph and the status word change at once,
+       so the status never shows through motion alone. It keeps fading under
+       reduced motion. */
     transition: color var(--todae-steps-motion-duration) var(--todae-steps-motion-easing);
   }
 

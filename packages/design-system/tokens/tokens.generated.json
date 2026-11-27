@@ -9072,6 +9072,34 @@
       "description": "OptionList.Root: a listbox of selectable options, inline or in a popover."
     },
     {
+      "path": "option.check.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-option-check-motion-duration",
+      "cssValue": "0ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How a picked option's check grows in. 0ms by default, so it shows at once; a brand opts in."
+    },
+    {
+      "path": "option.check.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-option-check-motion-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How a picked option's check grows in. 0ms by default, so it shows at once; a brand opts in."
+    },
+    {
       "path": "option.check.radius",
       "type": "dimension",
       "cssVar": "--todae-option-check-radius",
@@ -9308,6 +9336,34 @@
         "name": "contract"
       },
       "description": "Menu.Root: a popover list of actions, with check and radio items and separators."
+    },
+    {
+      "path": "menu.item.check.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-menu-item-check-motion-duration",
+      "cssValue": "0ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How a check item's check and a radio item's dot grow in as they are chosen. 0ms by default, so they show at once; a brand opts in."
+    },
+    {
+      "path": "menu.item.check.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-menu-item-check-motion-easing",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "entry": {
+        "kind": "set",
+        "name": "contract"
+      },
+      "description": "How a check item's check and a radio item's dot grow in as they are chosen. 0ms by default, so they show at once; a brand opts in."
     },
     {
       "path": "menu.item.fg.default",
@@ -9867,7 +9923,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.bg.default",
@@ -9881,7 +9937,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.bg.disabled",
@@ -9895,7 +9951,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.border.checked",
@@ -9909,7 +9965,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.border.default",
@@ -9923,7 +9979,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.border.disabled",
@@ -9937,7 +9993,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.border.invalid",
@@ -9951,7 +10007,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.border-width",
@@ -9965,7 +10021,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.fg.default",
@@ -9979,7 +10035,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.fg.disabled",
@@ -9993,7 +10049,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.font.size",
@@ -10007,7 +10063,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.font.weight",
@@ -10021,7 +10077,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.gap",
@@ -10035,7 +10091,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.indicator.fg",
@@ -10049,7 +10105,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.motion.duration",
@@ -10063,7 +10119,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.motion.easing",
@@ -10077,7 +10133,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.radius",
@@ -10091,7 +10147,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.ring.focus",
@@ -10105,7 +10161,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.ring.invalid",
@@ -10119,7 +10175,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.size",
@@ -10133,7 +10189,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.thumb.bg",
@@ -10147,7 +10203,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.thumb.border",
@@ -10161,7 +10217,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.thumb.inset",
@@ -10175,7 +10231,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "selection.track.bg",
@@ -10189,7 +10245,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb. The check marks in Menu and OptionList grow in on its motion pair too."
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
       "path": "alert.border-width",
@@ -14549,15 +14605,15 @@
       "path": "steps.motion.duration",
       "type": "duration",
       "cssVar": "--todae-steps-motion-duration",
-      "cssValue": "var(--todae-motion-duration-fast)",
-      "ref": "motion.duration.fast",
+      "cssValue": "0ms",
+      "ref": null,
       "layer": "contract",
       "context": null,
       "entry": {
         "kind": "set",
         "name": "contract"
       },
-      "description": "The color fade as a step changes status, on paint properties only."
+      "description": "The color fade as a step changes status, on paint properties only. 0ms by default, so a status changes its colors at once; a brand opts in."
     },
     {
       "path": "steps.motion.easing",
@@ -14571,7 +14627,7 @@
         "kind": "set",
         "name": "contract"
       },
-      "description": "The color fade as a step changes status, on paint properties only."
+      "description": "The color fade as a step changes status, on paint properties only. 0ms by default, so a status changes its colors at once; a brand opts in."
     },
     {
       "path": "breadcrumbs.current.fg",

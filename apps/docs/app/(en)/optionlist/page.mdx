@@ -33,7 +33,7 @@ A combobox can pass `id`, `activeValue`, `onActiveValueChange`, and `tabIndex={-
 
 ## Icons
 
-A selected option shows the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. In a multiple list it sits inside the box. The check grows in over `selection.motion.duration` as an option is picked, as [Checkbox](/checkbox)'s check does, and goes at once; under reduced motion it only fades. The highlight moves at once. A list that shows again, as a popover opens, draws its check at rest.
+A selected option shows the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. In a multiple list it sits inside the box. The check shows at once as an option is picked. A brand can grow it in with `option.check.motion.duration` (0ms by default) and `option.check.motion.easing`, as [Checkbox](/checkbox)'s check grows; it still goes at once, and under reduced motion it only fades, since a fade moves nothing. The highlight moves at once. A list that shows again, as a popover opens, draws its check at rest.
 
 ```tsx
 import { Check } from 'lucide-react';

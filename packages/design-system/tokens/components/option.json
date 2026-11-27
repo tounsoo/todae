@@ -34,7 +34,12 @@
       "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
       "scale": { "$type": "number", "$value": 0.85 },
       "gap": { "$type": "number", "$value": 0.4 },
-      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } }
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "motion": {
+        "$description": "How a picked option's check grows in. 0ms by default, so it shows at once; a brand opts in.",
+        "duration": { "$type": "duration", "$value": { "value": 0, "unit": "ms" } },
+        "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+      }
     }
   }
 }

@@ -113,8 +113,9 @@
     line-height: 1;
   }
 
-  /* The check grows in as an option is picked, as Checkbox's does, on
-     selection.motion, and goes at once; aria-selected says the state from
+  /* The check grows in as an option is picked, as Checkbox's does, when a
+     brand sets option.check.motion.duration (0ms by default, so it shows at
+     once), and goes at once; aria-selected says the state from
      the first frame, and the highlight never transitions, so keyboard moves
      stay instant. A list that shows, such as in a popover that opens, draws
      its check at rest. */
@@ -125,8 +126,8 @@
 
   .option[data-selected] > [data-todae-glyph].check {
     transition-property: opacity, scale;
-    transition-duration: var(--todae-selection-motion-duration);
-    transition-timing-function: var(--todae-selection-motion-easing);
+    transition-duration: var(--todae-option-check-motion-duration);
+    transition-timing-function: var(--todae-option-check-motion-easing);
   }
 
   @media (prefers-reduced-motion: no-preference) {

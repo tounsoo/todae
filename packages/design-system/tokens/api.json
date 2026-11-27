@@ -2758,6 +2758,14 @@
       "type": "color"
     },
     {
+      "path": "menu.item.check.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "menu.item.check.motion.easing",
+      "type": "cubicBezier"
+    },
+    {
       "path": "menu.item.fg.default",
       "type": "color"
     },
@@ -3176,6 +3184,14 @@
     {
       "path": "option.check.gap",
       "type": "number"
+    },
+    {
+      "path": "option.check.motion.duration",
+      "type": "duration"
+    },
+    {
+      "path": "option.check.motion.easing",
+      "type": "cubicBezier"
     },
     {
       "path": "option.check.radius",

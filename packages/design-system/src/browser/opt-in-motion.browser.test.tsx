@@ -15,8 +15,7 @@ import { useTooltip } from '../hooks/useTooltip.js';
 import { emulateMedia } from '../test/media.js';
 
 // The motion Ben approved on 2026-11-27: each new token starts at 0 so
-// Graphite looks and moves as before, and a brand opts in. The rest reuse
-// tokens that ship (selection.motion) or point at the core fast step.
+// Graphite looks and moves as before, and a brand opts in.
 
 afterEach(async () => {
   cleanup();
@@ -338,11 +337,11 @@ describe('Tabs panel fade (tabs.motion.panel.duration)', () => {
   });
 });
 
-describe('Steps status color fade (steps.motion)', () => {
-  function Plan() {
+describe('Steps status color fade (steps.motion.duration)', () => {
+  function Plan({ style }: { style?: CSSProperties }) {
     const [status, setStatus] = useState<StepsStatus>('pending');
     return (
-      <Themed>
+      <Themed style={style}>
         <Button.Root onClick={() => setStatus('done')}>Finish</Button.Root>
         <Steps.Root aria-label="Plan">
           <Steps.Item status={status}>Run the tests</Steps.Item>
@@ -351,22 +350,34 @@ describe('Steps status color fade (steps.motion)', () => {
     );
   }
 
-  it.each(['no-preference', 'reduce'] as const)('fades the step and its marker colors, and moves nothing, %s', async (motion) => {
-    await emulateMedia([{ name: 'prefers-reduced-motion', value: motion }]);
+  it('is 0ms by default, so a status changes its colors at once', async () => {
     render(<Plan />);
     const item = screen.getByRole('listitem');
     await userEvent.click(screen.getByRole('button', { name: 'Finish' }));
     await frame();
+    expect(props(item, { subtree: true })).toEqual([]);
+    expect(item.getAttribute('data-status')).toBe('done');
+  });
+
+  it.each(['no-preference', 'reduce'] as const)('fades the step and its marker colors when a brand sets it, and moves nothing, %s', async (motion) => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: motion }]);
+    render(<Plan style={{ ['--_todae-steps-motion-duration' as string]: '600ms' }} />);
+    const item = screen.getByRole('listitem');
+    await userEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    await frame();
+    // A color fade moves nothing, so it keeps running under reduced motion.
     const running = props(item, { subtree: true });
     expect(running).toEqual(expect.arrayContaining(['color', 'background-color', 'border-top-color']));
     for (const p of running) expect(MOVES).not.toContain(p);
   });
 });
 
-describe('Menu checkmarks (selection.motion)', () => {
-  function Options() {
+describe('Menu checkmarks (menu.item.check.motion.duration)', () => {
+  const optIn = { ['--_todae-menu-item-check-motion-duration' as string]: '600ms' };
+
+  function Options({ style }: { style?: CSSProperties }) {
     return (
-      <Themed>
+      <Themed style={style}>
         <Menu.Root defaultOpen>
           <Menu.Trigger variant="secondary">View</Menu.Trigger>
           <Menu.Content>
@@ -383,14 +394,24 @@ describe('Menu checkmarks (selection.motion)', () => {
 
   const indicator = (name: string) => screen.getByRole(name === 'Grid' ? 'menuitemcheckbox' : 'menuitemradio', { name }).firstElementChild!;
 
-  async function settledMenu() {
-    render(<Options />);
+  async function settledMenu(style?: CSSProperties) {
+    render(<Options style={style} />);
     const menu = screen.getByRole('menu');
     await waitFor(() => expect(menu.hasAttribute('data-todae-settled')).toBe(true), { timeout: 2000 });
   }
 
-  it('grows the check in and hides it at once', async () => {
+  it('is 0ms by default, so a check and a dot show at once', async () => {
     await settledMenu();
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Grid' }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'By date' }));
+    await frame();
+    expect(props(screen.getByRole('menu'), { subtree: true })).toEqual([]);
+    expect(getComputedStyle(indicator('Grid')).opacity).toBe('1');
+    expect(getComputedStyle(indicator('By date'), '::before').opacity).toBe('1');
+  });
+
+  it('grows the check in when a brand sets it, and hides it at once', async () => {
+    await settledMenu(optIn);
     const item = screen.getByRole('menuitemcheckbox', { name: 'Grid' });
     await userEvent.click(item);
     await frame();
@@ -403,8 +424,8 @@ describe('Menu checkmarks (selection.motion)', () => {
     expect(getComputedStyle(indicator('Grid')).visibility).toBe('hidden');
   });
 
-  it('grows the radio dot in', async () => {
-    await settledMenu();
+  it('grows the radio dot in when a brand sets it', async () => {
+    await settledMenu(optIn);
     await userEvent.click(screen.getByRole('menuitemradio', { name: 'By date' }));
     await frame();
     const dot = indicator('By date');
@@ -412,9 +433,9 @@ describe('Menu checkmarks (selection.motion)', () => {
     expect(running.map((a) => (a as CSSTransition).transitionProperty)).toEqual(expect.arrayContaining(['opacity', 'scale']));
   });
 
-  it('only fades under reduced motion', async () => {
+  it('only fades a brand\'s check under reduced motion', async () => {
     await reduce();
-    await settledMenu();
+    await settledMenu(optIn);
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Grid' }));
     await frame();
     expect(props(indicator('Grid'))).toEqual(['opacity']);
@@ -422,7 +443,7 @@ describe('Menu checkmarks (selection.motion)', () => {
   });
 
   it('moves the keyboard highlight at once', async () => {
-    await settledMenu();
+    await settledMenu(optIn);
     await userEvent.keyboard('{ArrowDown}');
     await frame();
     // Nothing on any item itself transitions, only a check or dot inside.
@@ -431,11 +452,13 @@ describe('Menu checkmarks (selection.motion)', () => {
   });
 });
 
-describe('OptionList checkmarks (selection.motion)', () => {
-  function Fruit() {
+describe('OptionList checkmarks (option.check.motion.duration)', () => {
+  const optIn = { ['--_todae-option-check-motion-duration' as string]: '600ms' };
+
+  function Fruit({ style }: { style?: CSSProperties }) {
     const [fruit, setFruit] = useState<string | null>(null);
     return (
-      <Themed>
+      <Themed style={style}>
         <OptionList.Root value={fruit} onValueChange={setFruit} aria-label="Fruit">
           <OptionList.Option value="apple">Apple</OptionList.Option>
           <OptionList.Option value="pear">Pear</OptionList.Option>
@@ -446,23 +469,31 @@ describe('OptionList checkmarks (selection.motion)', () => {
 
   const check = (name: string) => screen.getByRole('option', { name }).querySelector('[data-todae-glyph]');
 
-  it('grows the check in as an option is picked', async () => {
+  it('is 0ms by default, so the check shows at once', async () => {
     render(<Fruit />);
+    await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
+    await frame();
+    expect(props(check('Pear')!)).toEqual([]);
+    expect(getComputedStyle(check('Pear')!).opacity).toBe('1');
+  });
+
+  it('grows the check in as an option is picked, when a brand sets it', async () => {
+    render(<Fruit style={optIn} />);
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
     await frame();
     expect(props(check('Pear')!)).toEqual(expect.arrayContaining(['opacity', 'scale']));
   });
 
-  it('only fades the check in under reduced motion', async () => {
+  it('only fades a brand\'s check in under reduced motion', async () => {
     await reduce();
-    render(<Fruit />);
+    render(<Fruit style={optIn} />);
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
     await frame();
     expect(props(check('Pear')!)).toEqual(['opacity']);
   });
 
   it('hides the check at once as the pick moves on', async () => {
-    render(<Fruit />);
+    render(<Fruit style={optIn} />);
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
     await Promise.all(check('Pear')!.getAnimations().map((a) => a.finished));
     await userEvent.click(screen.getByRole('option', { name: 'Apple' }));
@@ -472,7 +503,7 @@ describe('OptionList checkmarks (selection.motion)', () => {
   });
 
   it('draws a picked check at rest when the list shows again, as a popover opens', async () => {
-    render(<Fruit />);
+    render(<Fruit style={optIn} />);
     await userEvent.click(screen.getByRole('option', { name: 'Pear' }));
     await Promise.all(check('Pear')!.getAnimations().map((a) => a.finished));
     const list = screen.getByRole('listbox');
@@ -485,7 +516,7 @@ describe('OptionList checkmarks (selection.motion)', () => {
   });
 
   it('moves the highlight at once', async () => {
-    render(<Fruit />);
+    render(<Fruit style={optIn} />);
     const list = screen.getByRole('listbox');
     list.focus();
     await userEvent.keyboard('{ArrowDown}');
