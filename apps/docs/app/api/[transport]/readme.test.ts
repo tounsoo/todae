@@ -9,10 +9,12 @@ const { POST } = await import('./route');
 const README_PATH = 'packages/design-system/README.md';
 const README = readFileSync(new URL(`../../../../../${README_PATH}`, import.meta.url), 'utf8');
 const ROUTE = 'apps/docs/app/api/[transport]/route.ts';
-const MCP_BULLET = /^- \*\*MCP server:\*\*.*$/m;
-const SNAKE_CASE = /`([a-z]+(?:_[a-z]+)+)`/g;
-/** A backticked `name: value` argument, such as `includeCode: true`. */
-const ARGUMENT = /`([a-zA-Z]+): [^`]+`/g;
+/** The MCP server bullet, with any lines it wraps onto, up to a blank line, the next item or a heading. */
+const MCP_BULLET = /^- \*\*MCP server:\*\*.*(?:\n(?!\n|- |#).*)*/m;
+const FENCE = /^```[\s\S]*?^```/gm;
+const SNAKE_CASE = /`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`/g;
+/** A backticked `name: value` argument, such as `includeCode: true` or `start_line: 1`. */
+const ARGUMENT = /`([a-zA-Z_][a-zA-Z0-9_]*): [^`]+`/g;
 
 /** The first call for a guide that starts at this tool. */
 const SEEDS: Record<string, Record<string, unknown>> = {
@@ -56,11 +58,9 @@ async function call(name: string, args: Record<string, unknown>): Promise<Body> 
   return JSON.parse(text) as Body;
 }
 
-/** True when a result carries example source, not only example stubs. */
+/** True when a result is example source (get_example's shape), not a page with example stubs. */
 function hasExampleCode(body: Body): boolean {
-  if (body.kind === 'example' && typeof body.code === 'string') return true;
-  const examples = body.examples;
-  return Array.isArray(examples) && examples.some((example) => typeof (example as { code?: unknown }).code === 'string');
+  return body.kind === 'example' && typeof body.code === 'string';
 }
 
 /** The arguments the previous result gives for a call to `tool`, the way the README says to pass them. */
@@ -81,11 +81,10 @@ function argumentsFor(previousTool: string, previous: Body, tool: string): Recor
  */
 async function readmeProblems(readme: string): Promise<string[]> {
   const tools = await registeredTools();
-  // A tool name starts with a verb a registered tool starts with, such as get_ or list_.
-  const verbs = new Set([...tools.keys()].map((name) => name.split('_')[0]));
   const problems: string[] = [];
-  for (const [, name = ''] of readme.matchAll(SNAKE_CASE)) {
-    if (verbs.has(name.split('_')[0]) && !tools.has(name)) problems.push(`${README_PATH} names \`${name}\`, which ${ROUTE} does not register.`);
+  // Outside code blocks, every backticked snake_case name in the README is a tool name.
+  for (const [, name = ''] of readme.replace(FENCE, '').matchAll(SNAKE_CASE)) {
+    if (!tools.has(name)) problems.push(`${README_PATH} names \`${name}\`, which ${ROUTE} does not register.`);
   }
   const bullet = readme.match(MCP_BULLET)?.[0];
   if (!bullet) return [...problems, `${README_PATH} has no "- **MCP server:**" bullet to guide agents.`];
@@ -94,7 +93,7 @@ async function readmeProblems(readme: string): Promise<string[]> {
   const mentions = [...bullet.matchAll(new RegExp(`${SNAKE_CASE.source}|${ARGUMENT.source}`, 'g'))];
   let current: string | undefined;
   for (const [, toolName, argument] of mentions) {
-    if (toolName && tools.has(toolName)) current = toolName;
+    if (toolName) current = tools.has(toolName) ? toolName : undefined;
     if (!argument) continue;
     const inputs = current ? Object.keys(tools.get(current)?.inputSchema.properties ?? {}) : [];
     if (!current || !inputs.includes(argument)) {
@@ -155,7 +154,25 @@ describe('package README agent guide', () => {
   });
 
   it('rejects a flow whose steps the server does not chain', async () => {
-    const problems = await readmeProblems(README.replace(MCP_BULLET, '- **MCP server:** Call `get_example`, then `search_docs`.'));
-    expect(problems.join('\n')).toMatch(/SEEDS|gives no arguments/);
+    const problems = await readmeProblems(README.replace(MCP_BULLET, '- **MCP server:** Call `search_docs`, then `get_changes`.'));
+    expect(problems).toEqual([expect.stringContaining('call `get_changes` after `search_docs`, but `search_docs`\'s result gives no arguments')]);
+  });
+
+  it('rejects a renamed first step, even with a verb no registered tool uses', async () => {
+    const problems = await readmeProblems(README.replace('`search_docs`', '`find_docs`'));
+    expect(problems.some((problem) => problem.includes('`find_docs`, which'))).toBe(true);
+  });
+
+  it('rejects a snake_case argument the tool does not take', async () => {
+    const problems = await readmeProblems(README.replace('`includeCode: true`', '`include_code: true`'));
+    expect(problems.some((problem) => problem.includes('passes `include_code` to `get_docs_page`'))).toBe(true);
+  });
+
+  it('reads the bullet across wrapped lines', async () => {
+    const wrapped = README.replace(MCP_BULLET, (bullet) => bullet.replace(' Then call `get_example`', '\n  Then call `get_examples`'));
+    expect(wrapped).not.toBe(README);
+    const problems = await readmeProblems(wrapped);
+    expect(problems.some((problem) => problem.includes('`get_examples`, which'))).toBe(true);
+    expect(problems.some((problem) => problem.includes('ends its reading flow at `get_docs_page`'))).toBe(true);
   });
 });
