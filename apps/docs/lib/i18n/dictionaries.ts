@@ -109,7 +109,8 @@ export type Dictionary = {
     | 'optIn'
     | 'optInHint'
     | 'reduced'
-    | 'focusNote'
+    | 'playDialog'
+    | 'dialogNote'
     | 'menuHint'
     | 'readout'
     | 'part'
@@ -233,15 +234,16 @@ const en: Dictionary = {
   },
   motionLab: {
     title: 'Motion replay',
-    lead: 'Plays a popover, a tip, a tab, a step and a check together, then a dialog, then a toast, with the Motion feel and theme you picked. It plays once per press.',
+    lead: 'Plays a popover, a tip, a tab, a step and a check together, then a toast, with the Motion feel and theme you picked. It plays once per press, and focus stays on the button.',
     play: 'Play motion',
     stop: 'Stop',
     slow: 'Slow motion (×4)',
-    slowNote: 'Slow motion plays each one four times as long as listed.',
+    slowNote: 'Slow motion plays each one four times as long as listed. It is for watching, so the JSON keeps the listed values.',
     optIn: 'Opt-in motion',
-    optInHint: 'Turns on the motions Todae ships at 0: popover and tip slides, the tab panel and step fades, and checks that grow in. Preview only: the JSON leaves them out.',
+    optInHint: 'Turns on the motions Todae ships at 0: popover and tip slides, the tab panel and step fades, and checks that grow in. While it is on, the copied JSON includes them.',
     reduced: 'Your device asks for reduced motion, so everything here only fades: nothing slides, rises or grows.',
-    focusNote: 'The dialog takes focus while it shows and gives it back to Play motion. Closing it, or pressing Escape, ends the replay.',
+    playDialog: 'Play dialog',
+    dialogNote: 'A dialog takes focus while it shows, so it has its own button: Play dialog opens it, closes it, and gives focus back to the button. Escape closes it sooner.',
     menuHint: 'To see the menu check, open More at the top of the preview and toggle Show drafts.',
     readout: 'What each part plays',
     part: 'Part',
@@ -369,15 +371,16 @@ const ko: Dictionary = {
   },
   motionLab: {
     title: '모션 재생',
-    lead: '고른 모션 느낌과 테마로 팝오버, 툴팁, 탭 패널, 단계, 체크를 함께 재생한 뒤 다이얼로그, 토스트 순서로 재생합니다. 한 번 누르면 한 번만 재생됩니다.',
+    lead: '고른 모션 느낌과 테마로 팝오버, 툴팁, 탭, 단계, 체크를 함께 재생한 뒤 토스트를 재생합니다. 한 번 누르면 한 번만 재생되고, 포커스는 버튼에 그대로 있습니다.',
     play: '모션 재생',
     stop: '정지',
     slow: '슬로 모션 (×4)',
-    slowNote: '슬로 모션에서는 각각 표의 네 배 길이로 재생됩니다.',
+    slowNote: '슬로 모션에서는 각각 표의 네 배 길이로 재생됩니다. 보기 위한 기능이라 JSON에는 표의 값이 그대로 들어갑니다.',
     optIn: '옵트인 모션',
-    optInHint: 'Todae가 0으로 내보내는 모션을 켭니다. 팝오버와 툴팁의 슬라이드, 탭 패널과 단계의 페이드, 커지며 나타나는 체크입니다. 미리보기에만 적용되며 JSON에는 들어가지 않습니다.',
+    optInHint: 'Todae가 0으로 내보내는 모션을 켭니다. 팝오버와 툴팁의 슬라이드, 탭 패널과 단계의 페이드, 커지며 나타나는 체크입니다. 켜져 있는 동안에는 복사한 JSON에도 들어갑니다.',
     reduced: '기기가 동작 줄이기를 요청하고 있어, 여기서는 모두 페이드만 합니다. 미끄러지거나 떠오르거나 커지는 동작은 없습니다.',
-    focusNote: '다이얼로그는 보이는 동안 포커스를 가져가고, 닫히면 모션 재생 버튼에 돌려줍니다. 직접 닫거나 Escape를 누르면 재생이 끝납니다.',
+    playDialog: '다이얼로그 재생',
+    dialogNote: '다이얼로그는 보이는 동안 포커스를 가져가므로 버튼을 따로 둡니다. 다이얼로그 재생을 누르면 열었다가 닫고, 포커스를 버튼에 돌려줍니다. Escape를 누르면 더 일찍 닫힙니다.',
     menuHint: '메뉴 체크를 보려면 미리보기 맨 위의 더 보기를 열고 임시 저장 보기를 켜고 끄세요.',
     readout: '각 부분이 재생하는 모션',
     part: '부분',

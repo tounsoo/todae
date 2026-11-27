@@ -22,7 +22,7 @@ import {
 } from '@tounsoo/todae';
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Dictionary } from '../../lib/i18n/dictionaries';
-import { motionReadout, optInMotion, replayCues, slowMotion, type Cue, type ReadoutRow, type Surface, type Timing } from './replay';
+import { dialogCues, motionReadout, optInMotion, replayCues, slowMotion, type Cue, type ReadoutRow, type Surface, type Timing } from './replay';
 
 const SLOW = 4;
 const TOAST_ID = 'motion-replay';
@@ -59,23 +59,28 @@ function TimingCell({ timing, off }: { timing: Timing; off: string }) {
 /**
  * The Playground stage's motion replay, above whatever it wraps. Play motion
  * runs once through the surfaces that appear and go under `overrides`, the
- * stage's theme with its Motion feel. Slow motion and the opt-in motions are
- * laid over the wrapped preview too, so a surface opened by hand shows them,
- * but never reach the exported JSON.
+ * stage's theme with its Motion feel, and never moves focus. The dialog, whose
+ * modal takes focus, has its own button that gets focus back. Slow motion and
+ * the opt-in motions are laid over the wrapped preview too, so a surface opened
+ * by hand shows them. The Playground owns the opt-in switch's state, since the
+ * copied JSON carries those values while it is on; slow motion never reaches it.
  */
 export function MotionStage({
   overrides,
+  optIn,
+  onOptInChange,
   toaster,
   copy,
   children,
 }: {
   overrides: ThemeOverride;
+  optIn: boolean;
+  onOptInChange: (optIn: boolean) => void;
   toaster: Pick<Toaster, 'add' | 'dismiss'>;
   copy: Dictionary['motionLab'];
   children?: ReactNode;
 }) {
   const [slow, setSlow] = useState(false);
-  const [optIn, setOptIn] = useState(false);
   const reduced = useSyncExternalStore(subscribeReduce, () => window.matchMedia(REDUCE).matches, () => false);
 
   const optInLayer = optIn ? optInMotion(overrides) : {};
@@ -85,10 +90,12 @@ export function MotionStage({
   const rows = motionReadout(listed);
   const played = motionReadout({ ...overrides, ...layer });
 
-  const ids = { title: useId(), lead: useId() };
+  const ids = { title: useId(), lead: useId(), dialogNote: useId() };
   const playRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLButtonElement>(null);
   const timers = useRef<number[]>([]);
-  const [running, setRunning] = useState(false);
+  // Which replay is playing, if one is.
+  const [running, setRunning] = useState<'play' | 'dialog' | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [tipOpen, setTipOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -102,7 +109,7 @@ export function MotionStage({
   const popover = usePopover({
     open: popoverOpen,
     onOpenChange: setPopoverOpen,
-    initialFocusRef: running ? playRef : undefined,
+    initialFocusRef: running === 'play' ? playRef : undefined,
   });
   const tip = useTooltip({ open: tipOpen, onOpenChange: setTipOpen });
 
@@ -142,7 +149,8 @@ export function MotionStage({
         toaster.dismiss(TOAST_ID);
         return;
       case 'done':
-        setRunning(false);
+        setRunning(null);
+        dialogGone();
     }
   }
 
@@ -155,10 +163,18 @@ export function MotionStage({
     for (const cue of ['close', 'dialog-close', 'toast-dismiss', 'done'] as const) apply(cue);
   }
 
-  function play() {
-    clearTimers();
-    setRunning(true);
-    timers.current = replayCues(played, speed).map(({ at, cue }) => window.setTimeout(() => applyRef.current(cue), at));
+  function start(which: 'play' | 'dialog') {
+    stop();
+    setRunning(which);
+    const cues = which === 'play' ? replayCues(played, speed) : dialogCues(played, speed);
+    timers.current = cues.map(({ at, cue }) => window.setTimeout(() => applyRef.current(cue), at));
+  }
+
+  // The modal hands focus back to what had it, the dialog's button. A pointer press may not
+  // focus a button (Safari), so focus that would land on the page lands on the button.
+  function dialogGone() {
+    const active = document.activeElement;
+    if (active === null || active === document.body) dialogRef.current?.focus({ preventScroll: true });
   }
 
   return (
@@ -175,13 +191,16 @@ export function MotionStage({
               </Text.Root>
             </div>
             <div className="pg-motion-controls">
-              <Button.Root ref={playRef} aria-describedby={ids.lead} onClick={running ? stop : play}>
-                {running ? copy.stop : copy.play}
+              <Button.Root ref={playRef} aria-describedby={ids.lead} onClick={running === 'play' ? stop : () => start('play')}>
+                {running === 'play' ? copy.stop : copy.play}
+              </Button.Root>
+              <Button.Root ref={dialogRef} variant="secondary" aria-describedby={ids.dialogNote} onClick={() => start('dialog')}>
+                {copy.playDialog}
               </Button.Root>
               <Switch.Root checked={slow} onCheckedChange={setSlow}>
                 {copy.slow}
               </Switch.Root>
-              <Switch.Root checked={optIn} onCheckedChange={setOptIn}>
+              <Switch.Root checked={optIn} onCheckedChange={onOptInChange}>
                 {copy.optIn}
               </Switch.Root>
             </div>
@@ -258,7 +277,8 @@ export function MotionStage({
               </Table.Body>
             </Table.Root>
             <Text.Root tone="muted" className="pg-motion-hints">
-              {[slow ? copy.slowNote : null, optIn ? copy.optInHint : null, copy.focusNote, copy.menuHint].filter(Boolean).join(' ')}
+              <span id={ids.dialogNote}>{copy.dialogNote}</span>{' '}
+              {[slow ? copy.slowNote : null, optIn ? copy.optInHint : null, copy.menuHint].filter(Boolean).join(' ')}
             </Text.Root>
           </div>
         </Card.Body>

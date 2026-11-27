@@ -37,6 +37,7 @@ import { MOTION_CHOICES, withMotion, type MotionChoice } from './playground/moti
 import { PRESETS, type ThemePreset } from './playground/presets';
 import { ICON_LIBRARIES } from './iconLibraries';
 import { MotionStage } from './playground/MotionStage';
+import { optInMotion } from './playground/replay';
 import { Preview, type PreviewToaster } from './playground/Preview';
 
 const LAYERS = {
@@ -262,6 +263,9 @@ export function Playground({ locale }: { locale: Locale }) {
   const resolved = useResolvedAppearance(appearance);
   const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
   const presetFor = (mode: 'light' | 'dark') => withMotion(preset?.[mode] ?? {}, motion);
+  // The motion replay's Opt-in motion switch. While it is on, the opt-in motions are in the copied JSON too.
+  const [optIn, setOptIn] = useState(false);
+  const withOptIn = (theme: ThemeOverride): ThemeOverride => (optIn ? { ...theme, ...optInMotion(theme) } : theme);
   const overrides: ThemeOverride = { ...presetFor(resolved), ...edits[resolved] };
   const paths = LAYERS[layer].filter((path) => path.includes(filter.trim().toLowerCase()));
   const changed = Object.keys(edits.light).length + Object.keys(edits.dark).length;
@@ -282,8 +286,8 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
-  const exportLight = { ...presetFor('light'), ...edits.light };
-  const exportDark = { ...presetFor('dark'), ...edits.dark };
+  const exportLight = withOptIn({ ...presetFor('light'), ...edits.light });
+  const exportDark = withOptIn({ ...presetFor('dark'), ...edits.dark });
   // One flat set when light and dark are the same, such as plain Todae with no edits.
   const exportJson = `${JSON.stringify(
     JSON.stringify(exportLight) === JSON.stringify(exportDark) ? exportLight : { light: exportLight, dark: exportDark },
@@ -518,8 +522,8 @@ export function Playground({ locale }: { locale: Locale }) {
         >
           {/* The preview is a product in the reader's language, so Todae's own text is too. */}
           <StringsProvider strings={TODAE_STRINGS[locale]}>
-            {/* The replay lays slow motion and the opt-in motions over the preview too, but not over the stage's own tokens, so the editor and the JSON never show them. */}
-            <MotionStage overrides={overrides} toaster={toaster} copy={motionCopy}>
+            {/* The replay lays slow motion and the opt-in motions over the preview too, but not over the stage's own tokens, so the editor never shows them. The JSON carries the opt-in motions while that switch is on. */}
+            <MotionStage overrides={overrides} optIn={optIn} onOptInChange={setOptIn} toaster={toaster} copy={motionCopy}>
               <Preview locale={locale} library={ICON_LIBRARIES.find((library) => library.id === iconsId)} toaster={toaster} />
             </MotionStage>
           </StringsProvider>

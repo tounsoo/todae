@@ -126,10 +126,10 @@ const HOLD = 700;
 const GAP = 250;
 
 /**
- * When the replay does what, in ms from the press. First the surfaces that
- * open together without taking focus (popover, tip, tab panel, step, check),
- * then the dialog alone, since a modal one makes the rest inert, then a
- * toast. `slow` stretches the rests as slow motion stretches the motion.
+ * When Play motion does what, in ms from the press: first the surfaces that
+ * open together without taking focus (popover, tip, tab, step, check), then
+ * a toast. Never the dialog, whose modal takes focus: it has its own button
+ * (`dialogCues`). `slow` stretches the rests as slow motion stretches the motion.
  */
 export function replayCues(rows: ReadoutRow[], slow: number): ReplayStep[] {
   const row = bySurface(rows);
@@ -142,14 +142,21 @@ export function replayCues(rows: ReadoutRow[], slow: number): ReplayStep[] {
   let at = enter + hold;
   out.push({ at, cue: 'close' });
   at += exit + gap;
-  out.push({ at, cue: 'dialog-open' });
-  at += row.dialog.enter.duration + hold;
-  out.push({ at, cue: 'dialog-close' });
-  at += (row.dialog.exit?.duration ?? 0) + gap;
   out.push({ at, cue: 'toast-show' });
   at += row.toast.enter.duration + hold;
   out.push({ at, cue: 'toast-dismiss' });
   at += (row.toast.exit?.duration ?? 0) + gap;
   out.push({ at, cue: 'done' });
   return out;
+}
+
+/** When the dialog's own replay opens it, closes it after its rest, and is done once it has gone. */
+export function dialogCues(rows: ReadoutRow[], slow: number): ReplayStep[] {
+  const { dialog } = bySurface(rows);
+  const close = dialog.enter.duration + HOLD * slow;
+  return [
+    { at: 0, cue: 'dialog-open' },
+    { at: close, cue: 'dialog-close' },
+    { at: close + (dialog.exit?.duration ?? 0), cue: 'done' },
+  ];
 }

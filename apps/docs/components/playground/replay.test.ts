@@ -1,6 +1,6 @@
 import type { ThemeOverride } from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
-import { bySurface, motionReadout, optInMotion, replayCues, slowMotion } from './replay';
+import { bySurface, dialogCues, motionReadout, optInMotion, replayCues, slowMotion } from './replay';
 import { MOTION_FEELS } from './motion';
 
 const TODAE_ENTER = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -91,17 +91,15 @@ describe('optInMotion', () => {
 });
 
 describe('replayCues', () => {
-  it('plays the small surfaces, then the dialog, then a toast, each held at rest before it goes', () => {
-    // Todae's own: popover and tip in 240, out 200; dialog in 280, out 200; toast in 200, out 160.
+  it('plays the small surfaces, then a toast, each held at rest before it goes, and never the dialog', () => {
+    // Todae's own: popover and tip in 240, out 200; toast in 200, out 160.
     // Each holds 700ms at rest, with 250ms between acts.
     expect(replayCues(motionReadout({}), 1)).toEqual([
       { at: 0, cue: 'open' },
       { at: 940, cue: 'close' },
-      { at: 1390, cue: 'dialog-open' },
-      { at: 2370, cue: 'dialog-close' },
-      { at: 2820, cue: 'toast-show' },
-      { at: 3720, cue: 'toast-dismiss' },
-      { at: 4130, cue: 'done' },
+      { at: 1390, cue: 'toast-show' },
+      { at: 2290, cue: 'toast-dismiss' },
+      { at: 2700, cue: 'done' },
     ]);
   });
 
@@ -113,6 +111,23 @@ describe('replayCues', () => {
   it('stretches the holds and gaps with slow motion, as the durations are', () => {
     const base = {};
     const cues = replayCues(motionReadout({ ...base, ...slowMotion(base, 4) }), 4);
-    expect(cues.at(-1)).toEqual({ at: 4130 * 4, cue: 'done' });
+    expect(cues.at(-1)).toEqual({ at: 2700 * 4, cue: 'done' });
+  });
+});
+
+describe('dialogCues', () => {
+  it('opens the dialog, holds it at rest, and is done once it has gone', () => {
+    // Todae's dialog enters in 280 and leaves in 200.
+    expect(dialogCues(motionReadout({}), 1)).toEqual([
+      { at: 0, cue: 'dialog-open' },
+      { at: 980, cue: 'dialog-close' },
+      { at: 1180, cue: 'done' },
+    ]);
+  });
+
+  it('follows the feel and slow motion', () => {
+    const base = MOTION_FEELS.springy;
+    // Springy's dialog enters in 320 and leaves in 200; ×4 with the hold.
+    expect(dialogCues(motionReadout({ ...base, ...slowMotion(base, 4) }), 4).at(-1)).toEqual({ at: (320 + 700 + 200) * 4, cue: 'done' });
   });
 });

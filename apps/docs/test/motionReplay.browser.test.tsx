@@ -33,9 +33,10 @@ function stageOverrides(presetId: string, choice: MotionChoice): ThemeOverride {
 
 function Stage({ overrides }: { overrides: ThemeOverride }) {
   const [toaster] = useState(() => createToaster());
+  const [optIn, setOptIn] = useState(false);
   return (
     <ThemeProvider appearance="light" overrides={overrides} data-density="comfortable" style={{ padding: 32 }}>
-      <MotionStage overrides={overrides} toaster={toaster} copy={copy}>
+      <MotionStage overrides={overrides} optIn={optIn} onOptInChange={setOptIn} toaster={toaster} copy={copy}>
         <Toast.Region toaster={toaster}>
           {(toast) => (
             <Toast.Root>
@@ -103,22 +104,51 @@ const tipEl = () => screen.queryByRole('tooltip', { name: copy.tip, hidden: true
 const dialogPanel = () => screen.queryByRole('dialog', { name: copy.dialogTitle })?.querySelector('[role="document"]');
 const toastItem = () => screen.queryByText(copy.toast)?.closest('li');
 
-/** Presses Play motion and reads each act's enter as it plays: the popover and tip, then the dialog, then the toast. */
+const playDialog = () => screen.getByRole('button', { name: copy.playDialog });
+
+/**
+ * Presses Play motion, with focus on it, and reads each act's enter as it plays: the popover and
+ * tip, then the toast. Meanwhile it watches every frame for focus leaving the button or a dialog showing.
+ */
 async function replay() {
-  play().click();
+  const button = play();
+  button.focus();
+  let focusLeft = false;
+  let dialogShown = false;
+  let watching = true;
+  const watch = (async () => {
+    while (watching) {
+      focusLeft ||= document.activeElement !== button;
+      dialogShown ||= screen.queryByRole('dialog', { name: copy.dialogTitle, hidden: true }) !== null;
+      await frame();
+    }
+  })();
+  button.click();
   await waitFor(() => expect(popoverOpen()).toBe(true));
   const [popover, tip] = (await Promise.all([transitionsOn(popoverEl), transitionsOn(tipEl)])).map(byProperty);
-  // The small surfaces open without taking focus.
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: copy.stop }));
-  await screen.findByRole('dialog', { name: copy.dialogTitle }, { timeout: 5000 });
-  const dialog = byProperty(await transitionsOn(dialogPanel));
   await screen.findByText(copy.toast, undefined, { timeout: 5000 });
   const toast = byProperty(await transitionsOn(toastItem));
-  // It plays once and stops, with focus back on its button.
+  // It plays once and stops.
   await waitFor(() => expect(screen.getByRole('button', { name: copy.play })).toBeTruthy(), { timeout: 5000 });
   await waitFor(() => expect(toastItem()).toBeFalsy(), { timeout: 5000 });
-  expect(document.activeElement).toBe(play());
-  return { popover: popover!, tip: tip!, dialog, toast };
+  watching = false;
+  await watch;
+  expect(focusLeft, 'Play motion never moves focus').toBe(false);
+  expect(dialogShown, 'Play motion never opens the dialog').toBe(false);
+  return { popover: popover!, tip: tip!, toast };
+}
+
+/** Presses Play dialog, with focus on it, reads the dialog's enter, and waits until it has gone. */
+async function dialogReplay() {
+  const button = playDialog();
+  button.focus();
+  button.click();
+  const dialog = await screen.findByRole('dialog', { name: copy.dialogTitle }, { timeout: 5000 });
+  const ran = byProperty(await transitionsOn(dialogPanel));
+  // The modal holds focus while it shows.
+  expect(dialog.contains(document.activeElement)).toBe(true);
+  await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.dialogTitle })).toBeNull(), { timeout: 8000 });
+  return ran;
 }
 
 const TODAE_ENTER = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -148,15 +178,13 @@ const FEELS = [
 ] as const;
 
 describe.each(FEELS)('Play motion on $name', ({ preset, choice, popover, tip, dialog, toast }) => {
-  it('plays the feel’s timing on the popover, dialog and toast, with their movement', { timeout: 30000 }, async () => {
+  it('plays the feel’s timing on the popover, tip and toast, with their movement, never moving focus', { timeout: 30000 }, async () => {
     render(<Stage overrides={stageOverrides(preset, choice)} />);
     const ran = await replay();
     expect(timing(ran.popover, 'opacity')).toEqual({ duration: popover.duration, easing: popover.easing });
     expect(timing(ran.popover, 'scale')).toEqual({ duration: popover.duration, easing: popover.easing });
     expect(ran.popover.scale!.from).toBe(popover.growsFrom);
     expect(timing(ran.tip, 'opacity')).toEqual(tip);
-    expect(timing(ran.dialog, 'opacity')).toEqual(dialog);
-    expect(timing(ran.dialog, 'top')).toEqual(dialog);
     expect(timing(ran.toast, 'opacity')).toEqual(toast);
     expect(Object.keys(ran.toast).some((p) => MOVES.includes(p)), 'the toast slides').toBe(true);
   });
@@ -170,25 +198,40 @@ describe.each(FEELS)('Play motion on $name', ({ preset, choice, popover, tip, di
     expect(timing(ran.popover, 'opacity')).toEqual({ duration: popover.duration, easing: popover.easing });
     expect(Object.keys(ran.tip)).toEqual(['opacity']);
     expect(timing(ran.tip, 'opacity')).toEqual(tip);
-    expect(Object.keys(ran.dialog)).toEqual(['opacity']);
-    expect(timing(ran.dialog, 'opacity')).toEqual(dialog);
     expect(Object.keys(ran.toast).filter((p) => MOVES.includes(p))).toEqual([]);
     expect(timing(ran.toast, 'opacity')).toEqual(toast);
+  });
+
+  it('plays the dialog on its own button with the feel’s timing, then gives focus back to that button', { timeout: 30000 }, async () => {
+    render(<Stage overrides={stageOverrides(preset, choice)} />);
+    const ran = await dialogReplay();
+    expect(timing(ran, 'opacity')).toEqual(dialog);
+    expect(timing(ran, 'top')).toEqual(dialog);
+    await waitFor(() => expect(document.activeElement).toBe(playDialog()));
+    // Only the dialog played.
+    expect(screen.queryByText(copy.toast)).toBeNull();
+    expect(popoverOpen()).toBe(false);
+  });
+
+  it('only fades the dialog under reduced motion, and still gives focus back', { timeout: 30000 }, async () => {
+    await reduce();
+    render(<Stage overrides={stageOverrides(preset, choice)} />);
+    const ran = await dialogReplay();
+    expect(Object.keys(ran)).toEqual(['opacity']);
+    expect(timing(ran, 'opacity')).toEqual(dialog);
+    await waitFor(() => expect(document.activeElement).toBe(playDialog()));
   });
 });
 
 describe('Closing the dialog', () => {
-  it('with Escape ends the replay, so no toast follows, and gives focus back', { timeout: 30000 }, async () => {
+  it('with Escape closes it sooner and gives focus back to Play dialog', { timeout: 30000 }, async () => {
     render(<Stage overrides={stageOverrides('graphite', 'snappy')} />);
-    play().click();
+    await userEvent.click(playDialog());
     const dialog = await screen.findByRole('dialog', { name: copy.dialogTitle }, { timeout: 5000 });
     await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.dialogTitle })).toBeNull(), { timeout: 5000 });
-    expect(document.activeElement).toBe(play());
-    // Snappy's toast would show within a second.
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    expect(screen.queryByText(copy.toast)).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(playDialog()));
   });
 });
 
