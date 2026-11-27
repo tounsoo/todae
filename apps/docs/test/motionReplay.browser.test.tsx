@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { userEvent } from 'vitest/browser';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
-import { createToaster, ThemeProvider, Toast, type ThemeOverride } from '@tounsoo/todae';
+import { createToaster, parseThemeValue, ThemeProvider, Toast, type ThemeOverride } from '@tounsoo/todae';
 import { emulateMedia } from '../../../packages/design-system/src/test/media';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { withMotion, type MotionChoice } from '../components/playground/motion';
@@ -11,8 +11,8 @@ import { MotionStage } from '../components/playground/MotionStage';
 import { PRESETS } from '../components/playground/presets';
 
 // The Playground's motion replay, on a stage like the Playground's: Play
-// motion runs the popover, tip, tab panel, step and check, then a dialog,
-// then a toast. These tests read the CSS transitions that actually run, so a
+// motion runs the popover, tip, tab panel, step and check, then a toast, and
+// never the dialog, which Play dialog plays on its own. These tests read the CSS transitions that actually run, so a
 // replay that plays something other than the picked feel fails here.
 
 beforeAll(() => emulateMedia([]));
@@ -232,6 +232,26 @@ describe('Closing the dialog', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.dialogTitle })).toBeNull(), { timeout: 5000 });
     await waitFor(() => expect(document.activeElement).toBe(playDialog()));
+  });
+});
+
+describe('The replay layer', () => {
+  it('keeps the preset’s colors and edits on the replay and the preview, with both switches on', async () => {
+    // Y2K Chrome paints its own accent; an edit to a semantic color must reach inside too.
+    const overrides: ThemeOverride = { ...stageOverrides('y2k-chrome', 'standard'), 'color.fg.muted': parseThemeValue('color.fg.muted', '#123456')! };
+    render(<Stage overrides={overrides} />);
+    screen.getByRole('switch', { name: copy.slow }).click();
+    screen.getByRole('switch', { name: copy.optIn }).click();
+    await frame();
+    const outer = screen.getByRole('region', { name: copy.title }).closest('[data-density]')!;
+    const inside = play();
+    for (const name of ['--todae-color-accent-default', '--todae-color-fg-muted', '--todae-color-bg-surface']) {
+      expect(getComputedStyle(inside).getPropertyValue(name), name).toBe(getComputedStyle(outer).getPropertyValue(name));
+    }
+    // The edit, #123456 as Todae writes it.
+    expect(getComputedStyle(inside).getPropertyValue('--todae-color-fg-muted').trim()).toBe('oklch(0.319 0.072 251.168)');
+    // And the layer still slows what it wraps: Todae's popup enter is 240ms.
+    expect(getComputedStyle(inside).getPropertyValue('--todae-popover-motion-duration-enter').trim()).toBe('960ms');
   });
 });
 

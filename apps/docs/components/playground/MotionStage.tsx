@@ -13,14 +13,14 @@ import {
   Table,
   Tabs,
   Text,
-  ThemeProvider,
+  themeOverrideStyle,
   Tooltip,
   usePopover,
   useTooltip,
   type ThemeOverride,
   type Toaster,
 } from '@tounsoo/todae';
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
 import type { Dictionary } from '../../lib/i18n/dictionaries';
 import { dialogCues, motionReadout, optInMotion, replayCues, slowMotion, type Cue, type ReadoutRow, type Surface, type Timing } from './replay';
 
@@ -87,6 +87,12 @@ export function MotionStage({
   const listed = { ...overrides, ...optInLayer };
   const speed = slow ? SLOW : 1;
   const layer: ThemeOverride = { ...optInLayer, ...slowMotion(listed, speed) };
+  // On a plain element, not a nested ThemeProvider: each provider's data-appearance declares the
+  // semantic colors again from Todae's own, which would drop the preset's and the reader's. Each
+  // value goes on its token and its --_ input, as a provider sets them, and the layer sets every
+  // token it changes directly, so nothing it needs is resolved above it.
+  const vars = themeOverrideStyle(layer);
+  const layerStyle = { ...vars, ...Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value])) } as CSSProperties;
   const rows = motionReadout(listed);
   const played = motionReadout({ ...overrides, ...layer });
 
@@ -109,7 +115,8 @@ export function MotionStage({
   const popover = usePopover({
     open: popoverOpen,
     onOpenChange: setPopoverOpen,
-    initialFocusRef: running === 'play' ? playRef : undefined,
+    // Only while the replay holds it open: a press on the Popover specimen afterwards focuses inside as usual.
+    initialFocusRef: running === 'play' && loading ? playRef : undefined,
   });
   const tip = useTooltip({ open: tipOpen, onOpenChange: setTipOpen });
 
@@ -150,7 +157,6 @@ export function MotionStage({
         return;
       case 'done':
         setRunning(null);
-        dialogGone();
     }
   }
 
@@ -170,15 +176,9 @@ export function MotionStage({
     timers.current = cues.map(({ at, cue }) => window.setTimeout(() => applyRef.current(cue), at));
   }
 
-  // The modal hands focus back to what had it, the dialog's button. A pointer press may not
-  // focus a button (Safari), so focus that would land on the page lands on the button.
-  function dialogGone() {
-    const active = document.activeElement;
-    if (active === null || active === document.body) dialogRef.current?.focus({ preventScroll: true });
-  }
 
   return (
-    <ThemeProvider overrides={layer}>
+    <div style={layerStyle}>
       <Card.Root className="pg-motion" role="region" aria-labelledby={ids.title}>
         <Card.Header>
           <div className="pg-motion-head">
@@ -283,7 +283,8 @@ export function MotionStage({
           </div>
         </Card.Body>
       </Card.Root>
-      <Dialog.Root open={dialogOpen} onOpenChange={(open) => (open ? undefined : stop())}>
+      {/* Focus goes back to Play dialog however it closes, even when a press (Safari) left it elsewhere. */}
+      <Dialog.Root open={dialogOpen} onOpenChange={(open) => (open ? undefined : stop())} restoreFocusRef={dialogRef}>
         <Dialog.Header>
           <Dialog.Title>{copy.dialogTitle}</Dialog.Title>
           <Dialog.Close />
@@ -291,6 +292,6 @@ export function MotionStage({
         <Dialog.Description>{copy.dialogBody}</Dialog.Description>
       </Dialog.Root>
       {children}
-    </ThemeProvider>
+    </div>
   );
 }

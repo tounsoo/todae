@@ -29,10 +29,15 @@ function durationOf(path: string, overrides: ThemeOverride): number {
   if (typeof value === 'string') {
     const match = /^(-?[\d.]+)(ms|s)$/.exec(value.trim());
     if (!match) throw new Error(`${path} is not a duration: ${value}`);
-    return Number(match[1]) * (match[2] === 's' ? 1000 : 1);
+    return toMs(Number(match[1]), match[2] as 'ms' | 's');
   }
   const { value: n, unit } = value as { value: number; unit: 'ms' | 's' };
-  return n * (unit === 's' ? 1000 : 1);
+  return toMs(n, unit);
+}
+
+/** Seconds as ms, rounded to a thousandth so 0.07s reads 70ms, not 70.00000000000001ms. */
+function toMs(n: number, unit: 'ms' | 's'): number {
+  return unit === 's' ? Math.round(n * 1_000_000) / 1000 : n;
 }
 
 /** A cubicBezier token as the CSS `cubic-bezier()` the browser reports. */

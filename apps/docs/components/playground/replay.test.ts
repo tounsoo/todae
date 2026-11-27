@@ -81,6 +81,11 @@ describe('optInMotion', () => {
     expect(rows.option?.enter.duration).toBe(160);
   });
 
+  it('reads a duration given in seconds as whole ms', () => {
+    // 0.07 × 1000 is 70.00000000000001 in floating point.
+    expect(optInMotion({ 'motion.reveal.duration.enter': { value: 0.07, unit: 's' } })).toMatchObject({ 'tabs.motion.panel.duration': { value: 70, unit: 'ms' } });
+  });
+
   it('keeps a value the theme already sets', () => {
     const own: ThemeOverride = { 'steps.motion.duration': { value: 500, unit: 'ms' }, 'popover.motion.offset': { value: 0.25, unit: 'rem' } };
     const layer = optInMotion(own) as Record<string, unknown>;
