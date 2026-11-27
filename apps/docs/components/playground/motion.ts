@@ -6,9 +6,9 @@ import type { ThemeCubicBezierValue, ThemeOverride } from '@tounsoo/todae';
 // popover grows and a dialog or toast travels. It leaves the core curves and
 // the fast and normal steps alone or shorter, since hover fades, checkbox and
 // switch changes and the tab indicator read them. Overshoot goes on the enter
-// curve of a popover, dialog or toast. Under prefers-reduced-motion Todae's
-// CSS still drops each slide, rise and grow, so there a feel changes how long
-// fades take and nothing more.
+// curve of a popover or dialog, never a toast, whose neighbours move with it.
+// Under prefers-reduced-motion Todae's CSS still drops each slide, rise and
+// grow, so there a feel changes how long fades take and nothing more.
 
 const ms = (value: number) => ({ value, unit: 'ms' }) as const;
 const rem = (value: number) => ({ value, unit: 'rem' }) as const;
@@ -26,7 +26,7 @@ type Feel = {
   /** The enter and exit curves of every surface that appears and goes. */
   enter?: ThemeCubicBezierValue;
   exit?: ThemeCubicBezierValue;
-  /** Enter curve for popovers, dialogs and toasts, where a slight overshoot may land. */
+  /** Enter curve for popovers and dialogs, where a slight overshoot may land. */
   surfaceEnter?: ThemeCubicBezierValue;
   /** How small a popover starts, 1 for no grow. */
   popoverScale?: number;
@@ -55,8 +55,11 @@ function feel(f: Feel): ThemeOverride {
   return out as ThemeOverride;
 }
 
-/** The surfaces whose enter curve may overshoot: each grows or rises into a resting place. */
-const SURFACES = ['popover', 'dialog', 'toast'] as const;
+/**
+ * The surfaces whose enter curve may overshoot: a popover grows and a dialog rises into a resting
+ * place. Not a toast: the toasts beside it move by the same curve, so they would bounce too.
+ */
+const SURFACES = ['popover', 'dialog'] as const;
 
 /**
  * The curve of each thing that appears and goes. They all alias the core curves,

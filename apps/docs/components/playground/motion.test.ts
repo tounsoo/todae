@@ -58,8 +58,9 @@ const FEELS = [
 
 const KEYS = new Set<string>(THEME_OVERRIDE_KEYS);
 
-// The enter curves that may overshoot: each surface grows or rises into a resting place.
-const OVERSHOOT_ALLOWED = ['popover.motion.easing.enter', 'dialog.motion.easing.enter', 'toast.motion.easing.enter'];
+// The enter curves that may overshoot: a popover grows and a dialog rises into a resting place.
+// A toast never springs, since its neighbours move with it.
+const OVERSHOOT_ALLOWED = ['popover.motion.easing.enter', 'dialog.motion.easing.enter'];
 
 // Todae's core duration scale and what each role points at (tokens/core.json and tokens/components/motion.json).
 const CORE = { fast: 160, normal: 200, moderate: 240, slow: 280, slower: 300 } as const;
@@ -96,7 +97,7 @@ describe.each(FEELS)('%s', (_name, override) => {
     for (const [key] of entries) expect(key, key).not.toMatch(/^(motion\.easing|selection|control|tabs|focus)\./);
   });
 
-  it('overshoots only subtly, and only on a surface that appears', () => {
+  it('overshoots only subtly, and only as a popover or dialog appears', () => {
     for (const [key, value] of entries) {
       if (!Array.isArray(value)) continue;
       const [, y1, , y2] = value as number[];
@@ -105,6 +106,17 @@ describe.each(FEELS)('%s', (_name, override) => {
       expect(y1!, key).toBeLessThanOrEqual(1.5);
       expect(y2!, key).toBeLessThanOrEqual(1.5);
       expect(Math.min(y1!, y2!), key).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('never springs a toast', () => {
+    for (const [key, value] of entries) {
+      if (!key.startsWith('toast.motion.easing')) continue;
+      const [, y1, , y2] = value as readonly number[];
+      for (const y of [y1!, y2!]) {
+        expect(y, key).toBeGreaterThanOrEqual(0);
+        expect(y, key).toBeLessThanOrEqual(1);
+      }
     }
   });
 
