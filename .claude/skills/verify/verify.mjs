@@ -218,11 +218,9 @@ export const STEPS = {
     cmd: [
       'bash',
       '-c',
-      '[ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "forbidden-paths.sh needs bash 4 or newer; this bash is $BASH_VERSION" >&2; exit 2; }; set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
+      'set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
     ],
-    // macOS ships bash 3.2, and the script lowercases with ${name,,}, which bash 4 added.
-    blockedWhen: /^forbidden-paths\.sh needs bash 4 or newer/m,
-    blockedReason: 'forbidden-paths.sh needs bash 4 or newer, which CI has. Install one, such as brew install bash, and put it first on PATH.',
+    // The script runs on macOS's bash 3.2 as well as CI's bash 5. .github/scripts/shell-compat.test.mjs keeps it so.
   },
   'verify-self-test': {
     id: 'verify-self-test',

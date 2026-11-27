@@ -299,13 +299,10 @@ describe('plans match CI', () => {
 });
 
 describe('forbidden-paths step', () => {
-  test("an old bash, such as macOS's 3.2, is BLOCKED with the fix, not FAIL", () => {
+  test("runs under any bash, macOS's 3.2 included, with no version gate", () => {
     const step = STEPS['forbidden-paths'];
-    assert.match('forbidden-paths.sh needs bash 4 or newer; this bash is 3.2.57(1)-release', step.blockedWhen);
-    // A real substitution bug under a new bash still fails.
-    assert.doesNotMatch('line 17: ${base,,}: bad substitution', step.blockedWhen);
-    assert.doesNotMatch('forbidden-paths: notes/x.md says forbidden-paths.sh needs bash 4 or newer', step.blockedWhen);
-    assert.match(step.blockedReason, /bash 4 or newer/);
+    assert.equal(step.blockedWhen, undefined);
+    assert.doesNotMatch(step.cmd.join(' '), /BASH_VERSINFO|bash 4/);
   });
 });
 

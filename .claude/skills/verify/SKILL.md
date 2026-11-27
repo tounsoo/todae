@@ -29,7 +29,7 @@ A run ends in one of three verdicts. The exit code carries it.
 
 `plan` maps each changed file to the first type that matches it, then lists the steps those types need. Read the plan before the run, so the proof fits the change.
 
-Each plan runs the commands that the jobs `Checks` needs in `.github/workflows/ci.yml` run for that type's files, so a run can't pass a commit those jobs would fail for them. Every type runs `pnpm check:self` (the `rule-checker` job) and the forbidden-paths check on the diff from the plan base, because CI runs both on every change. `forbidden-paths.sh` needs bash 4 or newer, as CI has. With the bash 3.2 that macOS ships, that step is `BLOCKED` with the fix.
+Each plan runs the commands that the jobs `Checks` needs in `.github/workflows/ci.yml` run for that type's files, so a run can't pass a commit those jobs would fail for them. Every type runs `pnpm check:self` (the `rule-checker` job) and the forbidden-paths check on the diff from the plan base, because CI runs both on every change. `forbidden-paths.sh` runs on the bash 3.2 that macOS ships as well as on CI's bash, and `.github/scripts/shell-compat.test.mjs` fails a shell script that uses a bash 4 feature.
 
 | Type | Files | Proof |
 | --- | --- | --- |
