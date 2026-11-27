@@ -1,4 +1,5 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, webkit } from '@playwright/test';
+import { firefoxOnHost, webkitOnHost } from '../../playwright.host';
 
 const PORT = 3100;
 
@@ -14,9 +15,10 @@ export default defineConfig({
     timezoneId: 'UTC',
   },
   projects: [
-    { name: 'iphone', use: { ...devices['iPhone 13'] } },
+    // On macOS, playwright.host.ts gives WebKit Linux's Tab order and Firefox a home it can start from.
+    { name: 'iphone', use: { ...devices['iPhone 13'], launchOptions: webkitOnHost(webkit.executablePath()) } },
     { name: 'chrome', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox-touch', use: { ...devices['Desktop Firefox'], hasTouch: true } },
+    { name: 'firefox-touch', use: { ...devices['Desktop Firefox'], hasTouch: true, launchOptions: firefoxOnHost() } },
   ],
   webServer: {
     command: `npx next start --port ${PORT}`,

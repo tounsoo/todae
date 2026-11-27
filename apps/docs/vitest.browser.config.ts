@@ -1,7 +1,9 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { playwright } from '@vitest/browser-playwright';
+import { chromium } from 'playwright';
 import { defineConfig } from 'vitest/config';
+import { classicScrollbarsOnHost } from '../../playwright.host';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
 
 if (process.env.VITEST) pinTestLocale();
@@ -52,7 +54,8 @@ export default defineConfig({
           browser: 'chromium',
           name: 'scroll-lock',
           include: ['test/scrollLock.browser.test.tsx'],
-          provider: playwright({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }),
+          // A classic 15px scrollbar, as on Linux. macOS overlays them, so they take no width (playwright.host.ts).
+          provider: playwright({ launchOptions: classicScrollbarsOnHost(chromium.executablePath(), { ignoreDefaultArgs: ['--hide-scrollbars'] }) }),
         },
       ],
     },
