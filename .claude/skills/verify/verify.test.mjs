@@ -327,6 +327,18 @@ describe('plans match CI', () => {
   });
 });
 
+describe('docs test servers', () => {
+  // Another checkout's docs server on 3100 made axe fail to start, and let peek test that checkout's build.
+  test('axe and peek get a free port and never reuse a server already running', () => {
+    for (const id of ['docs-axe', 'docs-peek']) assert.equal(STEPS[id].portEnv, 'TODAE_DOCS_TEST_PORT', id);
+    for (const file of ['apps/docs/playwright.config.ts', 'apps/docs/playwright.peek.config.ts']) {
+      const config = readFileSync(path.join(repoRoot, file), 'utf8');
+      assert.match(config, /process\.env\.TODAE_DOCS_TEST_PORT/, file);
+      assert.match(config, /reuseExistingServer: false/, file);
+    }
+  });
+});
+
 describe('nodeIcu', () => {
   // The Air's Homebrew node@24: its system ICU wrote ko dates as 2026/10/13, and five date tests failed there.
   test("a node that links the system ICU is a problem that names the fix", () => {

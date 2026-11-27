@@ -1,7 +1,8 @@
 import { defineConfig, devices, webkit } from '@playwright/test';
 import { firefoxOnHost, webkitOnHost } from '../../playwright.host';
 
-const PORT = 3100;
+// The verify helper passes a free port, since another checkout's server often holds 3100.
+const PORT = Number(process.env.TODAE_DOCS_TEST_PORT) || 3100;
 
 // Behaviour only. axe over the Korean pages is in playwright.config.ts.
 export default defineConfig({
@@ -23,6 +24,7 @@ export default defineConfig({
   webServer: {
     command: `npx next start --port ${PORT}`,
     port: PORT,
-    reuseExistingServer: !process.env.CI,
+    // Always this build's server: one left running from another checkout or an older build would check its pages.
+    reuseExistingServer: false,
   },
 });

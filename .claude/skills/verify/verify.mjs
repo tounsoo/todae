@@ -219,6 +219,8 @@ export const STEPS = {
     label: 'axe on the built docs site',
     cmd: ['pnpm', '--filter', 'docs', 'test:axe'],
     needs: ['docs-build'],
+    // playwright.config.ts and playwright.peek.config.ts serve the build on this port, 3100 when it is unset.
+    portEnv: 'TODAE_DOCS_TEST_PORT',
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
@@ -227,6 +229,8 @@ export const STEPS = {
     label: 'Behavior tests on the built docs site',
     cmd: ['pnpm', '--filter', 'docs', 'test:peek'],
     needs: ['docs-build'],
+    // playwright.config.ts and playwright.peek.config.ts serve the build on this port, 3100 when it is unset.
+    portEnv: 'TODAE_DOCS_TEST_PORT',
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
@@ -795,10 +799,23 @@ export function childEnv() {
   return env;
 }
 
-function capture(cmd) {
+// A port no server on this machine listens on now. Another checkout's docs test server often holds 3100.
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+  });
+}
+
+function capture(cmd, env = {}) {
   return new Promise((resolve) => {
     let output = '';
-    const child = spawn(cmd[0], cmd.slice(1), { cwd: root, env: childEnv(), stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(cmd[0], cmd.slice(1), { cwd: root, env: { ...childEnv(), ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
     for (const stream of [child.stdout, child.stderr]) {
       stream.setEncoding('utf8');
       stream.on('data', (chunk) => {
@@ -1155,8 +1172,11 @@ async function executeStep(step, number, dir, base) {
       return result;
     }
   }
-  const run = await capture(cmd);
-  transcript += `$ ${command}\n${run.output}`;
+  // A step that starts its own server gets a free port, so a server another checkout left on the default
+  // port is neither reused, which would test that checkout's build, nor in the way.
+  const env = step.portEnv ? { [step.portEnv]: String(await freePort()) } : {};
+  const run = await capture(cmd, env);
+  transcript += `$ ${Object.entries(env).map(([name, value]) => `${name}=${value} `).join('')}${command}\n${run.output}`;
   result.exit = run.exit;
   if (run.missing || run.exit === 127) {
     result.status = 'blocked';
