@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PRESETS } from './presets';
-import { BUILD_COMMAND, playgroundPackage } from './tokenPackage';
+import { BUILD_COMMAND } from '../../lib/token-package/package';
+import { playgroundPackage } from './tokenPackage';
 
 describe('playgroundPackage', () => {
   it('puts the token files and a README under tokens/, and names what differs by appearance', () => {

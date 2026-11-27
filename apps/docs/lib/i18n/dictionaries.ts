@@ -96,6 +96,7 @@ export type Dictionary = {
     | 'copyFailed'
     | 'downloadPackage'
     | 'downloaded'
+    | 'downloadFailed'
     | 'stage',
     string
   >;
@@ -200,6 +201,7 @@ const en: Dictionary = {
     copyFailed: 'Could not copy. Clipboard permission was denied.',
     downloadPackage: 'Download token package',
     downloaded: 'Downloaded {file}. Its README says how to build it.',
+    downloadFailed: 'Could not make the token package. Reload the page and try again.',
     stage: 'Preview',
   },
   regions: { code: 'Code example', table: 'Table' },
@@ -306,6 +308,7 @@ const ko: Dictionary = {
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
     downloadPackage: '토큰 패키지 다운로드',
     downloaded: '{file}을(를) 내려받았습니다. 빌드하는 방법은 README에 있습니다.',
+    downloadFailed: '토큰 패키지를 만들지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.',
     stage: '미리보기',
   },
   regions: { code: '코드 예시', table: '표' },

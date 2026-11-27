@@ -4,7 +4,7 @@ import { DOCS_ORIGIN } from '../origin';
 import { resolveEntries } from '@tounsoo/todae/tokens-builder';
 import { buildTokenFiles, todaeTokensDir, type BuildResult } from './build';
 import { envelope, MAX_RESPONSE_CHARS, type NextCall } from './budget';
-import { tokenPackage, type PackageSeed, type PackageToken, type TokenEntry } from '../token-package/package';
+import { BUILD_COMMAND, TOKENS_FOLDER, rowEntry, tokenPackage, type PackageSeed, type PackageToken, type TokenEntry } from '../token-package/package';
 import { catalogTokens, type CatalogToken } from './tokens';
 
 const SOURCE = 'todae-docs' as const;
@@ -93,14 +93,9 @@ function layerTokens(layer: 'core' | 'contract', values: Record<string, unknown>
     const variant = layer === 'contract' ? variants.find((name) => path.startsWith(`button.${name}.`)) : undefined;
     const row = rows.get(variant ? `button.secondary.${path.slice(`button.${variant}.`.length)}` : path);
     if (!row) throw new Error(`"${path}" is not a ${layer} token. Call list_tokens with layer "${layer}".`);
-    const entry: TokenEntry = variant
-      ? { kind: 'modifier', name: 'buttonVariant', context: variant }
-      : row.entry.kind === 'set'
-        ? { kind: 'set', name: row.entry.name }
-        : { kind: 'modifier', name: row.entry.name, context: row.entry.context ?? row.context ?? '' };
-    if (entry.kind === 'modifier' && entry.context === '') {
-      throw new Error(`"${path}" is set per ${row.entry.name} context. Add a context with ${row.entry.name === 'density' ? 'densities' : 'buttonVariants'} instead.`);
-    }
+    const entry: TokenEntry = variant ? { kind: 'modifier', name: 'buttonVariant', context: variant } : rowEntry(row);
+    // Core and contract tokens are declared once, or once per button variant, so this is a guard.
+    if (entry.kind === 'modifier' && entry.context === '') throw new Error(`"${path}" is set per ${row.entry.name} context`);
     tokens.push({ path, type: row.type, value, entry });
   }
   return tokens;
@@ -148,8 +143,9 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     }
   }
   if (densities.length > 0) {
-    const comfortable = JSON.parse(await readFile(join(base, 'density', 'comfortable.json'), 'utf8')) as Record<string, unknown>;
-    for (const density of densities) seeds.push({ entry: { kind: 'modifier', name: 'density', context: density }, tree: comfortable });
+    const text = await readFile(join(base, 'density', 'comfortable.json'), 'utf8');
+    const comfortable = JSON.parse(text) as Record<string, unknown>;
+    for (const density of densities) seeds.push({ entry: { kind: 'modifier', name: 'density', context: density }, tree: comfortable, text });
   }
   if (buttonVariants.length > 0) {
     const secondary = JSON.parse(await readFile(join(base, 'components', 'button.secondary.json'), 'utf8')) as {
@@ -170,11 +166,11 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
   }
 
   return {
-    tokensFolder: 'tokens',
+    tokensFolder: TOKENS_FOLDER,
     tokenFiles: files,
     otherFiles,
     build: build.ok ? { ok: true as const } : { ok: false as const, error: build.error },
-    command: 'npx --no todae-tokens build --resolver ./tokens/resolver.json',
+    command: BUILD_COMMAND,
     docsUrl: `${DOCS_ORIGIN}/guides/build-on-todae`,
     source: SOURCE,
   };

@@ -1,12 +1,9 @@
 import { parseThemeValue, type ThemeOverride, type ThemeOverrideKey } from '@tounsoo/todae';
 import catalog from '@tounsoo/todae/tokens.json';
 import { overridesPackage, type CatalogRow } from '../../lib/token-package/overrides';
+import { BUILD_COMMAND, TOKENS_FOLDER } from '../../lib/token-package/package';
 import { zipFiles } from '../../lib/token-package/zip';
 import { DOCS_ORIGIN } from '../../lib/origin';
-
-/** The folder the token files sit in, as `scaffold_design_system` and Fernway name it. */
-export const TOKENS_FOLDER = 'tokens';
-export const BUILD_COMMAND = `npx --no todae-tokens build --resolver ./${TOKENS_FOLDER}/resolver.json`;
 
 export type PlaygroundPackageInput = {
   /** The package's name: the preset's id, such as "graphite". */
@@ -38,7 +35,7 @@ function readme(name: string, presetName: string, files: readonly string[], resu
     '',
     '## Files',
     '',
-    ...files.map((file) => `- \`${file}\``),
+    list(files),
     '',
     `Rename the package in \`resolver.json\` (\`name\`) if you like. [Build on Todae](${DOCS_ORIGIN}/guides/build-on-todae) explains each set and modifier.`,
   ];
@@ -47,13 +44,20 @@ function readme(name: string, presetName: string, files: readonly string[], resu
       '',
       '## Tokens that differ by appearance',
       '',
-      `Todae declares these once for both appearances, but the Playground set them differently in light and dark. Each reads a \`${name.split('-').join('')}.*\` token that \`appearance/light.json\` and \`appearance/dark.json\` declare:`,
+      `Todae declares these once for both appearances, but the Playground set them differently in light and dark. Each reads a \`${result.root}.*\` token that \`appearance/light.json\` and \`appearance/dark.json\` declare:`,
       '',
       list(result.split),
     );
   }
-  if (result.lightOnly.length > 0) {
-    lines.push('', '## Kept at the light value', '', 'These read a token above that differs by appearance in a way a token file cannot follow, so they get its light value in both:', '', list(result.lightOnly));
+  if (result.unsplit.length > 0) {
+    lines.push(
+      '',
+      '## One value for both appearances',
+      '',
+      'The Playground showed these differently in light and dark, but the package could not split them, so they get one value in both. Check them in dark:',
+      '',
+      list(result.unsplit),
+    );
   }
   if (result.skipped.length > 0) {
     lines.push('', '## Left out', '', "Todae's token catalog does not know these overrides:", '', list(result.skipped));

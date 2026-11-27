@@ -78,9 +78,9 @@ describe('overridesPackage', () => {
   it('builds every Playground preset, or fails only on contrast the preset itself sets', async () => {
     const built: string[] = [];
     for (const preset of PRESETS) {
-      const { files, skipped, lightOnly } = exportOf(preset.light, preset.dark, preset.id);
+      const { files, skipped, unsplit } = exportOf(preset.light, preset.dark, preset.id);
       expect(skipped, preset.id).toEqual([]);
-      expect(lightOnly, preset.id).toEqual([]);
+      expect(unsplit, preset.id).toEqual([]);
       const result = await buildTokenFiles(files);
       // A preset may miss an APCA pair the Playground does not check, such as Anvil's selected option.
       if (result.ok) built.push(preset.id);
@@ -90,12 +90,12 @@ describe('overridesPackage', () => {
   }, 120_000);
 
   it('follows a core token that differs by appearance through the tokens that alias it', () => {
-    const { files, split, lightOnly } = exportOf(
+    const { files, split, unsplit } = exportOf(
       { 'color.gray.900': { colorSpace: 'oklch', components: [0.19, 0.01, 65] } },
       { 'color.gray.900': { colorSpace: 'oklch', components: [0.2, 0.03, 300] } },
     );
     expect(split).toEqual(['color.gray.900']);
-    expect(lightOnly).toEqual([]);
+    expect(unsplit).toEqual([]);
     expect(at(parsed(files, 'core.json'), 'color.gray.900.$value')).toEqual({ colorSpace: 'oklch', components: [0.19, 0.01, 65] });
     expect(at(parsed(files, 'appearance/dark.json'), 'acme.color.gray.900.$value')).toEqual({ colorSpace: 'oklch', components: [0.2, 0.03, 300] });
     const readers = rows.filter((row) => row.ref === 'color.gray.900' && row.context === 'dark');
@@ -159,6 +159,19 @@ describe('overridesPackage', () => {
     const contexts = rows.filter((candidate) => candidate.path === row.path).map((candidate) => candidate.context);
     expect(contexts.length).toBe(3);
     for (const context of contexts) expect(at(parsed(files, `density/${context}.json`), `${row.path}.$value`)).toEqual(value);
+  });
+
+  it('lists a one-sided override whose Todae value it cannot read back, instead of hiding it', () => {
+    const { split, unsplit, files } = overridesPackage({
+      name: 'acme',
+      light: { 'radius.md': { value: 1, unit: 'rem' } },
+      dark: {},
+      catalog: rows,
+      parse: () => null,
+    });
+    expect(split).toEqual([]);
+    expect(unsplit).toEqual(['radius.md']);
+    expect(at(parsed(files, 'core.json'), 'radius.md.$value')).toEqual({ value: 1, unit: 'rem' });
   });
 
   it('exports nothing but a resolver for no overrides', () => {

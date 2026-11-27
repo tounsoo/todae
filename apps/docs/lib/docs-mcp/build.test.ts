@@ -227,6 +227,8 @@ describe('scaffold_design_system', () => {
       'button.soft-tint.json',
     ]);
     expect(result.otherFiles.map((file) => file.path)).toEqual(['src/todae.d.ts']);
+    // A new density is Todae's comfortable file as it is written.
+    expect(result.tokenFiles['density/roomy.json']).toBe(readFileSync(join(todaeTokensDir(), 'density', 'comfortable.json'), 'utf8'));
     const dts = result.otherFiles[0]?.contents ?? '';
     expect(dts).toContain('export {};');
     expect(dts).toContain('    outline: true;');

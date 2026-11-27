@@ -291,26 +291,31 @@ export function Playground({ locale }: { locale: Locale }) {
   }
 
   // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
-  const [downloaded, setDownloaded] = useState<{ json: string; fileName: string } | null>(null);
+  const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
   async function downloadPackage() {
-    // Loaded on demand: the package reads Todae's whole token catalog.
-    const { playgroundPackage } = await import('./playground/tokenPackage');
-    const name = preset?.id ?? 'theme';
-    const result = playgroundPackage({ name, presetName: preset?.name ?? name, light: exportLight, dark: exportDark });
-    const url = URL.createObjectURL(new Blob([result.zip as BlobPart], { type: 'application/zip' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = result.fileName;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
-    setDownloaded({ json: exportJson, fileName: result.fileName });
+    try {
+      // Loaded on demand: the package reads Todae's whole token catalog.
+      const { playgroundPackage } = await import('./playground/tokenPackage');
+      const name = preset?.id ?? 'theme';
+      const result = playgroundPackage({ name, presetName: preset?.name ?? name, light: exportLight, dark: exportDark });
+      const url = URL.createObjectURL(new Blob([result.zip as BlobPart], { type: 'application/zip' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = result.fileName;
+      link.click();
+      // Some browsers drop a download whose URL is revoked at once.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setDownloaded({ json: exportJson, status: t.downloaded.replace('{file}', result.fileName) });
+    } catch {
+      setDownloaded({ json: exportJson, status: t.downloadFailed });
+    }
   }
 
   // The result shows only for the JSON it was for, so it clears once the theme changes.
   const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
-  const downloadStatus = downloaded?.json === exportJson ? t.downloaded.replace('{file}', downloaded.fileName) : null;
-  const copyStatus = clipboard.text === exportJson ? copyResult : downloadStatus;
-  const copyStatusLine = copyStatus ? <p className="pg-hint">{copyStatus}</p> : null;
+  const downloadStatus = downloaded?.json === exportJson ? downloaded.status : null;
+  const exportStatus = clipboard.text === exportJson ? copyResult : downloadStatus;
+  const exportStatusLine = exportStatus ? <p className="pg-hint">{exportStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
   if (!narrow && sheetOpen) setSheetOpen(false);
 
@@ -496,7 +501,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {tokenSection}
                 {codePanel}
                 {actions}
-                <p className="pg-hint">{copyStatus ?? t.exportHint}</p>
+                <p className="pg-hint">{exportStatus ?? t.exportHint}</p>
               </>
             )}
           </div>
@@ -546,7 +551,7 @@ export function Playground({ locale }: { locale: Locale }) {
               ) : null}
             </Button.Root>
             <Button.Root onClick={exportOverrides}>{t.export}</Button.Root>
-            {copyStatusLine}
+            {exportStatusLine}
           </div>
           <BottomSheet.Root className="pg-sheet" open={sheetOpen} onOpenChange={setSheetOpen}>
             {/* The site sets no StringsProvider, so the sheet's own controls get this locale's names here. */}
@@ -564,7 +569,7 @@ export function Playground({ locale }: { locale: Locale }) {
             </BottomSheet.Body>
             <BottomSheet.Footer className="pg-sheet-foot">
               {actions}
-              {copyStatusLine}
+              {exportStatusLine}
             </BottomSheet.Footer>
           </BottomSheet.Root>
         </>

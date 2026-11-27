@@ -1,4 +1,4 @@
-import { readsAppearance, tokenPackage, type PackageToken, type TokenEntry } from './package';
+import { ownRoot, readsAppearance, rowEntry, tokenPackage, type PackageToken, type TokenEntry } from './package';
 
 /** The catalog fields this export reads: one row per token, or per context for a token a modifier sets. */
 export type CatalogRow = {
@@ -36,12 +36,16 @@ export type OverridesPackage = {
    * token of its own in its appearance files, like Fernway's `fernway.hero.*`.
    */
   split: string[];
+  /** The root of the package's own split tokens, such as `acme` for `acme.color.gray.900`. */
+  root: string;
   /**
-   * Tokens that read a split core token in a way the package cannot follow,
-   * such as another core token aliasing it, so they get its light value in
-   * both appearances.
+   * Tokens that get one value in both appearances although the Playground
+   * showed them differently: tokens that read a split core token in a way the
+   * package cannot follow (another core token aliasing it, or a calc), which
+   * get its light value, and one-sided overrides whose Todae value the package
+   * cannot read back.
    */
-  lightOnly: string[];
+  unsplit: string[];
 };
 
 const APPEARANCES = ['light', 'dark'] as const;
@@ -99,12 +103,11 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
   const tokens: PackageToken[] = [];
   const skipped: string[] = [];
   const split: string[] = [];
-  const lightOnly = new Set<string>();
+  const unsplit = new Set<string>();
   const paths = [...new Set([...Object.keys(light), ...Object.keys(dark)])].sort();
   const values = { light, dark };
   const has = (side: 'light' | 'dark', path: string) => Object.hasOwn(values[side], path);
-  // A token path's first segment has no hyphens, so "y2k-chrome" roots its own tokens at "y2kchrome".
-  const root = name.split('-').join('');
+  const root = ownRoot(name);
 
   for (const path of paths) {
     const found = rows.get(path);
@@ -126,7 +129,9 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
     const valueIn = (side: 'light' | 'dark') => (has(side, path) ? values[side][path] : todae);
     const lightValue = valueIn('light');
     const darkValue = valueIn('dark');
-    if (lightValue === null || lightValue === undefined || darkValue === null || darkValue === undefined || same(lightValue, darkValue)) {
+    const unreadable = lightValue === null || lightValue === undefined || darkValue === null || darkValue === undefined;
+    if (unreadable || same(lightValue, darkValue)) {
+      if (unreadable) unsplit.add(path);
       const value = has('light', path) ? light[path] : dark[path];
       for (const target of targets) tokens.push({ path, type, value, entry: target });
       continue;
@@ -148,7 +153,7 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
       if (reader.path === path) continue;
       if (reader.ref !== path) {
         // A value that reads the token some other way, such as in a calc, cannot follow it.
-        if (reader.cssValue.includes(`${reads})`) || reader.cssValue.includes(`${reads},`)) lightOnly.add(reader.path);
+        if (reader.cssValue.includes(`${reads})`) || reader.cssValue.includes(`${reads},`)) unsplit.add(reader.path);
         continue;
       }
       const readerType = reader.type;
@@ -156,13 +161,9 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
         const side = reader.context as 'light' | 'dark';
         if (!has(side, reader.path)) tokens.push({ path: reader.path, type: readerType, value: alias(own), entry: { kind: 'modifier', name: 'appearance', context: side } });
       } else if (!readsAppearance(reader.entry)) {
-        lightOnly.add(reader.path);
+        unsplit.add(reader.path);
       } else if (!has('light', reader.path) && !has('dark', reader.path)) {
-        const target: TokenEntry =
-          reader.entry.kind === 'set'
-            ? { kind: 'set', name: reader.entry.name }
-            : { kind: 'modifier', name: reader.entry.name, context: reader.entry.context ?? reader.context ?? '' };
-        tokens.push({ path: reader.path, type: readerType, value: alias(own), entry: target });
+        tokens.push({ path: reader.path, type: readerType, value: alias(own), entry: rowEntry(reader) });
       }
     }
   }
@@ -174,6 +175,7 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
     files: tokenPackage({ name, ...(description ? { description } : {}), tokens }),
     skipped,
     split,
-    lightOnly: [...lightOnly].sort(),
+    root,
+    unsplit: [...unsplit].sort(),
   };
 }

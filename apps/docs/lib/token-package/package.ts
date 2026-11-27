@@ -15,8 +15,27 @@ export type TokenEntry = { kind: 'set'; name: string } | { kind: 'modifier'; nam
 /** One token to write: its path, DTCG `$type` and `$value`, and the entry it belongs to. */
 export type PackageToken = { path: string; type: string; value: unknown; entry: TokenEntry };
 
-/** A starting tree for one entry's file, such as a new button variant copied from `secondary`. */
-export type PackageSeed = { entry: TokenEntry; tree: Record<string, unknown> };
+/**
+ * A starting tree for one entry's file, such as a new button variant copied from `secondary`.
+ * `text` is the tree as written in its source file, kept as it is when no token changes the file.
+ */
+export type PackageSeed = { entry: TokenEntry; tree: Record<string, unknown>; text?: string };
+
+/** The folder a package's token files sit in, as Fernway and `scaffold_design_system` name it. */
+export const TOKENS_FOLDER = 'tokens';
+/** Builds a package's theme CSS and override types from the project root. */
+export const BUILD_COMMAND = `npx --no todae-tokens build --resolver ./${TOKENS_FOLDER}/resolver.json`;
+
+/** The entry a catalog row's token belongs to, for a row of one context. */
+export function rowEntry(row: { context: string | null; entry: { kind: 'set' | 'modifier'; name: string; context?: string } }): TokenEntry {
+  if (row.entry.kind === 'set') return { kind: 'set', name: row.entry.name };
+  return { kind: 'modifier', name: row.entry.name, context: row.entry.context ?? row.context ?? '' };
+}
+
+/** The root of a package's own tokens: its name without hyphens, since a token path's first segment has none. */
+export function ownRoot(name: string): string {
+  return name.split('-').join('');
+}
 
 export type PackageInput = {
   /** The design system's name, written into its resolver. */
@@ -68,7 +87,7 @@ export function entryFile(entry: TokenEntry): string {
   return `${entry.name}/${entry.context}.json`;
 }
 
-export function json(value: unknown): string {
+function json(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
@@ -77,7 +96,7 @@ function isGroup(value: unknown): value is Record<string, unknown> {
 }
 
 /** Puts `node` at a dotted path in a DTCG tree, replacing a token already there. */
-export function place(root: Record<string, unknown>, path: string, node: unknown): void {
+function place(root: Record<string, unknown>, path: string, node: unknown): void {
   const segments = path.split('.');
   let group = root;
   for (const segment of segments.slice(0, -1)) {
@@ -109,7 +128,7 @@ function rank(entry: { kind: string; name: string }): number {
  * are sorted by path, after the seed's own order.
  */
 export function tokenPackage({ name, description, tokens = [], seeds = [] }: PackageInput): Record<string, string> {
-  const files = new Map<string, { entry: TokenEntry; tree: Record<string, unknown> }>();
+  const files = new Map<string, { entry: TokenEntry; tree: Record<string, unknown>; text?: string }>();
   const fileFor = (entry: TokenEntry) => {
     const key = entryKey(entry);
     let file = files.get(key);
@@ -119,11 +138,17 @@ export function tokenPackage({ name, description, tokens = [], seeds = [] }: Pac
     }
     return file;
   };
-  for (const seed of seeds) Object.assign(fileFor(seed.entry).tree, structuredClone(seed.tree));
+  for (const seed of seeds) {
+    const file = fileFor(seed.entry);
+    Object.assign(file.tree, structuredClone(seed.tree));
+    file.text = seed.text;
+  }
   // Files keep the order the caller lists entries in, such as light before dark, within Todae's order.
   for (const token of tokens) fileFor(token.entry);
   for (const token of [...tokens].sort((a, b) => a.path.localeCompare(b.path))) {
-    place(fileFor(token.entry).tree, token.path, { $type: token.type, $value: token.value });
+    const file = fileFor(token.entry);
+    file.text = undefined;
+    place(file.tree, token.path, { $type: token.type, $value: token.value });
   }
 
   const ordered = [...files.values()].sort((a, b) => rank(a.entry) - rank(b.entry));
@@ -158,6 +183,6 @@ export function tokenPackage({ name, description, tokens = [], seeds = [] }: Pac
     resolutionOrder: order,
   };
   const out: Record<string, string> = { 'resolver.json': json(resolver) };
-  for (const file of ordered) out[entryFile(file.entry)] = json(file.tree);
+  for (const file of ordered) out[entryFile(file.entry)] = file.text ?? json(file.tree);
   return out;
 }
