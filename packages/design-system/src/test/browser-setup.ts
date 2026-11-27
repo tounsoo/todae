@@ -2,7 +2,7 @@ import './temporal.js';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
 import { server } from 'vitest/browser';
-import { pinLinuxFontMetrics } from '../../../../browser.host';
+import { macosEntry } from '../../../../browser.host';
 import { resetInputModality } from '../internal/inputModality.js';
 import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
 import { blurBeforeCleanup } from './focus.js';
@@ -13,9 +13,6 @@ import '../styles/todae.css';
 // is off here; controls-motion.browser.test.tsx turns it back on to test it.
 document.documentElement.style.setProperty('--_todae-control-motion-duration', '0s');
 
-// On macOS, text gets the font metrics of CI's Linux runs. browser.host.ts at the repo root says why.
-pinLinuxFontMetrics(server.platform);
-
 afterEach(() => {
   blurBeforeCleanup();
   cleanup();
@@ -25,6 +22,13 @@ afterEach(() => {
 
 // One page runs every file, and the frame of the file before is removed with focus in it. Firefox can leave this
 // frame's window unfocused, so typed keys and the first Tab would go to the top page.
+// On macOS, a test that browser.host.ts lists as failing there because of macOS itself is skipped, with why.
+// CI's Linux runs it.
+beforeEach((context) => {
+  const entry = macosEntry(server.platform, server.browser, context.task.file.filepath, context.task.fullTestName);
+  if (entry) context.skip(`macOS host: ${entry.reason}`);
+});
+
 beforeEach(async () => {
   window.focus();
   for (let frame = 0; frame < 10 && !document.hasFocus(); frame++) await new Promise(requestAnimationFrame);
