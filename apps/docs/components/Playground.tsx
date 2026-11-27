@@ -327,7 +327,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {paths.length === 0 ? <p className="pg-empty">{t.noMatch}</p> : null}
                 {paths.map((path) => (
                   <TokenField
-                    key={`${presetId}:${resolved}:${path}`}
+                    key={`${presetId}:${resolved}:${motion}:${path}`}
                     path={path}
                     value={valueFor(path)}
                     edited={edits[resolved][path] !== undefined}

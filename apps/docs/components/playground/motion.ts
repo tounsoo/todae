@@ -56,7 +56,7 @@ function feel(f: Feel): ThemeOverride {
 }
 
 /** The surfaces whose enter curve may overshoot: each grows or rises into a resting place. */
-export const SURFACES = ['popover', 'dialog', 'toast'] as const;
+const SURFACES = ['popover', 'dialog', 'toast'] as const;
 
 /**
  * The curve of each thing that appears and goes. They all alias the core curves,
