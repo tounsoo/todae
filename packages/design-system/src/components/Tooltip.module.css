@@ -1,9 +1,23 @@
+/* How far toward its trigger a cold tip sits before it has entered, from
+   tooltip.motion.offset, else 0. Registered, so it alone transitions. */
+@property --_tooltip-slide {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 @layer todae.components {
   .content {
     box-sizing: border-box;
     position: fixed;
     inset: unset;
     margin: 0;
+    /* By layout, never a transform: the end margin moves a tip over its
+       trigger down, the start margin one under it up. */
+    /* The far margin gives the same back, so the margin box a position try
+       measures stays where it rests through the slide. */
+    margin-block-start: var(--_tooltip-slide, 0px);
+    margin-block-end: calc(-1 * var(--_tooltip-slide, 0px));
     width: max-content;
     max-width: var(--todae-tooltip-max-width);
     padding: var(--todae-tooltip-padding-y) var(--todae-tooltip-padding-x);
@@ -13,9 +27,12 @@
     border-radius: var(--todae-tooltip-radius);
     box-shadow: var(--todae-tooltip-shadow);
     /* It fades in by opacity alone, as usePopoverSync marks it data-entered,
-       standing in for @starting-style as on Popover. It never moves, since it
-       sits by a trigger that may sit in many places, and it closes at once. */
-    transition: opacity var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
+       standing in for @starting-style as on Popover. By default it doesn't
+       move, and it closes at once. A brand can slide a cold tip in from its
+       trigger with tooltip.motion.offset, by layout. */
+    transition:
+      opacity var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter),
+      --_tooltip-slide var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
   }
 
   .content:not([data-open]) {
@@ -27,6 +44,12 @@
      sweep across a toolbar never lags. */
   .content:not([data-entered], [data-todae-warm]) {
     opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .content:not([data-entered], [data-todae-warm]) {
+      --_tooltip-slide: var(--todae-tooltip-motion-offset);
+    }
   }
 
   /* Warm, closing, or open and still: no transition. Safari re-resolves the
@@ -61,6 +84,8 @@
     bottom: unset;
     top: calc(anchor(bottom) + var(--todae-tooltip-offset));
     justify-self: anchor-center;
+    margin-block-start: calc(-1 * var(--_tooltip-slide, 0px));
+    margin-block-end: var(--_tooltip-slide, 0px);
   }
 
   @supports (position-try-fallbacks: flip-block) {

@@ -509,15 +509,16 @@
     "(section order)": "c4cbb2773a28"
   },
   "loader": {
-    "(top)": "2c55b6c55b63",
+    "(top)": "f1b69d3e05eb",
     "# Loader and Skeleton": "249c7b4e5b25",
     "## Loader": "36304bac1e3a",
     "### Dots": "426f9f2c69ad",
-    "## Skeleton": "63326266db85",
+    "## Skeleton": "dfe43eb9b679",
+    "### Shimmer": "cdbc60aec6fd",
     "## Accessible composition": "d76cd550ca68",
     "## When to use": "450ef0ffce4b",
     "## Props": "beb45b8d5394",
-    "(section order)": "0a8b0f340b98"
+    "(section order)": "92f3e7b28a93"
   },
   "mcp": {
     "# MCP server": "eaf89d1168a7",
@@ -552,7 +553,7 @@
     "## Submenus": "93805bf5d7d3",
     "## Links": "ede13f3623cf",
     "## Context menus": "2d9cceca0184",
-    "## Icons": "a5742eeef7cd",
+    "## Icons": "6532e2a2879a",
     "## Accessible composition": "b31bba7789d0",
     "## When to use": "9a102c1309d4",
     "## Props": "aa5c6b3046f6",
@@ -583,7 +584,7 @@
     "(top)": "79fa29c40cf3",
     "# OptionList": "0f34c7cc527d",
     "## Detail": "58e635bbfbad",
-    "## Icons": "c64f640cde20",
+    "## Icons": "0948797399bb",
     "## Accessible composition": "e95c5b0be999",
     "## When to use": "f5fbfd42f51c",
     "## Props": "230671f0f6b1",
@@ -602,13 +603,13 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "7912425efb51",
+    "# Native platform": "6b477e22f590",
     "## What Safari and Firefox do differently": "fb68583b26df",
     "(section order)": "838d852d6965"
   },
   "popover": {
     "(top)": "3e89bd45eeb2",
-    "# Popover": "9c4cecc2fb3c",
+    "# Popover": "19107ba2eb1b",
     "## Examples": "447a73474218",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "71f70ec143b8",
@@ -950,7 +951,7 @@
   "steps": {
     "(top)": "c686b86924ab",
     "# Steps": "a3f33f6f07ed",
-    "## Parts": "0579cf0e64d1",
+    "## Parts": "047868f3adf7",
     "## Variants": "74c247b04a06",
     "## Status words": "5e1bbccafcfa",
     "## Accessible composition": "7166254b7e2d",
@@ -978,7 +979,7 @@
   },
   "tabs": {
     "(top)": "25fccfe8fb48",
-    "# Tabs": "c3d918b6787d",
+    "# Tabs": "1c41d5992a56",
     "## Accessible composition": "5a77dc0a2eed",
     "## When to use": "7ad4ffcdaf0d",
     "## Props": "b49fd1369394",
@@ -1031,7 +1032,7 @@
     "## Status tones": "9db538465fa4",
     "## Category tones": "40d3a79f5387",
     "## Focus ring": "c4641c4527e8",
-    "## Motion": "57f3ed509321",
+    "## Motion": "098a9beb2e6d",
     "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
     "(section order)": "5e228a1781f3"
@@ -1046,7 +1047,7 @@
   },
   "tooltip": {
     "(top)": "2a983f89762f",
-    "# Tooltip": "003ec5ede25e",
+    "# Tooltip": "2e758459aed0",
     "## Warm-up": "e6ccde403145",
     "## Examples": "01670f737427",
     "## What goes where": "91a9e7b39130",

@@ -28,7 +28,7 @@ export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps
 export { Progress, type ProgressRootProps } from './components/Progress.js';
 export { Meter, type MeterRootProps } from './components/Meter.js';
 export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader.js';
-export { Skeleton, type SkeletonRootProps } from './components/Skeleton.js';
+export { Skeleton, type SkeletonRootProps, type SkeletonVariant } from './components/Skeleton.js';
 export { Slider, type SliderProps, type SliderRangeProps, type SliderRangeValue, type SliderRootProps, type SliderSingleProps } from './components/Slider.client.js';
 export { Code, type CodeRootProps } from './components/Code.js';
 export { CodeBlock, type CodeBlockRootProps } from './components/CodeBlock.js';

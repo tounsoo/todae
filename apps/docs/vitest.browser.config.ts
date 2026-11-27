@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { playwright } from '@vitest/browser-playwright';
 import { chromium } from 'playwright';
+import type { BrowserCommand } from 'vitest/node';
 import { defineConfig } from 'vitest/config';
 import { classicScrollbarsOnHost } from '../../playwright.host';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
@@ -12,6 +13,25 @@ const src = (path: string) => fileURLToPath(new URL(`../../packages/design-syste
 
 // The server-safe entries (`@tounsoo/todae/stack` and the rest), so they load the same CSS modules as the main entry.
 const serverEntries = readdirSync(src('server')).map((file) => file.replace(/\.ts$/, ''));
+
+type MediaFeature =
+  | { name: 'prefers-reduced-motion'; value: 'reduce' | 'no-preference' }
+  | { name: 'forced-colors'; value: 'active' | 'none' }
+  | { name: 'prefers-color-scheme'; value: 'light' | 'dark' };
+
+/**
+ * Sets the media features the page reports, as the package's browser config
+ * does, so the package's `emulateMedia` test helper works here too. A feature
+ * the list leaves out goes back to the page's starting value.
+ */
+const emulateMedia: BrowserCommand<[features: MediaFeature[]]> = async ({ page }, features) => {
+  const value = (name: MediaFeature['name']) => features.find((feature) => feature.name === name)?.value;
+  await page.emulateMedia({
+    reducedMotion: (value('prefers-reduced-motion') ?? 'no-preference') as 'reduce' | 'no-preference',
+    forcedColors: (value('forced-colors') ?? 'none') as 'active' | 'none',
+    colorScheme: (value('prefers-color-scheme') ?? 'light') as 'light' | 'dark',
+  });
+};
 
 // Runs every docs demo in headless Chromium against the package source.
 export default defineConfig({
@@ -44,6 +64,7 @@ export default defineConfig({
       enabled: true,
       provider: playwright(),
       headless: true,
+      commands: { emulateMedia },
       screenshotFailures: false,
       instances: [
         {
