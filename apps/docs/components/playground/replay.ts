@@ -24,7 +24,7 @@ function resolve(path: string, overrides: ThemeOverride): unknown {
 }
 
 /** A duration token in ms. */
-export function durationOf(path: string, overrides: ThemeOverride): number {
+function durationOf(path: string, overrides: ThemeOverride): number {
   const value = resolve(path, overrides);
   if (typeof value === 'string') {
     const match = /^(-?[\d.]+)(ms|s)$/.exec(value.trim());
@@ -36,7 +36,7 @@ export function durationOf(path: string, overrides: ThemeOverride): number {
 }
 
 /** A cubicBezier token as the CSS `cubic-bezier()` the browser reports. */
-export function easingOf(path: string, overrides: ThemeOverride): string {
+function easingOf(path: string, overrides: ThemeOverride): string {
   const value = resolve(path, overrides);
   if (typeof value === 'string') return value.trim();
   return `cubic-bezier(${(value as readonly number[]).join(', ')})`;
@@ -51,6 +51,7 @@ const SURFACE_TOKENS = {
   tooltip: { enter: ['tooltip.motion.duration.enter', 'tooltip.motion.easing.enter'], exit: null },
   dialog: { enter: ['dialog.motion.duration.enter', 'dialog.motion.easing.enter'], exit: ['dialog.motion.duration.exit', 'dialog.motion.easing.exit'] },
   toast: { enter: ['toast.motion.duration.enter', 'toast.motion.easing.enter'], exit: ['toast.motion.duration.exit', 'toast.motion.easing.exit'] },
+  indicator: { enter: ['tabs.motion.duration', 'tabs.motion.easing'], exit: null },
   tabs: { enter: ['tabs.motion.panel.duration', 'tabs.motion.easing'], exit: null },
   steps: { enter: ['steps.motion.duration', 'steps.motion.easing'], exit: null },
   option: { enter: ['option.check.motion.duration', 'option.check.motion.easing'], exit: null },
@@ -58,7 +59,12 @@ const SURFACE_TOKENS = {
 } as const;
 
 export type Surface = keyof typeof SURFACE_TOKENS;
-export const SURFACES = Object.keys(SURFACE_TOKENS) as Surface[];
+const READOUT_SURFACES = Object.keys(SURFACE_TOKENS) as Surface[];
+
+/** Readout rows by surface. */
+export function bySurface(rows: ReadoutRow[]): Record<Surface, ReadoutRow> {
+  return Object.fromEntries(rows.map((row) => [row.surface, row])) as Record<Surface, ReadoutRow>;
+}
 
 function timing([duration, easing]: readonly [string, string], overrides: ThemeOverride): Timing {
   return { duration: durationOf(duration, overrides), easing: easingOf(easing, overrides) };
@@ -66,7 +72,7 @@ function timing([duration, easing]: readonly [string, string], overrides: ThemeO
 
 /** What each surface plays under `overrides`, in the order the readout lists them. */
 export function motionReadout(overrides: ThemeOverride): ReadoutRow[] {
-  return SURFACES.map((surface) => {
+  return READOUT_SURFACES.map((surface) => {
     const tokens = SURFACE_TOKENS[surface];
     return { surface, enter: timing(tokens.enter, overrides), exit: tokens.exit ? timing(tokens.exit, overrides) : null };
   });
@@ -92,7 +98,8 @@ export function slowMotion(overrides: ThemeOverride, factor: number): ThemeOverr
  * the preview shows them: popovers and cold tips slide in from their trigger,
  * a switched tab panel and a step's status fade, and a picked check grows in.
  * The fades take the feel's reveal step and the checks its selection step, as
- * hover and selection changes do. A value the theme already sets stays.
+ * hover and selection changes do. A value the theme already sets stays, even
+ * 0, so the switch never hides what a theme chose.
  */
 export function optInMotion(overrides: ThemeOverride): ThemeOverride {
   const ms = (path: string) => ({ value: durationOf(path, overrides), unit: 'ms' });
@@ -111,6 +118,8 @@ export function optInMotion(overrides: ThemeOverride): ThemeOverride {
 }
 
 export type Cue = 'open' | 'close' | 'dialog-open' | 'dialog-close' | 'toast-show' | 'toast-dismiss' | 'done';
+/** One thing the replay does, `at` ms from the press. */
+export type ReplayStep = { at: number; cue: Cue };
 
 /** How long each surface rests once in, and the pause between acts, at normal speed. */
 const HOLD = 700;
@@ -122,14 +131,14 @@ const GAP = 250;
  * then the dialog alone, since a modal one makes the rest inert, then a
  * toast. `slow` stretches the rests as slow motion stretches the motion.
  */
-export function replayCues(rows: ReadoutRow[], slow: number): { at: number; cue: Cue }[] {
-  const row = Object.fromEntries(rows.map((r) => [r.surface, r])) as Record<Surface, ReadoutRow>;
+export function replayCues(rows: ReadoutRow[], slow: number): ReplayStep[] {
+  const row = bySurface(rows);
   const hold = HOLD * slow;
   const gap = GAP * slow;
-  const small: Surface[] = ['popover', 'tooltip', 'tabs', 'steps', 'option'];
+  const small: Surface[] = ['popover', 'tooltip', 'indicator', 'tabs', 'steps', 'option'];
   const enter = Math.max(...small.map((s) => row[s].enter.duration));
   const exit = Math.max(...small.map((s) => row[s].exit?.duration ?? 0));
-  const out: { at: number; cue: Cue }[] = [{ at: 0, cue: 'open' }];
+  const out: ReplayStep[] = [{ at: 0, cue: 'open' }];
   let at = enter + hold;
   out.push({ at, cue: 'close' });
   at += exit + gap;

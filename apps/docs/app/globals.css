@@ -1502,7 +1502,7 @@ table {
 .pg-motion-note {
   margin: 0;
   padding: 0.5rem 0.75rem;
-  border-inline-start: 3px solid var(--todae-color-border-strong, currentColor);
+  border-inline-start: 3px solid var(--todae-color-border-default);
 }
 
 .pg-motion-specimens {

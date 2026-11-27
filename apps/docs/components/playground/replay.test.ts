@@ -1,6 +1,6 @@
 import type { ThemeOverride } from '@tounsoo/todae';
 import { describe, expect, it } from 'vitest';
-import { motionReadout, optInMotion, replayCues, slowMotion } from './replay';
+import { bySurface, motionReadout, optInMotion, replayCues, slowMotion } from './replay';
 import { MOTION_FEELS } from './motion';
 
 const TODAE_ENTER = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -17,8 +17,12 @@ describe('motionReadout', () => {
     });
   });
 
+  it('reads the tab indicator, which moves by default, apart from the panel fade', () => {
+    expect(bySurface(motionReadout({})).indicator).toEqual({ surface: 'indicator', enter: { duration: 200, easing: TODAE_ENTER }, exit: null });
+  });
+
   it('reads a feel’s values where it sets them', () => {
-    const rows = Object.fromEntries(motionReadout(MOTION_FEELS.springy).map((row) => [row.surface, row]));
+    const rows = bySurface(motionReadout(MOTION_FEELS.springy));
     expect(rows.popover?.enter).toEqual({ duration: 280, easing: 'cubic-bezier(0.34, 1.36, 0.64, 1)' });
     expect(rows.dialog?.enter).toEqual({ duration: 320, easing: 'cubic-bezier(0.34, 1.36, 0.64, 1)' });
     // Toasts never spring.
@@ -26,16 +30,16 @@ describe('motionReadout', () => {
   });
 
   it('shows the opt-in motions at 0ms until something turns them on, with no exit', () => {
-    const rows = Object.fromEntries(motionReadout({}).map((row) => [row.surface, row]));
+    const rows = bySurface(motionReadout({}));
     for (const surface of ['tabs', 'steps', 'option', 'menu'] as const) {
-      expect(rows[surface]?.enter.duration, surface).toBe(0);
-      expect(rows[surface]?.exit, surface).toBeNull();
+      expect(rows[surface].enter.duration, surface).toBe(0);
+      expect(rows[surface].exit, surface).toBeNull();
     }
   });
 });
 
 describe('slowMotion', () => {
-  const slowed = (base: ThemeOverride) => Object.fromEntries(motionReadout({ ...base, ...slowMotion(base, 4) }).map((row) => [row.surface, row]));
+  const slowed = (base: ThemeOverride) => bySurface(motionReadout({ ...base, ...slowMotion(base, 4) }));
 
   it('plays every surface four times as long, on the same curve', () => {
     const rows = slowed(MOTION_FEELS.springy);
@@ -72,7 +76,7 @@ describe('optInMotion', () => {
   });
 
   it('times them by Todae’s own steps under standard', () => {
-    const rows = Object.fromEntries(motionReadout(optInMotion({})).map((row) => [row.surface, row]));
+    const rows = bySurface(motionReadout(optInMotion({})));
     expect(rows.tabs?.enter.duration).toBe(200);
     expect(rows.option?.enter.duration).toBe(160);
   });

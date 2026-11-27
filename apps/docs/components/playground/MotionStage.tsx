@@ -40,6 +40,7 @@ const PART_NAMES: Record<Surface, string> = {
   tooltip: 'Tooltip',
   dialog: 'Dialog',
   toast: 'Toast',
+  indicator: 'Tabs indicator',
   tabs: 'Tabs panel',
   steps: 'Steps',
   option: 'OptionList check',
@@ -79,7 +80,8 @@ export function MotionStage({
 
   const optInLayer = optIn ? optInMotion(overrides) : {};
   const listed = { ...overrides, ...optInLayer };
-  const layer: ThemeOverride = { ...optInLayer, ...slowMotion(listed, slow ? SLOW : 1) };
+  const speed = slow ? SLOW : 1;
+  const layer: ThemeOverride = { ...optInLayer, ...slowMotion(listed, speed) };
   const rows = motionReadout(listed);
   const played = motionReadout({ ...overrides, ...layer });
 
@@ -104,9 +106,7 @@ export function MotionStage({
   });
   const tip = useTooltip({ open: tipOpen, onOpenChange: setTipOpen });
 
-  const tabs = copy.tabLabels.split(',');
-  const steps = copy.stepLabels.split(',');
-  const options = copy.optionLabels.split(',');
+  const { tabLabels: tabs, stepLabels: steps, optionLabels: options } = copy;
 
   function clearTimers() {
     for (const timer of timers.current) window.clearTimeout(timer);
@@ -146,22 +146,23 @@ export function MotionStage({
     }
   }
 
+  // Each cue runs the apply of the latest render, so a cue after a locale change shows the new words.
+  const applyRef = useRef(apply);
+  applyRef.current = apply;
+
   function stop() {
     clearTimers();
-    apply('close');
-    setDialogOpen(false);
-    toaster.dismiss(TOAST_ID);
-    setRunning(false);
+    for (const cue of ['close', 'dialog-close', 'toast-dismiss', 'done'] as const) apply(cue);
   }
 
   function play() {
     clearTimers();
     setRunning(true);
-    timers.current = replayCues(played, slow ? SLOW : 1).map(({ at, cue }) => window.setTimeout(() => apply(cue), at));
+    timers.current = replayCues(played, speed).map(({ at, cue }) => window.setTimeout(() => applyRef.current(cue), at));
   }
 
   return (
-    <ThemeProvider overrides={layer} className="pg-stage-motion">
+    <ThemeProvider overrides={layer}>
       <Card.Root className="pg-motion" role="region" aria-labelledby={ids.title}>
         <Card.Header>
           <div className="pg-motion-head">
@@ -195,12 +196,12 @@ export function MotionStage({
             ) : null}
             <div className="pg-motion-specimens">
               <Button.Root variant="secondary" {...popover.getTriggerProps()}>
-                Popover
+                {copy.popover}
               </Button.Root>
-              <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Popover">
+              <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={copy.popover}>
                 <Text.Root>{copy.popoverBody}</Text.Root>
               </Popover.Root>
-              <Button.Root variant="secondary" tooltip={false} {...tip.getTriggerProps()} lang="en">
+              <Button.Root variant="secondary" tooltip={false} {...tip.getTriggerProps()}>
                 {copy.tooltip}
               </Button.Root>
               <Tooltip.Root {...tip.getTooltipProps()}>{copy.tip}</Tooltip.Root>
