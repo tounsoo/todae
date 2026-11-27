@@ -113,6 +113,30 @@
     line-height: 1;
   }
 
+  /* The check mounts as an option is picked and grows in as Checkbox's does,
+     on selection.motion; it goes at once with the option's selection.
+     aria-selected says the state from the first frame, and the highlight
+     never transitions, so keyboard moves stay instant. */
+  [data-todae-glyph].check {
+    transition-property: opacity, scale;
+    transition-duration: var(--todae-selection-motion-duration);
+    transition-timing-function: var(--todae-selection-motion-easing);
+  }
+
+  @starting-style {
+    [data-todae-glyph].check {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @starting-style {
+      [data-todae-glyph].check {
+        scale: 0.5;
+      }
+    }
+  }
+
   .check > :is(svg, img) {
     inline-size: 100%;
     block-size: 100%;

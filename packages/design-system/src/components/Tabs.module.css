@@ -184,6 +184,17 @@
 
   .panel {
     min-width: 0;
+    /* A newly selected panel fades in, by opacity alone, when a brand sets
+       tabs.motion.panel.duration; at its default 0ms the panels swap at once.
+       The old panel goes at once, so the two never overlap, and the fade
+       keeps running under reduced motion, since it moves nothing. */
+    transition: opacity var(--todae-tabs-motion-panel-duration) var(--todae-tabs-motion-easing);
+  }
+
+  @starting-style {
+    .panel {
+      opacity: 0;
+    }
   }
 
   .panel:focus-visible {

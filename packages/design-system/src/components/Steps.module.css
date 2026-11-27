@@ -16,6 +16,10 @@
     column-gap: var(--todae-steps-marker-gap);
     align-items: start;
     color: var(--todae-steps-fg-pending);
+    /* A status change fades its colors, paint only, so nothing moves; the
+       glyph and the status word change at once, so the status never shows
+       through motion alone. It keeps fading under reduced motion. */
+    transition: color var(--todae-steps-motion-duration) var(--todae-steps-motion-easing);
   }
 
   .item:not(:last-child) {
@@ -46,6 +50,9 @@
     border-radius: 50%;
     background: var(--todae-steps-marker-bg-pending);
     color: var(--todae-steps-marker-fg-pending);
+    transition-property: background-color, border-color, color;
+    transition-duration: var(--todae-steps-motion-duration);
+    transition-timing-function: var(--todae-steps-motion-easing);
   }
 
   .marker > [data-todae-glyph] {

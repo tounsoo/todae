@@ -22,7 +22,12 @@
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
         "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
       },
-      "scale": { "$type": "number", "$value": 0.96 }
+      "scale": { "$type": "number", "$value": 0.96 },
+      "offset": {
+        "$type": "dimension",
+        "$value": { "value": 0, "unit": "px" },
+        "$description": "How far toward its trigger a popover starts as it opens, and ends as it closes, moved by layout. 0 keeps it in place, so it only fades and grows."
+      }
     }
   }
 }

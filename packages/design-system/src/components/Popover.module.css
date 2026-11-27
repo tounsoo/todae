@@ -1,3 +1,13 @@
+/* How far toward its trigger the popover sits, from popover.motion.offset
+   before it has entered and as it exits, else 0. Registered, so it is the one
+   value that transitions: the margins that read it change at once whenever
+   anything else changes them, such as a position try. */
+@property --_popover-slide {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 @layer todae.components {
   /* The timing a surface's fades and growth read. A surface that draws on
      Popover with timing tokens of its own, as Coachmark's popup does, sets
@@ -15,6 +25,10 @@
     position: fixed;
     inset: unset;
     margin: 0;
+    /* The slide is layout, not a transform, so a tooltip anchored inside
+       stays by its trigger's box. Only the margin on the anchor's side moves
+       the box: the start one under the anchor, the end one over it. */
+    margin-block: calc(-1 * var(--_popover-slide));
     padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
     width: max-content;
     max-height: var(--todae-popover-max-height);
@@ -42,7 +56,8 @@
        https://developer.mozilla.org/en-US/docs/Web/CSS/overlay */
     transition:
       opacity var(--_motion-duration-enter) var(--_motion-easing-enter),
-      scale var(--_motion-duration-enter) var(--_motion-easing-enter);
+      scale var(--_motion-duration-enter) var(--_motion-easing-enter),
+      --_popover-slide var(--_motion-duration-enter) var(--_motion-easing-enter);
   }
 
   /* Its first frames as it shows, and its fade as it closes. */
@@ -75,6 +90,7 @@
   @media (prefers-reduced-motion: no-preference) {
     .content:not([data-entered]) {
       scale: var(--todae-popover-motion-scale);
+      --_popover-slide: var(--todae-popover-motion-offset);
     }
   }
 
@@ -111,7 +127,7 @@
       top: auto;
       inset-inline-start: auto;
       position-area: self-block-end span-self-inline-end;
-      margin-block-start: var(--todae-popover-offset);
+      margin-block-start: calc(var(--todae-popover-offset) - var(--_popover-slide));
       position-try-fallbacks:
         flip-block,
         --todae-popover-fit,
@@ -166,7 +182,9 @@
       inset-inline-start: auto;
       position-area: span-self-block-end self-inline-end;
       margin-block-start: calc(-1 * (var(--todae-popover-padding-y) + var(--todae-popover-border-width)));
-      margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width));
+      margin-block-end: 0;
+      /* A submenu slides in from the menu it sits beside. */
+      margin-inline-start: calc(var(--todae-popover-padding-x) + var(--todae-popover-border-width) - var(--_popover-slide));
       position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
     }
   }

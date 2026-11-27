@@ -23,6 +23,11 @@
       },
       "easing": {
         "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+      },
+      "offset": {
+        "$type": "dimension",
+        "$value": { "value": 0, "unit": "px" },
+        "$description": "How far toward its trigger a tip starts as it fades in cold, moved by layout. 0 keeps it in place, so it only fades."
       }
     }
   }

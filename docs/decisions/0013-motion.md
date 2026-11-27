@@ -11,7 +11,8 @@ Every animation reads its timing and curve from tokens. The rules, and the reaso
 - **2026-11-03:** the core enter and exit curves; a scale and rise for Dialog, Popover and Menu; the `selection` and `tabs` motion tokens.
 - **2026-11-04:** slower Popover, Menu and Dialog timings; the five motion roles (`motion.reveal`, `popup`, `window`, `panel`, `notice`); Popover moving by attributes.
 - **2026-11-05:** the Mention popups fade out; Coachmark's `move` pair.
-- **2026-11-07:** the motion review's changes, in pull requests 401 (reduced motion), 404 (height changes), 399 (Tooltip), 402 (hover fades), 400 (Progress, Meter, Alert and ErrorMessage) and 403 (Conversation); the overlay curves folded into the core curves, `toast.motion.offset` and Coachmark's own popup timing (410); the caret's `field.code.caret.motion.duration`, `conversation.motion.duration.glide`, and Skeleton keeping its own pulse curve (this pull request).
+- **2026-11-07:** the motion review's changes, in pull requests 401 (reduced motion), 404 (height changes), 399 (Tooltip), 402 (hover fades), 400 (Progress, Meter, Alert and ErrorMessage) and 403 (Conversation); the overlay curves folded into the core curves, `toast.motion.offset` and Coachmark's own popup timing (410); the caret's `field.code.caret.motion.duration`, `conversation.motion.duration.glide`, and Skeleton keeping its own pulse curve.
+- **2026-11-27:** opt-in motion that starts at 0 (`popover.motion.offset`, `tooltip.motion.offset`, `tabs.motion.panel.duration`), Skeleton's `shimmer` variant with `skeleton.shimmer.color`, `steps.motion`, and the Menu and OptionList checks on `selection.motion`.
 
 ## Why
 

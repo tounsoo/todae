@@ -47,6 +47,11 @@
       "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
       "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
       "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
+    "motion": {
+      "$description": "The color fade as a step changes status, on paint properties only.",
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
     }
   }
 }

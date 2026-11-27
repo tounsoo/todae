@@ -32,7 +32,9 @@ export default {
         // Which component's tokens each sheet reads, when its name is not the root.
         ownRoots: {
           BottomSheet: ['sheet'],
-          OptionList: ['option'],
+          // A check grows in on Checkbox's selection.motion.
+          OptionList: ['option', 'selection'],
+          Menu: ['menu', 'selection'],
           Label: ['field'],
           Description: ['field'],
           ErrorMessage: ['field'],
