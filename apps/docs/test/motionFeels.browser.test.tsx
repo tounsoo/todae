@@ -1,6 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import { Button, Dialog, Popover, ThemeProvider, usePopover, type ThemeOverride } from '@tounsoo/todae';
 import { emulateMedia } from '../../../packages/design-system/src/test/media';
@@ -11,6 +11,9 @@ import { PRESETS } from '../components/playground/presets';
 // overrides, with its motion swapped by the Motion picker. These tests open a
 // popover and a dialog on such a stage and read the CSS transitions that
 // actually run, so a feel that never reaches the page fails here.
+
+// Start from no motion preference, whatever the host or an earlier file set.
+beforeAll(() => emulateMedia([]));
 
 afterEach(async () => {
   cleanup();
@@ -96,8 +99,8 @@ async function popoverTransitions(overrides: ThemeOverride): Promise<Ran[]> {
 async function dialogTransitions(overrides: ThemeOverride): Promise<Ran[]> {
   render(<DialogStage overrides={overrides} />);
   screen.getByRole('button', { name: 'Edit' }).click();
-  // The panel is the dialog's content box; the backdrop fades on its own.
-  return transitionsOn(() => screen.queryByRole('dialog', { name: 'Edit invoice' })?.querySelector('[class*="panel"]') ?? null);
+  // The panel is the dialog's content box (role document); the backdrop fades on its own.
+  return transitionsOn(() => screen.queryByRole('dialog', { name: 'Edit invoice' })?.querySelector('[role="document"]') ?? null);
 }
 
 const byProperty = (ran: Ran[]) => Object.fromEntries(ran.map((r) => [r.property, r]));
