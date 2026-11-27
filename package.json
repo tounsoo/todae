@@ -9,7 +9,7 @@
     },
     "peerDependencyRules": {
       "allowedVersions": {
-        "mcp-handler>@modelcontextprotocol/sdk": "1.32.1"
+        "mcp-handler>@modelcontextprotocol/sdk": "1.32.2"
       }
     }
   },
