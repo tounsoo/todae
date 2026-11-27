@@ -1,15 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import type { Nav } from '../../../lib/docs-mcp/budget';
 
 // The package README tells agents which docs MCP tools to call, in what order. This test reads that
 // guide and walks it against the tools this route registers, so the README can't drift from them.
 const { POST } = await import('./route');
 
 const README_PATH = 'packages/design-system/README.md';
-const README = readFileSync(new URL('../../../../../packages/design-system/README.md', import.meta.url), 'utf8');
+const README = readFileSync(new URL(`../../../../../${README_PATH}`, import.meta.url), 'utf8');
 const ROUTE = 'apps/docs/app/api/[transport]/route.ts';
 const MCP_BULLET = /^- \*\*MCP server:\*\*.*$/m;
-const TOOL_NAME = /`([a-z]+(?:_[a-z]+)+)`/g;
+const SNAKE_CASE = /`([a-z]+(?:_[a-z]+)+)`/g;
+/** A backticked `name: value` argument, such as `includeCode: true`. */
+const ARGUMENT = /`([a-zA-Z]+): [^`]+`/g;
 
 /** The first call for a guide that starts at this tool. */
 const SEEDS: Record<string, Record<string, unknown>> = {
@@ -18,11 +21,13 @@ const SEEDS: Record<string, Record<string, unknown>> = {
   get_component: { name: 'Tooltip' },
 };
 
-type Body = Record<string, unknown> & { nav?: { next?: { tool: string; arguments: Record<string, unknown> }[] } };
+type Body = Record<string, unknown> & { nav?: Nav };
+type Tool = { name: string; inputSchema: { properties?: Record<string, unknown> } };
+type RpcResult = { result?: { tools?: Tool[]; isError?: boolean; content?: { type: string; text: string }[] }; error?: { message: string } };
 
 let nextId = 1;
 
-async function rpc(method: string, params: unknown): Promise<string> {
+async function rpc(method: string, params: unknown): Promise<NonNullable<RpcResult['result']>> {
   const response = await POST(
     new Request('https://todae.local/api/mcp', {
       method: 'POST',
@@ -31,21 +36,24 @@ async function rpc(method: string, params: unknown): Promise<string> {
       duplex: 'half',
     } as RequestInit),
   );
-  return response.text();
+  // The streamable HTTP transport answers with one server-sent event; its data line is the JSON-RPC reply.
+  const text = await response.text();
+  const data = text.split('\n').find((line) => line.startsWith('data: '))?.slice('data: '.length) ?? text;
+  const body = JSON.parse(data) as RpcResult;
+  if (!body.result) throw new Error(`${method} failed: ${body.error?.message ?? response.status}`);
+  return body.result;
 }
 
-async function registeredTools(): Promise<Set<string>> {
-  const text = await rpc('tools/list', {});
-  return new Set([...text.matchAll(/"name":"([a-z_]+)"/g)].map((match) => match[1] ?? ''));
+async function registeredTools(): Promise<Map<string, Tool>> {
+  const { tools = [] } = await rpc('tools/list', {});
+  return new Map(tools.map((tool) => [tool.name, tool]));
 }
 
 async function call(name: string, args: Record<string, unknown>): Promise<Body> {
-  const raw = await rpc('tools/call', { name, arguments: args });
-  const payload = raw.match(/"text":"((?:\\.|[^"\\])*)"/)?.[1];
-  if (!payload) throw new Error(`${name} returned no text: ${raw.slice(0, 200)}`);
-  const decoded = JSON.parse(`"${payload}"`) as string;
-  if (raw.includes('"isError":true')) throw new Error(`${name}(${JSON.stringify(args)}) failed: ${decoded}`);
-  return JSON.parse(decoded) as Body;
+  const result = await rpc('tools/call', { name, arguments: args });
+  const text = result.content?.find((part) => part.type === 'text')?.text ?? '';
+  if (result.isError) throw new Error(`${name}(${JSON.stringify(args)}) failed: ${text}`);
+  return JSON.parse(text) as Body;
 }
 
 /** True when a result carries example source, not only example stubs. */
@@ -57,7 +65,7 @@ function hasExampleCode(body: Body): boolean {
 
 /** The arguments the previous result gives for a call to `tool`, the way the README says to pass them. */
 function argumentsFor(previousTool: string, previous: Body, tool: string): Record<string, unknown> | undefined {
-  const named = previous.nav?.next?.find((next) => next.tool === tool);
+  const named = previous.nav?.next.find((next) => next.tool === tool);
   if (named) return named.arguments;
   // The README passes a hit's ref to get_docs_page; nav.next names only the top hit's call.
   if (previousTool === 'search_docs' && tool === 'get_docs_page' && Array.isArray(previous.hits)) {
@@ -68,18 +76,33 @@ function argumentsFor(previousTool: string, previous: Body, tool: string): Recor
 }
 
 /**
- * Problems with a README's agent guide: tools it names that the route does not register, and a reading
- * flow (the tools in the MCP server bullet, in order) that does not reach example code.
+ * Problems with a README's agent guide: tool names the route does not register, arguments a tool does
+ * not take, and a reading flow (the tools in the MCP server bullet, in order) that does not reach example code.
  */
 async function readmeProblems(readme: string): Promise<string[]> {
   const tools = await registeredTools();
+  // A tool name starts with a verb a registered tool starts with, such as get_ or list_.
+  const verbs = new Set([...tools.keys()].map((name) => name.split('_')[0]));
   const problems: string[] = [];
-  for (const [, name] of readme.matchAll(TOOL_NAME)) {
-    if (name && !tools.has(name)) problems.push(`${README_PATH} names \`${name}\`, which ${ROUTE} does not register.`);
+  for (const [, name = ''] of readme.matchAll(SNAKE_CASE)) {
+    if (verbs.has(name.split('_')[0]) && !tools.has(name)) problems.push(`${README_PATH} names \`${name}\`, which ${ROUTE} does not register.`);
   }
   const bullet = readme.match(MCP_BULLET)?.[0];
   if (!bullet) return [...problems, `${README_PATH} has no "- **MCP server:**" bullet to guide agents.`];
-  const flow = [...new Set([...bullet.matchAll(TOOL_NAME)].map((match) => match[1] ?? ''))].filter((name) => tools.has(name));
+
+  // Each backticked `name: value` is an argument of the last tool named before it.
+  const mentions = [...bullet.matchAll(new RegExp(`${SNAKE_CASE.source}|${ARGUMENT.source}`, 'g'))];
+  let current: string | undefined;
+  for (const [, toolName, argument] of mentions) {
+    if (toolName && tools.has(toolName)) current = toolName;
+    if (!argument) continue;
+    const inputs = current ? Object.keys(tools.get(current)?.inputSchema.properties ?? {}) : [];
+    if (!current || !inputs.includes(argument)) {
+      problems.push(`The MCP server bullet passes \`${argument}\` to \`${current ?? 'no tool'}\`, which takes only: ${inputs.join(', ') || 'nothing'}.`);
+    }
+  }
+
+  const flow = [...new Set(mentions.map(([, toolName]) => toolName ?? '').filter((name) => tools.has(name)))];
   const [first] = flow;
   if (!first) return [...problems, `The MCP server bullet in ${README_PATH} names no tool from ${ROUTE}.`];
   const seed = SEEDS[first];
@@ -97,17 +120,17 @@ async function readmeProblems(readme: string): Promise<string[]> {
     body = await call(tool, args);
   }
   if (!hasExampleCode(body)) {
-    const codeTools = [...new Set((body.nav?.next ?? []).map((next) => next.tool))].join(', ') || 'none';
+    const nextTools = [...new Set((body.nav?.next ?? []).map((next) => next.tool))].join(', ') || 'none';
     problems.push(
       `The MCP server bullet in ${README_PATH} ends its reading flow at \`${tool}\`, whose result has no example code ` +
-        `(by default ${tool} returns example stubs). Name the tool that returns the code after it; its nav.next names: ${codeTools}.`,
+        `(by default ${tool} returns example stubs). Name the tool that returns the code after it; its nav.next names: ${nextTools}.`,
     );
   }
   return problems;
 }
 
 describe('package README agent guide', () => {
-  it('names only registered tools, and its MCP flow reaches example code', async () => {
+  it('names only registered tools and their arguments, and its MCP flow reaches example code', async () => {
     expect(await readmeProblems(README)).toEqual([]);
   });
 
@@ -122,14 +145,17 @@ describe('package README agent guide', () => {
   });
 
   it('rejects a tool name the route does not register', async () => {
-    const renamed = README.replace('`get_example`', '`get_examples`');
-    const problems = await readmeProblems(renamed);
+    const problems = await readmeProblems(README.replace('`get_example`', '`get_examples`'));
     expect(problems.some((problem) => problem.includes('`get_examples`, which'))).toBe(true);
   });
 
+  it('rejects an argument the tool does not take', async () => {
+    const problems = await readmeProblems(README.replace('`includeCode: true`', '`withCode: true`'));
+    expect(problems.some((problem) => problem.includes('passes `withCode` to `get_docs_page`'))).toBe(true);
+  });
+
   it('rejects a flow whose steps the server does not chain', async () => {
-    const swapped = README.replace(MCP_BULLET, '- **MCP server:** Call `get_example`, then `search_docs`.');
-    const problems = await readmeProblems(swapped);
+    const problems = await readmeProblems(README.replace(MCP_BULLET, '- **MCP server:** Call `get_example`, then `search_docs`.'));
     expect(problems.join('\n')).toMatch(/SEEDS|gives no arguments/);
   });
 });
