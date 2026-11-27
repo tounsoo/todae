@@ -1157,7 +1157,7 @@ describe('chip list recipe', () => {
   // Random owner changes, resizes and key presses. Wherever focus starts in
   // the component, it stays there, and a keyed chip that can still take
   // focus keeps it.
-  it('keeps focus in the component through random changes', { timeout: 30000 }, async () => {
+  it('keeps focus in the component through random changes', async () => {
     const width = { current: 400 };
     const ros = stubListWidth(width);
     let seed = 7;
