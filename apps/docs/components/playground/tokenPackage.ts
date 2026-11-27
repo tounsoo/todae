@@ -70,6 +70,19 @@ function readme(name: string, presetName: string, files: readonly string[], resu
  * same files as one ZIP, laid out as `tokens/…`. The Playground loads this
  * module only when the reader asks for the package, since the catalog is large.
  */
+const PX = /^(-?\d*\.?\d+)px$/;
+
+/**
+ * Reads a catalog CSS value back into a token value: ThemeProvider's parser,
+ * plus px lengths, which a token file takes though an override does not.
+ */
+export function parseCatalogValue(path: string, css: string): unknown {
+  const value = parseThemeValue(path as ThemeOverrideKey, css);
+  if (value !== null) return value;
+  const px = PX.exec(css.trim());
+  return px ? { value: Number(px[1]), unit: 'px' } : null;
+}
+
 export function playgroundPackage({ name, presetName, light, dark }: PlaygroundPackageInput) {
   const result = overridesPackage({
     name,
@@ -77,7 +90,7 @@ export function playgroundPackage({ name, presetName, light, dark }: PlaygroundP
     light: light as Record<string, unknown>,
     dark: dark as Record<string, unknown>,
     catalog: (catalog as { tokens: CatalogRow[] }).tokens,
-    parse: (path, css) => parseThemeValue(path as ThemeOverrideKey, css),
+    parse: parseCatalogValue,
   });
   const paths = Object.keys(result.files);
   const files: Record<string, string> = {};

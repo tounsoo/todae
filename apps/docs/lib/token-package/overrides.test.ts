@@ -1,15 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { THEME_OVERRIDE_KEYS, parseThemeValue, themeOverrideType, type ThemeOverrideKey } from '@tounsoo/todae';
+import { THEME_OVERRIDE_KEYS, themeOverrideType } from '@tounsoo/todae';
 import catalog from '@tounsoo/todae/tokens.json';
 import { describe, expect, it } from 'vitest';
 import { PRESETS } from '../../components/playground/presets';
+import { parseCatalogValue } from '../../components/playground/tokenPackage';
 import { buildTokenFiles, todaeTokensDir } from '../docs-mcp/build';
 import { overridesPackage, type CatalogRow } from './overrides';
 import { TODAE_ENTRIES, entryFile, tokenPackage } from './package';
 
 const rows = (catalog as { tokens: CatalogRow[] }).tokens;
-const parse = (path: string, css: string) => parseThemeValue(path as ThemeOverrideKey, css);
+const parse = parseCatalogValue;
 
 function exportOf(light: Record<string, unknown>, dark: Record<string, unknown>, name = 'acme') {
   return overridesPackage({ name, light, dark, catalog: rows, parse });
@@ -137,6 +138,24 @@ describe('overridesPackage', () => {
       expect(built.ok ? '' : built.error, path).toBe('');
     }
   }, 120_000);
+
+  it('follows a split opacity through the alpha of the colors that read it', async () => {
+    const { files, unsplit } = exportOf({}, { 'opacity.70': 0.85, 'color.gray.950': { colorSpace: 'oklch', components: [0.15, 0.03, 300] } });
+    expect(unsplit).toEqual([]);
+    expect(at(parsed(files, 'appearance/dark.json'), 'color.bg.scrim.$value')).toEqual({
+      colorSpace: 'oklch',
+      components: [0, 1, 2].map((index) => ({ $ref: `#/acme/color/gray/950/$value/components/${index}` })),
+      alpha: { $ref: '#/acme/opacity/70/$value' },
+    });
+    const built = await buildTokenFiles(files);
+    expect(built.ok ? '' : built.error).toBe('');
+  }, 60_000);
+
+  it('reads a px default back, so a one-sided px edit splits', () => {
+    const { split, unsplit } = exportOf({ 'border.width': { value: 2, unit: 'px' } }, {});
+    expect(split).toEqual(['border.width']);
+    expect(unsplit).toEqual([]);
+  });
 
   it('gives a one-sided contract edit the split core value in the other appearance', async () => {
     const { files } = exportOf(

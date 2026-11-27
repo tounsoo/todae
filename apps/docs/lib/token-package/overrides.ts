@@ -148,7 +148,8 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
     const css = (match[2] as string).trim();
     const opacity = VAR.exec(css);
     const alphaPath = opacity ? byVar.get(opacity[1] as string) : undefined;
-    const alpha = alphaPath ? alias(alphaPath) : Number.isFinite(Number(css)) ? Number(css) : null;
+    // The alpha may read a split core token too, such as a dark-only opacity.
+    const alpha = alphaPath ? (legalAlias(alphaPath, side) ?? null) : Number.isFinite(Number(css)) ? Number(css) : null;
     if (alpha === null) return null;
     const prefix = base.$ref;
     return { colorSpace: 'oklch', components: [0, 1, 2].map((index) => ({ $ref: `${prefix}/components/${index}` })), alpha };
@@ -205,7 +206,18 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
   const coreFirst = (path: string) => (rows.get(path)?.[0] && isCore((rows.get(path)?.[0] as CatalogRow).entry) ? 0 : 1);
   paths.sort((a, b) => coreFirst(a) - coreFirst(b));
 
+  // Every core split is known before any reader is rewired, so a color that reads two of them,
+  // such as a scrim's gray and its opacity, reads both split tokens.
+  const rewires: [path: string, cssVar: string][] = [];
+  let rewired = false;
+  const flush = () => {
+    if (rewired) return;
+    rewired = true;
+    for (const [path, cssVar] of rewires) rewire(path, cssVar);
+  };
+
   for (const path of paths) {
+    if (coreFirst(path) === 1) flush();
     const found = rows.get(path);
     const first = found?.[0];
     if (!found || !first) {
@@ -244,8 +256,9 @@ export function overridesPackage({ name, description, light, dark, catalog, pars
     // A core token keeps light in core, and the tokens that read it read the split token.
     for (const target of targets) tokens.push({ path, type, value: lightValue, entry: target });
     splitCore.add(path);
-    rewire(path, first.cssVar);
+    rewires.push([path, first.cssVar]);
   }
+  flush();
 
   // Light's file before dark's, whichever token reaches an appearance first.
   const lightFirst = (token: PackageToken) => (token.entry.kind === 'modifier' && token.entry.context === 'dark' ? 1 : 0);
