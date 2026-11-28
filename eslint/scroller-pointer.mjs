@@ -190,8 +190,9 @@ const scrollerPointerRule = {
         // A parameter, a destructured name or an import brings a value this file doesn't show, so it is no window.
         const variable = variableOf(current);
         if (!variable || variable.defs.length === 0) return false;
-        // So does an ambient `declare let`, and a write that destructures, whose writeExpr is the whole object.
-        if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier' || def.parent?.declare)) return false;
+        // So does an ambient `declare let`, a write that destructures, whose writeExpr is the whole object, and a for…of or for…in binding, which each turn of the loop sets.
+        const looped = (def) => (def.parent?.parent?.type === 'ForOfStatement' || def.parent?.parent?.type === 'ForInStatement') && def.parent.parent.left === def.parent;
+        if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier' || def.parent?.declare || looped(def))) return false;
         const values = [];
         for (const def of variable.defs) if (def.node.init) values.push(def.node.init);
         for (const reference of variable.references) {

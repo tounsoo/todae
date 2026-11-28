@@ -144,6 +144,8 @@ function effect(own: HTMLElement, el: HTMLElement) {
     // A destructured write and an ambient binding bring values this file doesn't show (Neon round 2 on #536).
     { code: `function attach(el: HTMLElement) { let target: HTMLElement; ({ body: target } = document); target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     { code: `declare let target: EventTarget;\nfunction attach(el: HTMLElement, all: boolean) { if (all) target = window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    // A loop binding holds each item until it is set to the window (Neon round 3 on #536).
+    { code: `function attach(arrows: HTMLElement[], el: HTMLElement, all: boolean) { for (let target of arrows) { if (all) target = window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); } }`, errors: [error] },
     // \`arrow ?? window\` may be the arrow.
     { code: `function attach(arrow: HTMLElement | null, el: HTMLElement) { (arrow ?? window).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`window && arrow\` is the arrow.
