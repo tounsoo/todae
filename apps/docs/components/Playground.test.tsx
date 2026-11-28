@@ -140,6 +140,38 @@ describe('Playground', () => {
     expect(exported().dark['popover.motion.scale']).toBe(0.9);
   });
 
+  it('copies the opt-in motions only while Opt-in motion is on, and never slow motion', async () => {
+    render(<Playground locale="en" />);
+    const exported = () => JSON.parse(screen.getByRole('region', { name: 'Overrides' }).textContent ?? '');
+    fireEvent.click(screen.getByRole('button', { name: 'snappy' }));
+    const OPT_IN = [
+      'popover.motion.offset',
+      'tooltip.motion.offset',
+      'tabs.motion.panel.duration',
+      'steps.motion.duration',
+      'option.check.motion.duration',
+      'menu.item.check.motion.duration',
+    ];
+    for (const key of OPT_IN) expect(exported()[key], key).toBeUndefined();
+    fireEvent.click(screen.getByRole('switch', { name: 'Slow motion (×4)' }));
+    // Slow motion is for watching, so the JSON keeps snappy's own popup timing.
+    expect(exported()['motion.popup.duration.enter']).toEqual({ value: 160, unit: 'ms' });
+    fireEvent.click(screen.getByRole('switch', { name: 'Opt-in motion' }));
+    // Snappy's reveal step is 140ms and its selection step 120ms, unslowed.
+    expect(exported()).toMatchObject({
+      'popover.motion.offset': { value: 0.5, unit: 'rem' },
+      'tooltip.motion.offset': { value: 0.25, unit: 'rem' },
+      'tabs.motion.panel.duration': { value: 140, unit: 'ms' },
+      'steps.motion.duration': { value: 140, unit: 'ms' },
+      'option.check.motion.duration': { value: 120, unit: 'ms' },
+      'menu.item.check.motion.duration': { value: 120, unit: 'ms' },
+    });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
+    expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual(exported());
+    fireEvent.click(screen.getByRole('switch', { name: 'Opt-in motion' }));
+    for (const key of OPT_IN) expect(exported()[key], key).toBeUndefined();
+  });
+
   it('shows the preview and Todae’s own text in the page’s language', () => {
     render(<Playground locale="ko" />);
     const preview = within(screen.getByRole('region', { name: '미리보기' }));
@@ -178,6 +210,9 @@ describe('Playground', () => {
     expect(within(drawer).getByRole('button', { name: 'Mark paid' })).toBeTruthy();
   });
 
+  /** The invoice list's table: the stage's other table is the motion readout, named by its caption. */
+  const invoiceTable = () => within(stage()).getAllByRole('table').find((table) => table.querySelector('caption') === null)!;
+
   it('makes a new invoice only once the form holds a customer and an amount', async () => {
     render(<Playground locale="en" />);
     const preview = within(stage());
@@ -205,7 +240,8 @@ describe('Playground', () => {
     // The dialog plays its exit before it leaves.
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New invoice' })).toBeNull());
     // It starts as a draft, and the list is sorted newest first, so it leads.
-    const first = preview.getAllByRole('row')[1]!;
+    // The invoice list's rows, not the motion replay's readout above it.
+    const first = within(invoiceTable()).getAllByRole('row')[1]!;
     expect(within(first).getByRole('button', { name: 'INV-1046' })).toBeTruthy();
     expect(within(first).getByText('Draft')).toBeTruthy();
   });
