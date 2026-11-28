@@ -241,11 +241,61 @@ describe('scroll edge arrows', () => {
     expect(end.left).toBeCloseTo(0, 0);
     expect(end.top).toBeCloseTo(0, 0);
     expect(end.bottom).toBeCloseTo(0, 0);
-    await userEvent.hover(edge(area, 'inline-end'));
+    // force skips only Playwright's check that the arrow is the event target: on a Mac, WebKit's overlay
+    // scrollbar lies over the arrow's lower half and its events go to the scroller. The pointer still moves there.
+    await userEvent.hover(edge(area, 'inline-end'), { force: true });
     await waitFor(() => expect(area.scrollLeft).toBeLessThan(-40));
     await userEvent.unhover(edge(area, 'inline-end'));
     await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
     expect(offsets(edge(area, 'inline-start'), area).right).toBeCloseTo(0, 0);
+  });
+
+  it.each(['ltr', 'rtl'] as const)('scroll while the pointer rests on the foot of an arrow, where a scrollbar can lie over it, dir %s', async (dir) => {
+    render(
+      <div dir={dir}>
+        <ScrollArea.Root arrows axis="inline" data-testid="area" aria-label="Rows" style={{ inlineSize: 200 }}>
+          <div style={{ display: 'flex', gap: 8 }}>{rows(20)}</div>
+        </ScrollArea.Root>
+      </div>,
+    );
+    const area = screen.getByTestId('area');
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+    const end = edge(area, 'inline-end');
+    const box = end.getBoundingClientRect();
+    const away = () => Math.abs(area.scrollLeft);
+    const still = async () => {
+      const left = area.scrollLeft;
+      await frames(10);
+      expect(area.scrollLeft).toBe(left);
+    };
+    // A real pointer near the arrow's foot. On a Mac, WebKit's overlay scrollbar takes that band's events, so
+    // force skips Playwright's check that the arrow is their target.
+    await userEvent.hover(end, { position: { x: box.width / 2, y: box.height - 4 }, force: true });
+    await waitFor(() => expect(away()).toBeGreaterThan(20));
+    await userEvent.unhover(end);
+    await still();
+    area.scrollLeft = 0;
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+    // The same, as WebKit sends it on any host: the scroller, not the arrow, is the target.
+    const move = (target: EventTarget, clientX: number, init: PointerEventInit = {}) =>
+      target.dispatchEvent(new PointerEvent('pointermove', { pointerType: 'mouse', bubbles: true, movementX: 1, clientX, clientY: box.bottom - 2, ...init }));
+    const middle = box.left + box.width / 2;
+    move(area, middle);
+    await waitFor(() => expect(away()).toBeGreaterThan(20));
+    // On along the scrollbar, past the arrow, it stops.
+    const port = area.getBoundingClientRect();
+    move(area, port.left + port.width / 2);
+    await still();
+    // From the arrow into the band under it keeps scrolling: the pointer has not left what it sees.
+    area.scrollLeft = 0;
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+    move(end, middle, { clientY: box.top + 2 });
+    await waitFor(() => expect(away()).toBeGreaterThan(10));
+    end.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse', relatedTarget: area, clientX: middle, clientY: box.bottom - 2 }));
+    const left = away();
+    await waitFor(() => expect(away()).toBeGreaterThan(left + 10));
+    area.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    await still();
   });
 
   it('stay on the edges of a right-to-left scroller of fractional size, and after it turns left-to-right', async () => {

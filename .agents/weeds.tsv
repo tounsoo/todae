@@ -43,3 +43,6 @@ date	class	ref	caught_by	note
 2026-11-27	macos-host	#524	ben	Local verify on the Air failed on scroll-lock and EventCalendar, and peek reported Firefox as not installed; CI passed.
 2026-11-27	browser-editing-keys	#525	ben	Local verify on the Air failed 33 browser tests that pressed Control for select all, copy, paste and undo, which are Meta on macOS; CI passed.
 2026-11-27	verify-node-icu	#525	ben	Local verify on the Air failed 5 date tests under Homebrew node, which links macOS's ICU; CI's official Node passed.
+2026-11-27	verify-free-port	#523	ben	Local verify on the Air was BLOCKED: the docs server's fixed port 3100 was busy; #531's free-port verify now picks a port; CI passed.
+2026-11-27	verify-free-port	#530	ben	Local verify on the Air was BLOCKED again on a busy fixed port, 3322 this time; #531's free-port verify now picks a port; CI passed.
+2026-11-28	overlay-scrollbar-hit	d8e4aac5	ben	Scroll edge arrows ignored the foot of the arrow, where macOS WebKit's overlay scrollbar sends pointer events to the scroller; CI's Linux scrollbars take room, so only the Air failed.

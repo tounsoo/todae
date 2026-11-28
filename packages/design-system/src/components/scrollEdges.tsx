@@ -257,24 +257,50 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
     // Only a pointer that moves onto an arrow starts it. An arrow that shows
     // up under a pointer left still, as keys or a wheel scroll the list, gets
     // a pointerenter too, and must not pull the list back.
-    const enter = (event: PointerEvent) => {
-      if (event.pointerType === 'touch' || !moved(event, win)) return;
-      const edge = (event.currentTarget as HTMLElement).dataset.edge as Edge;
+    const rest = (event: PointerEvent, edge: Edge) => {
+      if (!moved(event, win)) return;
       if (resting?.edge === edge || room(el, edge, rtl) < 1) return;
       const now = performance.now();
       stop();
       resting = { edge, since: now, last: now, carry: 0 };
       frame = requestAnimationFrame(tick);
     };
+    const enter = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      rest(event, (event.currentTarget as HTMLElement).dataset.edge as Edge);
+    };
+    // A scrollbar that takes no room, as macOS draws them, lies over the
+    // arrows at the scroller's edge, and WebKit sends a move over it to the
+    // scroller rather than to the arrow drawn there. So a move that reaches the
+    // scroller itself counts by the shown arrow under the pointer.
+    const under = (event: PointerEvent): HTMLElement | undefined =>
+      [...own.children].find((node): node is HTMLElement => {
+        if (!node.hasAttribute('data-shown')) return false;
+        const box = node.getBoundingClientRect();
+        return event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom;
+      });
+    const over = (event: PointerEvent) => {
+      if (event.pointerType === 'touch' || own.contains(event.target as Node)) return;
+      const node = event.target === el ? under(event) : undefined;
+      if (node) rest(event, node.dataset.edge as Edge);
+      else stop();
+    };
+    // Leaving an arrow for that band of the scroller has not left the arrow.
+    const leave = (event: PointerEvent) => {
+      if (event.relatedTarget === el && under(event) === event.currentTarget) return;
+      stop();
+    };
     // A press on an arrow would focus the scroller, or close what it sits in.
     const press = (event: Event) => event.preventDefault();
 
     for (const node of own.children) {
       node.addEventListener('pointermove', enter as EventListener);
-      node.addEventListener('pointerleave', stop);
+      node.addEventListener('pointerleave', leave as EventListener);
       node.addEventListener('pointerdown', press);
       node.addEventListener('mousedown', press);
     }
+    el.addEventListener('pointermove', over, { passive: true });
+    el.addEventListener('pointerleave', stop);
     el.addEventListener('scroll', show, { passive: true });
     // Firefox can leave a newly focused row under a shown arrow, inside the
     // scrollport, so the scroll padding the arrow adds is honored here too.
@@ -303,11 +329,13 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
       cancelLayout(showKey);
       stop();
       watch.stop();
+      el.removeEventListener('pointermove', over);
+      el.removeEventListener('pointerleave', stop);
       el.removeEventListener('scroll', show);
       el.removeEventListener('focusin', focused);
       for (const node of own.children) {
         node.removeEventListener('pointermove', enter as EventListener);
-        node.removeEventListener('pointerleave', stop);
+        node.removeEventListener('pointerleave', leave as EventListener);
         node.removeEventListener('pointerdown', press);
         node.removeEventListener('mousedown', press);
       }
