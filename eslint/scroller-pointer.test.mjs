@@ -106,6 +106,9 @@ function effect(own: HTMLElement, el: HTMLElement) {
     `function press(el: HTMLElement) { el.addEventListener('pointerdown', () => { el.scrollTop = 0; }); }`,
     // A name that matches a scrolling helper's but reads a property, a key or a type member is not a call to it (Neon round 1).
     `${step}\nfunction tip(el: HTMLElement, obj: { step: number }) { el.addEventListener('pointermove', (e: { step?: number }) => el.setAttribute('data-x', String(obj.step + ({ step: 1 }).step))); }`,
+    // A hover that only cancels a frame or timer the scroll runs in starts nothing (Neon round 2).
+    `function attach(node: HTMLElement, el: HTMLElement) { let frame = 0; const start = () => { frame = requestAnimationFrame(() => { el.scrollTop += 4; }); }; node.addEventListener('click', start); node.addEventListener('pointerleave', () => cancelAnimationFrame(frame)); }`,
+    `function attach(a: HTMLElement, el: HTMLElement) { let timer = 0; a.addEventListener('click', () => { timer = setTimeout(() => { el.scrollTop += 4; }, 10); }); a.addEventListener('pointerleave', () => clearTimeout(timer)); }`,
   ],
   invalid: [
     { code: before533, errors: [error] },
@@ -123,6 +126,12 @@ function effect(own: HTMLElement, el: HTMLElement) {
     { code: `const Arrow = ({ list, theirs }) => { const onMove = composeHandlers(theirs, () => { list.scrollLeft += 4; }); return <span onPointerMove={onMove} />; };`, errors: [error] },
     { code: `function attach(arrow: HTMLElement, el: HTMLElement) { let onMove; onMove = () => { el.scrollTop += 4; }; arrow.addEventListener('pointermove', onMove); }`, errors: [error] },
     { code: `function attach(arrow: HTMLElement, el: HTMLElement) { arrow.addEventListener('pointerenter', () => el.scroll({ top: 10 })); }`, errors: [error] },
+    // Named helpers through the same wrappers, a later write and a choice (Neon round 2).
+    { code: `function nudge(el: HTMLElement) { el.scrollTop += 4; }\nconst Arrow = ({ theirs }) => { const onMove = composeHandlers(theirs, nudge); return <span onPointerMove={onMove} />; };`, errors: [error] },
+    { code: `function nudge() { document.body.scrollTop += 4; }\nconst Arrow = () => { const onMove = useCallback(nudge, []); return <span onPointerMove={onMove} />; };`, errors: [error] },
+    { code: `function nudge(this: HTMLElement) { this.scrollTop += 4; }\nfunction attach(arrow: HTMLElement, el: HTMLElement, fast: boolean) { let onMove; onMove = fast ? nudge.bind(el) : () => {}; arrow.addEventListener('pointermove', onMove); }`, errors: [error] },
+    // \`arrow ?? window\` may be the arrow.
+    { code: `function attach(arrow: HTMLElement | null, el: HTMLElement) { (arrow ?? window).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`window && arrow\` is the arrow.
     { code: `function attach(arrow: HTMLElement, el: HTMLElement) { (window && arrow).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
   ],

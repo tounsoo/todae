@@ -78,13 +78,8 @@ function isReference(node) {
   return true;
 }
 
-/** The functions an expression gives: itself, or those it wraps, as `useCallback(fn)` and `composeHandlers(theirs, fn)` do. */
-function functionsIn(node) {
-  const current = unwrap(node);
-  if (isFunction(current)) return [current];
-  if (current?.type === 'CallExpression') return current.arguments.flatMap(functionsIn);
-  return [];
-}
+/** Calls that return a handler made of the functions passed to them. Any other call, such as requestAnimationFrame's, returns a value. */
+const HANDLER_WRAPPERS = new Set(['useCallback', 'useEffectEvent', 'composeHandlers', 'alongside']);
 
 const scrollerPointerRule = {
   meta: {
@@ -116,19 +111,34 @@ const scrollerPointerRule = {
     }
 
     /**
-     * The functions a binding read here may hold: a function declaration, a const set to a function or to a
-     * wrapper of one, such as `useCallback(fn)`, and any function written to it later.
+     * The functions an expression gives: itself, a function of this file it names, either branch of a choice, or
+     * those a handler wrapper such as `useCallback(fn)`, `composeHandlers(theirs, fn)` or `fn.bind(x)` wraps.
      */
-    function functionsOf(identifier) {
-      const variable = variableOf(identifier);
-      if (!variable) return [];
-      const found = [];
-      for (const def of variable.defs) {
-        if (def.type === 'FunctionName') found.push(def.node);
-        else if (def.type === 'Variable' && def.node.init) found.push(...functionsIn(def.node.init));
+    function functionsIn(node, seen = new Set()) {
+      const current = unwrap(node);
+      if (!current || seen.has(current)) return [];
+      seen.add(current);
+      if (isFunction(current)) return [current];
+      if (current.type === 'Identifier') {
+        const variable = variableOf(current);
+        if (!variable) return [];
+        const nodes = [];
+        for (const def of variable.defs) {
+          if (def.type === 'FunctionName') nodes.push(def.node);
+          else if (def.type === 'Variable' && def.node.init) nodes.push(def.node.init);
+        }
+        for (const reference of variable.references) if (reference.writeExpr) nodes.push(reference.writeExpr);
+        return nodes.flatMap((child) => functionsIn(child, seen));
       }
-      for (const reference of variable.references) if (reference.writeExpr) found.push(...functionsIn(reference.writeExpr));
-      return found;
+      if (current.type === 'ConditionalExpression') return [current.consequent, current.alternate].flatMap((child) => functionsIn(child, seen));
+      if (current.type === 'LogicalExpression') return [current.left, current.right].flatMap((child) => functionsIn(child, seen));
+      if (current.type === 'CallExpression') {
+        const callee = unwrap(current.callee);
+        if (propertyName(callee) === 'bind') return functionsIn(callee.object, seen);
+        const name = callee.type === 'Identifier' ? callee.name : propertyName(callee);
+        if (HANDLER_WRAPPERS.has(name)) return current.arguments.flatMap((child) => functionsIn(child, seen));
+      }
+      return [];
     }
 
     /** Whether a node, or a function of this file it names or calls, writes a scroll position. */
@@ -143,7 +153,7 @@ const scrollerPointerRule = {
           return false;
         }
         if (child.type === 'Identifier' && isReference(child)) {
-          for (const fn of functionsOf(child)) {
+          for (const fn of functionsIn(child)) {
             if (reachesScroll(fn, seen)) {
               found = true;
               return false;
@@ -167,9 +177,9 @@ const scrollerPointerRule = {
       }
       if (current.type === 'MemberExpression') return ['ownerDocument', 'defaultView', 'document'].includes(propertyName(current));
       if (current.type === 'LogicalExpression') {
-        // `a && b` gives b whenever a is set; `a || b` and `a ?? b` give either.
+        // `a && b` gives b whenever a is set; `a || b` and `a ?? b` give either, so both must be.
         if (current.operator === '&&') return isWindowLike(current.right, seen);
-        return isWindowLike(current.left, seen) || isWindowLike(current.right, seen);
+        return isWindowLike(current.left, seen) && isWindowLike(current.right, seen);
       }
       if (current.type === 'ChainExpression') return isWindowLike(current.expression, seen);
       return false;
