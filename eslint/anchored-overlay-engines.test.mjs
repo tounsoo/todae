@@ -22,6 +22,8 @@ const imports = [
   "import { Field } from '../components/Field.js';",
   "import { Tabs } from '../components/Tabs.js';",
   "import { usePopover } from '../hooks/usePopover.js';",
+  "import { MentionText } from '../components/MentionText.js';",
+  "import type { PopoverCloseReason } from '../components/Popover.js';",
 ].join('\n');
 const code = (body) => `${imports}\n${body}`;
 const error = { messageId: 'skipsEngine' };
@@ -51,6 +53,16 @@ tester.run('anchored-overlay-engines', plugin.rules['anchored-overlay-engines'],
     code(
       "const session = () => cdp();\nconst axIt = it.runIf(server.browser === 'chromium');\naxIt('names the dialog', async () => { render(<Popover.Root />); await session().send('A'); });",
     ),
+    // Both sides assert, one inside waitFor's callback (Neon round 1 on #532).
+    code(
+      "it('lands', async () => { render(<Popover.Root />); if (server.browser === 'firefox') { await waitFor(() => expect(sub.left).toBeCloseTo(0, 0)); } else { expect(sub.right).toBe(1); } });",
+    ),
+    // A value picked in a callback that doesn't assert.
+    code("it('slides', () => { render(<Popover.Root />); const steps = [1].map(() => { if (server.browser === 'webkit') return 2; return 1; }); expect(steps).toHaveLength(1); });"),
+    // A type from an anchored module makes no test anchored.
+    code("it('fades the panel', () => { const reason: PopoverCloseReason = 'escape'; if (server.browser !== 'chromium') return; render(<Tabs.Root />); expect(reason).toBe('escape'); });"),
+    // One CDP test in a Chromium-only suite of non-anchored tests.
+    code("describe.runIf(server.browser === 'chromium')('Tabs', () => { it('names', async () => { render(<Tabs.Root />); await cdp().send('A'); }); });"),
   ],
   invalid: [
     // #525's slide tests, as they merged.
@@ -73,6 +85,21 @@ tester.run('anchored-overlay-engines', plugin.rules['anchored-overlay-engines'],
     { code: code("it.skipIf(server.browser === 'webkit')('slides', () => { render(<Field.Picker />); });"), errors: [error] },
     { code: code("describe.runIf(server.browser === 'chromium')('Popover', () => { it('slides', () => { usePopover(); }); });"), errors: [error] },
     { code: code("const motionIt = it.runIf(server.browser === 'chromium');\nmotionIt('slides', () => { render(<Popover.Root />); });"), errors: [error] },
+    // Inside waitFor's callback (Neon round 1 on #532).
+    { code: code("it('slides', async () => { render(<Popover.Root />); await waitFor(() => { if (server.browser !== 'chromium') return; expect(gap()).toBeLessThan(4); }); });"), errors: [error] },
+    { code: code("it('slides', async () => { render(<Popover.Root />); if (server.browser === 'chromium') { await waitFor(() => expect(gap()).toBeLessThan(4)); } });"), errors: [error] },
+    // Chained after the gate, directly or on an alias.
+    { code: code("it.runIf(server.browser === 'chromium').each([false, true])('slides', (above) => { render(<Popover.Root />); });"), errors: [error] },
+    { code: code("const motionIt = it.runIf(server.browser === 'chromium');\nmotionIt.each([false, true])('slides', (above) => { render(<Popover.Root />); });"), errors: [error] },
+    // In a helper of the file that an anchored test calls.
+    { code: code("function check() { if (server.browser !== 'chromium') return; expect(gap()).toBeLessThan(4); }\nit('slides', () => { render(<Popover.Root />); check(); });"), errors: [error] },
+    // MentionText renders Mention's popovers.
+    { code: code("it.runIf(server.browser === 'chromium')('peeks', () => { render(<MentionText text=\"@a\" />); });"), errors: [error] },
+    // A suite whose one CDP test doesn't excuse the anchored one beside it.
+    {
+      code: code("describe.runIf(server.browser === 'chromium')('Popover', () => { it('names', async () => { usePopover(); await cdp().send('A'); }); it('slides', () => { render(<Popover.Root />); }); });"),
+      errors: [error],
+    },
     // Through a value of the file, or the user agent.
     { code: code("const chrome = server.browser === 'chromium';\nit('slides', () => { render(<Popover.Root />); if (!chrome) return; expect(1).toBe(1); });"), errors: [error] },
     { code: code("it('slides', () => { render(<Popover.Root />); if (/WebKit/.test(navigator.userAgent)) return; expect(1).toBe(1); });"), errors: [error] },

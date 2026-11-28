@@ -60,6 +60,26 @@ test('an anchored sheet may not transition a custom property, by transition or t
   ]);
 });
 
+test('a custom property anywhere in a transition item counts, and all counts once the sheet registers one', async () => {
+  // Neon round 1 on #532.
+  const name = 'Unexpected transition of --_popover-slide in a sheet with anchor positioning';
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: 200ms ease --_popover-slide; }`), [name]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: var(--_d) --_popover-slide; }`), [name]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: allow-discrete --_popover-slide 200ms; }`), [name]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: opacity var(--_d) cubic-bezier(0.2, 0.8, 0.2, 1); }`), []);
+  assert.deepEqual(await lint(`${registered}.a { position-anchor: --a; transition: all 200ms; }`), [
+    'Unexpected transition of all in a sheet with anchor positioning that registers a custom property',
+  ]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: all 200ms; }`), []);
+});
+
+test('a named @position-try may not set a margin from a local length, wherever it is registered', async () => {
+  // Coachmark's popup draws on Popover, whose sheet registers --_popover-slide (Neon round 1 on #532).
+  assert.deepEqual(await lint(`@position-try --flip { margin-block-start: var(--_popover-slide, 0px); }`), [
+    'Unexpected margin-block-start reading the local --_popover-slide in a named @position-try',
+  ]);
+});
+
 test('a named @position-try may not set a margin from a length the sheet registers', async () => {
   // The flip try #529 removed.
   const before529 = `${registered}${anchored}
@@ -71,8 +91,8 @@ test('a named @position-try may not set a margin from a length the sheet registe
       margin-block-end: calc(-1 * var(--_popover-slide, 0px));
     }`;
   assert.deepEqual(await lint(before529), [
-    'Unexpected margin-block-start reading --_popover-slide in a named @position-try',
-    'Unexpected margin-block-end reading --_popover-slide in a named @position-try',
+    'Unexpected margin-block-start reading the local --_popover-slide in a named @position-try',
+    'Unexpected margin-block-end reading the local --_popover-slide in a named @position-try',
   ]);
 });
 

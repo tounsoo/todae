@@ -102,7 +102,7 @@ export const firefoxBranches: readonly FirefoxBranch[] = [
   {
     file: 'src/browser/coachmark.browser.test.tsx',
     code: "expect(scrim().hasAttribute('data-todae-moving')).toBe(slides);",
-    reason: 'Firefox never marks the hole moving, since it moves at once.',
+    reason: 'Firefox has cleared the moving mark by the time it is read, since its move does not animate.',
   },
   {
     file: 'src/browser/coachmark.browser.test.tsx',

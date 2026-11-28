@@ -15,12 +15,13 @@ const ANCHORED_EXPORTS = new Set([
   'useChipList',
   'Coachmark',
   'Mention',
+  'MentionText',
   'useMentions',
 ]);
 
 /** Modules whose every export is about an anchored overlay. */
 const ANCHORED_MODULE =
-  /(?:^|\/)(?:components\/(?:Popover|Tooltip|Menu|ChipList|Coachmark|Mention|Field\.Picker)|hooks\/(?:usePopover|useTooltip|useChipList|useMentions|useMentionPeek)|overlay\/(?:popover\w*|tooltip|coachmark|usePopoverSync|anchorName))(?:\.[cm]?[jt]sx?)?$/;
+  /(?:^|\/)(?:components\/(?:Popover|Tooltip|Menu|ChipList|Coachmark|Mention|MentionText|Field\.Picker)|hooks\/(?:usePopover|useTooltip|useChipList|useMentions|useMentionPeek)|overlay\/(?:popover\w*|tooltip\w*|coachmark|usePopoverSync|anchorName))(?:\.[cm]?[jt]sx?)?$/;
 
 const TEST_CALLS = new Set(['it', 'test', 'describe', 'suite']);
 
@@ -161,34 +162,14 @@ const anchoredRule = {
       return found;
     }
 
-    /** It returns, or skips the test, so what follows runs in some engines only. */
-    const leaves = (node) =>
-      !!node &&
-      holds(
-        node,
-        (child) =>
-          child.type === 'ReturnStatement' ||
-          (child.type === 'CallExpression' &&
-            (rootName(child.callee) === 'skip' || (child.callee.type === 'MemberExpression' && !child.callee.computed && child.callee.property.name === 'skip'))),
-      );
-
     const isExpect = (child) => child.type === 'CallExpression' && rootName(child.callee) === 'expect';
 
-    /** It asserts, itself or through a function of this file that it calls. */
-    const asserts = (node) =>
-      !!node &&
-      holds(
-        node,
-        (child) =>
-          isExpect(child) ||
-          (child.type === 'CallExpression' && child.callee.type === 'Identifier' && targetsOf(child.callee).some((target) => reaches(target, isExpect))),
-      );
+    /** It asserts, itself, in a callback such as waitFor's, or through a function of this file that it calls. */
+    const asserts = (node) => !!node && reaches(node, isExpect);
 
-    /**
-     * Whether a choice between two branches skips assertions in some engine: one branch returns from the
-     * test or skips it, or only one of them asserts. Two branches that each assert give each engine its own expectation.
-     */
-    const skipsAssertions = (one, other, inBody) => (inBody && (leaves(one) || leaves(other))) || asserts(one) !== asserts(other);
+    const isSkip = (child) =>
+      child.type === 'CallExpression' &&
+      (rootName(child.callee) === 'skip' || (child.callee.type === 'MemberExpression' && !child.callee.computed && child.callee.property.name === 'skip'));
 
     /** The nearest function around a node. */
     function enclosingFunction(node) {
@@ -196,40 +177,102 @@ const anchoredRule = {
       return null;
     }
 
-    /** The test body around a node: the nearest function passed to a call. */
+    /**
+     * It skips the test, or returns from a function that asserts, such as a test body or a waitFor
+     * callback, so its assertions run in some engines only. A return from a helper that picks a value
+     * skips nothing.
+     */
+    function leaves(node, gate) {
+      if (!node) return false;
+      if (holds(node, isSkip)) return true;
+      if (!holds(node, (child) => child.type === 'ReturnStatement')) return false;
+      const around = enclosingFunction(gate);
+      return !!around && asserts(around.body);
+    }
+
+    /**
+     * Whether a choice between two branches skips assertions in some engine: one branch skips the test or
+     * returns from one that asserts, or only one of them asserts. Two branches that each assert give each
+     * engine its own expectation.
+     */
+    const skipsAssertions = (gate, one, other) => leaves(one, gate) || leaves(other, gate) || asserts(one) !== asserts(other);
+
+    const lastFunction = (call) => [...call.arguments].reverse().find(isFunction) ?? null;
+
+    /** Names bound to a test call, such as `const motionIt = it.runIf(...)`. */
+    const testAliases = new Set();
+    const isTestCall = (call) => call?.type === 'CallExpression' && (isTestCallee(call.callee) || testAliases.has(rootName(call.callee)));
+    const testCalls = [];
+
+    /** The test body around a node: the nearest function passed to a test or suite call. */
     function testBody(node) {
       for (let current = node.parent; current; current = current.parent) {
-        if (isFunction(current) && current.parent?.type === 'CallExpression' && current.parent.arguments.includes(current)) return current;
+        if (isFunction(current) && isTestCall(current.parent) && current.parent.arguments.includes(current)) return current;
       }
       return null;
     }
 
-    const lastFunction = (call) => [...call.arguments].reverse().find(isFunction) ?? null;
+    /** The test bodies a body holds, or the body itself when it is a test: a suite runs its tests. */
+    function testsIn(body) {
+      const inner = testCalls.map(lastFunction).filter((fn) => fn && fn !== body && fn.range[0] >= body.range[0] && fn.range[1] <= body.range[1]);
+      const leavesOnly = inner.filter((fn) => !inner.some((other) => other !== fn && other.range[0] >= fn.range[0] && other.range[1] <= fn.range[1]));
+      return leavesOnly.length > 0 ? leavesOnly : [body];
+    }
 
-    function report(node, body, how) {
-      if (!body || drivesCdp(body) || !anchored(body)) return;
-      context.report({ node, messageId: 'skipsEngine', data: { how } });
+    /** Whether any of these bodies tests an anchored overlay without driving CDP. */
+    const anchoredTests = (bodies) => bodies.flatMap(testsIn).some((body) => !drivesCdp(body) && anchored(body));
+
+    /** The test bodies that run a node: its own test, or every test that calls the helper of this file it sits in. */
+    function bodiesRunning(node) {
+      const body = testBody(node);
+      if (body) return [body];
+      let helper = null;
+      for (let current = node.parent; current; current = current.parent) if (isFunction(current)) helper = current;
+      if (!helper) return [];
+      return testCalls
+        .map(lastFunction)
+        .filter((fn) => fn && !(fn.range[0] <= helper.range[0] && fn.range[1] >= helper.range[1]))
+        .filter((fn) => reaches(fn, (child) => child === helper));
+    }
+
+    /** The outermost call in a chain such as `it.runIf(x).each(rows)(name, fn)`, from its first link. */
+    function outerCall(node) {
+      let current = node;
+      let call = null;
+      while (current.parent) {
+        const parent = current.parent;
+        if (parent.type === 'MemberExpression' && parent.object === current) current = parent;
+        else if (parent.type === 'CallExpression' && parent.callee === current) {
+          current = parent;
+          call = parent;
+        } else break;
+      }
+      return { call, top: current };
+    }
+
+    function report(node, bodies, how) {
+      if (anchoredTests(bodies)) context.report({ node, messageId: 'skipsEngine', data: { how } });
     }
 
     const gates = [];
-    const aliasCalls = new Map();
 
     return {
       ImportDeclaration(node) {
+        if (node.importKind === 'type') return;
         const whole = typeof node.source.value === 'string' && ANCHORED_MODULE.test(node.source.value);
         for (const specifier of node.specifiers) {
+          if (specifier.importKind === 'type') continue;
           const imported = specifier.type === 'ImportSpecifier' ? (specifier.imported.name ?? specifier.imported.value) : null;
           if (whole || (imported && ANCHORED_EXPORTS.has(imported))) anchoredNames.add(specifier.local.name);
           if (imported === 'Field') fieldNames.add(specifier.local.name);
         }
       },
+      VariableDeclarator(node) {
+        if (node.id.type === 'Identifier' && node.init && TEST_CALLS.has(rootName(node.init))) testAliases.add(node.id.name);
+      },
       CallExpression(node) {
+        testCalls.push(node);
         const callee = node.callee;
-        if (callee.type === 'Identifier') {
-          const list = aliasCalls.get(callee.name) ?? [];
-          list.push(node);
-          aliasCalls.set(callee.name, list);
-        }
         if (callee.type !== 'MemberExpression' || callee.computed || !isTestCallee(callee)) return;
         if (callee.property.name !== 'runIf' && callee.property.name !== 'skipIf') return;
         if (!node.arguments[0]) return;
@@ -245,32 +288,27 @@ const anchoredRule = {
         if (node.operator === '&&' || node.operator === '||') gates.push({ kind: 'branch', node, test: node.left, branches: [node.right] });
       },
       'Program:exit'() {
+        for (let i = testCalls.length - 1; i >= 0; i -= 1) if (!isTestCall(testCalls[i]) || !lastFunction(testCalls[i])) testCalls.splice(i, 1);
         for (const gate of gates) {
           const { node } = gate;
           if (gate.kind === 'call') {
             if (!readsEngine(node.arguments[0])) continue;
             const how = node.callee.property.name === 'runIf' ? 'runs in one engine only' : 'skips an engine';
-            const parent = node.parent;
-            if (parent?.type === 'CallExpression' && parent.callee === node) {
-              report(node, lastFunction(parent), how);
-            } else if (parent?.type === 'VariableDeclarator' && parent.id.type === 'Identifier') {
-              const uses = aliasCalls.get(parent.id.name) ?? [];
-              const bodies = uses.map(lastFunction).filter(Boolean);
-              if (bodies.some((body) => !drivesCdp(body) && anchored(body))) context.report({ node, messageId: 'skipsEngine', data: { how } });
+            const { call, top } = outerCall(node);
+            const declarator = top.parent;
+            if (call && call !== node && lastFunction(call)) {
+              report(node, [lastFunction(call)], how);
+            } else if (declarator?.type === 'VariableDeclarator' && declarator.init === top && declarator.id.type === 'Identifier') {
+              const name = declarator.id.name;
+              report(node, testCalls.filter((use) => rootName(use.callee) === name).map(lastFunction), how);
             }
             continue;
           }
-          if (gate.kind === 'if') {
-            if (!readsEngine(node.test)) continue;
-            const body = testBody(node);
-            if (!skipsAssertions(node.consequent, node.alternate, enclosingFunction(node) === body)) continue;
-            report(node.test, body, 'skips its assertions in an engine');
-            continue;
-          }
-          if (!readsEngine(gate.test)) continue;
-          const body = testBody(node);
-          if (!skipsAssertions(gate.branches[0], gate.branches[1], enclosingFunction(node) === body)) continue;
-          report(gate.test, body, 'skips its assertions in an engine');
+          const test = gate.kind === 'if' ? node.test : gate.test;
+          if (!readsEngine(test)) continue;
+          const [one, other] = gate.kind === 'if' ? [node.consequent, node.alternate] : gate.branches;
+          if (!skipsAssertions(node, one, other)) continue;
+          report(test, bodiesRunning(node), 'skips its assertions in an engine');
         }
       },
     };
