@@ -113,8 +113,10 @@ describe('Menu submenus in a browser', () => {
     const at = `menu ${outer.left}-${outer.right}, submenu ${sub.left}-${sub.right}`;
     // Firefox mirrors a popover's position-area alignment when its parent box's direction differs
     // from the root's, so it lands at the viewport's left edge (#360). Firefox bug:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=2019601. Drop the skip once Firefox ships a fix.
-    if (server.browser !== 'firefox') expect(Math.abs(sub.right - outer.left), at).toBeLessThanOrEqual(1);
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=2019601. This fails once Firefox ships a fix:
+    // then hold Firefox to the menu's edge too.
+    if (server.browser === 'firefox') expect(sub.left, at).toBeCloseTo(0, 0);
+    else expect(Math.abs(sub.right - outer.left), at).toBeLessThanOrEqual(1);
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(submenu().matches(':popover-open')).toBe(false));
     expect(document.activeElement).toBe(item('Share'));

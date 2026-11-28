@@ -97,6 +97,13 @@ export default tseslint.config(
     },
   },
   {
+    // An anchored overlay's placement and motion broke in WebKit and Firefox after tests that ran only in
+    // Chromium (#525, #529), so its browser tests run and assert in every engine.
+    files: ['packages/design-system/src/**/*.browser.test.{ts,tsx}'],
+    plugins: { todae },
+    rules: { 'todae/anchored-overlay-engines': 'error' },
+  },
+  {
     // TypeScript already checks undefined names.
     files: ['**/*.{ts,tsx}'],
     rules: { 'no-undef': 'off' },

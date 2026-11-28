@@ -133,17 +133,20 @@ describe('Coachmark in a browser', () => {
 
   it("slides the hole and the popup to a tour's next target, then stops", async () => {
     const before = await openTourAndStep();
-    // WebKit and Firefox move them at once, as they do the Tabs indicator; motion only has to
-    // work in Chrome (ARCHITECTURE "Motion"). All three end at the new target.
-    if (server.browser === 'chromium') {
+    // Firefox moves them at once, as it does the Tabs indicator, until it animates an anchor() inset
+    // whose anchor changed (ARCHITECTURE "Motion"). Chromium and WebKit slide. All three end at the new target.
+    const slides = server.browser !== 'firefox';
+    expect(scrim().hasAttribute('data-todae-moving')).toBe(slides);
+    if (slides) {
       const target = screen.getByRole('button', { name: 'Export' }).getBoundingClientRect();
-      expect(scrim().hasAttribute('data-todae-moving')).toBe(true);
       const hole = scrim().getBoundingClientRect().left;
       const popup = screen.getByRole('dialog').getBoundingClientRect().left;
       expect(hole).toBeGreaterThan(before.hole + 1);
       expect(hole).toBeLessThan(target.left - 5);
       expect(popup).toBeGreaterThan(before.popup + 1);
       expect(popup).toBeLessThan(target.left - 1);
+    } else {
+      expectAtExport();
     }
     await settle();
     expectAtExport();

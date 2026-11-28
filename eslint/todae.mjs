@@ -1,4 +1,5 @@
 import path from 'node:path';
+import anchoredOverlayEngines from './anchored-overlay-engines.mjs';
 
 const FORBIDDEN_PROP_NAMES = new Set(['isDisabled', 'isInvalid', 'isOpen', 'error', 'hasError']);
 const CONSOLE_METHODS = new Set(['warn', 'error', 'log', 'info', 'debug']);
@@ -425,6 +426,7 @@ const plugin = {
     'prop-naming': propNaming,
     'dev-only-diagnostics': devOnlyDiagnostics,
     'layer-imports': layerImports,
+    'anchored-overlay-engines': anchoredOverlayEngines,
   },
 };
 

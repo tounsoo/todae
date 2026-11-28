@@ -184,7 +184,7 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
     // Under reduce the slide length never changes, so its margins never transition.
     expect(running.some((p) => p.includes('slide') || p.startsWith('margin'))).toBe(false);
-    if (server.browser === 'chromium') expect(running).toContain('opacity');
+    expect(running).toContain('opacity');
   });
 });
 
