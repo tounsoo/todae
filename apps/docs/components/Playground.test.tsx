@@ -160,13 +160,17 @@ describe('Playground', () => {
     expect(screen.getByText(uppercase)).toBeTruthy();
     expect(field().getAttribute('aria-describedby')).toContain(screen.getByText(uppercase).id);
     fireEvent.change(field(), { target: { value: 'fs' } });
-    expect(screen.getByText('npm keeps this name for Node itself. Pick another, such as acme-tokens.')).toBeTruthy();
+    const reserved = 'npm keeps this name for Node itself. Pick another, such as acme-tokens.';
+    const reservedId = screen.getByText(reserved).id;
+    expect(field().getAttribute('aria-describedby')).toContain(reservedId);
+    expect(screen.queryByText(uppercase)).toBeNull();
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
     expect(names).toEqual(['riso-tokens.zip']);
     expect(document.activeElement).toBe(field());
     fireEvent.change(field(), { target: { value: '@acme/tokens' } });
     expect(field().getAttribute('aria-invalid')).toBeNull();
-    expect(screen.queryByText(uppercase)).toBeNull();
+    expect(screen.queryByText(reserved)).toBeNull();
+    expect(field().getAttribute('aria-describedby') ?? '').not.toContain(reservedId);
     // A typed name stays when the preset changes.
     fireEvent.click(screen.getByLabelText('Bloom'));
     expect(field().value).toBe('@acme/tokens');
