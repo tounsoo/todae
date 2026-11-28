@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from 'vitest/browser';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { server, userEvent } from 'vitest/browser';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { getTabbables } from '../overlay/tabbables.js';
 import { Button, Menu, Popover, ScrollArea, Tabs, usePopover } from '../index.js';
 import { emulateMedia } from '../test/media.js';
+import { mouse } from '../test/mouse.js';
 
 afterEach(async () => {
   vi.restoreAllMocks();
@@ -303,6 +304,142 @@ describe('scroll edge arrows', () => {
     await waitFor(() => expect(away()).toBeGreaterThan(left + 10));
     area.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
     await still();
+  });
+
+  // The strip is the band along the scroller's foot where its scrollbar is: on a Mac, an overlay scrollbar that lies
+  // over the arrow's foot, and on Linux, a classic one under the arrow. A real mouse hit tests there as a person's
+  // does, so a press may reach the native scrollbar, not the arrow drawn over it.
+  describe('beside a scrollbar strip', () => {
+    // By default, content twice the scroller's width, so the thumb is half the track and lies under the arrow near
+    // the end.
+    function Strip({ dir, count = 6 }: { dir: 'ltr' | 'rtl'; count?: number }) {
+      return (
+        <div dir={dir}>
+          <ScrollArea.Root arrows axis="inline" data-testid="area" aria-label="Rows" style={{ inlineSize: 200 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {Array.from({ length: count }, (_, i) => (
+                <div key={i} style={{ blockSize: 60, inlineSize: 60, flex: 'none' }}>
+                  Row {i + 1}
+                </div>
+              ))}
+            </div>
+          </ScrollArea.Root>
+        </div>
+      );
+    }
+
+    async function setup(dir: 'ltr' | 'rtl', count?: number) {
+      render(<Strip dir={dir} count={count} />);
+      const area = screen.getByTestId('area');
+      await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+      const end = edge(area, 'inline-end');
+      const box = end.getBoundingClientRect();
+      const port = area.getBoundingClientRect();
+      const toward = dir === 'ltr' ? 1 : -1;
+      const pressed: { target: EventTarget | null; prevented: boolean }[] = [];
+      // After the whole dispatch, so the arrow's own listener has run.
+      const record = (event: Event) => setTimeout(() => pressed.push({ target: event.target, prevented: event.defaultPrevented }));
+      // pointerdown: a press the arrow prevents sends no mousedown.
+      document.addEventListener('pointerdown', record, true);
+      onTestFinished(() => document.removeEventListener('pointerdown', record, true));
+      onTestFinished(() => mouse.up());
+      return {
+        area,
+        end,
+        // The arrow's column, toward its inner side, where the thumb lies when the list is near its end. A Linux
+        // scrollbar's step button sits at the track's very end, under the arrow's outer side.
+        x: dir === 'ltr' ? box.left + 6 : box.right - 6,
+        // In the strip: 4px above the scroller's foot, in its scrollbar on every host.
+        foot: port.bottom - 4,
+        // On the arrow, above any scrollbar.
+        head: box.top + 8,
+        toward,
+        away: () => Math.abs(area.scrollLeft),
+        pressed,
+        still: async () => {
+          const left = area.scrollLeft;
+          await frames(10);
+          expect(area.scrollLeft).toBe(left);
+        },
+      };
+    }
+
+    it.each(['ltr', 'rtl'] as const)('a press on the arrow, above the strip, scrolls and leaves focus alone, dir %s', async (dir) => {
+      const { area, end, x, head, away, pressed, still, toward } = await setup(dir);
+      const focused = document.activeElement;
+      await mouse.path([
+        [x, head + 20],
+        [x, head],
+      ]);
+      await mouse.down();
+      await waitFor(() => expect(pressed).toHaveLength(1));
+      expect(end.contains(pressed[0]!.target as Node)).toBe(true);
+      expect(pressed[0]!.prevented).toBe(true);
+      await waitFor(() => expect(away()).toBeGreaterThan(20));
+      expect(document.activeElement).toBe(focused);
+      await mouse.up();
+      await mouse.path([
+        [x - toward * 120, head],
+        [x - toward * 121, head],
+      ]);
+      await still();
+      expect(area.contains(document.activeElement)).toBe(false);
+    });
+
+    it.for(['ltr', 'rtl'] as const)('a drag along the strip from under the arrow scrolls natively, and the arrow stops, dir %s', async (dir, { skip }) => {
+      const { area, end, x, foot, toward, away, pressed, still } = await setup(dir);
+      const max = area.scrollWidth - area.clientWidth;
+      area.scrollLeft = toward * (max - 20);
+      await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
+      // Onto the thumb in the strip, as a hand reaches for it: on a Mac, WebKit gives these moves to the scroller,
+      // and a rest over the arrow's foot scrolls (above). The press then goes to the scrollbar.
+      await mouse.path([
+        [x, foot + 30],
+        [x, foot],
+      ]);
+      await mouse.down();
+      await waitFor(() => expect(pressed).toHaveLength(1));
+      // Chromium and Firefox on a Mac draw an overlay scrollbar a press can't reach over the arrow: there the
+      // strip is the arrow, which the test above covers.
+      skip(end.contains(pressed[0]!.target as Node), `${server.browser} on ${server.platform}: no scrollbar to press under the arrow`);
+      expect(pressed[0]).toEqual({ target: area, prevented: false });
+      const from = away();
+      await mouse.path(Array.from({ length: 6 }, (_, i) => [x - toward * 5 * (i + 1), foot] as const));
+      await waitFor(() => expect(away()).toBeLessThan(from - 20));
+      // Held still mid-drag, the list stays where the thumb put it: no arrow pulls it back toward the end.
+      await still();
+      await mouse.up();
+      await still();
+    });
+
+    it.for(['ltr', 'rtl'] as const)('a drag of the thumb along the strip to under the arrow scrolls natively and never starts it, dir %s', async (dir, { skip }) => {
+      // A long list, so the thumb is narrow and a drag to the arrow's column ends just short of the end, where the
+      // arrow still shows and could pull the list on.
+      const { area, end, x, foot, toward, away, pressed, still } = await setup(dir, 20);
+      const port = area.getBoundingClientRect();
+      // The thumb's start, at the track's start: past a Linux scrollbar's step button there.
+      const start = dir === 'ltr' ? port.left + 24 : port.right - 24;
+      // A Mac's overlay scrollbar takes a press only while it shows, as it does once the list scrolls.
+      area.scrollLeft = toward * 2;
+      await frames(2);
+      area.scrollLeft = 0;
+      await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+      await mouse.path([
+        [start, foot + 30],
+        [start, foot],
+      ]);
+      await mouse.down();
+      await waitFor(() => expect(pressed).toHaveLength(1));
+      skip(end.contains(pressed[0]!.target as Node) || pressed[0]!.target !== area, `${server.browser} on ${server.platform}: no scrollbar to press`);
+      expect(pressed[0]!.prevented).toBe(false);
+      // Along the strip and on under the arrow, where the drag holds.
+      await mouse.path(Array.from({ length: 8 }, (_, i) => [start + ((x - start) * (i + 1)) / 8, foot] as const));
+      await waitFor(() => expect(away()).toBeGreaterThan(20));
+      await still();
+      expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']);
+      await mouse.up();
+      await still();
+    });
   });
 
   it('stay on the edges of a right-to-left scroller of fractional size, and after it turns left-to-right', async () => {

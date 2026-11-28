@@ -69,6 +69,26 @@ const emulateMedia: BrowserCommand<[features: MediaFeature[]]> = async ({ page }
   });
 };
 
+type MouseStep = { type: 'move'; x: number; y: number } | { type: 'down' } | { type: 'up' };
+
+/**
+ * Drives the real mouse through `steps`, at points in the test frame's own
+ * coordinates, as `clientX` and `clientY` give them. Unlike `userEvent`, it
+ * targets no element, so a press or drag lands on whatever the browser hit
+ * tests there, a native scrollbar included.
+ */
+const mouse: BrowserCommand<[steps: MouseStep[]]> = async ({ page, iframe, frame }, steps) => {
+  const box = await iframe.owner().boundingBox();
+  if (!box) throw new Error('The test frame has no box');
+  // Vitest scales the frame down when the page is smaller than it.
+  const scale = box.width / (await (await frame()).evaluate(() => window.innerWidth));
+  for (const step of steps) {
+    if (step.type === 'move') await page.mouse.move(box.x + step.x * scale, box.y + step.y * scale);
+    else if (step.type === 'down') await page.mouse.down();
+    else await page.mouse.up();
+  }
+};
+
 // Real-browser tests for what jsdom can't check: the top layer, anchor
 // positioning, layout measurement and focus. Run with `pnpm test:browser`.
 // Every test runs in Chromium, Firefox and WebKit, the engines README's
@@ -99,7 +119,7 @@ export default defineConfig({
           provider: playwright({ launchOptions: webkitOnHost(webkit.executablePath()), contextOptions: { viewport: { width: 1280, height: 960 } } }),
         },
       ],
-      commands: { scopedThemeCss, emulateMedia },
+      commands: { scopedThemeCss, emulateMedia, mouse },
     },
   },
 });

@@ -294,6 +294,13 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
     };
     // A press on an arrow would focus the scroller, or close what it sits in.
     const press = (event: Event) => event.preventDefault();
+    // A press that reaches the scroller itself is on its scrollbar, which
+    // then holds the mouse: WebKit sends no move or leave until it lets go.
+    // So an arrow the pointer started on the way to the thumb stops here,
+    // rather than pull against the drag.
+    const grab = (event: PointerEvent) => {
+      if (event.target === el) stop();
+    };
 
     for (const node of own.children) {
       node.addEventListener('pointermove', enter as EventListener);
@@ -303,6 +310,7 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
     }
     el.addEventListener('pointermove', over, { passive: true });
     el.addEventListener('pointerleave', stop);
+    el.addEventListener('pointerdown', grab);
     el.addEventListener('scroll', show, { passive: true });
     // Firefox can leave a newly focused row under a shown arrow, inside the
     // scrollport, so the scroll padding the arrow adds is honored here too.
@@ -333,6 +341,7 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
       watch.stop();
       el.removeEventListener('pointermove', over);
       el.removeEventListener('pointerleave', stop);
+      el.removeEventListener('pointerdown', grab);
       el.removeEventListener('scroll', show);
       el.removeEventListener('focusin', focused);
       for (const node of own.children) {
