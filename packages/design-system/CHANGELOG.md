@@ -1,5 +1,31 @@
 # @tounsoo/todae
 
+## 0.13.0
+
+### Minor Changes
+
+- The token build and ThemeProvider's override check now hold `calendar.day.fg.range` on `calendar.day.bg.range` to APCA Lc 60 over `popover.bg` and each page surface, as they already did for a selected option's text. ([#531](https://github.com/tounsoo/todae/pull/531))
+  
+  - If your theme's calendar range text misses Lc 60 on its tint, `todae-tokens build` now fails and names the nearest lightness that passes. Set that lightness, or retune the pair in your resolver's contrast list.
+
+- Calendar.Grid days and OptionList options with an OptionList.OptionDetail are named by everything they show, so they pass WCAG 2.5.3 Label in Name. ([#526](https://github.com/tounsoo/todae/pull/526))
+  
+  - A Calendar.Grid day with `renderDay` content is named by its date and then that content, such as "Tuesday, October 13, 2026 Review", and has no description. Find it by that name, or by a name that starts with the date.
+  - A day button is named by its content, not `aria-label`, and shows its number in the locale's digits. Read a day's date from its accessible name, not `aria-label`.
+  - An OptionList.Option with an OptionList.OptionDetail is named by its title and then its detail, such as "Apple Crisp and sweet", through `aria-labelledby`, and the detail is no longer its `aria-describedby`.
+
+### Patch Changes
+
+- Scroll edge arrows now scroll when the pointer rests on the part of an arrow that a macOS overlay scrollbar lies over in Safari. ([#533](https://github.com/tounsoo/todae/pull/533))
+
+- Scroll edge arrows now stop when a press in a macOS overlay scrollbar under an arrow starts a thumb drag in Safari, so the drag scrolls the list instead of fighting the arrow. ([#534](https://github.com/tounsoo/todae/pull/534))
+
+- Add opt-in motion tokens that start at 0 (`popover.motion.offset`, `tooltip.motion.offset`, `tabs.motion.panel.duration`), a `variant="shimmer"` for `Skeleton.Root` with `skeleton.shimmer.color`, and a Steps status color fade (`steps.motion.duration`) and Menu and OptionList check marks that grow in (`menu.item.check.motion.duration`, `option.check.motion.duration`), each 0ms by default so nothing moves until a theme sets it. ([#525](https://github.com/tounsoo/todae/pull/525))
+
+- With `popover.motion.offset` or `tooltip.motion.offset` set, Popover, Menu, the field pickers and Tooltip now slide in Safari too, and a closing Popover slides back toward its trigger instead of jumping onto it and fading there. ([#529](https://github.com/tounsoo/todae/pull/529))
+
+- The package README's For AI agents section says that `get_docs_page` returns example stubs, and that `get_example` returns an example's code. ([#520](https://github.com/tounsoo/todae/pull/520))
+
 ## 0.12.1
 
 ### Patch Changes
