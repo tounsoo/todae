@@ -45,9 +45,10 @@ export type ScrollerPartsListener = {
   /** Whether a part shows now. A hidden part takes no pointer. */
   shown: (part: HTMLElement) => boolean;
   /**
-   * A mouse or pen with no button held moved onto a shown part: over the
-   * part itself, or over the scroller where a scrollbar lies over the part.
-   * A part that shows up under a still pointer hears nothing.
+   * A mouse or pen moved onto a shown part: over the part itself, or, with
+   * no button held, over the scroller where a scrollbar lies over the part.
+   * A held button there is a drag of that scrollbar. A part that shows up
+   * under a still pointer hears nothing.
    */
   rest: (part: HTMLElement) => void;
   /**
@@ -69,8 +70,9 @@ export function watchScrollerParts(scroller: HTMLElement, parts: readonly HTMLEl
   const isPart = (node: EventTarget | null) => parts.some((part) => part.contains(node as Node));
 
   const enter = (event: PointerEvent) => {
-    if (event.pointerType === 'touch' || !moved(event, win)) return;
-    listener.rest(event.currentTarget as HTMLElement);
+    const part = event.currentTarget as HTMLElement;
+    if (event.pointerType === 'touch' || !listener.shown(part) || !moved(event, win)) return;
+    listener.rest(part);
   };
   // A scrollbar that takes no room, as macOS draws them, lies over the parts
   // at the scroller's edge, and WebKit sends a move over it to the scroller

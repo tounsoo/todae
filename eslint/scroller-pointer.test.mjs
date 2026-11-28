@@ -104,6 +104,8 @@ function effect(own: HTMLElement, el: HTMLElement) {
     `const Row = ({ list }) => <div onPointerMove={() => highlight(list)} onKeyDown={() => { list.scrollTop = 0; }} />;`,
     // A press handler that scrolls: a press over a scrollbar is the scrollbar's, not a hover over a part.
     `function press(el: HTMLElement) { el.addEventListener('pointerdown', () => { el.scrollTop = 0; }); }`,
+    // A name that matches a scrolling helper's but reads a property, a key or a type member is not a call to it (Neon round 1).
+    `${step}\nfunction tip(el: HTMLElement, obj: { step: number }) { el.addEventListener('pointermove', (e: { step?: number }) => el.setAttribute('data-x', String(obj.step + ({ step: 1 }).step))); }`,
   ],
   invalid: [
     { code: before533, errors: [error] },
@@ -116,5 +118,12 @@ function effect(own: HTMLElement, el: HTMLElement) {
     // A React hover prop.
     { code: `const Arrow = ({ list }) => <span onPointerEnter={() => { list.current.scrollLeft += 8; }} />;`, errors: [error] },
     { code: 'function attach(arrow, list) { arrow.addEventListener(`pointerover`, () => list.scrollTo({ top: 0 })); }', errors: [error] },
+    // Handlers wrapped as React and Todae write them, one set later, and el.scroll() (Neon round 1).
+    { code: `const Arrow = ({ list }) => { const onMove = useCallback(() => { list.scrollTop += 4; }, [list]); return <span onPointerMove={onMove} />; };`, errors: [error] },
+    { code: `const Arrow = ({ list, theirs }) => { const onMove = composeHandlers(theirs, () => { list.scrollLeft += 4; }); return <span onPointerMove={onMove} />; };`, errors: [error] },
+    { code: `function attach(arrow: HTMLElement, el: HTMLElement) { let onMove; onMove = () => { el.scrollTop += 4; }; arrow.addEventListener('pointermove', onMove); }`, errors: [error] },
+    { code: `function attach(arrow: HTMLElement, el: HTMLElement) { arrow.addEventListener('pointerenter', () => el.scroll({ top: 10 })); }`, errors: [error] },
+    // \`window && arrow\` is the arrow.
+    { code: `function attach(arrow: HTMLElement, el: HTMLElement) { (window && arrow).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
   ],
 });

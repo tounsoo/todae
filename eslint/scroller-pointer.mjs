@@ -20,7 +20,7 @@ const HOVER_TYPES = new Set([
 ]);
 const HOVER_PROP = /^on(?:Pointer|Mouse)(?:Move|Over|Enter|Leave|Out)(?:Capture)?$/;
 const SCROLL_PROPS = new Set(['scrollTop', 'scrollLeft']);
-const SCROLL_CALLS = new Set(['scrollBy', 'scrollTo']);
+const SCROLL_CALLS = new Set(['scroll', 'scrollBy', 'scrollTo']);
 
 const SKIP_KEYS = new Set(['parent', 'loc', 'range', 'tokens', 'comments']);
 
@@ -51,7 +51,7 @@ function unwrap(node) {
 const propertyName = (member) =>
   member?.type === 'MemberExpression' && !member.computed && member.property.type === 'Identifier' ? member.property.name : null;
 
-/** A write to a scroll position: `el.scrollTop = …`, `el.scrollLeft += …`, `el.scrollBy(…)` or `el.scrollTo(…)`. */
+/** A write to a scroll position: `el.scrollTop = …`, `el.scrollLeft += …`, `el.scroll(…)`, `el.scrollBy(…)` or `el.scrollTo(…)`. */
 function isScrollWrite(node) {
   if (node.type === 'AssignmentExpression') return SCROLL_PROPS.has(propertyName(unwrap(node.left)));
   if (node.type === 'UpdateExpression') return SCROLL_PROPS.has(propertyName(unwrap(node.argument)));
@@ -64,6 +64,26 @@ function literalType(node) {
   if (node?.type === 'Literal' && typeof node.value === 'string') return node.value;
   if (node?.type === 'TemplateLiteral' && node.expressions.length === 0) return node.quasis[0].value.cooked;
   return null;
+}
+
+/** Whether an identifier here names a binding, rather than a property, key, type member or JSX attribute. */
+function isReference(node) {
+  const parent = node.parent;
+  if (!parent) return true;
+  if (parent.type === 'MemberExpression' && parent.property === node && !parent.computed) return false;
+  if ((parent.type === 'Property' || parent.type === 'MethodDefinition' || parent.type === 'PropertyDefinition') && parent.key === node && !parent.computed && !parent.shorthand) return false;
+  if (parent.type === 'TSPropertySignature' || parent.type === 'TSMethodSignature') return false;
+  if (parent.type === 'JSXAttribute' && parent.name === node) return false;
+  if (parent.type === 'JSXMemberExpression' && parent.property === node) return false;
+  return true;
+}
+
+/** The functions an expression gives: itself, or those it wraps, as `useCallback(fn)` and `composeHandlers(theirs, fn)` do. */
+function functionsIn(node) {
+  const current = unwrap(node);
+  if (isFunction(current)) return [current];
+  if (current?.type === 'CallExpression') return current.arguments.flatMap(functionsIn);
+  return [];
 }
 
 const scrollerPointerRule = {
@@ -83,28 +103,31 @@ const scrollerPointerRule = {
   create(context) {
     const { sourceCode } = context;
 
-    /** The variable an identifier reads, if this file declares it. */
+    /** Each identifier that reads a binding this file declares, to that binding. */
+    let resolved = null;
     function variableOf(identifier) {
-      let scope = sourceCode.getScope(identifier);
-      while (scope) {
-        const reference = scope.references.find((ref) => ref.identifier === identifier);
-        if (reference) return reference.resolved;
-        const variable = scope.set.get(identifier.name);
-        if (variable) return variable;
-        scope = scope.upper;
+      if (!resolved) {
+        resolved = new Map();
+        for (const scope of sourceCode.scopeManager.scopes) {
+          for (const reference of scope.references) if (reference.resolved) resolved.set(reference.identifier, reference.resolved);
+        }
       }
-      return null;
+      return resolved.get(identifier) ?? null;
     }
 
-    /** The functions an identifier names: a function declaration, or a const set to a function. */
+    /**
+     * The functions a binding read here may hold: a function declaration, a const set to a function or to a
+     * wrapper of one, such as `useCallback(fn)`, and any function written to it later.
+     */
     function functionsOf(identifier) {
       const variable = variableOf(identifier);
       if (!variable) return [];
       const found = [];
       for (const def of variable.defs) {
         if (def.type === 'FunctionName') found.push(def.node);
-        else if (def.type === 'Variable' && isFunction(unwrap(def.node.init))) found.push(unwrap(def.node.init));
+        else if (def.type === 'Variable' && def.node.init) found.push(...functionsIn(def.node.init));
       }
+      for (const reference of variable.references) if (reference.writeExpr) found.push(...functionsIn(reference.writeExpr));
       return found;
     }
 
@@ -119,7 +142,7 @@ const scrollerPointerRule = {
           found = true;
           return false;
         }
-        if (child.type === 'Identifier' && child !== node.id) {
+        if (child.type === 'Identifier' && isReference(child)) {
           for (const fn of functionsOf(child)) {
             if (reachesScroll(fn, seen)) {
               found = true;
@@ -143,7 +166,11 @@ const scrollerPointerRule = {
         return !!variable?.defs.some((def) => def.type === 'Variable' && def.node.init && isWindowLike(def.node.init, seen));
       }
       if (current.type === 'MemberExpression') return ['ownerDocument', 'defaultView', 'document'].includes(propertyName(current));
-      if (current.type === 'LogicalExpression') return isWindowLike(current.left, seen) || isWindowLike(current.right, seen);
+      if (current.type === 'LogicalExpression') {
+        // `a && b` gives b whenever a is set; `a || b` and `a ?? b` give either.
+        if (current.operator === '&&') return isWindowLike(current.right, seen);
+        return isWindowLike(current.left, seen) || isWindowLike(current.right, seen);
+      }
       if (current.type === 'ChainExpression') return isWindowLike(current.expression, seen);
       return false;
     }
