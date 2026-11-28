@@ -430,8 +430,11 @@ describe('scroll edge arrows', () => {
       await mouse.path(Array.from({ length: 6 }, (_, i) => [x - toward * 5 * (i + 1), foot] as const));
       await waitFor(() => expect(away()).toBeLessThan(from - 20));
       await settle();
-      // Held still mid-drag, the list stays where the thumb put it: no arrow pulls it back toward the end.
+      // Held still mid-drag, the list stays where the thumb put it: no arrow pulls it back toward the end. The
+      // list is short, so an arrow could reach the end and rest there: it must still be short of it.
       await still();
+      expect(away()).toBeLessThan(from - 20);
+      expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']);
       await mouse.up();
       await still();
     });
