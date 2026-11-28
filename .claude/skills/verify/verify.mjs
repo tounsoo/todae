@@ -1006,6 +1006,29 @@ function portInUse(port) {
   });
 }
 
+// Whether every process listening on `port` is in the process group `group` leads; null when lsof can't say.
+async function ownsPort(group, port) {
+  let pids;
+  try {
+    const { stdout } = await exec('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-t']);
+    pids = stdout.split('\n').filter(Boolean);
+  } catch (error) {
+    // lsof exits 1 when nothing listens there.
+    if (error.code === 1) return false;
+    return null;
+  }
+  if (pids.length === 0) return false;
+  for (const pid of pids) {
+    try {
+      const { stdout } = await exec('ps', ['-o', 'pgid=', '-p', pid]);
+      if (Number(stdout.trim()) !== group) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function logTail(lines = 15) {
   try {
     return (await readFile(serverLogPath, 'utf8')).trimEnd().split('\n').slice(-lines).join('\n');
@@ -1066,16 +1089,28 @@ async function launch(port, { onSpawn, attempt = 1 } = {}) {
   const deadline = Date.now() + LAUNCH_TIMEOUT_MS;
   try {
     while (Date.now() < deadline) {
-      const reply = alive(child.pid) ? await answer(port) : null;
-      if (reply) return { url: `http://127.0.0.1:${port}`, port, pid: child.pid, home: reply };
-      if (!alive(child.pid)) {
-        const tail = await logTail();
-        // Another process can take a free port before next binds it; pick another.
-        if (free && attempt < 3 && /EADDRINUSE/.test(tail)) {
+      const running = () => child.exitCode === null && child.signalCode === null && alive(child.pid);
+      const reply = running() ? await answer(port) : null;
+      if (reply && running()) {
+        // Another process can take a free port before next binds it, and answer in its place: next then exits
+        // with EADDRINUSE, or on a Mac binds [::] beside it and stays up. Only a reply from next's own group counts.
+        const owned = await ownsPort(child.pid, port);
+        if (owned !== false) return { url: `http://127.0.0.1:${port}`, port, pid: child.pid, home: reply };
+        if (!free) throw new Blocked(`port ${port} is answered by a process this helper did not start`);
+        if (attempt < 3) {
           await cleanup().catch(() => {});
           return launch(undefined, { onSpawn, attempt: attempt + 1 });
         }
-        throw new Blocked(`the docs server exited before it was ready. Log tail:\n${tail}`);
+        throw new Blocked(`port ${port} was taken by another process before the docs server bound it, ${attempt} times`);
+      }
+      if (!running()) {
+        // The whole log, since a long stack can push EADDRINUSE above the tail.
+        const log = await readFile(serverLogPath, 'utf8').catch(() => '');
+        if (free && attempt < 3 && /EADDRINUSE/.test(log)) {
+          await rm(pidPath, { force: true });
+          return launch(undefined, { onSpawn, attempt: attempt + 1 });
+        }
+        throw new Blocked(`the docs server exited before it was ready. Log tail:\n${await logTail()}`);
       }
       await delay(1000);
     }

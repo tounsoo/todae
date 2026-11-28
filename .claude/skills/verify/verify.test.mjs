@@ -361,25 +361,52 @@ describe('the verify docs server', () => {
   const bin = path.join(dir, 'bin');
   const helper = path.join(dir, '.claude/skills/verify/verify.mjs');
   const held = [];
+  const thieves = [];
   after(async () => {
     spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir });
-    await Promise.all(held.map((server) => new Promise((resolve) => server.close(resolve))));
+    for (const pid of thieves) {
+      try {
+        process.kill(pid, 'SIGKILL');
+      } catch {}
+    }
+    await Promise.all(
+      held.map(
+        (server) =>
+          new Promise((resolve) => {
+            server.closeAllConnections?.();
+            server.close(resolve);
+          }),
+      ),
+    );
     rmSync(dir, { recursive: true, force: true });
   });
   mkdirSync(bin, { recursive: true });
   mkdirSync(path.dirname(helper), { recursive: true });
   cpSync(path.join(here, 'verify.mjs'), helper);
-  // A stand-in for `pnpm --filter docs exec next dev --port <n>`: it serves a docs-like home page on that port.
+  // A docs-like page in the path's language, which the drive passes.
+  const page = `(req, res) => res.end('<html lang="' + (req.url.startsWith('/ko') ? 'ko' : 'en') + '" data-appearance="light"><h1>Home</h1></html>')`;
+  // A stand-in for `pnpm --filter docs exec next dev --port <n>`: it serves that page on that port.
   writeFileSync(
     path.join(bin, 'pnpm'),
     `#!${process.execPath}\nconst port = Number(process.argv[process.argv.indexOf('--port') + 1]);\n` +
+      `const fs = require('node:fs'), { spawn } = require('node:child_process');\n` +
       // With TAKEN_ONCE set, the first start finds its port taken, as when another process wins the race for it.
-      `const fs = require('node:fs'), once = process.env.TAKEN_ONCE;\n` +
+      `const once = process.env.TAKEN_ONCE;\n` +
       `if (once && !fs.existsSync(once)) { fs.writeFileSync(once, String(port)); console.error('Error: listen EADDRINUSE: address already in use'); process.exit(1); }\n` +
-      `require('node:http').createServer((_, res) => res.end('<html data-appearance="light"></html>')).listen(port, '127.0.0.1');\n`,
+      // With THIEF_ONCE set, another process takes the port first and answers like the docs, while this one stays
+      // up without serving it, as next dev on a Mac does when it binds [::] beside a server on 127.0.0.1.
+      `const thief = process.env.THIEF_ONCE;\n` +
+      `if (thief && !fs.existsSync(thief)) {\n` +
+      `  const child = spawn(process.execPath, ['-e', "require('node:http').createServer(" + ${JSON.stringify(page)} + ").listen(" + port + ", '127.0.0.1')"], { detached: true, stdio: 'ignore' });\n` +
+      `  child.unref(); fs.writeFileSync(thief, port + ' ' + child.pid); setInterval(() => {}, 1e5);\n` +
+      `} else require('node:http').createServer(${page}).listen(port, '127.0.0.1');\n`,
     { mode: 0o755 },
   );
-  execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: dir });
+  writeFileSync(path.join(dir, '.gitignore'), '.verify/\nevidence/\ntaken-once\nthief-once\n');
+  const git = (...argv) => execFileSync('git', argv, { cwd: dir, encoding: 'utf8' });
+  git('init', '-q', '-b', 'main');
+  git('add', '.');
+  git('-c', 'user.email=test@example.com', '-c', 'user.name=Test', 'commit', '-qm', 'base', '--no-verify');
   const env = { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}` };
 
   // The ports past runs found busy, held by a server verify did not start. One already held elsewhere is busy too.
@@ -412,6 +439,17 @@ describe('the verify docs server', () => {
     assert.equal(spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir, encoding: 'utf8' }).status, 0);
   });
 
+  test('launch moves to another free port when a server it did not start answers on its first one', async () => {
+    const marker = path.join(dir, 'thief-once');
+    const run = spawnSync(process.execPath, [helper, 'launch'], { cwd: dir, env: { ...env, THIEF_ONCE: marker }, encoding: 'utf8', timeout: 60_000 });
+    const [stolen, thief] = readFileSync(marker, 'utf8').split(' ').map(Number);
+    thieves.push(thief);
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const port = Number(/launch ready http:\/\/127\.0\.0\.1:(\d+) /.exec(run.stdout)?.[1]);
+    assert.ok(port > 0 && port !== stolen, run.stdout);
+    assert.equal(spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir, encoding: 'utf8' }).status, 0);
+  });
+
   test('the drive step starts its server on a free port when the old default ports are busy', async () => {
     await Promise.all(busy.map(hold));
     const { STEPS: steps, executeDrive } = await import(pathToFileURL(helper).href);
@@ -426,6 +464,8 @@ describe('the verify docs server', () => {
       const port = Number(/launched http:\/\/127\.0\.0\.1:(\d+) /.exec(log)?.[1]);
       assert.ok(port > 0 && !busy.includes(port), log);
       assert.match(log, /cleaned up the docs server this run started/);
+      // The whole drive ran against that server: it is this checkout's, at HEAD, and both pages passed.
+      assert.equal(result.status, 'passed', log);
     } finally {
       process.env.PATH = path0;
     }
