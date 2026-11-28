@@ -136,6 +136,9 @@ function effect(own: HTMLElement, el: HTMLElement) {
     // An optional bind, and a \`let\` that starts as the window and is set to an element later (Neon round 3 on #535).
     { code: `function nudge(this: HTMLElement) { this.scrollTop += 4; }\nfunction attach(arrow: HTMLElement, el: HTMLElement) { const onMove = nudge?.bind(el); arrow.addEventListener('pointermove', onMove); }`, errors: [error] },
     { code: `function attach(arrow: HTMLElement, el: HTMLElement) { let target: EventTarget = window; target = arrow; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    // A parameter that may be set to the window holds what the caller passed until then (Neon round 1 on #536).
+    { code: `function attach(target: EventTarget | null, el: HTMLElement) { target ??= window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    { code: `function attach(target: EventTarget, el: HTMLElement, all: boolean) { if (all) target = window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`arrow ?? window\` may be the arrow.
     { code: `function attach(arrow: HTMLElement | null, el: HTMLElement) { (arrow ?? window).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`window && arrow\` is the arrow.

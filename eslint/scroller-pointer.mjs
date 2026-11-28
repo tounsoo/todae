@@ -187,11 +187,17 @@ const scrollerPointerRule = {
         if (['window', 'document', 'globalThis', 'self'].includes(current.name)) return true;
         // Every value the binding is given, at its declaration and later, must be a window or a document:
         // a `let` that starts as the window and is set to an element later may hold the element.
+        // A parameter, a destructured name or an import brings a value this file doesn't show, so it is no window.
         const variable = variableOf(current);
-        if (!variable) return false;
+        if (!variable || variable.defs.length === 0) return false;
+        if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier')) return false;
         const values = [];
-        for (const def of variable.defs) if (def.type === 'Variable' && def.node.init) values.push(def.node.init);
-        for (const reference of variable.references) if (reference.writeExpr) values.push(reference.writeExpr);
+        for (const def of variable.defs) if (def.node.init) values.push(def.node.init);
+        for (const reference of variable.references) {
+          if (!reference.isWrite()) continue;
+          if (!reference.writeExpr) return false;
+          values.push(reference.writeExpr);
+        }
         return values.length > 0 && values.every((value) => isWindowLike(value, seen));
       }
       if (current.type === 'MemberExpression') return ['ownerDocument', 'defaultView', 'document'].includes(propertyName(current));
