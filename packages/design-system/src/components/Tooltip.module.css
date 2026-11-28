@@ -84,10 +84,12 @@
 
   /* Under its trigger when there is no room over it, by flip-block, as on
      Popover: a named @position-try that set the margins made Firefox slide a
-     flipped tip in from the far side. */
+     flipped tip in from the far side. flip-block alone, as the tip has always
+     flipped: with no room on either side it stays over its trigger, where an
+     inline flip would move it below a toast at the top of the screen. */
   @supports (position-try-fallbacks: flip-block) {
     .content {
-      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+      position-try-fallbacks: flip-block;
     }
   }
 
