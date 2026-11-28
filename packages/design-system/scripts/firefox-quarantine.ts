@@ -95,9 +95,24 @@ export const firefoxBranches: readonly FirefoxBranch[] = [
     reason: "Firefox selects a text input's whole text when its label is clicked, as on Tab.",
   },
   {
+    file: 'src/browser/coachmark.browser.test.tsx',
+    code: "const slides = server.browser !== 'firefox';",
+    reason: "Firefox moves Coachmark's hole and popup at once until it animates an anchor() inset whose anchor changed.",
+  },
+  {
+    file: 'src/browser/coachmark.browser.test.tsx',
+    code: "expect(scrim().hasAttribute('data-todae-moving')).toBe(slides);",
+    reason: 'Firefox never marks the hole moving, since it moves at once.',
+  },
+  {
+    file: 'src/browser/coachmark.browser.test.tsx',
+    code: 'if (slides) {',
+    reason: 'Firefox is held to the new target at once, the other engines to a point on the way.',
+  },
+  {
     file: 'src/browser/submenu.browser.test.tsx',
-    code: "if (server.browser !== 'firefox') expect(Math.abs(sub.right - outer.left), at)",
-    reason: "Firefox mirrors a popover's position-area alignment when its parent's direction differs (Firefox bug 2019601).",
+    code: "if (server.browser === 'firefox') expect(sub.left, at).toBeCloseTo(0, 0);",
+    reason: "Firefox mirrors a popover's position-area alignment when its parent's direction differs (Firefox bug 2019601), so it is held to where it lands.",
   },
 ];
 
