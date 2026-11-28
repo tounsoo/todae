@@ -136,6 +136,8 @@ function anvilAppearance(c: {
   accent: [ThemeColorValue, ThemeColorValue, ThemeColorValue, ThemeColorValue];
   tint: ThemeColorValue;
   tintStrong: ThemeColorValue;
+  /** Text on a selected option. Anvil's accent, unless that misses Lc 60 on the tints. */
+  selectedFg: ThemeColorValue;
   danger: ThemeColorValue;
   tint1: number;
   wash: ThemeColorValue;
@@ -199,7 +201,7 @@ function anvilAppearance(c: {
     'toast.shadow': shadow(0, 8, 24, 0, c.shadow),
     'option.bg.selected': c.tint,
     'option.bg.selected-highlighted': c.tintStrong,
-    'option.fg.selected': c.accent[0],
+    'option.fg.selected': c.selectedFg,
     'calendar.day.bg.range': c.tint,
     'calendar.day.fg.range': c.accent[0],
     'steps.marker.border.current': c.accent[0],
@@ -443,7 +445,10 @@ export const PRESETS: readonly ThemePreset[] = [
       thumb: oklch(1, 0, 0),
       accent: [oklch(0.532, 0.198, 258), oklch(0.438, 0.15, 261), oklch(0.336, 0.118, 257), oklch(1, 0, 0)],
       tint: oklch(0.954, 0.022, 254),
-      tintStrong: oklch(0.908, 0.046, 253),
+      // Anvil's 0.908 highlight puts its blue at Lc 58, under Todae's 60, so
+      // it sits a step lighter.
+      tintStrong: oklch(0.919, 0.046, 253),
+      selectedFg: oklch(0.532, 0.198, 258),
       danger: oklch(0.561, 0.215, 32),
       tint1: 0.06,
       wash: oklch(0.637, 0, 0),
@@ -489,7 +494,12 @@ export const PRESETS: readonly ThemePreset[] = [
         accent: [oklch(0.749, 0.132, 254), oklch(0.827, 0.088, 253), oklch(0.908, 0.046, 253), oklch(0.13, 0, 0)],
         tint: alpha(oklch(0.749, 0.132, 254), 0.2),
         tintStrong: alpha(oklch(0.749, 0.132, 254), 0.3),
-        danger: oklch(0.686, 0.205, 33),
+        // Anvil's blue on its own tints reaches Lc 43 to 51, under Todae's 60,
+        // so a selected option's text is a lighter blue of the same hue.
+        selectedFg: oklch(0.843, 0.081, 254),
+        // Anvil's red reaches Lc 42 on the raised surface, under Todae's 60,
+        // so it is lighter, with the chroma the sRGB gamut keeps at that lightness.
+        danger: oklch(0.793, 0.122, 33),
         tint1: 0.08,
         wash: oklch(1, 0, 0),
         focus: oklch(0.749, 0.132, 254),

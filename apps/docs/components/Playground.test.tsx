@@ -98,7 +98,7 @@ describe('Playground', () => {
   });
 
   // Four exports of the whole playground, so it gets more room than the describe's default.
-  it('downloads the theme as a token package with its edits and their appearance', { timeout: 40_000 }, async () => {
+  it('downloads the theme as a token package with its edits and their appearance', async () => {
     const created: Blob[] = [];
     URL.createObjectURL = vi.fn((blob: Blob) => {
       created.push(blob);

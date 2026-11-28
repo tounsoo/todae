@@ -76,18 +76,16 @@ describe('tokenPackage', () => {
 });
 
 describe('overridesPackage', () => {
-  it('builds every Playground preset, or fails only on contrast the preset itself sets', async () => {
-    const built: string[] = [];
+  it('builds every Playground preset clean, its APCA contrast pairs included', async () => {
+    const built: Record<string, string> = {};
     for (const preset of PRESETS) {
       const { files, skipped, unsplit } = exportOf(preset.light, preset.dark, preset.id);
       expect(skipped, preset.id).toEqual([]);
       expect(unsplit, preset.id).toEqual([]);
       const result = await buildTokenFiles(files);
-      // A preset may miss an APCA pair the Playground does not check, such as Anvil's selected option.
-      if (result.ok) built.push(preset.id);
-      else expect(result.error, preset.id).toMatch(/^contrast: \d+ pair\(s\) fail APCA/);
+      built[preset.id] = result.ok ? '' : result.error;
     }
-    expect(built).toEqual(expect.arrayContaining(['graphite', 'porcelain', 'acid', 'bloom', 'riso', 'y2k-chrome']));
+    expect(built).toEqual(Object.fromEntries(PRESETS.map((preset) => [preset.id, ''])));
   }, 120_000);
 
   it('follows a core token that differs by appearance through the tokens that alias it', () => {

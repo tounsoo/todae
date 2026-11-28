@@ -18,7 +18,7 @@ Shared rules live in Ben's home repo, [tounsoo/home](https://github.com/tounsoo/
 
 - `AGENTS.md` there: the memory split and the learnings ladder. A todae fact in this file overrides home.
 - `standards/git.md` and `standards/pull-requests.md`
-- `playbooks/review-before-pr.md` and `playbooks/waiting-on-ci.md`. The **Repo lines** below fill those in ([0016](docs/decisions/0016-shared-agent-rules-live-in-home.md)).
+- `playbooks/pull-request.md`. The **Repo lines** below fill it in ([0016](docs/decisions/0016-shared-agent-rules-live-in-home.md)).
 
 [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, commands, and pull requests. [ARCHITECTURE.md](ARCHITECTURE.md) records how the design system is built. Read it before adding or changing a component, hook, recipe, token or docs page. Dated decisions are in [docs/decisions](docs/decisions/README.md). A pull request that changes a decision or a spec also edits that decision's file. A design-system rule still belongs in `ARCHITECTURE.md`, updated in that same pull request.
 
@@ -36,7 +36,7 @@ The required checks are `Checks` and `rule-checker`. `Token consumers` is inform
 
 ## Repo lines
 
-These fill the **Repo lines** in home's `playbooks/review-before-pr.md` and `playbooks/waiting-on-ci.md`. [0016](docs/decisions/0016-shared-agent-rules-live-in-home.md) records why the copies are not in this repo.
+These fill the **Repo lines** in home's `playbooks/pull-request.md`. [0016](docs/decisions/0016-shared-agent-rules-live-in-home.md) records why the copies are not in this repo.
 
 - Base branch: `main`.
 - Checks, in the order [Check your change](CONTRIBUTING.md#check-your-change) lists. The [rule table](#rule-table) names each check. Claude proves the change with `node .claude/skills/verify/verify.mjs run` and puts `node .claude/skills/verify/verify.mjs body` under Verification. Cursor drives the docs site with `.cursor/skills/verify/SKILL.md`.

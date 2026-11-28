@@ -42,20 +42,22 @@ describe('playgroundPackage', () => {
         const light = side('light');
         const result = playgroundPackage({ name: preset.id, presetName: preset.name, light, dark: side('dark') });
         expect(result.skipped, `${preset.id}/${choice}`).toEqual([]);
-        // Every motion token the stage applies is declared in the package at its own path, opt-in motions included.
-        const declared = new Set<string>();
+        // Every motion token the stage applies is declared in the package at its own path, with the value the stage applies, opt-in motions included.
+        const declared = new Map<string, unknown>();
         const walk = (node: unknown, path: string[]) => {
           if (typeof node !== 'object' || node === null || Array.isArray(node)) return;
-          if ('$value' in node) declared.add(path.join('.'));
+          if ('$value' in node) declared.set(path.join('.'), node.$value);
           else for (const [key, child] of Object.entries(node)) walk(child, [...path, key]);
         };
         for (const [file, text] of Object.entries(result.files)) if (file !== 'resolver.json') walk(JSON.parse(text), []);
-        for (const key of Object.keys(light).filter(isMotionKey)) expect(declared.has(key), `${preset.id}/${choice}: ${key}`).toBe(true);
+        for (const key of Object.keys(light).filter(isMotionKey)) {
+          expect(declared.get(key), `${preset.id}/${choice}: ${key}`).toEqual(light[key as keyof typeof light]);
+        }
         for (const key of ['popover.motion.offset', 'tabs.motion.panel.duration', 'option.check.motion.duration']) {
           expect(Object.keys(light)).toContain(key);
         }
         const built = await buildTokenFiles(result.files);
-        if (!built.ok) expect(built.error, `${preset.id}/${choice}`).toMatch(/^contrast: \d+ pair\(s\) fail APCA/);
+        expect(built.ok ? '' : built.error, `${preset.id}/${choice}`).toBe('');
       }
     }
   }, 300_000);
