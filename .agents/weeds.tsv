@@ -45,3 +45,6 @@ date	class	ref	caught_by	note
 2026-11-27	verify-node-icu	#525	ben	Local verify on the Air failed 5 date tests under Homebrew node, which links macOS's ICU; CI's official Node passed.
 2026-11-27	anchored-overlay-engines	#525	ben	Popover and Tooltip slide tests returned outside Chromium, so the WebKit close jump on a box with position-try fallbacks merged; Ben found it in the Playground.
 2026-11-27	anchored-overlay-engines	#529	review	Named @position-try flips set the transitioning margins, so Firefox slid a flipped Popover or Tooltip in from the far side; Neon round 1 caught it.
+2026-11-27	verify-free-port	#523	ben	Local verify on the Air was BLOCKED: axe's fixed docs port 3100 was busy; #528 moved axe and peek to a free port, and #531's verify-free-port rule holds it; CI passed.
+2026-11-27	verify-free-port	#530	ben	Local verify on the Air was BLOCKED again on a busy fixed port, 3322 this time; #531's free-port verify now picks a port; CI passed.
+2026-11-28	overlay-scrollbar-hit	d8e4aac5	ben	Scroll edge arrows ignored the foot of the arrow, where macOS WebKit's overlay scrollbar sends pointer events to the scroller; CI's Linux scrollbars take room, so only the Air failed.
