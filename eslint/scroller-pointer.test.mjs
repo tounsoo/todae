@@ -114,6 +114,14 @@ function effect(own: HTMLElement, el: HTMLElement) {
     `function attach(node: HTMLElement, el: HTMLElement) { let pending: (() => void) | null = null; const start = () => { pending = () => { el.scrollTop += 4; }; }; const cancel = () => { pending = null; }; node.addEventListener('click', start); node.addEventListener('pointerleave', cancel); }`,
     // A long chain of window aliases resolves in linear time (Neon round 2 on #536).
     `function watch(el: HTMLElement) { ${Array.from({ length: 40 }, (_, i) => `const w${i + 1} = ${i ? `w${i}` : 'window'};`).join(' ')} w40.addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
+    // A binding declared in a loop's body, not as the loop's own, is asked about like any other (#536 follow-up).
+    `function watch(el: HTMLElement, keys: string[]) { for (const key of keys) { const win = el.ownerDocument.defaultView ?? window; win.addEventListener('pointermove', () => { el.scrollLeft += key.length; }); } }`,
+    `function watch(el: HTMLElement, keys: string[]) { for (const key in keys) var win = window; win.addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
+    // A diamond of window aliases, each read twice, resolves in linear time: it took 2^n steps before (#536 follow-up).
+    `function watch(el: HTMLElement) { const w0 = window; ${Array.from({ length: 40 }, (_, i) => `const w${i + 1} = w${i} ?? w${i};`).join(' ')} w40.addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
+    // A binding set to itself or the window stays a window; \`??=\` already was (#536 follow-up).
+    `function watch(el: HTMLElement) { let win = el.ownerDocument.defaultView; win = win ?? window; win.addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
+    `function watch(el: HTMLElement) { let win = el.ownerDocument.defaultView; win ??= window; win.addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
   ],
   invalid: [
     { code: before533, errors: [error] },
@@ -150,5 +158,14 @@ function effect(own: HTMLElement, el: HTMLElement) {
     { code: `function attach(arrow: HTMLElement | null, el: HTMLElement) { (arrow ?? window).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`window && arrow\` is the arrow.
     { code: `function attach(arrow: HTMLElement, el: HTMLElement) { (window && arrow).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    // A for…in binding holds each key until it is set to the window, as a for…of one does (#536 follow-up).
+    { code: `function attach(arrows: Record<string, HTMLElement>, el: HTMLElement, all: boolean) { for (let target in arrows) { if (all) target = window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); } }`, errors: [error] },
+    // An element declared in a loop's body is no window.
+    { code: `function attach(arrows: HTMLElement[], el: HTMLElement) { for (const arrow of arrows) { const target = arrow; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); } }`, errors: [error] },
+    // Self-reassignment keeps whatever else the binding holds: an element at the start, or one set later (#536 follow-up).
+    { code: `function attach(arrow: HTMLElement, el: HTMLElement) { let target: EventTarget = arrow; target = target ?? window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    { code: `function attach(arrow: HTMLElement, el: HTMLElement) { let win = el.ownerDocument.defaultView; win = win ?? window; win = arrow; win.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    // A binding that only ever holds itself is no window.
+    { code: `function attach(el: HTMLElement) { let w: EventTarget; w = w; w.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
   ],
 });
