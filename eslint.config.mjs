@@ -43,6 +43,9 @@ export default tseslint.config(
       'todae/no-hidden-type': 'error',
       'todae/prop-naming': 'error',
       'todae/dev-only-diagnostics': 'error',
+      // A native scrollbar over a scroller's edge took the pointer from ScrollEdges' arrows on a Mac (#533, #534),
+      // so a pointer that scrolls as it moves over a part goes through src/internal/scrollerParts.ts.
+      'todae/scroller-pointer': 'error',
     },
   },
   {

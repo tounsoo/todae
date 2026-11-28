@@ -1,5 +1,6 @@
 import path from 'node:path';
 import anchoredOverlayEngines from './anchored-overlay-engines.mjs';
+import scrollerPointer from './scroller-pointer.mjs';
 
 const FORBIDDEN_PROP_NAMES = new Set(['isDisabled', 'isInvalid', 'isOpen', 'error', 'hasError']);
 const CONSOLE_METHODS = new Set(['warn', 'error', 'log', 'info', 'debug']);
@@ -427,6 +428,7 @@ const plugin = {
     'dev-only-diagnostics': devOnlyDiagnostics,
     'layer-imports': layerImports,
     'anchored-overlay-engines': anchoredOverlayEngines,
+    'scroller-pointer': scrollerPointer,
   },
 };
 
