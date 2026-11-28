@@ -7,6 +7,7 @@ export default {
     './stylelint/local-custom-property.mjs',
     './stylelint/focus-ring-token.mjs',
     './stylelint/disabled-state.mjs',
+    './stylelint/anchored-motion.mjs',
   ],
   ignoreFiles: ['**/*.generated.css', '**/*.test.css', '**/*.stories.css', 'apps/docs/**'],
   rules: {
@@ -14,6 +15,7 @@ export default {
     'todae/no-raw-literal': [true, { severity: 'error' }],
     'todae/local-custom-property': [true, { severity: 'error' }],
     'todae/disabled-state': [true, { severity: 'error' }],
+    'todae/anchored-motion': [true, { severity: 'error' }],
     'todae/token-root-scope': [
       true,
       {
