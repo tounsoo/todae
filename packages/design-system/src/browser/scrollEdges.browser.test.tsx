@@ -286,6 +286,13 @@ describe('scroll edge arrows', () => {
     const port = area.getBoundingClientRect();
     move(area, port.left + port.width / 2);
     await still();
+    // So does a move onto a row.
+    area.scrollLeft = 0;
+    await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));
+    move(area, middle);
+    await waitFor(() => expect(away()).toBeGreaterThan(20));
+    move(screen.getByText('Row 2'), port.left + port.width / 2, { clientY: box.top + 2 });
+    await still();
     // From the arrow into the band under it keeps scrolling: the pointer has not left what it sees.
     area.scrollLeft = 0;
     await waitFor(() => expect(shownEdges(area)).toEqual(['inline-end']));

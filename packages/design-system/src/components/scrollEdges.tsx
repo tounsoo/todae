@@ -273,8 +273,10 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
     // arrows at the scroller's edge, and WebKit sends a move over it to the
     // scroller rather than to the arrow drawn there. So a move that reaches the
     // scroller itself counts by the shown arrow under the pointer.
+    // A later arrow paints over an earlier one where two meet in a corner,
+    // so the search runs from the last.
     const under = (event: PointerEvent): HTMLElement | undefined =>
-      [...own.children].find((node): node is HTMLElement => {
+      [...own.children].reverse().find((node): node is HTMLElement => {
         if (!node.hasAttribute('data-shown')) return false;
         const box = node.getBoundingClientRect();
         return event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom;
