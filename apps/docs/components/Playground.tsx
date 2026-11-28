@@ -6,10 +6,12 @@ import {
   Button,
   Code,
   CodeBlock,
+  ErrorMessage,
   ColorPicker,
   COMPONENT_OVERRIDE_KEYS,
   createToaster,
   Field,
+  Label,
   RAW_OVERRIDE_KEYS,
   ScrollArea,
   SEMANTIC_OVERRIDE_KEYS,
@@ -32,6 +34,7 @@ import {
 import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { packageNameProblem } from '../lib/token-package/packageName';
 import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
 import { MOTION_CHOICES, withMotion, type MotionChoice } from './playground/motion';
 import { PRESETS, type ThemePreset } from './playground/presets';
@@ -244,6 +247,9 @@ export function Playground({ locale }: { locale: Locale }) {
   const [toaster] = useState<PreviewToaster>(() => createToaster());
   const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
   const codeId = useId();
+  const packageNameId = useId();
+  const packageNameErrorId = useId();
+  const packageNameRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
@@ -299,8 +305,14 @@ export function Playground({ locale }: { locale: Locale }) {
     2,
   )}\n`;
 
-  // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
-  const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
+  // The package name follows the preset until the reader types one.
+  const [typedPackageName, setTypedPackageName] = useState<string | null>(null);
+  const packageName = typedPackageName ?? `${preset?.id ?? 'theme'}-tokens`;
+  const packageNameError = packageNameProblem(packageName);
+  const packageNameInvalid = packageNameError !== null;
+
+  // Which theme and package name the last download was for, so its status clears once either changes, like the copy status.
+  const [downloaded, setDownloaded] = useState<{ json: string; packageName: string; status: string } | null>(null);
 
   function exportOverrides() {
     // Whichever export ran last owns the status line.
@@ -309,12 +321,16 @@ export function Playground({ locale }: { locale: Locale }) {
   }
 
   async function downloadPackage() {
+    if (packageNameInvalid) {
+      packageNameRef.current?.focus();
+      return;
+    }
     clipboard.reset();
     try {
       // Loaded on demand: the package reads Todae's whole token catalog.
       const { playgroundPackage } = await import('./playground/tokenPackage');
       const name = preset?.id ?? 'theme';
-      const result = playgroundPackage({ name, presetName: preset?.name ?? name, light: exportLight, dark: exportDark });
+      const result = playgroundPackage({ name, presetName: preset?.name ?? name, packageName, light: exportLight, dark: exportDark });
       const url = URL.createObjectURL(new Blob([result.zip as BlobPart], { type: 'application/zip' }));
       const link = document.createElement('a');
       link.href = url;
@@ -322,15 +338,15 @@ export function Playground({ locale }: { locale: Locale }) {
       link.click();
       // Some browsers drop a download whose URL is revoked at once.
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setDownloaded({ json: exportJson, status: t.downloaded.replace('{file}', result.fileName) });
+      setDownloaded({ json: exportJson, packageName, status: t.downloaded.replace('{file}', result.fileName) });
     } catch {
-      setDownloaded({ json: exportJson, status: t.downloadFailed });
+      setDownloaded({ json: exportJson, packageName, status: t.downloadFailed });
     }
   }
 
   // The result shows only for the JSON it was for, so it clears once the theme changes.
   const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
-  const downloadStatus = downloaded?.json === exportJson ? downloaded.status : null;
+  const downloadStatus = downloaded?.json === exportJson && downloaded.packageName === packageName ? downloaded.status : null;
   const exportStatus = clipboard.text === exportJson ? copyResult : downloadStatus;
   const exportStatusLine = exportStatus ? <p className="pg-hint">{exportStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
@@ -381,6 +397,26 @@ export function Playground({ locale }: { locale: Locale }) {
         </Tabs.Panel>
       ))}
     </Tabs.Root>
+  );
+
+  // Rendered once, in the rail or the sheet, so its ids never repeat.
+  const packageNameField = (
+    <Field.Group>
+      <Label.Root htmlFor={packageNameId}>{t.packageName}</Label.Root>
+      <Field.Root id={packageNameId} invalid={packageNameInvalid} aria-describedby={packageNameInvalid ? packageNameErrorId : undefined}>
+        <Field.TextInput
+          ref={packageNameRef}
+          spellCheck={false}
+          autoCapitalize="none"
+          autoComplete="off"
+          value={packageName}
+          onChange={(event) => setTypedPackageName(event.target.value)}
+        />
+      </Field.Root>
+      {packageNameError ? (
+        <ErrorMessage.Root id={packageNameErrorId}>{DICTIONARIES[locale].packageNameProblems[packageNameError]}</ErrorMessage.Root>
+      ) : null}
+    </Field.Group>
   );
 
   const actions = (
@@ -533,6 +569,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {themeControls}
                 {tokenSection}
                 {codePanel}
+                {packageNameField}
                 {actions}
                 <p className="pg-hint">{exportStatus ?? t.exportHint}</p>
               </>
@@ -600,6 +637,7 @@ export function Playground({ locale }: { locale: Locale }) {
               {themeControls}
               {tokenSection}
               {codePanel}
+              {packageNameField}
               {/* At the end of the list, so it leaves the short sheet's room to the tokens. */}
               <BottomSheet.Description className="pg-hint">{t.exportHint}</BottomSheet.Description>
             </BottomSheet.Body>

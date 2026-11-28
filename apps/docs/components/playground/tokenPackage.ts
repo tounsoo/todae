@@ -2,14 +2,18 @@ import { parseThemeValue, type ThemeOverride, type ThemeOverrideKey } from '@tou
 import catalog from '@tounsoo/todae/tokens.json';
 import { overridesPackage, type CatalogRow } from '../../lib/token-package/overrides';
 import { BUILD_COMMAND, TOKENS_FOLDER } from '../../lib/token-package/package';
+import { packageNameProblem } from '../../lib/token-package/packageName';
 import { zipFiles } from '../../lib/token-package/zip';
 import { DOCS_ORIGIN } from '../../lib/origin';
+import { RELEASE } from '../../lib/version';
 
 export type PlaygroundPackageInput = {
   /** The package's name: the preset's id, such as "graphite". */
   name: string;
   /** The preset's display name, for the README. */
   presetName: string;
+  /** The npm package name for package.json, such as "@acme/tokens". `<name>-tokens` when left out. */
+  packageName?: string;
   /** Everything the stage applies in each appearance. */
   light: ThemeOverride;
   dark: ThemeOverride;
@@ -19,7 +23,7 @@ function list(paths: readonly string[]): string {
   return paths.map((path) => `- \`${path}\``).join('\n');
 }
 
-function readme(name: string, presetName: string, files: readonly string[], result: ReturnType<typeof overridesPackage>): string {
+function readme(name: string, packageName: string, presetName: string, files: readonly string[], result: ReturnType<typeof overridesPackage>): string {
   const lines = [
     `# ${name} tokens`,
     '',
@@ -32,6 +36,8 @@ function readme(name: string, presetName: string, files: readonly string[], resu
     '```',
     '',
     'The build checks the tokens, including the APCA contrast pairs Todae keeps, and names any it fails with a fix.',
+    '',
+    `The \`package.json\` next to this folder names the package \`${packageName}\` and runs the same build as \`npm run build:tokens\`. To add the tokens to a project that has its own \`package.json\`, copy only this folder.`,
     '',
     '## Files',
     '',
@@ -83,18 +89,36 @@ export function parseCatalogValue(path: string, css: string): unknown {
   return px ? { value: Number(px[1]), unit: 'px' } : null;
 }
 
-export function playgroundPackage({ name, presetName, light, dark }: PlaygroundPackageInput) {
+/** The package.json next to `tokens/`: the name, the build script, and the Todae release the tokens were made against. */
+function packageJson(packageName: string, description: string): string {
+  const manifest = {
+    name: packageName,
+    version: '0.0.0',
+    description,
+    files: [TOKENS_FOLDER],
+    scripts: { 'build:tokens': `todae-tokens build --resolver ./${TOKENS_FOLDER}/resolver.json` },
+    dependencies: { '@tounsoo/todae': `^${RELEASE.version}` },
+  };
+  return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+export function playgroundPackage({ name, presetName, light, dark, packageName = `${name}-tokens` }: PlaygroundPackageInput) {
+  const problem = packageNameProblem(packageName);
+  if (problem) throw new Error(`"${packageName}" is not a valid npm package name (${problem})`);
+  const description = `Exported from the Todae Playground, starting from the ${presetName} preset.`;
   const result = overridesPackage({
     name,
-    description: `Exported from the Todae Playground, starting from the ${presetName} preset.`,
+    description,
     light: light as Record<string, unknown>,
     dark: dark as Record<string, unknown>,
     catalog: (catalog as { tokens: CatalogRow[] }).tokens,
     parse: parseCatalogValue,
   });
   const paths = Object.keys(result.files);
-  const files: Record<string, string> = {};
+  const files: Record<string, string> = { 'package.json': packageJson(packageName, description) };
   for (const [path, contents] of Object.entries(result.files)) files[`${TOKENS_FOLDER}/${path}`] = contents;
-  files[`${TOKENS_FOLDER}/README.md`] = readme(name, presetName, paths, result);
-  return { ...result, archive: files, zip: zipFiles(files), fileName: `${name}-tokens.zip` };
+  files[`${TOKENS_FOLDER}/README.md`] = readme(name, packageName, presetName, paths, result);
+  // "@acme/tokens" downloads as acme-tokens.zip.
+  const fileName = `${packageName.replace(/^@/, '').replace('/', '-')}.zip`;
+  return { ...result, archive: files, zip: zipFiles(files), fileName };
 }
