@@ -34,6 +34,11 @@ import EventCalendarZones, {
   type DaySegment,
 } from '../../examples/recipes/event-calendar/EventCalendarExample';
 
+/** A month day's button. A day is named by its full date, then what it shows, a space apart. */
+function dayButton(date: string): HTMLElement {
+  return screen.getByRole('button', { name: (name) => name === date || name.startsWith(`${date} `) });
+}
+
 const date = (text: string) => Temporal.PlainDate.from(text);
 const time = (text: string) => Temporal.PlainTime.from(text);
 const at = (text: string) => Temporal.ZonedDateTime.from(text);
@@ -496,7 +501,7 @@ describe('the calendar', () => {
     expect(early.textContent).toContain('…');
     expect(screen.getByRole('button', { name: `Ship review, ${clock('15:00')} to ${clock('18:30')}, continues` })).toBeTruthy();
     const one = screen.getByRole('button', { name: `1:1, ${clock('11:00')} to ${clock('11:30')}` });
-    expect(one.textContent).toBe('1:1');
+    expect(one.textContent?.trim()).toBe('1:1');
     const offsite = screen.getByRole('button', { name: `Offsite, ${longDate('2026-11-16')}` });
     expect(screen.getByRole('list', { name: 'Mon, Nov 16' }).contains(offsite)).toBe(false);
     expect(screen.getByRole('button', { name: `Launch watch, ${longRange('2026-11-18', '2026-11-19')}, ${clock('22:00')} to ${clock('02:00')}` })).toBeTruthy();
@@ -764,14 +769,11 @@ describe('the calendar', () => {
   });
 });
 
-function describedBy(name: string): string | null {
-  const button = screen.getByRole('button', { name });
-  const id = button.getAttribute('aria-describedby');
-  if (!id) return null;
-  const node = document.getElementById(id);
-  if (!node) return null;
-  const text = spokenText(node);
-  return text.length === 0 ? '' : text;
+/** What a month day reads after its date: the day is named by its date, then what it shows. */
+function readAfterDate(date: string): string | null {
+  const text = spokenText(dayButton(date)).replace(/\s+/g, ' ').trim();
+  if (text === date) return '';
+  return text.startsWith(`${date} `) ? text.slice(date.length + 1) : null;
 }
 
 function spokenText(node: Node): string {
@@ -848,25 +850,24 @@ describe('the month', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
   }
 
-  it('describes each day with two titles and the count of the rest, and draws the trailing days', () => {
+  it('names each day with its date, two titles and the count of the rest, and draws the trailing days', () => {
     openMonth();
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Monday, November 16, 2026' }).getAttribute('aria-label')).toBe('Monday, November 16, 2026');
-    expect(describedBy('Monday, November 16, 2026')).toBe(`Offsite, ${longDate('2026-11-16')}, Handoff, ${longRange('2026-11-16', '2026-11-17')}, +2 more`);
-    expect(describedBy('Tuesday, November 17, 2026')).toBe(`Handoff, ${longRange('2026-11-16', '2026-11-17')}, Interview`);
-    expect(describedBy('Wednesday, November 18, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Early sync, +1 more`);
-    expect(describedBy('Thursday, November 19, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Planning, +5 more`);
-    expect(describedBy('Friday, November 20, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Demo`);
-    expect(describedBy('Saturday, November 21, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Office hours`);
-    const saturday = screen.getByRole('button', { name: 'Saturday, November 21, 2026' });
+    expect(readAfterDate('Monday, November 16, 2026')).toBe(`Offsite, ${longDate('2026-11-16')}, Handoff, ${longRange('2026-11-16', '2026-11-17')}, +2 more`);
+    expect(readAfterDate('Tuesday, November 17, 2026')).toBe(`Handoff, ${longRange('2026-11-16', '2026-11-17')}, Interview`);
+    expect(readAfterDate('Wednesday, November 18, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Early sync, +1 more`);
+    expect(readAfterDate('Thursday, November 19, 2026')).toBe(`Launch watch, ${longRange('2026-11-18', '2026-11-19')}, Planning, +5 more`);
+    expect(readAfterDate('Friday, November 20, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Demo`);
+    expect(readAfterDate('Saturday, November 21, 2026')).toBe(`Retreat, ${longRange('2026-11-20', '2026-11-22')}, Office hours`);
+    const saturday = dayButton('Saturday, November 21, 2026');
     expect(saturday.querySelectorAll('[class*="cue"]')).toHaveLength(1);
     expect(saturday.querySelector('[data-bar="retreat"]')?.hasAttribute('data-cut-start')).toBe(false);
-    expect(screen.getByRole('button', { name: 'Friday, November 20, 2026' }).querySelectorAll('[class*="cue"]')).toHaveLength(0);
-    expect(describedBy('Sunday, November 15, 2026')).toBe('Book club, repeats');
-    const anchorDay = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    expect(dayButton('Friday, November 20, 2026').querySelectorAll('[class*="cue"]')).toHaveLength(0);
+    expect(readAfterDate('Sunday, November 15, 2026')).toBe('Book club, repeats');
+    const anchorDay = dayButton('Monday, November 16, 2026');
     expect(anchorDay.hasAttribute('data-selected')).toBe(false);
     expect(anchorDay.closest('td')?.getAttribute('aria-selected')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Tuesday, December 1, 2026' })).toBeTruthy();
+    expect(dayButton('Tuesday, December 1, 2026')).toBeTruthy();
   });
 
   it('reads the upper bar first when a lower row is listed earlier', () => {
@@ -874,7 +875,7 @@ describe('the month', () => {
     const high = event('high', '2026-11-16T00:00:00-08:00[America/Los_Angeles]', '2026-11-19T00:00:00-08:00[America/Los_Angeles]', { title: 'High', allDay: true });
     render(<EventCalendarExample locale="en-US" events={[low, high]} />);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Tuesday, November 17, 2026')).toBe(`High, ${longRange('2026-11-16', '2026-11-18')}, Low, ${longDate('2026-11-17')}`);
+    expect(readAfterDate('Tuesday, November 17, 2026')).toBe(`High, ${longRange('2026-11-16', '2026-11-18')}, Low, ${longDate('2026-11-17')}`);
   });
 
   it('puts a multi-day event on each day it covers, and keeps an event that ends at midnight on the earlier day', () => {
@@ -885,15 +886,15 @@ describe('the month', () => {
     ];
     render(<EventCalendarExample locale="en-US" timeZone={zone} events={events} />);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe(`Edge, ${longDate('2026-11-16')}, Span, ${longRange('2026-11-16', '2026-11-18')}`);
-    expect(describedBy('Tuesday, November 17, 2026')).toBe(`Span, ${longRange('2026-11-16', '2026-11-18')}`);
-    expect(describedBy('Wednesday, November 18, 2026')).toBe(`Span, ${longRange('2026-11-16', '2026-11-18')}`);
-    expect(describedBy('Thursday, November 19, 2026')).toBe('');
+    expect(readAfterDate('Monday, November 16, 2026')).toBe(`Edge, ${longDate('2026-11-16')}, Span, ${longRange('2026-11-16', '2026-11-18')}`);
+    expect(readAfterDate('Tuesday, November 17, 2026')).toBe(`Span, ${longRange('2026-11-16', '2026-11-18')}`);
+    expect(readAfterDate('Wednesday, November 18, 2026')).toBe(`Span, ${longRange('2026-11-16', '2026-11-18')}`);
+    expect(readAfterDate('Thursday, November 19, 2026')).toBe('');
   });
 
   it('opens the pressed day and focuses its first event', () => {
     openMonth();
-    fireEvent.click(screen.getByRole('button', { name: 'Thursday, November 19, 2026' }));
+    fireEvent.click(dayButton('Thursday, November 19, 2026'));
     expect(screen.getByRole('heading', { name: 'Thu, Nov 19' })).toBeTruthy();
     expect(screen.queryByRole('grid')).toBeNull();
     const planning = screen.getByRole('button', { name: `Planning, ${clock('10:00')} to ${clock('12:00')}` });
@@ -902,7 +903,7 @@ describe('the month', () => {
 
   it('focuses the day heading when the pressed day has no event', () => {
     openMonth();
-    fireEvent.click(screen.getByRole('button', { name: 'Sunday, November 8, 2026' }));
+    fireEvent.click(dayButton('Sunday, November 8, 2026'));
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Sun, Nov 8' }));
     expect(screen.queryByRole('button', { name: /Design review|Planning|Offsite/ })).toBeNull();
   });
@@ -913,21 +914,21 @@ describe('the month', () => {
     next.focus();
     fireEvent.click(next);
     expect(screen.getByText('December 2026')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Wednesday, December 16, 2026' })).toBeTruthy();
+    expect(dayButton('Wednesday, December 16, 2026')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Monday, November 16, 2026' })).toBeNull();
     expect(document.activeElement).toBe(next);
   });
 
   it('moves a month from Page Down and focuses that month’s same day', () => {
     openMonth();
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown' });
+    fireEvent.keyDown(dayButton('Monday, November 16, 2026'), { key: 'PageDown' });
     expect(screen.getByText('December 2026')).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Wednesday, December 16, 2026' }));
+    expect(document.activeElement).toBe(dayButton('Wednesday, December 16, 2026'));
   });
 
   it('cancels Page Up and Page Down so the page does not scroll', () => {
     openMonth();
-    const day = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    const day = dayButton('Monday, November 16, 2026');
     for (const key of ['PageUp', 'PageDown']) {
       const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
       day.dispatchEvent(event);
@@ -937,14 +938,14 @@ describe('the month', () => {
 
   it('moves a year from Shift and Page Down', () => {
     openMonth();
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown', shiftKey: true });
+    fireEvent.keyDown(dayButton('Monday, November 16, 2026'), { key: 'PageDown', shiftKey: true });
     expect(screen.getByRole('grid', { name: 'November 2027' })).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, November 16, 2027' }));
+    expect(document.activeElement).toBe(dayButton('Tuesday, November 16, 2027'));
   });
 
   it('names the focused month when arrowing across the month boundary', () => {
     openMonth();
-    let current: HTMLElement = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    let current: HTMLElement = dayButton('Monday, November 16, 2026');
     current.focus();
     for (let step = 0; step < 4; step += 1) {
       fireEvent.keyDown(current, { key: 'ArrowDown' });
@@ -952,13 +953,13 @@ describe('the month', () => {
     }
     expect(screen.getByRole('grid', { name: 'December 2026' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'December 2026' })).toBeTruthy();
-    expect(current).toBe(screen.getByRole('button', { name: 'Monday, December 14, 2026' }));
+    expect(current).toBe(dayButton('Monday, December 14, 2026'));
     expect(screen.queryByRole('grid', { name: 'November 2026' })).toBeNull();
   });
 
   it('names the focused month in Korean when arrowing across the month boundary', () => {
     openMonth('ko');
-    let current: HTMLElement = screen.getByRole('button', { name: '2026년 11월 16일 월요일' });
+    let current: HTMLElement = dayButton('2026년 11월 16일 월요일');
     current.focus();
     for (let step = 0; step < 4; step += 1) {
       fireEvent.keyDown(current, { key: 'ArrowDown' });
@@ -966,7 +967,7 @@ describe('the month', () => {
     }
     expect(screen.getByRole('grid', { name: '2026년 12월' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '2026년 12월' })).toBeTruthy();
-    expect(current).toBe(screen.getByRole('button', { name: '2026년 12월 14일 월요일' }));
+    expect(current).toBe(dayButton('2026년 12월 14일 월요일'));
     expect(screen.queryByRole('grid', { name: '2026년 11월' })).toBeNull();
   });
 
@@ -979,7 +980,7 @@ describe('the month', () => {
     ];
     render(<EventCalendarExample locale="en-US" events={events} />);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe(`Alpha, ${longRange('2026-11-16', '2026-11-18')}, Beta, ${longRange('2026-11-16', '2026-11-17')}, +2 more`);
+    expect(readAfterDate('Monday, November 16, 2026')).toBe(`Alpha, ${longRange('2026-11-16', '2026-11-18')}, Beta, ${longRange('2026-11-16', '2026-11-17')}, +2 more`);
   });
 
   it('lists an all-day event before a timed event that starts at the same time', () => {
@@ -989,17 +990,17 @@ describe('the month', () => {
     ];
     render(<EventCalendarExample locale="en-US" events={events} />);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe(`Zebra, ${longDate('2026-11-16')}, Alpha`);
+    expect(readAfterDate('Monday, November 16, 2026')).toBe(`Zebra, ${longDate('2026-11-16')}, Alpha`);
   });
 
   it('opens the week that contains the pressed Sunday, in English and Korean', () => {
     openMonth();
-    fireEvent.click(screen.getByRole('button', { name: 'Sunday, November 15, 2026' }));
+    fireEvent.click(dayButton('Sunday, November 15, 2026'));
     fireEvent.click(screen.getByRole('button', { name: 'Week' }));
     expect(screen.getByText('Nov 15 – Nov 21, 2026')).toBeTruthy();
     cleanup();
     openMonth('ko');
-    fireEvent.click(screen.getByRole('button', { name: '2026년 11월 15일 일요일' }));
+    fireEvent.click(dayButton('2026년 11월 15일 일요일'));
     fireEvent.click(screen.getByRole('button', { name: 'Week' }));
     expect(screen.getByText('11월 15일 – 2026년 11월 21일')).toBeTruthy();
   });
@@ -1015,7 +1016,7 @@ describe('the month', () => {
 
   it('opens the week of the day Arrow Down reaches', () => {
     openMonth();
-    let current: HTMLElement = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    let current: HTMLElement = dayButton('Monday, November 16, 2026');
     current.focus();
     for (let step = 0; step < 4; step += 1) {
       fireEvent.keyDown(current, { key: 'ArrowDown' });
@@ -1027,7 +1028,7 @@ describe('the month', () => {
 
   it('opens the week and the day Page Down reaches', () => {
     openMonth();
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Monday, November 16, 2026' }), { key: 'PageDown' });
+    fireEvent.keyDown(dayButton('Monday, November 16, 2026'), { key: 'PageDown' });
     fireEvent.click(screen.getByRole('button', { name: 'Week' }));
     expect(screen.getByText(reachedWeek)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Day' }));
@@ -1046,7 +1047,7 @@ describe('the month', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Week' }));
       fireEvent.click(screen.getByRole('button', { name: 'Month' }));
     }
-    const day = screen.getByRole('button', { name: 'Wednesday, March 10, 2027' });
+    const day = dayButton('Wednesday, March 10, 2027');
     expect(day.tabIndex).toBe(0);
     expect(day.hasAttribute('data-selected')).toBe(false);
     expect(day.closest('td')?.getAttribute('aria-selected')).toBeNull();
@@ -1056,8 +1057,8 @@ describe('the month', () => {
   it('renders the month in Korean', () => {
     openMonth('ko');
     expect(screen.getByText('2026년 11월')).toBeTruthy();
-    expect(describedBy('2026년 11월 16일 월요일')).toBe(`Offsite, ${longDate('2026-11-16', 'ko')}, Handoff, ${longRange('2026-11-16', '2026-11-17', 'ko')}, +2 more`);
-    expect(screen.getByRole('button', { name: '2026년 12월 1일 화요일' })).toBeTruthy();
+    expect(readAfterDate('2026년 11월 16일 월요일')).toBe(`Offsite, ${longDate('2026-11-16', 'ko')}, Handoff, ${longRange('2026-11-16', '2026-11-17', 'ko')}, +2 more`);
+    expect(dayButton('2026년 12월 1일 화요일')).toBeTruthy();
   });
 });
 
@@ -1295,8 +1296,8 @@ describe('the event menu and dialog', () => {
     await choose(review().getAttribute('aria-label')!, 'Move to next day');
     expect(screen.getByRole('list', { name: 'Tue, Nov 17' }).contains(review())).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Monday, November 16, 2026')).toBe(`Offsite, ${longDate('2026-11-16')}, Handoff, ${longRange('2026-11-16', '2026-11-17')}, +1 more`);
-    expect(describedBy('Tuesday, November 17, 2026')).toBe(`Handoff, ${longRange('2026-11-16', '2026-11-17')}, Design review, +1 more`);
+    expect(readAfterDate('Monday, November 16, 2026')).toBe(`Offsite, ${longDate('2026-11-16')}, Handoff, ${longRange('2026-11-16', '2026-11-17')}, +1 more`);
+    expect(readAfterDate('Tuesday, November 17, 2026')).toBe(`Handoff, ${longRange('2026-11-16', '2026-11-17')}, Design review, +1 more`);
   });
 
   it('hides day moves on the day view, and disables a step that would leave the lane', async () => {
@@ -1377,9 +1378,9 @@ describe('the event menu and dialog', () => {
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(screen.getByRole('button', { name: `Retreat, ${longRange('2026-11-20', '2026-11-22')}` })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Friday, November 20, 2026')).toContain(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`);
-    expect(describedBy('Sunday, November 22, 2026')).toContain('Retreat');
-    expect(describedBy('Monday, November 23, 2026')).not.toContain('Retreat');
+    expect(readAfterDate('Friday, November 20, 2026')).toContain(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`);
+    expect(readAfterDate('Sunday, November 22, 2026')).toContain('Retreat');
+    expect(readAfterDate('Monday, November 23, 2026')).not.toContain('Retreat');
   });
 
   it('moves an all-day bar by a day, and turns it into the opening slot', async () => {
@@ -1978,9 +1979,9 @@ describe('repeating events', () => {
     expect(screen.getByRole('list', { name: 'Sun, Nov 22' }).contains(screen.getByRole('button', { name: bookClubName }))).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(describedBy('Sunday, November 15, 2026')).toBe('Book club, repeats');
-    expect(describedBy('Sunday, November 22, 2026')).toContain('Book club, repeats');
-    expect(describedBy('Sunday, November 8, 2026')).toBe('');
+    expect(readAfterDate('Sunday, November 15, 2026')).toBe('Book club, repeats');
+    expect(readAfterDate('Sunday, November 22, 2026')).toContain('Book club, repeats');
+    expect(readAfterDate('Sunday, November 8, 2026')).toBe('');
   });
 
   it('saves a weekly series on the chosen days and stops after the chosen count', async () => {
@@ -2089,11 +2090,11 @@ describe('repeating events', () => {
     fireEvent.click(within(form).getByRole('switch', { name: 'All day' }));
     fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    const bar = screen.getByRole('button', { name: 'Book club, November 22, 2026, repeats' });
+    const bar = screen.getByRole('button', { name: 'Book club, repeats, November 22, 2026' });
     expect(screen.getByText('Nov 22 – Nov 28, 2026')).toBeTruthy();
     await vi.waitFor(() => expect(document.activeElement).toBe(bar));
 
-    await choose('Book club, November 22, 2026, repeats', 'Edit…');
+    await choose('Book club, repeats, November 22, 2026', 'Edit…');
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Edit repeating event' })).getByRole('button', { name: 'All events' }));
     const again = await screen.findByRole('dialog', { name: 'Edit Book club' });
     fireEvent.click(within(again).getByRole('switch', { name: 'All day' }));
@@ -2279,10 +2280,23 @@ describe('repeating events', () => {
     fireEvent.change(within(dialog).getByLabelText('Repeat'), { target: { value: 'WEEKLY' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    const holiday = screen.getByRole('button', { name: 'Holiday, November 16, 2026, repeats' });
+    const holiday = screen.getByRole('button', { name: 'Holiday, repeats, November 16, 2026' });
     const cue = within(holiday).getByText('Repeats');
     expect(cue.checkVisibility()).toBe(true);
     expect(cue.getAttribute('aria-hidden')).not.toBe('true');
+
+    // In the month, the bar reads repeats right after the title too, then its range, and shows Repeats a space apart.
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    expect(readAfterDate('Monday, November 16, 2026')).toContain('Holiday, repeats, November 16, 2026');
+    const bar = dayButton('Monday, November 16, 2026').querySelector<HTMLElement>('[data-bar]:has([class*="repeats"])');
+    expect(bar?.querySelector('[class*="repeats"]')?.textContent).toMatch(/^\s+Repeats$/);
+  });
+
+  it('marks today in the locale digits, as the grid writes the day it covers', () => {
+    render(<EventCalendarExample locale="fa-IR" anchor={Temporal.Now.plainDateISO()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Month' }));
+    const mark = document.querySelector('[class*="dateMark"]');
+    expect(mark?.textContent).toBe(new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(Temporal.Now.plainDateISO().day));
   });
 
   it('loads the series start and its weekdays when a later occurrence edits all events', async () => {

@@ -8,7 +8,16 @@ afterEach(cleanup);
 const date = (text: string) => Temporal.PlainDate.from(text);
 const grid = () => screen.getByRole('grid');
 const focusedDay = () => grid().querySelector<HTMLButtonElement>('[tabindex="0"]')!;
-const day = (name: string) => screen.getByRole('button', { name });
+/** A day button's name: it is named by its content, the date, and its number is hidden from that name. */
+const dayName = (day: Element) => {
+  const copy = day.cloneNode(true) as Element;
+  for (const hidden of copy.querySelectorAll('[aria-hidden="true"]')) hidden.remove();
+  return copy.textContent;
+};
+/** The day button for a date's full name. A day with content is named by the date, then that content, a space apart. */
+const day = (date: string) => screen.getByRole('button', { name: (name) => name === date || name.startsWith(`${date} `) });
+/** What a day or year button shows: a day's number, or a year. */
+const shown = (cell: Element) => (cell.querySelector('[aria-hidden="true"]') ?? cell).textContent;
 
 function RangeControlled({
   initial = null,
@@ -42,7 +51,7 @@ function RangeControlled({
 const october = (n: number) =>
   day(Temporal.PlainDate.from({ year: 2026, month: 10, day: n }).toLocaleString('en-US', { dateStyle: 'full' }));
 const selectedCells = () =>
-  [...grid().querySelectorAll('td[aria-selected="true"]')].map((cell) => cell.textContent);
+  [...grid().querySelectorAll('td[aria-selected="true"]')].map(shown);
 
 describe('Calendar range mode', () => {
   it('picks a range from two picks in either order, and reports it once', () => {
@@ -142,7 +151,7 @@ describe('Calendar range mode', () => {
       );
     }
     render(<Outside />);
-    const inRange = () => [...grid().querySelectorAll('[data-in-range]')].map((cell) => cell.textContent);
+    const inRange = () => [...grid().querySelectorAll('[data-in-range]')].map(shown);
     // Escape, a completed range and a value from outside each drop the first pick.
     const drops = [
       () => fireEvent.keyDown(october(5), { key: 'Escape' }),
@@ -513,7 +522,7 @@ describe('Calendar range mode', () => {
     fireEvent.click(october(5));
     fireEvent.click(screen.getByRole('button', { name: 'set' }));
     expect(screen.getByText('March 2027')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, March 2, 2027');
+    expect(dayName(focusedDay())).toBe('Tuesday, March 2, 2027');
     expect(selectedCells()).toEqual(['2', '3', '4', '5', '6', '7', '8', '9']);
   });
 
@@ -524,7 +533,7 @@ describe('Calendar range mode', () => {
     fireEvent.click(day('Wednesday, November 4, 2026'));
     expect(screen.getByTestId('value').textContent).toBe('2026-10-28/2026-11-04');
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(dayName(focusedDay())).toBe('Wednesday, November 4, 2026');
   });
 
   it.each([
@@ -556,7 +565,7 @@ describe('Calendar range mode', () => {
     fireEvent.click(day('Wednesday, November 4, 2026'));
     await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('2026-10-28/2026-11-04'));
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(dayName(focusedDay())).toBe('Wednesday, November 4, 2026');
     expect(selectedCells()).toEqual(['1', '2', '3', '4']);
   });
 
@@ -591,7 +600,7 @@ describe('Calendar range mode', () => {
     fireEvent.click(tenth);
     fireEvent.click(screen.getByRole('button', { name: 'answer' }));
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, November 10, 2026');
+    expect(dayName(focusedDay())).toBe('Tuesday, November 10, 2026');
     expect(selectedCells()).toEqual(['10']);
     fireEvent.click(day('Thursday, November 12, 2026'));
     fireEvent.click(screen.getByRole('button', { name: 'answer' }));
@@ -777,7 +786,7 @@ describe('Calendar range mode', () => {
     fireEvent.click(day('Wednesday, November 4, 2026'));
     expect(onValueChange).toHaveBeenCalledWith({ start: date('2026-10-28'), end: date('2026-11-04') });
     expect(screen.getByText('November 2026')).toBeTruthy();
-    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, November 4, 2026');
+    expect(dayName(focusedDay())).toBe('Wednesday, November 4, 2026');
     expect(selectedCells()).toEqual([]);
   });
 

@@ -537,7 +537,7 @@
           "name": "renderDay",
           "type": "(day: CalendarDayState) => React.ReactNode",
           "required": false,
-          "description": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show."
+          "description": "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop. Its name is the full date, then the content, so it holds every word the day shows. The content is not interactive. Ignored while the years show."
         },
         {
           "name": "showOutsideDays",
@@ -3775,7 +3775,7 @@
     },
     {
       "name": "OptionList.Option",
-      "description": "Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.",
+      "description": "Option inside OptionList.Root. The title names it; with an OptionList.OptionDetail, the name is the title, then the detail.",
       "props": [
         {
           "name": "value",
@@ -3800,13 +3800,13 @@
     },
     {
       "name": "OptionList.OptionDetail",
-      "description": "Second line under an option title. The option describes itself with this line.",
+      "description": "Second line under an option title. The option is named by its title, then this line.",
       "props": [
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Detail text, announced as the option description."
+          "description": "Detail text, read in the option name after the title."
         }
       ]
     },

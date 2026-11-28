@@ -416,7 +416,7 @@
   text-align: start;
 }
 
-.month :global(td button[type='button'] > span) {
+.month :global(td button[type='button'] > span:last-child) {
   align-items: stretch;
   align-self: stretch;
   inline-size: 100%;
@@ -428,7 +428,7 @@
   color: transparent;
 }
 
-.month :global(td button[type='button'][aria-current='date'] > span) {
+.month :global(td button[type='button'][aria-current='date'] > span:last-child) {
   color: var(--todae-color-fg-default);
 }
 
@@ -439,7 +439,7 @@
   justify-content: center;
   inline-size: var(--_date-mark);
   block-size: var(--_date-mark);
-  /* The day number is the button's text node, so this row pulls up over it and the bars follow the row. */
+  /* The day number is the button's first line, so this row pulls up over it and the bars follow the row. */
   margin-block-start: calc(-1 * 1lh);
 }
 
@@ -617,6 +617,7 @@
   .barLabel,
   .cue,
   .cueEnd,
+  .monthBar .repeats,
   .chip,
   .more {
     position: absolute;
