@@ -80,6 +80,23 @@ function isReference(node) {
 /** Calls that return a handler made of the functions passed to them. Any other call, such as requestAnimationFrame's, returns a value. */
 const HANDLER_WRAPPERS = new Set(['useCallback', 'useEffectEvent', 'composeHandlers', 'alongside']);
 
+/**
+ * Whether an expression is a window: YES, NO, or CYCLE when it only leads back to bindings still being asked about.
+ * `open` names those bindings.
+ */
+const YES = 'yes';
+const NO = 'no';
+const CYCLE = 'cycle';
+const settled = (state) => ({ state, open: new Set() });
+
+/** Several values held together: any non-window makes the whole one, else any window does, else they only cycle. */
+function combine(results) {
+  const open = new Set(results.flatMap((result) => [...result.open]));
+  if (results.some((result) => result.state === NO)) return { state: NO, open };
+  if (results.some((result) => result.state === YES)) return { state: YES, open };
+  return { state: CYCLE, open };
+}
+
 const scrollerPointerRule = {
   meta: {
     type: 'problem',
@@ -169,48 +186,65 @@ const scrollerPointerRule = {
 
     /**
      * Whether an expression is the window or a document, which hear every move whatever the browser hit tests.
-     * `seen` holds the expressions on the path being followed, so a cycle of bindings ends and two branches that
-     * read the same binding, as `win ?? fallback` with `fallback = win` does, each follow it.
+     * It asks of each binding it reads whether every value the binding is given is one. A value that leads back to
+     * a binding still being asked about, as `win = win ?? window` does, adds no value of its own, so it counts
+     * neither way: the binding is a window when its other values are, and at least one of them is.
      */
-    function isWindowLike(node, seen = new Set()) {
-      const current = unwrap(node);
-      if (!current || seen.has(current)) return false;
-      seen.add(current);
-      try {
-        return windowLike(current, seen);
-      } finally {
-        seen.delete(current);
-      }
+    function isWindowLike(node) {
+      return windowState(node, new Set()).state === YES;
     }
-    function windowLike(current, seen) {
-      if (current.type === 'Identifier') {
-        if (['window', 'document', 'globalThis', 'self'].includes(current.name)) return true;
-        // Every value the binding is given, at its declaration and later, must be a window or a document:
-        // a `let` that starts as the window and is set to an element later may hold the element.
-        // A parameter, a destructured name or an import brings a value this file doesn't show, so it is no window.
-        const variable = variableOf(current);
-        if (!variable || variable.defs.length === 0) return false;
-        // So does an ambient `declare let`, a write that destructures, whose writeExpr is the whole object, and a for…of or for…in binding, which each turn of the loop sets.
-        const looped = (def) => (def.parent?.parent?.type === 'ForOfStatement' || def.parent?.parent?.type === 'ForInStatement') && def.parent.parent.left === def.parent;
-        if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier' || def.parent?.declare || looped(def))) return false;
-        const values = [];
-        for (const def of variable.defs) if (def.node.init) values.push(def.node.init);
-        for (const reference of variable.references) {
-          // The declaration's own write is its init, already above.
-          if (!reference.isWrite() || reference.init) continue;
-          const parent = reference.identifier.parent;
-          if (!reference.writeExpr || parent?.type !== 'AssignmentExpression' || parent.left !== reference.identifier) return false;
-          values.push(reference.writeExpr);
-        }
-        return values.length > 0 && values.every((value) => isWindowLike(value, seen));
-      }
-      if (current.type === 'MemberExpression') return ['ownerDocument', 'defaultView', 'document'].includes(propertyName(current));
+    function windowState(node, active) {
+      const current = unwrap(node);
+      if (!current) return settled(NO);
+      if (current.type === 'Identifier') return bindingState(current, active);
+      if (current.type === 'MemberExpression') return settled(['ownerDocument', 'defaultView', 'document'].includes(propertyName(current)) ? YES : NO);
       if (current.type === 'LogicalExpression') {
         // `a && b` gives b whenever a is set; `a || b` and `a ?? b` give either, so both must be.
-        if (current.operator === '&&') return isWindowLike(current.right, seen);
-        return isWindowLike(current.left, seen) && isWindowLike(current.right, seen);
+        if (current.operator === '&&') return windowState(current.right, active);
+        return combine([windowState(current.left, active), windowState(current.right, active)]);
       }
-      return false;
+      return settled(NO);
+    }
+    /** Each binding's answer, once it depends on no binding still being asked about, so each is asked once. */
+    const settledBindings = new Map();
+    function bindingState(identifier, active) {
+      if (['window', 'document', 'globalThis', 'self'].includes(identifier.name)) return settled(YES);
+      const variable = variableOf(identifier);
+      if (!variable) return settled(NO);
+      if (active.has(variable)) return { state: CYCLE, open: new Set([variable]) };
+      if (settledBindings.has(variable)) return settled(settledBindings.get(variable));
+      const values = valuesOf(variable);
+      if (!values) return settled(NO);
+      active.add(variable);
+      const result = combine(values.map((value) => windowState(value, active)));
+      active.delete(variable);
+      result.open.delete(variable);
+      // Values that only lead back to this binding give it nothing, so it holds no window.
+      if (result.state === CYCLE && result.open.size === 0) result.state = NO;
+      if (result.open.size === 0) settledBindings.set(variable, result.state);
+      return result;
+    }
+    /**
+     * Every value a binding is given, at its declaration and later, or null when one of them is out of sight: a
+     * parameter, a destructured name or an import brings a value this file doesn't show, and so does an ambient
+     * `declare let`, a write that destructures, whose writeExpr is the whole object, and a for…of or for…in
+     * binding, which each turn of the loop sets.
+     */
+    function valuesOf(variable) {
+      if (variable.defs.length === 0) return null;
+      const looped = (def) =>
+        (def.parent?.parent?.type === 'ForOfStatement' || def.parent?.parent?.type === 'ForInStatement') && def.parent.parent.left === def.parent;
+      if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier' || def.parent?.declare || looped(def))) return null;
+      const values = [];
+      for (const def of variable.defs) if (def.node.init) values.push(def.node.init);
+      for (const reference of variable.references) {
+        // The declaration's own write is its init, already above.
+        if (!reference.isWrite() || reference.init) continue;
+        const parent = reference.identifier.parent;
+        if (!reference.writeExpr || parent?.type !== 'AssignmentExpression' || parent.left !== reference.identifier) return null;
+        values.push(reference.writeExpr);
+      }
+      return values;
     }
 
     return {
