@@ -104,8 +104,13 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
   it('is 0 by default, so the popover opens where it rests and only fades and grows', async () => {
     render(<Slide style={slow} />);
     const content = screen.getByRole('dialog', { name: 'Slide' });
-    const gaps = await sample(() => gap(false));
+    const running: string[] = [];
+    const gaps = await sample(() => {
+      running.push(...props(content));
+      return gap(false);
+    });
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
+    expect(running.some((p) => p.startsWith('margin'))).toBe(false);
     expect(getComputedStyle(content).marginBlockStart).toBe('0px');
     expect(getComputedStyle(content).translate).toBe('none');
   });
@@ -116,6 +121,8 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     const gaps = await sample(() => gap(above));
     await waitFor(() => expect(content.hasAttribute('data-todae-settled')).toBe(true));
     const rest = gap(above);
+    // Placed on the side it was asked for, not over its trigger.
+    expect(rest).toBeGreaterThan(0);
     // It starts closer to its trigger, by up to the offset, and moves only toward rest:
     // Firefox once slid a flipped one in from the far side when its margins transitioned.
     expectSlide(gaps, rest, 12);
@@ -149,6 +156,7 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     const content = screen.getByRole('dialog', { name: 'Slide' });
     await waitFor(() => expect(content.hasAttribute('data-todae-settled')).toBe(true), { timeout: 3000 });
     const rest = gap(above);
+    expect(rest).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Close it' }));
     await waitFor(() => expect(content.hasAttribute('data-todae-exiting')).toBe(true));
     const gaps: number[] = [];
@@ -222,8 +230,16 @@ describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
 
   it('is 0 by default, so a cold tip fades in where it rests', async () => {
     await openCold(slow);
-    const gaps = (await sample(() => gap('A'))).filter((g) => !Number.isNaN(g));
+    const tip = screen.getByRole('tooltip', { name: 'Tip A' });
+    const running: string[] = [];
+    const gaps = (
+      await sample(() => {
+        running.push(...props(tip));
+        return gap('A');
+      })
+    ).filter((g) => !Number.isNaN(g));
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
+    expect(running.some((p) => p.startsWith('margin'))).toBe(false);
   });
 
   it.each([false, true])('slides a cold tip in from its trigger by the offset, flipped below %s', async (below) => {
