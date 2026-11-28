@@ -6,10 +6,12 @@ import {
   Button,
   Code,
   CodeBlock,
+  ErrorMessage,
   ColorPicker,
   COMPONENT_OVERRIDE_KEYS,
   createToaster,
   Field,
+  Label,
   RAW_OVERRIDE_KEYS,
   ScrollArea,
   SEMANTIC_OVERRIDE_KEYS,
@@ -32,6 +34,7 @@ import {
 import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { packageNameProblem } from '../lib/token-package/packageName';
 import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
 import { MOTION_CHOICES, withMotion, type MotionChoice } from './playground/motion';
 import { PRESETS, type ThemePreset } from './playground/presets';
@@ -244,6 +247,9 @@ export function Playground({ locale }: { locale: Locale }) {
   const [toaster] = useState<PreviewToaster>(() => createToaster());
   const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
   const codeId = useId();
+  const packageNameId = useId();
+  const packageNameErrorId = useId();
+  const packageNameRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
@@ -299,6 +305,11 @@ export function Playground({ locale }: { locale: Locale }) {
     2,
   )}\n`;
 
+  // The package name follows the preset until the reader types one.
+  const [typedPackageName, setTypedPackageName] = useState<string | null>(null);
+  const packageName = typedPackageName ?? `${preset?.id ?? 'theme'}-tokens`;
+  const packageNameInvalid = packageNameProblem(packageName) !== null;
+
   // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
   const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
 
@@ -309,12 +320,16 @@ export function Playground({ locale }: { locale: Locale }) {
   }
 
   async function downloadPackage() {
+    if (packageNameInvalid) {
+      packageNameRef.current?.focus();
+      return;
+    }
     clipboard.reset();
     try {
       // Loaded on demand: the package reads Todae's whole token catalog.
       const { playgroundPackage } = await import('./playground/tokenPackage');
       const name = preset?.id ?? 'theme';
-      const result = playgroundPackage({ name, presetName: preset?.name ?? name, light: exportLight, dark: exportDark });
+      const result = playgroundPackage({ name, presetName: preset?.name ?? name, packageName, light: exportLight, dark: exportDark });
       const url = URL.createObjectURL(new Blob([result.zip as BlobPart], { type: 'application/zip' }));
       const link = document.createElement('a');
       link.href = url;
@@ -381,6 +396,24 @@ export function Playground({ locale }: { locale: Locale }) {
         </Tabs.Panel>
       ))}
     </Tabs.Root>
+  );
+
+  // Rendered once, in the rail or the sheet, so its ids never repeat.
+  const packageNameField = (
+    <Field.Group>
+      <Label.Root htmlFor={packageNameId}>{t.packageName}</Label.Root>
+      <Field.Root id={packageNameId} invalid={packageNameInvalid} aria-describedby={packageNameInvalid ? packageNameErrorId : undefined}>
+        <Field.TextInput
+          ref={packageNameRef}
+          spellCheck={false}
+          autoCapitalize="none"
+          autoComplete="off"
+          value={packageName}
+          onChange={(event) => setTypedPackageName(event.target.value)}
+        />
+      </Field.Root>
+      {packageNameInvalid ? <ErrorMessage.Root id={packageNameErrorId}>{t.packageNameInvalid}</ErrorMessage.Root> : null}
+    </Field.Group>
   );
 
   const actions = (
@@ -533,6 +566,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {themeControls}
                 {tokenSection}
                 {codePanel}
+                {packageNameField}
                 {actions}
                 <p className="pg-hint">{exportStatus ?? t.exportHint}</p>
               </>
@@ -600,6 +634,7 @@ export function Playground({ locale }: { locale: Locale }) {
               {themeControls}
               {tokenSection}
               {codePanel}
+              {packageNameField}
               {/* At the end of the list, so it leaves the short sheet's room to the tokens. */}
               <BottomSheet.Description className="pg-hint">{t.exportHint}</BottomSheet.Description>
             </BottomSheet.Body>

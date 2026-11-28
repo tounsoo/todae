@@ -97,7 +97,6 @@ describe('Playground', () => {
     expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.077, 165] });
   });
 
-  // Four exports of the whole playground, so it gets more room than the describe's default.
   it('downloads the theme as a token package with its edits and their appearance', async () => {
     const created: Blob[] = [];
     URL.createObjectURL = vi.fn((blob: Blob) => {
@@ -129,6 +128,48 @@ describe('Playground', () => {
     expect(await page.findByText('Copied theme override JSON.')).toBeTruthy();
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
     expect(await page.findByText('Downloaded porcelain-tokens.zip. Its README says how to build it.')).toBeTruthy();
+    click.mockRestore();
+  });
+
+  it('names the package from the Package name field, and downloads nothing while npm would refuse the name', async () => {
+    const created: Blob[] = [];
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      created.push(blob);
+      return 'blob:package';
+    });
+    URL.revokeObjectURL = vi.fn();
+    const names: string[] = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      names.push(this.download);
+    });
+    render(<Playground locale="en" />);
+    const field = () => screen.getByLabelText('Package name') as HTMLInputElement;
+    // The name follows the preset until the reader types one.
+    expect(field().value).toBe('graphite-tokens');
+    fireEvent.click(screen.getByLabelText('Riso'));
+    expect(field().value).toBe('riso-tokens');
+    fireEvent.change(field(), { target: { value: 'Acme Tokens' } });
+    expect(field().getAttribute('aria-invalid')).toBe('true');
+    const error = 'Use a name npm accepts, such as acme-tokens or @acme/tokens: lowercase, with no spaces, at most 214 characters.';
+    expect(screen.getByText(error)).toBeTruthy();
+    expect(field().getAttribute('aria-describedby')).toContain(screen.getByText(error).id);
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
+    expect(names).toEqual([]);
+    expect(document.activeElement).toBe(field());
+    fireEvent.change(field(), { target: { value: '@acme/tokens' } });
+    expect(field().getAttribute('aria-invalid')).toBeNull();
+    expect(screen.queryByText(error)).toBeNull();
+    // A typed name stays when the preset changes.
+    fireEvent.click(screen.getByLabelText('Bloom'));
+    expect(field().value).toBe('@acme/tokens');
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
+    await waitFor(() => expect(names).toEqual(['acme-tokens.zip']));
+    const text = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.readAsText(created[0] as Blob);
+    });
+    expect(text).toContain('"name": "@acme/tokens"');
     click.mockRestore();
   });
 

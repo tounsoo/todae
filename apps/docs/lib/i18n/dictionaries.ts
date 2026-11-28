@@ -96,6 +96,8 @@ export type Dictionary = {
     | 'copied'
     | 'copyFailed'
     | 'downloadPackage'
+    | 'packageName'
+    | 'packageNameInvalid'
     | 'downloaded'
     | 'downloadFailed'
     | 'stage',
@@ -235,6 +237,8 @@ const en: Dictionary = {
     copied: 'Copied theme override JSON.',
     copyFailed: 'Could not copy. Clipboard permission was denied.',
     downloadPackage: 'Download token package',
+    packageName: 'Package name',
+    packageNameInvalid: 'Use a name npm accepts, such as acme-tokens or @acme/tokens: lowercase, with no spaces, at most 214 characters.',
     downloaded: 'Downloaded {file}. Its README says how to build it.',
     downloadFailed: 'Could not make the token package. Reload the page and try again.',
     stage: 'Preview',
@@ -376,6 +380,8 @@ const ko: Dictionary = {
     copied: '테마 오버라이드 JSON을 복사했습니다.',
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
     downloadPackage: '토큰 패키지 다운로드',
+    packageName: '패키지 이름',
+    packageNameInvalid: 'npm이 받는 이름을 쓰세요. 예: acme-tokens, @acme/tokens. 소문자로, 공백 없이, 214자 이하로 씁니다.',
     downloaded: '{file}을(를) 내려받았습니다. 빌드하는 방법은 README에 있습니다.',
     downloadFailed: '토큰 패키지를 만들지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.',
     stage: '미리보기',
