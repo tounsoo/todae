@@ -39,12 +39,11 @@ function walk(node, visit) {
 const isFunction = (node) =>
   node?.type === 'FunctionDeclaration' || node?.type === 'FunctionExpression' || node?.type === 'ArrowFunctionExpression';
 
-/** The expression under TypeScript's `as`, `satisfies` and `!`. */
+/** The expression under TypeScript's `as`, `satisfies` and `!`, and under an optional chain such as `fn?.bind(x)`. */
+const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ChainExpression']);
 function unwrap(node) {
   let current = node;
-  while (current && (current.type === 'TSAsExpression' || current.type === 'TSSatisfiesExpression' || current.type === 'TSNonNullExpression')) {
-    current = current.expression;
-  }
+  while (current && WRAPPERS.has(current.type)) current = current.expression;
   return current;
 }
 
@@ -98,13 +97,16 @@ const scrollerPointerRule = {
   create(context) {
     const { sourceCode } = context;
 
-    /** Each identifier that reads a binding this file declares, to that binding. */
+    /**
+     * Each identifier that reads a binding this file declares, to that binding. A plain write, such as
+     * `pending = null`, reads nothing, so a handler that only clears a binding never reaches what it held.
+     */
     let resolved = null;
     function variableOf(identifier) {
       if (!resolved) {
         resolved = new Map();
         for (const scope of sourceCode.scopeManager.scopes) {
-          for (const reference of scope.references) if (reference.resolved) resolved.set(reference.identifier, reference.resolved);
+          for (const reference of scope.references) if (reference.resolved && reference.isRead()) resolved.set(reference.identifier, reference.resolved);
         }
       }
       return resolved.get(identifier) ?? null;
@@ -165,15 +167,32 @@ const scrollerPointerRule = {
       return found;
     }
 
-    /** Whether an expression is the window or a document, which hear every move whatever the browser hit tests. */
+    /**
+     * Whether an expression is the window or a document, which hear every move whatever the browser hit tests.
+     * `seen` holds the expressions on the path being followed, so a cycle of bindings ends and two branches that
+     * read the same binding, as `win ?? fallback` with `fallback = win` does, each follow it.
+     */
     function isWindowLike(node, seen = new Set()) {
       const current = unwrap(node);
       if (!current || seen.has(current)) return false;
       seen.add(current);
+      try {
+        return windowLike(current, seen);
+      } finally {
+        seen.delete(current);
+      }
+    }
+    function windowLike(current, seen) {
       if (current.type === 'Identifier') {
         if (['window', 'document', 'globalThis', 'self'].includes(current.name)) return true;
+        // Every value the binding is given, at its declaration and later, must be a window or a document:
+        // a `let` that starts as the window and is set to an element later may hold the element.
         const variable = variableOf(current);
-        return !!variable?.defs.some((def) => def.type === 'Variable' && def.node.init && isWindowLike(def.node.init, seen));
+        if (!variable) return false;
+        const values = [];
+        for (const def of variable.defs) if (def.type === 'Variable' && def.node.init) values.push(def.node.init);
+        for (const reference of variable.references) if (reference.writeExpr) values.push(reference.writeExpr);
+        return values.length > 0 && values.every((value) => isWindowLike(value, seen));
       }
       if (current.type === 'MemberExpression') return ['ownerDocument', 'defaultView', 'document'].includes(propertyName(current));
       if (current.type === 'LogicalExpression') {
@@ -181,7 +200,6 @@ const scrollerPointerRule = {
         if (current.operator === '&&') return isWindowLike(current.right, seen);
         return isWindowLike(current.left, seen) && isWindowLike(current.right, seen);
       }
-      if (current.type === 'ChainExpression') return isWindowLike(current.expression, seen);
       return false;
     }
 
