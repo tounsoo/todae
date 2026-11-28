@@ -24,6 +24,7 @@ const ANCHORED_MODULE =
   /(?:^|\/)(?:components\/(?:Popover|Tooltip|Menu|ChipList|Coachmark|Mention|MentionText|Field\.Picker)|hooks\/(?:usePopover|useTooltip|useChipList|useMentions|useMentionPeek)|overlay\/(?:popover\w*|tooltip\w*|coachmark|usePopoverSync|anchorName))(?:\.[cm]?[jt]sx?)?$/;
 
 const TEST_CALLS = new Set(['it', 'test', 'describe', 'suite']);
+const SUITE_CALLS = new Set(['describe', 'suite']);
 
 const SKIP_KEYS = new Set(['parent', 'loc', 'range', 'tokens', 'comments']);
 
@@ -148,7 +149,7 @@ const anchoredRule = {
       });
 
     /** Whether a node drives Chromium's DevTools session, through cdp(). */
-    const drivesCdp = (node) => reaches(node, (child) => child.type === 'Identifier' && child.name === 'cdp');
+    const drivesCdp = (node) => reaches(node, (child) => child.type === 'Identifier' && child.name === 'cdp' && isReference(child));
 
     /** Whether a branch has a part `match` finds, outside the functions it defines. */
     function holds(node, match) {
@@ -201,16 +202,9 @@ const anchoredRule = {
 
     /** Names bound to a test call, such as `const motionIt = it.runIf(...)`. */
     const testAliases = new Set();
+    const suiteAliases = new Set();
     const isTestCall = (call) => call?.type === 'CallExpression' && (isTestCallee(call.callee) || testAliases.has(rootName(call.callee)));
     const testCalls = [];
-
-    /** The test body around a node: the nearest function passed to a test or suite call. */
-    function testBody(node) {
-      for (let current = node.parent; current; current = current.parent) {
-        if (isFunction(current) && isTestCall(current.parent) && current.parent.arguments.includes(current)) return current;
-      }
-      return null;
-    }
 
     /** The test bodies a body holds, or the body itself when it is a test: a suite runs its tests. */
     function testsIn(body) {
@@ -222,12 +216,32 @@ const anchoredRule = {
     /** Whether any of these bodies tests an anchored overlay without driving CDP. */
     const anchoredTests = (bodies) => bodies.flatMap(testsIn).some((body) => !drivesCdp(body) && anchored(body));
 
-    /** The test bodies that run a node: its own test, or every test that calls the helper of this file it sits in. */
+    /** Whether a call is a suite, `describe` or `suite`, directly or through an alias of one. */
+    function isSuiteCall(call) {
+      const name = rootName(call.callee);
+      if (SUITE_CALLS.has(name)) return true;
+      if (!testAliases.has(name)) return false;
+      return suiteAliases.has(name);
+    }
+
+    /**
+     * The test bodies that run a node: the test it sits in, even inside a callback such as waitFor's; or,
+     * for a helper of this file, whether declared at the top or inside a suite, every test that calls it;
+     * or a suite's tests, for a gate in the suite's own body.
+     */
     function bodiesRunning(node) {
-      const body = testBody(node);
-      if (body) return [body];
       let helper = null;
-      for (let current = node.parent; current; current = current.parent) if (isFunction(current)) helper = current;
+      for (let current = node.parent; current; current = current.parent) {
+        if (!isFunction(current)) continue;
+        const call = current.parent;
+        if (isTestCall(call) && call.arguments.includes(current)) {
+          if (!isSuiteCall(call)) return [current];
+          if (!helper) return [current];
+          break;
+        }
+        const passed = call?.type === 'CallExpression' && call.arguments.includes(current);
+        if (!passed) helper = current;
+      }
       if (!helper) return [];
       return testCalls
         .map(lastFunction)
@@ -268,7 +282,10 @@ const anchoredRule = {
         }
       },
       VariableDeclarator(node) {
-        if (node.id.type === 'Identifier' && node.init && TEST_CALLS.has(rootName(node.init))) testAliases.add(node.id.name);
+        if (node.id.type === 'Identifier' && node.init && TEST_CALLS.has(rootName(node.init))) {
+          testAliases.add(node.id.name);
+          if (SUITE_CALLS.has(rootName(node.init))) suiteAliases.add(node.id.name);
+        }
       },
       CallExpression(node) {
         testCalls.push(node);

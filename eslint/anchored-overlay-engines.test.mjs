@@ -63,6 +63,13 @@ tester.run('anchored-overlay-engines', plugin.rules['anchored-overlay-engines'],
     code("it('fades the panel', () => { const reason: PopoverCloseReason = 'escape'; if (server.browser !== 'chromium') return; render(<Tabs.Root />); expect(reason).toBe('escape'); });"),
     // One CDP test in a Chromium-only suite of non-anchored tests.
     code("describe.runIf(server.browser === 'chromium')('Tabs', () => { it('names', async () => { render(<Tabs.Root />); await cdp().send('A'); }); });"),
+    // A helper inside a suite runs only in the tests that call it (Neon round 2 on #532).
+    code(
+      "describe('mixed', () => { function checkTabs() { if (server.browser !== 'chromium') return; expect(1).toBe(1); } it('tabs', () => { render(<Tabs.Root />); checkTabs(); }); it('popover', () => { render(<Popover.Root />); expect(2).toBe(2); }); });",
+    ),
+    code(
+      "describe('Popover', () => { async function checkAx() { if (server.browser !== 'chromium') return; await cdp().send('A'); expect(1).toBe(1); } it('names', async () => { render(<Popover.Root />); await checkAx(); }); it('slides', () => { render(<Popover.Root />); expect(2).toBe(2); }); });",
+    ),
   ],
   invalid: [
     // #525's slide tests, as they merged.
@@ -98,6 +105,18 @@ tester.run('anchored-overlay-engines', plugin.rules['anchored-overlay-engines'],
     // A suite whose one CDP test doesn't excuse the anchored one beside it.
     {
       code: code("describe.runIf(server.browser === 'chromium')('Popover', () => { it('names', async () => { usePopover(); await cdp().send('A'); }); it('slides', () => { render(<Popover.Root />); }); });"),
+      errors: [error],
+    },
+    // A helper inside a suite, called from an anchored test.
+    {
+      code: code("describe('Popover', () => { function check() { if (server.browser !== 'chromium') return; expect(gap()).toBe(1); } it('slides', () => { render(<Popover.Root />); check(); }); });"),
+      errors: [error],
+    },
+    // A property named cdp drives nothing.
+    { code: code("it.runIf(server.browser === 'chromium')('slides', () => { const opts = { cdp: false }; render(<Popover.Root {...opts} />); });"), errors: [error] },
+    // The tooltip overlay modules count.
+    {
+      code: `import { server } from 'vitest/browser';\nimport { wireTooltip } from '../overlay/tooltipWire.js';\nit.runIf(server.browser === 'chromium')('tips', () => { wireTooltip(); });`,
       errors: [error],
     },
     // Through a value of the file, or the user agent.

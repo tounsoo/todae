@@ -67,10 +67,16 @@ test('a custom property anywhere in a transition item counts, and all counts onc
   assert.deepEqual(await lint(`.a { position-anchor: --a; transition: var(--_d) --_popover-slide; }`), [name]);
   assert.deepEqual(await lint(`.a { position-anchor: --a; transition: allow-discrete --_popover-slide 200ms; }`), [name]);
   assert.deepEqual(await lint(`.a { position-anchor: --a; transition: opacity var(--_d) cubic-bezier(0.2, 0.8, 0.2, 1); }`), []);
-  assert.deepEqual(await lint(`${registered}.a { position-anchor: --a; transition: all 200ms; }`), [
-    'Unexpected transition of all in a sheet with anchor positioning that registers a custom property',
-  ]);
-  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: all 200ms; }`), []);
+  const all = 'Unexpected transition of all properties in a sheet with anchor positioning, by all or by naming none';
+  // Whether or not this sheet registers the length: Coachmark draws on Popover's (Neon round 2 on #532).
+  assert.deepEqual(await lint(`${registered}.a { position-anchor: --a; transition: all 200ms; }`), [all]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: ALL 200ms; }`), [all]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: 200ms ease; }`), [all]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: opacity 200ms, 1s cubic-bezier(0, 0, 1, 1); }`), [all]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: none; }`), []);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: var(--_motion); }`), []);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; transition: var(--_d)--_popover-slide; }`), [name]);
+  assert.deepEqual(await lint(`.a { position-anchor: --a; TRANSITION-PROPERTY: --_popover-slide; }`), [name]);
 });
 
 test('a named @position-try may not set a margin from a local length, wherever it is registered', async () => {

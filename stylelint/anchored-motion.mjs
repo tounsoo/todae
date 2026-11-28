@@ -8,8 +8,8 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
     'fallbacks from an animating custom property\'s end value, so a margin that reads it jumped instead of sliding (#529). ' +
     'Transition the properties that read it, such as margin-block-start and margin-block-end.',
   all: () =>
-    'Unexpected transition of all in a sheet with anchor positioning that registers a custom property. It transitions the ' +
-    'registered length too, which WebKit lays out from its end value (#529). Name the properties that move, such as ' +
+    'Unexpected transition of all properties in a sheet with anchor positioning, by all or by naming none. It transitions ' +
+    'a registered length too, which WebKit lays out from its end value (#529). Name the properties that move, such as ' +
     'opacity, margin-block-start and margin-block-end.',
   tryMargin: (prop, name) =>
     `Unexpected ${prop} reading the local ${name} in a named @position-try. Firefox transitions a margin a named try sets from the ` +
@@ -44,18 +44,34 @@ function topLevelWords(text) {
   const out = [];
   let depth = 0;
   let start = -1;
-  for (let i = 0; i <= text.length; i += 1) {
+  const end = (i) => {
+    if (start >= 0) out.push({ text: text.slice(start, i), start });
+    start = -1;
+  };
+  for (let i = 0; i < text.length; i += 1) {
     const char = text[i];
-    const space = char === undefined || /\s/.test(char);
-    if (depth === 0 && start >= 0 && (space || char === '(')) {
-      if (char !== '(') out.push({ text: text.slice(start, i), start });
-      start = char === '(' ? start : -1;
+    if (char === '(') {
+      if (depth === 0 && start < 0) start = i;
+      depth += 1;
+    } else if (char === ')') {
+      depth -= 1;
+      if (depth === 0) end(i + 1);
+    } else if (depth === 0) {
+      if (/\s/.test(char)) end(i);
+      else if (start < 0) start = i;
     }
-    if (char === '(') depth += 1;
-    else if (char === ')') depth -= 1;
-    else if (depth === 0 && !space && start < 0) start = i;
   }
+  end(text.length);
   return out;
+}
+
+const TIMING_WORDS = new Set(['ease', 'ease-in', 'ease-out', 'ease-in-out', 'linear', 'step-start', 'step-end', 'normal', 'allow-discrete']);
+const TIME = /^[+-]?(?:\d*\.)?\d+(?:ms|s)$/i;
+
+/** Whether a word of a transition item is its duration, delay, easing or behavior, so not the property it names. */
+function isTiming(word) {
+  const lower = word.toLowerCase();
+  return TIME.test(word) || TIMING_WORDS.has(lower) || /^(?:cubic-bezier|steps|linear)\(/.test(lower);
 }
 
 const rule = (primary) => (root, result) => {
@@ -63,36 +79,42 @@ const rule = (primary) => (root, result) => {
   if (!valid) return;
 
   let anchors = false;
-  const registered = new Set();
   root.walkAtRules((atRule) => {
-    if (atRule.name === 'position-try') anchors = true;
-    if (atRule.name === 'property') registered.add(atRule.params.trim());
+    if (atRule.name.toLowerCase() === 'position-try') anchors = true;
   });
   root.walkDecls((decl) => {
-    if (ANCHOR_PROPS.has(decl.prop) || ANCHOR_FUNCTION.test(decl.value)) anchors = true;
+    if (ANCHOR_PROPS.has(decl.prop.toLowerCase()) || ANCHOR_FUNCTION.test(decl.value)) anchors = true;
   });
 
   const valueStart = (decl) => decl.prop.length + (decl.raws.between?.length ?? 0);
 
   if (anchors) {
     root.walkDecls((decl) => {
-      if (!TRANSITION_PROPS.has(decl.prop)) return;
+      const prop = decl.prop.toLowerCase();
+      if (!TRANSITION_PROPS.has(prop)) return;
       for (const item of items(decl.value)) {
-        for (const word of topLevelWords(item.text)) {
+        const words = topLevelWords(item.text);
+        for (const word of words) {
           const index = valueStart(decl) + item.start + word.start;
           if (word.text.startsWith('--')) {
             stylelint.utils.report({ ruleName, result, node: decl, message: messages.customProperty(word.text), index, endIndex: index + word.text.length });
-          } else if (word.text === 'all' && registered.size > 0) {
+          } else if (word.text.toLowerCase() === 'all') {
             stylelint.utils.report({ ruleName, result, node: decl, message: messages.all(), index, endIndex: index + 3 });
           }
+        }
+        // A shorthand item that names no property transitions all of them. One made only of var()s may name it.
+        if (prop === 'transition' && words.length > 0 && words.every((word) => isTiming(word.text)) && words.some((word) => !word.text.startsWith('var('))) {
+          const index = valueStart(decl) + item.start + words[0].start;
+          stylelint.utils.report({ ruleName, result, node: decl, message: messages.all(), index, endIndex: index + words[0].text.length });
         }
       }
     });
   }
 
-  root.walkAtRules('position-try', (atRule) => {
+  root.walkAtRules((atRule) => {
+    if (atRule.name.toLowerCase() !== 'position-try') return;
     atRule.walkDecls((decl) => {
-      if (!decl.prop.startsWith('margin')) return;
+      if (!decl.prop.toLowerCase().startsWith('margin')) return;
       for (const match of decl.value.matchAll(/var\(\s*(--[\w-]+)/g)) {
         if (!match[1].startsWith('--_')) continue;
         const index = valueStart(decl) + match.index;
