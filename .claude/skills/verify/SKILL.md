@@ -60,7 +60,7 @@ A passing step for one type does not prove another. A unit test does not show a 
 node .claude/skills/verify/verify.mjs launch
 ```
 
-That runs `next dev` for `apps/docs` on port 3322 and writes its pid to `.verify/scratch/claude-server.json`. Port 3321 belongs to the Cursor helper. Ready means the server answered `/`, not only that a process started. When `/` answers with an error page, launch says so, and the drive of `/` then fails, so a change that breaks the home page is `FAIL`, not `BLOCKED`. The launch refuses a port that something else already answers on. If the app never answers, or exits, the result is `BLOCKED` with the last lines of `.verify/scratch/claude-docs.log`. Build the package with `pnpm build:ds` first if the log says the docs app can't resolve `@tounsoo/todae`.
+That runs `next dev` for `apps/docs` on a free port the helper picks, prints that port, and writes it with the pid to `.verify/scratch/claude-server.json`. A fixed port was busy twice, held by another checkout's docs server (3100 on #523, 3322 on #530), and the drive stopped `BLOCKED`, so `run` and `launch` never use one. If another process takes the port before `next dev` binds it, the helper picks another, up to three times. `launch --port <n>` asks for a port, and refuses one that something else already answers on. Ready means the server answered `/`, not only that a process started. When `/` answers with an error page, launch says so, and the drive of `/` then fails, so a change that breaks the home page is `FAIL`, not `BLOCKED`. If the app never answers, or exits, the result is `BLOCKED` with the last lines of `.verify/scratch/claude-docs.log`. Build the package with `pnpm build:ds` first if the log says the docs app can't resolve `@tounsoo/todae`.
 
 ## DOCTOR
 
@@ -80,7 +80,7 @@ The tested commit is that HEAD. The tree has to be clean, so the commit is the c
 The drive reads pages over HTTP. It takes no screenshots.
 
 ```sh
-node .claude/skills/verify/verify.mjs drive --url http://127.0.0.1:3322 --paths /button
+node .claude/skills/verify/verify.mjs drive --url http://127.0.0.1:<port from launch> --paths /button
 ```
 
 Each path is driven in both languages. `/button` also opens `/ko/button`, and `/` also opens `/ko`. A page passes when it returns 200 at the path asked for, its HTML has `data-appearance`, `<html lang>` is the page's language, and it has an `h1`. A login wall fails, because it has no `data-appearance`. A redirect to another page fails too, because the page asked for was never shown.

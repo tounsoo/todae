@@ -18,7 +18,6 @@ const pidPath = path.join(scratchDir, 'claude-server.json');
 const serverLogPath = path.join(scratchDir, 'claude-docs.log');
 const latestPath = path.join(evidenceRoot, 'latest-claude');
 const SELF = '.claude/skills/verify/verify.mjs';
-const DEFAULT_PORT = 3322;
 const LAUNCH_TIMEOUT_MS = 240_000;
 const REQUEST_TIMEOUT_MS = 120_000;
 const MAX_REDIRECTS = 5;
@@ -800,7 +799,7 @@ export function childEnv() {
   return env;
 }
 
-// A port no server on this machine listens on now. Another checkout's docs test server often holds 3100.
+// A port no server on this machine listens on now. Another checkout's docs server often holds a fixed one.
 function freePort() {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -1025,14 +1024,18 @@ async function answer(port) {
   }
 }
 
-async function launch(port = DEFAULT_PORT, { onSpawn } = {}) {
+// Starts the docs server on `port`, or on a free port when none is given. A fixed default port was busy twice,
+// held by another checkout's docs server (3100 on #523, 3322 on #530), and stopped the drive BLOCKED.
+async function launch(port, { onSpawn, attempt = 1 } = {}) {
   await mkdir(scratchDir, { recursive: true });
   const existing = await readPidRecord();
   if (await isOurServer(existing)) {
     throw new Blocked(`a verify docs server is already running (pid ${existing.pid}, port ${existing.port}). Run cleanup first.`);
   }
-  if (await portInUse(port)) {
-    throw new Blocked(`port ${port} is answered by a process this helper did not start`);
+  const free = port === undefined;
+  if (free) port = await freePort();
+  else if (await portInUse(port)) {
+    throw new Blocked(`port ${port} is answered by a process this helper did not start; leave out --port to use a free one`);
   }
   const fd = openSync(serverLogPath, 'w');
   let child;
@@ -1063,9 +1066,17 @@ async function launch(port = DEFAULT_PORT, { onSpawn } = {}) {
   const deadline = Date.now() + LAUNCH_TIMEOUT_MS;
   try {
     while (Date.now() < deadline) {
-      const reply = await answer(port);
+      const reply = alive(child.pid) ? await answer(port) : null;
       if (reply) return { url: `http://127.0.0.1:${port}`, port, pid: child.pid, home: reply };
-      if (!alive(child.pid)) throw new Blocked(`the docs server exited before it was ready. Log tail:\n${await logTail()}`);
+      if (!alive(child.pid)) {
+        const tail = await logTail();
+        // Another process can take a free port before next binds it; pick another.
+        if (free && attempt < 3 && /EADDRINUSE/.test(tail)) {
+          await cleanup().catch(() => {});
+          return launch(undefined, { onSpawn, attempt: attempt + 1 });
+        }
+        throw new Blocked(`the docs server exited before it was ready. Log tail:\n${tail}`);
+      }
       await delay(1000);
     }
     throw new Blocked(`the docs server was not ready within ${LAUNCH_TIMEOUT_MS / 1000}s. Log tail:\n${await logTail()}`);
@@ -1203,7 +1214,7 @@ async function executeStep(step, number, dir, base) {
   return result;
 }
 
-async function executeDrive(step, number, dir, flags, routes) {
+export async function executeDrive(step, number, dir, flags, routes) {
   const started = Date.now();
   const logFile = path.join(dir, `${String(number).padStart(2, '0')}-${step.id}.log`);
   const result = { id: step.id, label: step.label, command: '', status: 'failed', exit: null, ms: 0, log: path.relative(root, logFile) };
@@ -1217,7 +1228,7 @@ async function executeDrive(step, number, dir, flags, routes) {
     if (!flags.url) {
       process.once('SIGINT', onSignal);
       process.once('SIGTERM', onSignal);
-      const server = await launch(DEFAULT_PORT, {
+      const server = await launch(undefined, {
         onSpawn: () => {
           spawned = true;
         },
@@ -1567,7 +1578,7 @@ const USAGE = `usage: node ${SELF} <command> [flags]
   doctor
   run [--base <ref>] [--url <docs base>] [--only <step,...>] [--expect-sha <sha> --deployment-sha <sha>]
   body [--stamp <name>]
-  launch [--port 3322]
+  launch [--port <n>]
   cleanup
   drive --url <base> --paths </a,/b> [--expect-sha <sha> --deployment-sha <sha>]
   self-test`;
@@ -1601,8 +1612,8 @@ async function main(argv) {
     return 0;
   }
   if (command === 'launch') {
-    const port = flags.port === undefined ? DEFAULT_PORT : Number(flags.port);
-    if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new UsageError('--port must be an integer from 1024 to 65535');
+    const port = flags.port === undefined ? undefined : Number(flags.port);
+    if (port !== undefined && (!Number.isInteger(port) || port < 1024 || port > 65535)) throw new UsageError('--port must be an integer from 1024 to 65535');
     const server = await launch(port);
     say(`launch ready ${server.url} pid=${server.pid}`);
     if (!server.home.home) say(`warning: / returned ${server.home.status} without the docs page, so a drive of it will fail`);

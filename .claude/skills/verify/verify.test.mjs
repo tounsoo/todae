@@ -5,7 +5,7 @@ import http from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, describe, test } from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
   CHANGE_TYPES,
@@ -350,6 +350,84 @@ describe('docs test servers', () => {
       const config = readFileSync(path.join(repoRoot, file), 'utf8');
       assert.match(config, /process\.env\.TODAE_DOCS_TEST_PORT/, file);
       assert.match(config, /reuseExistingServer: false/, file);
+    }
+  });
+});
+
+// #523 found 3100 busy and #530 found 3322 busy, each held by another checkout's docs server, and verify's drive
+// stopped BLOCKED on "port 3322 is answered by a process this helper did not start". Verify picks the port itself.
+describe('the verify docs server', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'verify-port-'));
+  const bin = path.join(dir, 'bin');
+  const helper = path.join(dir, '.claude/skills/verify/verify.mjs');
+  const held = [];
+  after(async () => {
+    spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir });
+    await Promise.all(held.map((server) => new Promise((resolve) => server.close(resolve))));
+    rmSync(dir, { recursive: true, force: true });
+  });
+  mkdirSync(bin, { recursive: true });
+  mkdirSync(path.dirname(helper), { recursive: true });
+  cpSync(path.join(here, 'verify.mjs'), helper);
+  // A stand-in for `pnpm --filter docs exec next dev --port <n>`: it serves a docs-like home page on that port.
+  writeFileSync(
+    path.join(bin, 'pnpm'),
+    `#!${process.execPath}\nconst port = Number(process.argv[process.argv.indexOf('--port') + 1]);\n` +
+      // With TAKEN_ONCE set, the first start finds its port taken, as when another process wins the race for it.
+      `const fs = require('node:fs'), once = process.env.TAKEN_ONCE;\n` +
+      `if (once && !fs.existsSync(once)) { fs.writeFileSync(once, String(port)); console.error('Error: listen EADDRINUSE: address already in use'); process.exit(1); }\n` +
+      `require('node:http').createServer((_, res) => res.end('<html data-appearance="light"></html>')).listen(port, '127.0.0.1');\n`,
+    { mode: 0o755 },
+  );
+  execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: dir });
+  const env = { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}` };
+
+  // The ports past runs found busy, held by a server verify did not start. One already held elsewhere is busy too.
+  const hold = (port) =>
+    new Promise((resolve) => {
+      const server = http.createServer((_, res) => res.end('another checkout'));
+      server.once('error', resolve);
+      server.listen(port, '127.0.0.1', () => {
+        held.push(server);
+        resolve();
+      });
+    });
+  const busy = [3100, 3322];
+
+  test('launch starts on a free port when the old default ports are busy', async () => {
+    await Promise.all(busy.map(hold));
+    const run = spawnSync(process.execPath, [helper, 'launch'], { cwd: dir, env, encoding: 'utf8', timeout: 60_000 });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const port = Number(/launch ready http:\/\/127\.0\.0\.1:(\d+) /.exec(run.stdout)?.[1]);
+    assert.ok(port > 0 && !busy.includes(port), run.stdout);
+    assert.equal(spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir, encoding: 'utf8' }).status, 0);
+  });
+
+  test('launch picks another free port when its first one is taken before the server binds it', () => {
+    const taken = path.join(dir, 'taken-once');
+    const run = spawnSync(process.execPath, [helper, 'launch'], { cwd: dir, env: { ...env, TAKEN_ONCE: taken }, encoding: 'utf8', timeout: 60_000 });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const port = Number(/launch ready http:\/\/127\.0\.0\.1:(\d+) /.exec(run.stdout)?.[1]);
+    assert.ok(port > 0 && String(port) !== readFileSync(taken, 'utf8'), run.stdout);
+    assert.equal(spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir, encoding: 'utf8' }).status, 0);
+  });
+
+  test('the drive step starts its server on a free port when the old default ports are busy', async () => {
+    await Promise.all(busy.map(hold));
+    const { STEPS: steps, executeDrive } = await import(pathToFileURL(helper).href);
+    const evidence = path.join(dir, 'evidence');
+    mkdirSync(evidence, { recursive: true });
+    const path0 = process.env.PATH;
+    process.env.PATH = env.PATH;
+    try {
+      const { result } = await executeDrive(steps.drive, 1, evidence, {}, ['/']);
+      const log = readFileSync(path.join(dir, result.log), 'utf8');
+      assert.doesNotMatch(log, /is answered by a process this helper did not start/);
+      const port = Number(/launched http:\/\/127\.0\.0\.1:(\d+) /.exec(log)?.[1]);
+      assert.ok(port > 0 && !busy.includes(port), log);
+      assert.match(log, /cleaned up the docs server this run started/);
+    } finally {
+      process.env.PATH = path0;
     }
   });
 });
