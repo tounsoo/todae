@@ -439,7 +439,9 @@ describe('the verify docs server', () => {
     assert.equal(spawnSync(process.execPath, [helper, 'cleanup'], { cwd: dir, encoding: 'utf8' }).status, 0);
   });
 
-  test('launch moves to another free port when a server it did not start answers on its first one', async () => {
+  // launch trusts a reply when lsof can't name the listener, so this needs lsof, as macOS and CI's Ubuntu have.
+  const lsof = spawnSync('lsof', ['-v'], { stdio: 'ignore' }).error === undefined;
+  test('launch moves to another free port when a server it did not start answers on its first one', { skip: !lsof && 'no lsof' }, () => {
     const marker = path.join(dir, 'thief-once');
     const run = spawnSync(process.execPath, [helper, 'launch'], { cwd: dir, env: { ...env, THIEF_ONCE: marker }, encoding: 'utf8', timeout: 60_000 });
     const [stolen, thief] = readFileSync(marker, 'utf8').split(' ').map(Number);
