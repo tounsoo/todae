@@ -603,13 +603,13 @@
   },
   "platform": {
     "(top)": "37a947c8e5fd",
-    "# Native platform": "6b477e22f590",
+    "# Native platform": "541a6a54010e",
     "## What Safari and Firefox do differently": "fb68583b26df",
     "(section order)": "838d852d6965"
   },
   "popover": {
     "(top)": "3e89bd45eeb2",
-    "# Popover": "19107ba2eb1b",
+    "# Popover": "5943bc3aa5ef",
     "## Examples": "447a73474218",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "71f70ec143b8",

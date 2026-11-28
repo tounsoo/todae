@@ -1,7 +1,9 @@
 /* How far toward its trigger the popover sits, from popover.motion.offset
-   before it has entered and as it exits, else 0. Registered, so it is the one
-   value that transitions: the margins that read it change at once whenever
-   anything else changes them, such as a position try. */
+   before it has entered and as it exits, else 0. The margins that read it
+   transition, not this length: WebKit lays out a box with position-try
+   fallbacks from a registered length's end value while it animates, so a
+   close jumped the whole offset onto the trigger at once. Registered so it
+   never inherits into a popover inside. */
 @property --_popover-slide {
   syntax: '<length>';
   inherits: false;
@@ -61,7 +63,8 @@
     transition:
       opacity var(--_motion-duration-enter) var(--_motion-easing-enter),
       scale var(--_motion-duration-enter) var(--_motion-easing-enter),
-      --_popover-slide var(--_motion-duration-enter) var(--_motion-easing-enter);
+      margin-block-start var(--_motion-duration-enter) var(--_motion-easing-enter),
+      margin-block-end var(--_motion-duration-enter) var(--_motion-easing-enter);
   }
 
   /* Its first frames as it shows, and its fade as it closes. */
@@ -106,17 +109,15 @@
     }
   }
 
-  @position-try --todae-popover-flip-block {
-    top: unset;
-    bottom: calc(anchor(top) + var(--todae-popover-offset));
-    inset-inline-start: anchor(self-start);
-    margin-block-start: var(--_popover-slide, 0px);
-    margin-block-end: calc(-1 * var(--_popover-slide, 0px));
-  }
-
+  /* Over its anchor when there is no room under it. flip-block mirrors the
+     inset, the anchor side and the two block margins, so the slide still
+     runs toward the trigger. Not a named @position-try with the same
+     declarations: Firefox transitions a margin that a named try sets from the
+     margin outside the try, so a flipped popover slid in from the far side
+     and jumped as it ended. */
   @supports (position-try-fallbacks: flip-block) {
     .content {
-      position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline;
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
     }
   }
 

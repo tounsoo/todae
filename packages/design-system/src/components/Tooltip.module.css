@@ -1,5 +1,7 @@
 /* How far toward its trigger a cold tip sits before it has entered, from
-   tooltip.motion.offset, else 0. Registered, so it alone transitions. */
+   tooltip.motion.offset, else 0. The margins that read it transition, as on
+   Popover, since WebKit lays out a box with position-try fallbacks from a
+   registered length's end value while it animates. */
 @property --_tooltip-slide {
   syntax: '<length>';
   inherits: false;
@@ -32,7 +34,8 @@
        trigger with tooltip.motion.offset, by layout. */
     transition:
       opacity var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter),
-      --_tooltip-slide var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
+      margin-block-start var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter),
+      margin-block-end var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
   }
 
   .content:not([data-open]) {
@@ -76,27 +79,18 @@
       position-anchor: var(--todae-tooltip-anchor);
       bottom: calc(anchor(top) + var(--todae-tooltip-offset));
       justify-self: anchor-center;
-      position-try-fallbacks: flip-block;
     }
   }
 
-  @position-try --todae-tooltip-flip-block {
-    bottom: unset;
-    top: calc(anchor(bottom) + var(--todae-tooltip-offset));
-    justify-self: anchor-center;
-    margin-block-start: calc(-1 * var(--_tooltip-slide, 0px));
-    margin-block-end: var(--_tooltip-slide, 0px);
-  }
-
+  /* Under its trigger when there is no room over it, by flip-block, as on
+     Popover: a named @position-try that set the margins made Firefox slide a
+     flipped tip in from the far side. flip-block alone, as the tip has always
+     flipped: with no room on either side it stays over its trigger, where
+     the flip-block flip-inline fallback put Firefox's tip below a toast at the
+     top of the screen. */
   @supports (position-try-fallbacks: flip-block) {
     .content {
-      position-try-fallbacks: --todae-tooltip-flip-block, flip-block, flip-inline, flip-block flip-inline;
-    }
-  }
-
-  @supports (position-try: bottom) {
-    .content {
-      position-try: --todae-tooltip-flip-block, bottom;
+      position-try-fallbacks: flip-block;
     }
   }
 }

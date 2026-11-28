@@ -120,7 +120,7 @@
   @supports (position-try-fallbacks: flip-block) {
     .panel[popover] {
       position-try-fallbacks:
-        --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline, --todae-chip-panel-in-view,
+        flip-block, flip-inline, flip-block flip-inline, --todae-chip-panel-in-view,
         --todae-chip-panel-in-view flip-block;
     }
   }

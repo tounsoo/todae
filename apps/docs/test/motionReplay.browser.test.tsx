@@ -78,7 +78,8 @@ async function transitionsOn(target: () => Element | null | undefined, { subtree
         property: animation.transitionProperty,
         duration: Number(effect.getTiming().duration),
         easing: String(effect.getTiming().easing),
-        from: String(effect.getKeyframes()[0]?.[animation.transitionProperty] ?? ''),
+        // Keyframes name a CSS property in camel case, and a custom property as written.
+        from: String(effect.getKeyframes()[0]?.[camel(animation.transitionProperty)] ?? ''),
       });
     }
     started ||= running.length > 0;
@@ -86,6 +87,10 @@ async function transitionsOn(target: () => Element | null | undefined, { subtree
     if (quiet > 2) break;
   }
   return [...seen.values()];
+}
+
+function camel(property: string) {
+  return property.startsWith('--') ? property : property.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
 const byProperty = (ran: Ran[]) => Object.fromEntries(ran.map((r) => [r.property, r]));
@@ -319,12 +324,15 @@ describe('Opt-in motion', () => {
 
   it('slides the popover and tip, fades the tab panel and the step, grows the check, and shimmers, timed by the feel', { timeout: 30000 }, async () => {
     const ran = await optInReplay('snappy');
-    // Snappy's popup enters in 160ms on its own curve. The popover slides 0.5rem and the tip 0.25rem, by layout.
+    // Snappy's popup enters in 160ms on its own curve. The popover slides 0.5rem and the tip 0.25rem, by layout:
+    // its block margins transition (Chromium names them physically), the popover under its trigger from 8px up,
+    // the tip over its trigger from 4px down.
     const SNAPPY = { duration: 160, easing: 'cubic-bezier(0, 0, 0.2, 1)' };
-    expect(timing(ran.popover, '--_popover-slide')).toEqual(SNAPPY);
-    expect(ran.popover['--_popover-slide']!.from).toBe('8px');
-    expect(timing(ran.tip, '--_tooltip-slide')).toEqual(SNAPPY);
-    expect(ran.tip['--_tooltip-slide']!.from).toBe('4px');
+    expect(timing(ran.popover, 'margin-top')).toEqual(SNAPPY);
+    expect(ran.popover['margin-top']!.from).toBe('-8px');
+    expect(timing(ran.popover, 'margin-bottom')).toEqual(SNAPPY);
+    expect(timing(ran.tip, 'margin-top')).toEqual(SNAPPY);
+    expect(ran.tip['margin-top']!.from).toBe('4px');
     // Snappy's reveal step is 140ms and its selection step 120ms; these read the core curve, which feels leave alone.
     expect(timing(ran.tabs, 'opacity')).toEqual({ duration: 140, easing: TODAE_ENTER });
     expect(timing(ran.steps, 'color')).toEqual({ duration: 140, easing: TODAE_ENTER });
