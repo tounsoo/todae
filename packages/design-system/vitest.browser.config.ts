@@ -78,13 +78,19 @@ type MouseStep = { type: 'move'; x: number; y: number } | { type: 'down' } | { t
  * tests there, a native scrollbar included.
  */
 const mouse: BrowserCommand<[steps: MouseStep[]]> = async ({ page, iframe, frame }, steps) => {
-  const box = await iframe.owner().boundingBox();
-  if (!box) throw new Error('The test frame has no box');
-  // Vitest scales the frame down when the page is smaller than it.
-  const scale = box.width / (await (await frame()).evaluate(() => window.innerWidth));
+  // Where the frame is, read only for a move, so a press or release goes out at once.
+  let place: { x: number; y: number; scale: number } | undefined;
+  const locate = async () => {
+    const box = await iframe.owner().boundingBox();
+    if (!box) throw new Error('The test frame has no box');
+    // Vitest scales the frame down when the page is smaller than it.
+    return { x: box.x, y: box.y, scale: box.width / (await (await frame()).evaluate(() => window.innerWidth)) };
+  };
   for (const step of steps) {
-    if (step.type === 'move') await page.mouse.move(box.x + step.x * scale, box.y + step.y * scale);
-    else if (step.type === 'down') await page.mouse.down();
+    if (step.type === 'move') {
+      place ??= await locate();
+      await page.mouse.move(place.x + step.x * place.scale, place.y + step.y * place.scale);
+    } else if (step.type === 'down') await page.mouse.down();
     else await page.mouse.up();
   }
 };

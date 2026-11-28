@@ -281,11 +281,13 @@ export function ScrollEdges({ axis, active = true }: { axis: ScrollAxis; active?
         const box = node.getBoundingClientRect();
         return event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom;
       });
+    // A move with a button held is a drag, as of the scrollbar's thumb,
+    // and never starts an arrow; one already resting keeps on.
     const over = (event: PointerEvent) => {
       if (event.pointerType === 'touch' || own.contains(event.target as Node)) return;
       const node = event.target === el ? under(event) : undefined;
-      if (node) rest(event, node.dataset.edge as Edge);
-      else stop();
+      if (!node) stop();
+      else if (!event.buttons) rest(event, node.dataset.edge as Edge);
     };
     // Leaving an arrow for that band of the scroller has not left the arrow.
     const leave = (event: PointerEvent) => {

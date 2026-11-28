@@ -310,6 +310,10 @@ describe('scroll edge arrows', () => {
   // over the arrow's foot, and on Linux, a classic one under the arrow. A real mouse hit tests there as a person's
   // does, so a press may reach the native scrollbar, not the arrow drawn over it.
   describe('beside a scrollbar strip', () => {
+    // Before the file's afterEach and the page cleanup, which would otherwise run with the button still down
+    // after a test skips or fails mid-press.
+    afterEach(() => mouse.up());
+
     // By default, content twice the scroller's width, so the thumb is half the track and lies under the arrow near
     // the end.
     function Strip({ dir, count = 6 }: { dir: 'ltr' | 'rtl'; count?: number }) {
@@ -342,7 +346,17 @@ describe('scroll edge arrows', () => {
       // pointerdown: a press the arrow prevents sends no mousedown.
       document.addEventListener('pointerdown', record, true);
       onTestFinished(() => document.removeEventListener('pointerdown', record, true));
-      onTestFinished(() => mouse.up());
+      // The press reaches a native scrollbar where its target is the scroller itself. It must land in the scroller
+      // in every engine, so a missed point fails rather than skips. WebKit on a Mac, where this strip's bugs were
+      // found, must hit its scrollbar. Elsewhere a press can find none to hit: Chromium's and Firefox's overlay
+      // scrollbars on a Mac take no press over the arrow, and CI's headless Linux engines take none at the foot.
+      const onScrollbar = (skip: (condition: boolean, note: string) => void) => {
+        const { target } = pressed[0]!;
+        expect(area.contains(target as Node)).toBe(true);
+        if (server.platform === 'darwin' && server.browser === 'webkit') expect(target).toBe(area);
+        else skip(target !== area, `${server.browser} on ${server.platform}: no scrollbar to press there`);
+        expect(pressed[0]!.prevented).toBe(false);
+      };
       return {
         area,
         end,
@@ -356,6 +370,17 @@ describe('scroll edge arrows', () => {
         toward,
         away: () => Math.abs(area.scrollLeft),
         pressed,
+        onScrollbar,
+        // Until a native drag's last moves have landed: the list rests three frames in a row. An arrow that runs
+        // moves it every frame, so it never settles and the wait fails.
+        settle: async () => {
+          for (let left = area.scrollLeft, same = 0, frame = 0; same < 3; frame++) {
+            if (frame > 60) throw new Error(`the list never settled, at ${area.scrollLeft}`);
+            await frames(1);
+            same = area.scrollLeft === left ? same + 1 : 0;
+            left = area.scrollLeft;
+          }
+        },
         still: async () => {
           const left = area.scrollLeft;
           await frames(10);
@@ -387,7 +412,7 @@ describe('scroll edge arrows', () => {
     });
 
     it.for(['ltr', 'rtl'] as const)('a drag along the strip from under the arrow scrolls natively, and the arrow stops, dir %s', async (dir, { skip }) => {
-      const { area, end, x, foot, toward, away, pressed, still } = await setup(dir);
+      const { area, x, foot, toward, away, pressed, onScrollbar, settle, still } = await setup(dir);
       const max = area.scrollWidth - area.clientWidth;
       area.scrollLeft = toward * (max - 20);
       await waitFor(() => expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']));
@@ -399,13 +424,12 @@ describe('scroll edge arrows', () => {
       ]);
       await mouse.down();
       await waitFor(() => expect(pressed).toHaveLength(1));
-      // Chromium and Firefox on a Mac draw an overlay scrollbar a press can't reach over the arrow: there the
-      // strip is the arrow, which the test above covers.
-      skip(end.contains(pressed[0]!.target as Node), `${server.browser} on ${server.platform}: no scrollbar to press under the arrow`);
-      expect(pressed[0]).toEqual({ target: area, prevented: false });
+      // Where the press lands on the arrow, the strip is the arrow, which the test above covers.
+      onScrollbar(skip);
       const from = away();
       await mouse.path(Array.from({ length: 6 }, (_, i) => [x - toward * 5 * (i + 1), foot] as const));
       await waitFor(() => expect(away()).toBeLessThan(from - 20));
+      await settle();
       // Held still mid-drag, the list stays where the thumb put it: no arrow pulls it back toward the end.
       await still();
       await mouse.up();
@@ -415,7 +439,7 @@ describe('scroll edge arrows', () => {
     it.for(['ltr', 'rtl'] as const)('a drag of the thumb along the strip to under the arrow scrolls natively and never starts it, dir %s', async (dir, { skip }) => {
       // A long list, so the thumb is narrow and a drag to the arrow's column ends just short of the end, where the
       // arrow still shows and could pull the list on.
-      const { area, end, x, foot, toward, away, pressed, still } = await setup(dir, 20);
+      const { area, x, foot, toward, away, pressed, onScrollbar, settle, still } = await setup(dir, 20);
       const port = area.getBoundingClientRect();
       // The thumb's start, at the track's start: past a Linux scrollbar's step button there.
       const start = dir === 'ltr' ? port.left + 24 : port.right - 24;
@@ -430,15 +454,31 @@ describe('scroll edge arrows', () => {
       ]);
       await mouse.down();
       await waitFor(() => expect(pressed).toHaveLength(1));
-      skip(end.contains(pressed[0]!.target as Node) || pressed[0]!.target !== area, `${server.browser} on ${server.platform}: no scrollbar to press`);
-      expect(pressed[0]!.prevented).toBe(false);
+      onScrollbar(skip);
       // Along the strip and on under the arrow, where the drag holds.
       await mouse.path(Array.from({ length: 8 }, (_, i) => [start + ((x - start) * (i + 1)) / 8, foot] as const));
       await waitFor(() => expect(away()).toBeGreaterThan(20));
+      await settle();
       await still();
       expect(shownEdges(area)).toEqual(['inline-start', 'inline-end']);
       await mouse.up();
       await still();
+    });
+
+    it.each(['ltr', 'rtl'] as const)('a drag that reaches the foot of an arrow with a button held never starts it, dir %s', async (dir) => {
+      // As an engine that sends moves during a scrollbar drag would: to the scroller, at the arrow's foot.
+      const { area, end, x, still } = await setup(dir);
+      // Inside the arrow's box on every host, where a Linux scrollbar would lie under it.
+      const clientY = end.getBoundingClientRect().bottom - 2;
+      const move = (clientX: number, buttons: number) =>
+        area.dispatchEvent(new PointerEvent('pointermove', { pointerType: 'mouse', bubbles: true, movementX: 1, clientX, clientY, buttons }));
+      move(x, 1);
+      await still();
+      move(x + 1, 1);
+      await still();
+      // Let go and move, and the rest over the foot scrolls as before.
+      move(x, 0);
+      await waitFor(() => expect(Math.abs(area.scrollLeft)).toBeGreaterThan(10));
     });
   });
 
