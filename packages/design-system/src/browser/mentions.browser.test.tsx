@@ -142,10 +142,10 @@ describe('useMentions in a browser', () => {
     await userEvent.click(field());
     await userEvent.keyboard('@ad{Enter}');
     expect(field().value).toBe('@Ada Lovelace ');
-    await userEvent.keyboard('{Control>}z{/Control}');
+    await userEvent.keyboard('{ControlOrMeta>}z{/ControlOrMeta}');
     expect(field().value).toBe('@ad');
     expect(onChange).toHaveBeenLastCalledWith({ text: '@ad', tokens: [] });
-    await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
+    await userEvent.keyboard('{ControlOrMeta>}{Shift>}z{/Shift}{/ControlOrMeta}');
     expect(field().value).toBe('@Ada Lovelace ');
     expect(onChange).toHaveBeenLastCalledWith({
       text: '@Ada Lovelace ',

@@ -12,9 +12,10 @@ scratch_body() {
 	[[ "$base" == *-body.md ]]
 }
 
+# A bracket per letter, not ${base,,}: that lowercasing is bash 4, and macOS ships bash 3.2.
 png_file() {
 	local base="${1##*/}"
-	[[ "${base,,}" == *.png ]]
+	[[ "$base" == *.[pP][nN][gG] ]]
 }
 
 new_claude_artifact() {
@@ -126,6 +127,7 @@ self_test() {
 	check 'uppercase png' 1 'home.PNG' '' A apps/docs/visual/baselines/light/en/home.PNG
 	check 'brand png' 1 'mark-32.png' '' M apps/docs/public/brand/mark-32.png
 	check 'loose png' 1 'screenshot.PNG' '' A screenshot.PNG
+	check 'mixed case png' 1 'shot.pNg' '' A shot.pNg
 	check 'png delete' 0 '' '' D apps/docs/visual/baselines/light/en/home.png
 	check 'png-like name' 0 '' '' A notes/png.md
 	check 'edit claude markdown' 0 '' '' M .claude/skills/verify/SKILL.md

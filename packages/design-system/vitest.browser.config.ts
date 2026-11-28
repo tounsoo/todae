@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { playwright } from '@vitest/browser-playwright';
+import { webkit } from 'playwright';
 import type { BrowserCommand } from 'vitest/node';
 import { defineConfig } from 'vitest/config';
+import { firefoxOnHost, webkitOnHost } from '../../playwright.host';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
 import base from './vite.config';
 
@@ -90,8 +92,12 @@ export default defineConfig({
         // A page tall enough for the 414x896 test frame, so Vitest doesn't scale the frame down. Scaled,
         // Firefox snaps scroll offsets to device pixels and both engines land real input up to a pixel off.
         // Chromium keeps the default page, which its screenshots were taken in.
-        { browser: 'firefox', provider: playwright({ contextOptions: { viewport: { width: 1280, height: 960 } } }) },
-        { browser: 'webkit', provider: playwright({ contextOptions: { viewport: { width: 1280, height: 960 } } }) },
+        // On macOS, playwright.host.ts gives Firefox a home it can start from and WebKit Linux's Tab order.
+        { browser: 'firefox', provider: playwright({ launchOptions: firefoxOnHost(), contextOptions: { viewport: { width: 1280, height: 960 } } }) },
+        {
+          browser: 'webkit',
+          provider: playwright({ launchOptions: webkitOnHost(webkit.executablePath()), contextOptions: { viewport: { width: 1280, height: 960 } } }),
+        },
       ],
       commands: { scopedThemeCss, emulateMedia },
     },

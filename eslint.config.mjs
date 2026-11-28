@@ -80,6 +80,23 @@ export default tseslint.config(
     rules: { '@typescript-eslint/no-explicit-any': 'off' },
   },
   {
+    // A browser test presses real keys in a real browser. Select all, copy, paste, undo and redo are Meta on
+    // macOS and Control elsewhere, so {Control>}a selected nothing on a Mac and 33 tests failed there.
+    files: ['**/*.browser.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        // Control with a, c, v, x, y or z, in either case, with Shift held before or after it or not. A shortcut a
+        // product binds to Control itself, such as CommandPalette's Control+K, stays Control.
+        ...['Literal[value=/(\\{Control>\\}(\\{Shift>\\})?|\\{Shift>\\}\\{Control>\\})[acvxyz]/i]', 'TemplateElement[value.raw=/(\\{Control>\\}(\\{Shift>\\})?|\\{Shift>\\}\\{Control>\\})[acvxyz]/i]'].map((selector) => ({
+          selector,
+          message:
+            'Select all, cut, copy, paste, undo and redo are Meta on macOS. Press {ControlOrMeta>}…{/ControlOrMeta}, which Playwright sends as Meta on macOS and Control elsewhere.',
+        })),
+      ],
+    },
+  },
+  {
     // TypeScript already checks undefined names.
     files: ['**/*.{ts,tsx}'],
     rules: { 'no-undef': 'off' },

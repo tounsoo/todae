@@ -28,8 +28,8 @@ afterEach(cleanup);
 const stage = () => screen.getByRole('region', { name: 'Preview' });
 
 // Each test renders the whole playground, preview included, and every edit re-renders it, which takes
-// seconds in jsdom; the default 5s timeout fails under a loaded parallel run.
-describe('Playground', { timeout: 15_000 }, () => {
+// seconds in jsdom. vitest.config.ts gives the docs unit tests a hang guard sized for that.
+describe('Playground', () => {
   it('paints the stage with a preset and its light or dark overrides', () => {
     render(<Playground locale="en" />);
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('');

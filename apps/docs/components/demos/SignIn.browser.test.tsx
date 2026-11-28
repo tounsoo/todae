@@ -74,7 +74,7 @@ it('moves focus to an unmarked code field, sends a full code by itself, and conf
   await new Promise((resolve) => setTimeout(resolve, LONGER_THAN_A_SEND));
   expect(code()).not.toHaveAttribute('aria-invalid');
   code().focus();
-  await userEvent.keyboard('{Control>}a{/Control}123456');
+  await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}123456');
   const heading = await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 4000 });
   await expect.poll(() => document.activeElement).toBe(heading);
 });
@@ -98,9 +98,9 @@ it('sends a code changed during a check, and not one in the field when a new cod
 
   // A wrong code sends itself; changed while it is checked, the new code sends after.
   code().focus();
-  await userEvent.keyboard('{Control>}a{/Control}111111');
+  await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}111111');
   await expect.poll(() => verify().getAttribute('aria-disabled'), { timeout: 3000 }).toBe('true');
-  await userEvent.keyboard('{Control>}a{/Control}123456');
+  await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}123456');
   await screen.findByRole('heading', { name: 'Signed in' }, { timeout: 5000 });
 });
 

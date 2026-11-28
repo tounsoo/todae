@@ -54,14 +54,15 @@ export const CHANGE_TYPES = [
     id: 'tokens',
     label: 'Design tokens',
     match: under('packages/design-system/tokens/'),
-    steps: ['tokens-api-check', 'check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'fernway', 'forbidden-paths'],
+    steps: ['tokens-api-check', 'check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'build-ds', 'publish-check', 'ssr-smoke', 'relink', 'fernway', 'forbidden-paths'],
     proof: "the token API check and everything a package change runs, since built tokens reach every component; the token change needs Ben's approval",
   },
   {
     id: 'component',
     label: 'Design system package',
-    match: under('packages/design-system/'),
-    steps: ['check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'build-ds', 'publish-check', 'ssr-smoke', 'fernway', 'forbidden-paths'],
+    // The browser hosts set how every engine launches and which tests a Mac skips, so they run the browser tests.
+    match: anyOf(under('packages/design-system/'), oneOf('playwright.host.ts', 'browser.host.ts', 'scripts/macos-browser.sh')),
+    steps: ['check', 'schema', 'tokens-check', 'changeset', 'unit', 'browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'build-ds', 'publish-check', 'ssr-smoke', 'relink', 'fernway', 'forbidden-paths'],
     proof: 'pnpm check, schema with no diff, token and changeset checks, unit and browser tests, build, publish and SSR checks, and the Fernway build',
   },
   {
@@ -75,7 +76,7 @@ export const CHANGE_TYPES = [
     id: 'example',
     label: 'Examples',
     match: under('examples/'),
-    steps: ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths'],
+    steps: ['check', 'build-ds', 'relink', 'fernway', 'ssr-smoke', 'forbidden-paths'],
     proof: 'pnpm check, and the Fernway example and the SSR smoke app build against the built design system',
   },
   {
@@ -125,8 +126,9 @@ export const CHANGE_TYPES = [
 ];
 
 // The browser tests launch Chromium, Firefox and WebKit. The package and the docs app pin the same Playwright,
-// so one install serves both.
-const PLAYWRIGHT_MISSING = /Executable doesn't exist|playwright install|browserType\.launch/i;
+// so one install serves both. Only a missing browser is BLOCKED: one that is installed and fails to start is a
+// FAIL, with Playwright's own launch log, so it isn't mistaken for a missing install.
+const PLAYWRIGHT_MISSING = /Executable doesn't exist|npx playwright install/i;
 const PLAYWRIGHT_INSTALL =
   'Playwright Chromium, Firefox or WebKit is not installed. Run pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium firefox webkit.';
 
@@ -167,25 +169,49 @@ export const STEPS = {
     unlessReason: 'changeset-exempt.mjs found the change ships nothing, so it needs no changeset',
     cmd: ['pnpm', 'changeset', 'status', '--since={base}'],
   },
+  // The browser steps run the commands CI's Fernway and Engines jobs run, one engine each, so a local run
+  // fails on what CI fails on. On macOS, playwright.host.ts gives each engine CI's Linux behavior.
   browser: {
     id: 'browser',
-    label: 'Browser tests',
-    cmd: ['pnpm', 'test:browser'],
+    label: 'Package browser tests in Chromium',
+    cmd: ['pnpm', '--filter', '@tounsoo/todae', 'test:browser', '--project', 'chromium'],
     needs: ['build-ds'],
-    // The root script runs each workspace's test:browser, the docs app's included.
-    parts: ['docs-browser'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
+  'browser-firefox': {
+    id: 'browser-firefox',
+    label: 'Package browser tests in Firefox, with the quarantine',
+    // CI's Engines (firefox) step: one file at a time, and the quarantine turns a known failure into a warning.
+    cmd: [
+      'bash',
+      '-c',
+      'set -uo pipefail; mkdir -p .verify/scratch; export BROWSER_RESULTS="$PWD/.verify/scratch/firefox-results.json"; rm -f "$BROWSER_RESULTS"; cd packages/design-system || exit 2; pnpm test:browser --project firefox --no-file-parallelism --reporter=default --reporter=./scripts/browser-results-reporter.ts; status=$?; node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/firefox-quarantine.ts --results "$BROWSER_RESULTS" --vitest-exit "$status"',
+    ],
+    needs: ['build-ds'],
+    blockedWhen: PLAYWRIGHT_MISSING,
+    blockedReason: PLAYWRIGHT_INSTALL,
+  },
+  'browser-webkit': {
+    id: 'browser-webkit',
+    label: 'Package browser tests in WebKit',
+    cmd: ['pnpm', '--filter', '@tounsoo/todae', 'test:browser', '--project', 'webkit'],
+    needs: ['build-ds'],
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
   'docs-browser': {
     id: 'docs-browser',
     label: 'Docs browser tests',
-    cmd: ['pnpm', '--filter', 'docs', 'test:browser'],
+    cmd: ['pnpm', '--filter', 'docs', 'test:browser', '--project', 'chromium', '--project', 'scroll-lock'],
     needs: ['build-ds'],
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
   'build-ds': { id: 'build-ds', label: 'Build the design system', cmd: ['pnpm', 'build:ds'] },
+  // pnpm links a package's bin only when its target exists. A fresh install ran before dist did, so the
+  // todae-tokens bin Fernway runs is missing until this relinks it, as CI's Fernway job does.
+  relink: { id: 'relink', label: 'Relink the workspace bins', cmd: ['pnpm', 'install', '--frozen-lockfile', '--offline'], needs: ['build-ds'] },
   'publish-check': { id: 'publish-check', label: 'Publish checks', cmd: ['pnpm', 'publish:check'], needs: ['build-ds'] },
   'ssr-smoke': { id: 'ssr-smoke', label: 'SSR smoke test of the packed package', cmd: ['pnpm', 'ssr:smoke'], needs: ['build-ds'] },
   'docs-build': { id: 'docs-build', label: 'Build the docs site', cmd: ['pnpm', '--filter', 'docs', 'build'], needs: ['build-ds'] },
@@ -194,6 +220,8 @@ export const STEPS = {
     label: 'axe on the built docs site',
     cmd: ['pnpm', '--filter', 'docs', 'test:axe'],
     needs: ['docs-build'],
+    // playwright.config.ts and playwright.peek.config.ts serve the build on this port, 3100 when it is unset.
+    portEnv: 'TODAE_DOCS_TEST_PORT',
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
@@ -202,6 +230,8 @@ export const STEPS = {
     label: 'Behavior tests on the built docs site',
     cmd: ['pnpm', '--filter', 'docs', 'test:peek'],
     needs: ['docs-build'],
+    // playwright.config.ts and playwright.peek.config.ts serve the build on this port, 3100 when it is unset.
+    portEnv: 'TODAE_DOCS_TEST_PORT',
     blockedWhen: PLAYWRIGHT_MISSING,
     blockedReason: PLAYWRIGHT_INSTALL,
   },
@@ -209,7 +239,7 @@ export const STEPS = {
     id: 'fernway',
     label: 'Build the Fernway example',
     cmd: ['pnpm', '--filter', 'fernway-example', 'build'],
-    needs: ['build-ds'],
+    needs: ['build-ds', 'relink'],
   },
   'pinned-actions': { id: 'pinned-actions', label: 'Remote actions are pinned', cmd: ['node', '.github/scripts/pinned-actions.mjs'] },
   'forbidden-paths': {
@@ -218,11 +248,9 @@ export const STEPS = {
     cmd: [
       'bash',
       '-c',
-      '[ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "forbidden-paths.sh needs bash 4 or newer; this bash is $BASH_VERSION" >&2; exit 2; }; set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
+      'set -euo pipefail; bash .github/scripts/forbidden-paths.sh --self-test; git -c core.quotePath=false diff -z --name-status --diff-filter=AMT --no-renames {base}...HEAD | bash .github/scripts/forbidden-paths.sh',
     ],
-    // macOS ships bash 3.2, and the script lowercases with ${name,,}, which bash 4 added.
-    blockedWhen: /^forbidden-paths\.sh needs bash 4 or newer/m,
-    blockedReason: 'forbidden-paths.sh needs bash 4 or newer, which CI has. Install one, such as brew install bash, and put it first on PATH.',
+    // The script runs on macOS's bash 3.2 as well as CI's bash 5. .github/scripts/shell-compat.test.mjs keeps it so.
   },
   'verify-self-test': {
     id: 'verify-self-test',
@@ -280,38 +308,35 @@ export const CI_RUNS = [
     run: 'pnpm --filter @tounsoo/todae test:browser --project chromium',
     steps: ['browser'],
     types: ['tokens', 'component'],
-    differs: 'pnpm test:browser runs every browser project of the package, Chromium included',
   },
   {
     job: 'fernway',
     run: 'pnpm --filter docs test:browser --project chromium --project scroll-lock',
     steps: ['docs-browser'],
     types: ['tokens', 'component', 'docs'],
-    differs: "runs every docs browser project, these two included; pnpm test:browser runs it as a part",
   },
-  { job: 'fernway', run: 'pnpm install --frozen-lockfile --offline', steps: [], why: "relinks the todae-tokens bin in CI's install, made before dist existed" },
+  { job: 'fernway', run: 'pnpm install --frozen-lockfile --offline', steps: ['relink'], types: ['tokens', 'component', 'example'] },
   { job: 'fernway', run: 'pnpm --filter fernway-example build', steps: ['fernway'], types: ['tokens', 'component', 'example'] },
   { job: 'engines', run: 'fc-match sans-serif:bold', steps: [], why: "sets the CI container's sans-serif font" },
   {
     job: 'engines',
     run: 'pnpm test:browser --project firefox',
-    steps: ['browser'],
+    steps: ['browser-firefox'],
     types: ['tokens', 'component'],
-    differs:
-      'pnpm test:browser runs Firefox too, but with file parallelism and without the quarantine, so a local Firefox failure may be one CI would not fail on',
+    differs: 'runs the same line and the quarantine in one bash step from the repo root, with the results file under .verify/scratch',
   },
   {
     job: 'engines',
     run: 'scripts/firefox-quarantine.ts',
-    steps: [],
-    why: 'turns quarantined Firefox failures into warnings; there is no quarantine here',
+    steps: ['browser-firefox'],
+    types: ['tokens', 'component'],
+    differs: 'runs in the same bash step as the Firefox tests, and writes no job summary',
   },
   {
     job: 'engines',
     run: 'pnpm --filter @tounsoo/todae test:browser --project webkit',
-    steps: ['browser'],
+    steps: ['browser-webkit'],
     types: ['tokens', 'component'],
-    differs: 'pnpm test:browser runs every browser project, WebKit included',
   },
   { job: 'docs', run: 'pnpm build:ds', steps: ['build-ds'], types: ['docs'] },
   { job: 'docs', run: 'pnpm --filter docs build', steps: ['docs-build'], types: ['docs'] },
@@ -775,10 +800,23 @@ export function childEnv() {
   return env;
 }
 
-function capture(cmd) {
+// A port no server on this machine listens on now. Another checkout's docs test server often holds 3100.
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+  });
+}
+
+function capture(cmd, env = {}) {
   return new Promise((resolve) => {
     let output = '';
-    const child = spawn(cmd[0], cmd.slice(1), { cwd: root, env: childEnv(), stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(cmd[0], cmd.slice(1), { cwd: root, env: { ...childEnv(), ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
     for (const stream of [child.stdout, child.stderr]) {
       stream.setEncoding('utf8');
       stream.on('data', (chunk) => {
@@ -855,6 +893,21 @@ function printPlan(plan) {
 
 const commandText = (step, base) => (step.drive ? 'text-only HTTP drive of the routes below' : withBase(step.cmd, base).join(' '));
 
+// CI runs the official Node build, which bundles its own ICU and CLDR. Homebrew's node links the system ICU
+// instead, whose CLDR writes dates differently: on the Air, ko's short date came out 2026/10/13 for CI's
+// 2026. 10. 13., and five date tests failed there only. The tests pin the locale and time zone, not the CLDR.
+export function nodeIcu(variables = {}, versions = {}) {
+  const system = /icu-system/.test(variables.icu_gyp_path ?? '') || variables.node_use_system_icu === true;
+  const which = `ICU ${versions.icu ?? '?'}, CLDR ${versions.cldr ?? '?'}`;
+  if (system) {
+    return {
+      ok: false,
+      detail: `this node links the system ${which}, as Homebrew's does, not the ICU an official Node build bundles, which CI runs; install Node from nodejs.org, nvm or fnm and put it first on PATH`,
+    };
+  }
+  return { ok: true, detail: `bundled ${which}, as the official Node build CI runs has` };
+}
+
 async function doctor() {
   const checks = [];
   const record = (name, ok, detail) => checks.push({ name, ok, detail });
@@ -863,6 +916,8 @@ async function doctor() {
   const wantNode = /\d+/.exec(await read('.nvmrc'))?.[0];
   const haveNode = process.versions.node.split('.')[0];
   record('node', Boolean(wantNode) && wantNode === haveNode, `running ${process.versions.node}, .nvmrc wants ${wantNode ?? 'a number'}`);
+  const icu = nodeIcu(process.config.variables, process.versions);
+  record('node ICU', icu.ok, icu.detail);
 
   let packageManager = '';
   try {
@@ -1118,8 +1173,11 @@ async function executeStep(step, number, dir, base) {
       return result;
     }
   }
-  const run = await capture(cmd);
-  transcript += `$ ${command}\n${run.output}`;
+  // A step that starts its own server gets a free port, so a server another checkout left on the default
+  // port is neither reused, which would test that checkout's build, nor in the way.
+  const env = step.portEnv ? { [step.portEnv]: String(await freePort()) } : {};
+  const run = await capture(cmd, env);
+  transcript += `$ ${Object.entries(env).map(([name, value]) => `${name}=${value} `).join('')}${command}\n${run.output}`;
   result.exit = run.exit;
   if (run.missing || run.exit === 127) {
     result.status = 'blocked';
@@ -1458,7 +1516,7 @@ async function selfTest() {
       const manifest = packages.get(rest[1]);
       expect(manifest, `STEPS.${id} filters on ${rest[1]}, which is not a workspace package`);
       if (rest[2] !== 'exec') expect(manifest?.scripts?.[rest[2]], `${rest[1]} has no ${rest[2]} script, which STEPS.${id} runs`);
-    } else if (program === 'pnpm') {
+    } else if (program === 'pnpm' && rest[0] !== 'install') {
       expect(rootManifest.scripts?.[rest[0]] || bin(rest[0]), `package.json has no ${rest[0]} script and no such bin is installed, which STEPS.${id} runs`);
     }
   }

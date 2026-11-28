@@ -3,7 +3,7 @@
 // A local action (./...) passes, and a docker:// image passes only when pinned to a sha256 digest. So does the
 // image of a job's container or service, because a tag can be pushed again with other contents.
 // With no arguments it scans .github/workflows and .github/actions. Each argument is a file to scan instead.
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isAlias, isMap, isScalar, isSeq, LineCounter, parseAllDocuments } from 'yaml';
@@ -91,10 +91,20 @@ export function defaultFiles() {
   return [...yamlFiles(join(root, '.github/workflows'), false), ...yamlFiles(join(root, '.github/actions'), true)];
 }
 
+const realOrSame = (file) => {
+  try {
+    return realpathSync(file);
+  } catch {
+    return file;
+  }
+};
+
 export function scan(files) {
   const lines = [];
   for (const file of files) {
-    const name = relative(process.cwd(), file) || file;
+    // process.cwd() is a real path. On macOS tmpdir() and /tmp go through a symlink (/var is /private/var), so
+    // resolve the file the same way, or the name comes out as ../../var/... instead of relative to here.
+    const name = relative(process.cwd(), realOrSame(file)) || file;
     try {
       for (const hit of findUnpinned(readFileSync(file, 'utf8'))) lines.push(`${name}:${hit.line}: ${hit.ref}`);
     } catch (error) {

@@ -23,6 +23,7 @@ import {
   classify,
   driveSite,
   importGraph,
+  nodeIcu,
   isOurServer,
   pairLocales,
   parseBase,
@@ -128,8 +129,12 @@ describe('planFor', () => {
       'build-ds',
       'unit',
       'browser',
+      'browser-firefox',
+      'browser-webkit',
+      'docs-browser',
       'publish-check',
       'ssr-smoke',
+      'relink',
       'fernway',
       'forbidden-paths',
       'docs-unit',
@@ -138,13 +143,34 @@ describe('planFor', () => {
       'docs-peek',
       'drive',
     ]);
-    assert.ok(!steps.includes('docs-browser'), 'browser runs the docs browser tests as a part');
     assert.equal(new Set(steps).size, steps.length);
+  });
+
+  test('a browser host file runs the browser tests', () => {
+    for (const file of ['playwright.host.ts', 'browser.host.ts', 'scripts/macos-browser.sh']) {
+      assert.deepEqual(planFor([file]).types, ['component'], file);
+    }
   });
 
   test('a lone fernway need is still ordered after the build it needs', () => {
     const { steps } = planFor(['examples/fernway/a.ts']);
-    assert.deepEqual(steps, ['check', 'build-ds', 'fernway', 'ssr-smoke', 'forbidden-paths']);
+    assert.deepEqual(steps, ['check', 'build-ds', 'relink', 'fernway', 'ssr-smoke', 'forbidden-paths']);
+  });
+
+  // A fresh worktree's install ran before dist existed, so Fernway's todae-tokens bin was missing and its
+  // build failed with "todae-tokens: command not found" until the relink CI also runs.
+  test('fernway relinks the bins after the package build, as CI does', () => {
+    assert.deepEqual(expandNeeds(['fernway']), ['build-ds', 'relink', 'fernway']);
+    assert.deepEqual(STEPS.relink.cmd, ['pnpm', 'install', '--frozen-lockfile', '--offline']);
+  });
+
+  // pnpm test:browser ran every engine at once, Firefox with file parallelism and no quarantine, so a local
+  // run failed where CI's Engines jobs passed. Each step is now one of CI's commands.
+  test('a package change runs each engine as its own CI command', () => {
+    const { steps } = planFor(['packages/design-system/src/a.ts']);
+    for (const id of ['browser', 'browser-firefox', 'browser-webkit', 'docs-browser']) assert.ok(steps.includes(id), id);
+    assert.ok(!steps.some((id) => STEPS[id].cmd?.join(' ') === 'pnpm test:browser'));
+    assert.match(STEPS['browser-firefox'].cmd.join(' '), /--project firefox --no-file-parallelism .*firefox-quarantine\.ts --results "\$BROWSER_RESULTS" --vitest-exit "\$status"/);
   });
 
   test('markdown alone runs the jobs CI runs on Markdown, and an empty diff plans nothing', () => {
@@ -288,7 +314,7 @@ describe('plans match CI', () => {
     const config = readFileSync(path.join(repoRoot, 'packages/design-system/vitest.browser.config.ts'), 'utf8');
     const launched = [...new Set([...config.matchAll(/browser: '(\w+)'/g)].map((match) => match[1]))];
     assert.deepEqual(launched.sort(), ['chromium', 'firefox', 'webkit']);
-    for (const id of ['browser', 'docs-browser', 'docs-axe', 'docs-peek']) {
+    for (const id of ['browser', 'browser-firefox', 'browser-webkit', 'docs-browser', 'docs-axe', 'docs-peek']) {
       const reason = STEPS[id].blockedReason;
       for (const name of launched) {
         assert.match(reason, new RegExp(name, 'i'), `${id} hint leaves out ${name}`);
@@ -296,16 +322,56 @@ describe('plans match CI', () => {
       assert.match(reason, /playwright install --with-deps chromium firefox webkit\.$/);
     }
   });
+
+  // On macOS, WebKit and the scroll-lock Chromium start through scripts/macos-browser.sh, and Playwright checks only
+  // that the wrapper exists. Its missing-browser line has to read as a missing install too.
+  test("the macOS browser wrapper's missing-browser line is BLOCKED with the install command", () => {
+    const script = readFileSync(path.join(repoRoot, 'scripts/macos-browser.sh'), 'utf8');
+    const line = /echo "(macos-browser\.sh: Executable doesn't exist at[^"]*)"/.exec(script)?.[1];
+    assert.ok(line, 'scripts/macos-browser.sh has no missing-browser line');
+    for (const id of ['browser-webkit', 'docs-browser', 'docs-peek']) assert.match(line.replace('$browser', '/x/Playwright'), STEPS[id].blockedWhen, id);
+  });
+
+  // Playwright's Firefox failed to start on macOS 27 ("Could not find profile folder"), and the helper called
+  // that "not installed". Only a missing browser is BLOCKED; a launch failure is a FAIL with its log.
+  test('a browser that is installed but fails to start is not reported as missing', () => {
+    const missing = STEPS.browser.blockedWhen;
+    assert.match("browserType.launch: Executable doesn't exist at /x/firefox", missing);
+    assert.match('Please run the following command to download new browsers:\n    npx playwright install', missing);
+    assert.doesNotMatch('Error: browserType.launch: Failed to launch the browser process.\n[err] Could not find profile folder.', missing);
+  });
+});
+
+describe('docs test servers', () => {
+  // Another checkout's docs server on 3100 made axe fail to start, and let peek test that checkout's build.
+  test('axe and peek get a free port and never reuse a server already running', () => {
+    for (const id of ['docs-axe', 'docs-peek']) assert.equal(STEPS[id].portEnv, 'TODAE_DOCS_TEST_PORT', id);
+    for (const file of ['apps/docs/playwright.config.ts', 'apps/docs/playwright.peek.config.ts']) {
+      const config = readFileSync(path.join(repoRoot, file), 'utf8');
+      assert.match(config, /process\.env\.TODAE_DOCS_TEST_PORT/, file);
+      assert.match(config, /reuseExistingServer: false/, file);
+    }
+  });
+});
+
+describe('nodeIcu', () => {
+  // The Air's Homebrew node@24: its system ICU wrote ko dates as 2026/10/13, and five date tests failed there.
+  test("a node that links the system ICU is a problem that names the fix", () => {
+    const result = nodeIcu({ icu_gyp_path: 'tools/icu/icu-system.gyp' }, { icu: '79.1', cldr: '49.0' });
+    assert.equal(result.ok, false);
+    assert.match(result.detail, /system ICU 79\.1, CLDR 49\.0.*nodejs\.org, nvm or fnm/);
+  });
+
+  test('an official build, with its own ICU, passes', () => {
+    assert.equal(nodeIcu({ icu_gyp_path: 'tools/icu/icu-generic.gyp' }, { icu: '78.3', cldr: '48.0' }).ok, true);
+  });
 });
 
 describe('forbidden-paths step', () => {
-  test("an old bash, such as macOS's 3.2, is BLOCKED with the fix, not FAIL", () => {
+  test("runs under any bash, macOS's 3.2 included, with no version gate", () => {
     const step = STEPS['forbidden-paths'];
-    assert.match('forbidden-paths.sh needs bash 4 or newer; this bash is 3.2.57(1)-release', step.blockedWhen);
-    // A real substitution bug under a new bash still fails.
-    assert.doesNotMatch('line 17: ${base,,}: bad substitution', step.blockedWhen);
-    assert.doesNotMatch('forbidden-paths: notes/x.md says forbidden-paths.sh needs bash 4 or newer', step.blockedWhen);
-    assert.match(step.blockedReason, /bash 4 or newer/);
+    assert.equal(step.blockedWhen, undefined);
+    assert.doesNotMatch(step.cmd.join(' '), /BASH_VERSINFO|bash 4/);
   });
 });
 
