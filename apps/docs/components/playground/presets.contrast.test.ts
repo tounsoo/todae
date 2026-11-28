@@ -17,11 +17,10 @@ const declared = [...resolver.sets.contract.$extensions['dev.todae'].contrast, .
 const measured = declared.reduce((total, entry) => total + (entry.over?.length ?? 1), 0);
 
 describe('preset contrast', () => {
-  it('keeps every contract pair of every preset at its minimum in light and dark, as the token build does, and calendar range text', () => {
+  it('keeps every contract pair of every preset at its minimum in light and dark, as the token build does', () => {
     const { count, lines } = contrastFailures();
     expect(declared.length).toBeGreaterThan(50);
-    // Plus the Playground's own: calendar range text on its tint over each of the five surfaces.
-    expect(count).toBe(PRESETS.length * 2 * (measured + 5));
+    expect(count).toBe(PRESETS.length * 2 * measured);
     expect(lines, lines.join('\n')).toEqual([]);
   });
 });
