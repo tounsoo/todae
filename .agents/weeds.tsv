@@ -48,3 +48,4 @@ date	class	ref	caught_by	note
 2026-11-27	verify-free-port	#523	ben	Local verify on the Air was BLOCKED: axe's fixed docs port 3100 was busy; #528 moved axe and peek to a free port, and #531's verify-free-port rule holds it; CI passed.
 2026-11-27	verify-free-port	#530	ben	Local verify on the Air was BLOCKED again on a busy fixed port, 3322 this time; #531's free-port verify now picks a port; CI passed.
 2026-11-28	overlay-scrollbar-hit	d8e4aac5	ben	Scroll edge arrows ignored the foot of the arrow, where macOS WebKit's overlay scrollbar sends pointer events to the scroller; CI's Linux scrollbars take room, so only the Air failed.
+2026-11-28	overlay-scrollbar-hit	#533	ben	A drag of the macOS WebKit overlay scrollbar thumb from under a scroll edge arrow lost to the arrow, which the move into the strip had started and no event stopped; the real-mouse browser tests Ben asked for in the strip follow-up caught it on the Air.
