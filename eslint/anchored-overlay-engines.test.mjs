@@ -70,6 +70,13 @@ tester.run('anchored-overlay-engines', plugin.rules['anchored-overlay-engines'],
     code(
       "describe('Popover', () => { async function checkAx() { if (server.browser !== 'chromium') return; await cdp().send('A'); expect(1).toBe(1); } it('names', async () => { render(<Popover.Root />); await checkAx(); }); it('slides', () => { render(<Popover.Root />); expect(2).toBe(2); }); });",
     ),
+    // A helper declared at the top, called from one test of a mixed suite (Neon round 3 on #532).
+    code(
+      "function checkTabs() { if (server.browser !== 'chromium') return; expect(1).toBe(1); }\ndescribe('mixed', () => { it('tabs', () => { render(<Tabs.Root />); checkTabs(); }); it('popover', () => { render(<Popover.Root />); expect(2).toBe(2); }); });",
+    ),
+    code(
+      "async function checkAx() { if (server.browser !== 'chromium') return; await cdp().send('A'); expect(1).toBe(1); }\ndescribe('Popover', () => { it('names', async () => { render(<Popover.Root />); await checkAx(); }); it('slides', () => { render(<Popover.Root />); expect(2).toBe(2); }); });",
+    ),
   ],
   invalid: [
     // #525's slide tests, as they merged.

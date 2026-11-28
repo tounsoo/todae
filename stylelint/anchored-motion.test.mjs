@@ -60,7 +60,7 @@ test('an anchored sheet may not transition a custom property, by transition or t
   ]);
 });
 
-test('a custom property anywhere in a transition item counts, and all counts once the sheet registers one', async () => {
+test('a custom property anywhere in a transition item counts, and so does all, named or implied', async () => {
   // Neon round 1 on #532.
   const name = 'Unexpected transition of --_popover-slide in a sheet with anchor positioning';
   assert.deepEqual(await lint(`.a { position-anchor: --a; transition: 200ms ease --_popover-slide; }`), [name]);

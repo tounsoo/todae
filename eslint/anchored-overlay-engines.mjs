@@ -244,6 +244,7 @@ const anchoredRule = {
       }
       if (!helper) return [];
       return testCalls
+        .filter((call) => !isSuiteCall(call))
         .map(lastFunction)
         .filter((fn) => fn && !(fn.range[0] <= helper.range[0] && fn.range[1] >= helper.range[1]))
         .filter((fn) => reaches(fn, (child) => child === helper));

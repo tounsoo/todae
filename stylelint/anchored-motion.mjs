@@ -18,7 +18,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
 });
 
 const ANCHOR_PROPS = new Set(['position-anchor', 'position-area', 'position-try', 'position-try-fallbacks', 'anchor-name']);
-const ANCHOR_FUNCTION = /\banchor(?:-size)?\(/;
+const ANCHOR_FUNCTION = /\banchor(?:-size)?\(/i;
 const TRANSITION_PROPS = new Set(['transition', 'transition-property']);
 
 /** Splits a value on its top-level commas. */
@@ -102,8 +102,8 @@ const rule = (primary) => (root, result) => {
             stylelint.utils.report({ ruleName, result, node: decl, message: messages.all(), index, endIndex: index + 3 });
           }
         }
-        // A shorthand item that names no property transitions all of them. One made only of var()s may name it.
-        if (prop === 'transition' && words.length > 0 && words.every((word) => isTiming(word.text)) && words.some((word) => !word.text.startsWith('var('))) {
+        // A shorthand item that names no property transitions all of them. A var() may name one, so it is not timing.
+        if (prop === 'transition' && words.length > 0 && words.every((word) => isTiming(word.text))) {
           const index = valueStart(decl) + item.start + words[0].start;
           stylelint.utils.report({ ruleName, result, node: decl, message: messages.all(), index, endIndex: index + words[0].text.length });
         }
@@ -115,7 +115,7 @@ const rule = (primary) => (root, result) => {
     if (atRule.name.toLowerCase() !== 'position-try') return;
     atRule.walkDecls((decl) => {
       if (!decl.prop.toLowerCase().startsWith('margin')) return;
-      for (const match of decl.value.matchAll(/var\(\s*(--[\w-]+)/g)) {
+      for (const match of decl.value.matchAll(/var\(\s*(--[\w-]+)/gi)) {
         if (!match[1].startsWith('--_')) continue;
         const index = valueStart(decl) + match.index;
         stylelint.utils.report({ ruleName, result, node: decl, message: messages.tryMargin(decl.prop, match[1]), index, endIndex: index + match[0].length });
