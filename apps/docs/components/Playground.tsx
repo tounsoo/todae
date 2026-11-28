@@ -266,7 +266,10 @@ export function Playground({ locale }: { locale: Locale }) {
   // The motion replay's Opt-in motion switch. While it is on, the opt-in motions are in the copied JSON too.
   const [optIn, setOptIn] = useState(false);
   const withOptIn = (theme: ThemeOverride): ThemeOverride => (optIn ? { ...theme, ...optInMotion(theme) } : theme);
-  const overrides: ThemeOverride = { ...presetFor(resolved), ...edits[resolved] };
+  // Everything the stage applies in one appearance: the preset with its motion, then the edits.
+  // The JSON and the token package export the same, so a new kind of setting added here reaches both.
+  const themeFor = (side: 'light' | 'dark'): ThemeOverride => ({ ...presetFor(side), ...edits[side] });
+  const overrides = themeFor(resolved);
   const paths = LAYERS[layer].filter((path) => path.includes(filter.trim().toLowerCase()));
   const changed = Object.keys(edits.light).length + Object.keys(edits.dark).length;
 
@@ -286,8 +289,9 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
-  const exportLight = withOptIn({ ...presetFor('light'), ...edits.light });
-  const exportDark = withOptIn({ ...presetFor('dark'), ...edits.dark });
+  // The JSON and the token package carry the opt-in motions too while the switch is on.
+  const exportLight = withOptIn(themeFor('light'));
+  const exportDark = withOptIn(themeFor('dark'));
   // One flat set when light and dark are the same, such as plain Todae with no edits.
   const exportJson = `${JSON.stringify(
     JSON.stringify(exportLight) === JSON.stringify(exportDark) ? exportLight : { light: exportLight, dark: exportDark },
@@ -295,14 +299,40 @@ export function Playground({ locale }: { locale: Locale }) {
     2,
   )}\n`;
 
+  // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
+  const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
+
   function exportOverrides() {
+    // Whichever export ran last owns the status line.
+    setDownloaded(null);
     void clipboard.copy(exportJson);
+  }
+
+  async function downloadPackage() {
+    clipboard.reset();
+    try {
+      // Loaded on demand: the package reads Todae's whole token catalog.
+      const { playgroundPackage } = await import('./playground/tokenPackage');
+      const name = preset?.id ?? 'theme';
+      const result = playgroundPackage({ name, presetName: preset?.name ?? name, light: exportLight, dark: exportDark });
+      const url = URL.createObjectURL(new Blob([result.zip as BlobPart], { type: 'application/zip' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = result.fileName;
+      link.click();
+      // Some browsers drop a download whose URL is revoked at once.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setDownloaded({ json: exportJson, status: t.downloaded.replace('{file}', result.fileName) });
+    } catch {
+      setDownloaded({ json: exportJson, status: t.downloadFailed });
+    }
   }
 
   // The result shows only for the JSON it was for, so it clears once the theme changes.
   const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
-  const copyStatus = clipboard.text === exportJson ? copyResult : null;
-  const copyStatusLine = copyStatus ? <p className="pg-hint">{copyStatus}</p> : null;
+  const downloadStatus = downloaded?.json === exportJson ? downloaded.status : null;
+  const exportStatus = clipboard.text === exportJson ? copyResult : downloadStatus;
+  const exportStatusLine = exportStatus ? <p className="pg-hint">{exportStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
   if (!narrow && sheetOpen) setSheetOpen(false);
 
@@ -359,6 +389,9 @@ export function Playground({ locale }: { locale: Locale }) {
         {t.reset}
       </Button.Root>
       <Button.Root onClick={exportOverrides}>{t.export}</Button.Root>
+      <Button.Root variant="secondary" className="pg-download" onClick={() => void downloadPackage()}>
+        {t.downloadPackage}
+      </Button.Root>
     </div>
   );
 
@@ -501,7 +534,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {tokenSection}
                 {codePanel}
                 {actions}
-                <p className="pg-hint">{copyStatus ?? t.exportHint}</p>
+                <p className="pg-hint">{exportStatus ?? t.exportHint}</p>
               </>
             )}
           </div>
@@ -554,7 +587,7 @@ export function Playground({ locale }: { locale: Locale }) {
               ) : null}
             </Button.Root>
             <Button.Root onClick={exportOverrides}>{t.export}</Button.Root>
-            {copyStatusLine}
+            {exportStatusLine}
           </div>
           <BottomSheet.Root className="pg-sheet" open={sheetOpen} onOpenChange={setSheetOpen}>
             {/* The site sets no StringsProvider, so the sheet's own controls get this locale's names here. */}
@@ -572,7 +605,7 @@ export function Playground({ locale }: { locale: Locale }) {
             </BottomSheet.Body>
             <BottomSheet.Footer className="pg-sheet-foot">
               {actions}
-              {copyStatusLine}
+              {exportStatusLine}
             </BottomSheet.Footer>
           </BottomSheet.Root>
         </>

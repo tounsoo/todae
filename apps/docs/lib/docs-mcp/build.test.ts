@@ -227,6 +227,8 @@ describe('scaffold_design_system', () => {
       'button.soft-tint.json',
     ]);
     expect(result.otherFiles.map((file) => file.path)).toEqual(['src/todae.d.ts']);
+    // A new density is Todae's comfortable file as it is written.
+    expect(result.tokenFiles['density/roomy.json']).toBe(readFileSync(join(todaeTokensDir(), 'density', 'comfortable.json'), 'utf8'));
     const dts = result.otherFiles[0]?.contents ?? '';
     expect(dts).toContain('export {};');
     expect(dts).toContain('    outline: true;');
@@ -235,6 +237,57 @@ describe('scaffold_design_system', () => {
 
     // tokenFiles go to build_tokens as they are.
     expect((await buildTokenFiles(result.tokenFiles)).ok).toBe(true);
+  });
+
+  it('sets core and contract values the way Fernway does, and they build', async () => {
+    const result = await scaffoldDesignSystem({
+      name: 'cabin',
+      buttonVariants: ['soft'],
+      core: {
+        'radius.md': { value: 0.625, unit: 'rem' },
+        'font.family.sans': ['Avenir Next', 'Avenir', 'system-ui', 'sans-serif'],
+        'font.weight.bold': 750,
+        'motion.duration.fast': { value: 120, unit: 'ms' },
+        'motion.easing.enter': [0.2, 0, 0, 1],
+      },
+      contract: {
+        'button.base.radius': { $ref: '#/radius/full/$value' },
+        'card.shadow': { $ref: '#/shadow/none/$value' },
+        'motion.popup.duration.enter': { value: 180, unit: 'ms' },
+        'button.primary.border.default': { $ref: '#/color/accent/default/$value' },
+        'button.soft.bg.default': { colorSpace: 'oklch', components: [0.93, 0.04, 150] },
+      },
+    });
+    expect(result.build).toEqual({ ok: true });
+    expect(Object.keys(result.tokenFiles)).toEqual(['resolver.json', 'core.json', 'button.json', 'button.soft.json', 'button.primary.json', 'contract.json']);
+    const resolver = JSON.parse(result.tokenFiles['resolver.json'] ?? '{}') as Record<string, unknown>;
+    expect(resolver.resolutionOrder).toEqual([
+      { $ref: '#/sets/core' },
+      { $ref: '#/sets/button' },
+      { $ref: '#/modifiers/buttonVariant' },
+      { $ref: '#/sets/contract' },
+    ]);
+    expect(resolver.sets).toEqual({
+      core: { sources: [{ $ref: './core.json' }], $extensions: { 'dev.todae': { layer: 'core' } } },
+      button: { sources: [{ $ref: './button.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } },
+      contract: { sources: [{ $ref: './contract.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } },
+    });
+    const core = JSON.parse(result.tokenFiles['core.json'] ?? '{}') as { motion: { duration: { fast: unknown } } };
+    expect(core.motion.duration.fast).toEqual({ $type: 'duration', $value: { value: 120, unit: 'ms' } });
+    // The new variant's copy of secondary keeps its other tokens and takes the one set here.
+    const soft = JSON.parse(result.tokenFiles['button.soft.json'] ?? '{}') as { button: { soft: { bg: Record<string, unknown>; fg: unknown } } };
+    expect(soft.button.soft.bg.default).toEqual({ $type: 'color', $value: { colorSpace: 'oklch', components: [0.93, 0.04, 150] } });
+    expect(soft.button.soft.fg).toBeDefined();
+    const built = await buildTokenFiles(result.tokenFiles);
+    expect(built.ok && built.css).toContain('--todae-motion-duration-fast: 120ms');
+  });
+
+  it('rejects a core or contract path from another layer, and reports a value of the wrong type', async () => {
+    await expect(scaffoldDesignSystem({ name: 'a', core: { 'card.shadow': 1 } })).rejects.toThrow('not a core token');
+    await expect(scaffoldDesignSystem({ name: 'a', contract: { 'radius.md': 1 } })).rejects.toThrow('not a contract token');
+    await expect(scaffoldDesignSystem({ name: 'a', contract: { 'button.outline.bg.default': 1 } })).rejects.toThrow('not a contract token');
+    const wrong = await scaffoldDesignSystem({ name: 'a', core: { 'motion.duration.fast': 'fast' } });
+    expect(wrong.build.ok).toBe(false);
   });
 
   it('reports a failing build instead of throwing', async () => {

@@ -4,7 +4,8 @@ import { DOCS_ORIGIN } from '../origin';
 import { resolveEntries } from '@tounsoo/todae/tokens-builder';
 import { buildTokenFiles, todaeTokensDir, type BuildResult } from './build';
 import { envelope, MAX_RESPONSE_CHARS, type NextCall } from './budget';
-import { catalogTokens } from './tokens';
+import { BUILD_COMMAND, TOKENS_FOLDER, rowEntry, tokenPackage, type PackageSeed, type PackageToken, type TokenEntry } from '../token-package/package';
+import { catalogTokens, type CatalogToken } from './tokens';
 
 const SOURCE = 'todae-docs' as const;
 const NAME_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
@@ -22,6 +23,17 @@ export type ScaffoldOptions = {
   buttonVariants?: string[];
   /** New densities, each starting as a copy of Todae's `comfortable`. */
   densities?: string[];
+  /**
+   * Core token values to replace, by path, such as `radius.md`, `font.family.sans` or
+   * `motion.duration.fast`. Each is a DTCG `$value`. Core is declared on `:root`, so it takes no `$ref` alias.
+   */
+  core?: Record<string, unknown>;
+  /**
+   * Contract token values to replace, by path, such as `button.base.radius`, `card.shadow` or
+   * `motion.popup.duration.enter`. Each is a DTCG `$value` or an alias such as `{ "$ref": "#/radius/full/$value" }`. A path under `button.<variant>.` for a
+   * name in `buttonVariants` changes that new variant's copy of `secondary`.
+   */
+  contract?: Record<string, unknown>;
 };
 
 export type ScaffoldFile = { path: string; contents: string };
@@ -48,37 +60,8 @@ function unique(kind: string, names: readonly string[]): void {
   }
 }
 
-function json(value: unknown): string {
-  return `${JSON.stringify(value, null, 2)}\n`;
-}
-
-/** Nests `{ 'color.accent.default': node }` into DTCG groups. */
-function tree(entries: [path: string, node: unknown][]): Record<string, unknown> {
-  const root: Record<string, unknown> = {};
-  for (const [path, node] of entries) {
-    const segments = path.split('.');
-    let group = root;
-    for (const segment of segments.slice(0, -1)) {
-      group[segment] ??= {};
-      group = group[segment] as Record<string, unknown>;
-    }
-    group[segments[segments.length - 1] as string] = node;
-  }
-  return root;
-}
-
 function appearanceColorPaths(): Set<string> {
   return new Set(catalogTokens().filter((row) => row.layer === 'appearance' && row.type === 'color').map((row) => row.path));
-}
-
-function colorFile(colors: Record<string, Oklch>): string {
-  return json(
-    tree(
-      Object.entries(colors)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([path, components]) => [path, { $type: 'color', $value: { colorSpace: 'oklch', components } }]),
-    ),
-  );
 }
 
 function quoteKey(name: string): string {
@@ -98,14 +81,36 @@ function declarations(variants: readonly string[], densities: readonly string[])
 }
 
 /**
+ * `core` or `contract` values as package tokens, each in the file of the set or
+ * modifier context that declares it in Todae's catalog. A contract path of a
+ * new button variant takes its type from the same path under `secondary`.
+ */
+function layerTokens(layer: 'core' | 'contract', values: Record<string, unknown>, variants: readonly string[]): PackageToken[] {
+  const rows = new Map<string, CatalogToken>();
+  for (const row of catalogTokens()) if (row.layer === layer && !rows.has(row.path)) rows.set(row.path, row);
+  const tokens: PackageToken[] = [];
+  for (const [path, value] of Object.entries(values)) {
+    const variant = layer === 'contract' ? variants.find((name) => path.startsWith(`button.${name}.`)) : undefined;
+    const row = rows.get(variant ? `button.secondary.${path.slice(`button.${variant}.`.length)}` : path);
+    if (!row) throw new Error(`"${path}" is not a ${layer} token. Call list_tokens with layer "${layer}".`);
+    const entry: TokenEntry = variant ? { kind: 'modifier', name: 'buttonVariant', context: variant } : rowEntry(row);
+    // Core and contract tokens are declared once, or once per button variant, so this is a guard.
+    if (entry.kind === 'modifier' && entry.context === '') throw new Error(`"${path}" is set per ${row.entry.name} context`);
+    tokens.push({ path, type: row.type, value, entry });
+  }
+  return tokens;
+}
+
+/**
  * Starter files for a design system on Todae: a company resolver, its token
  * files and TypeScript declarations, checked with the same build
- * `todae-tokens build` runs. `tokenFiles` are by path inside `tokensFolder`,
+ * `todae-tokens build` runs. The files follow the layout of
+ * `examples/fernway/tokens`. `tokenFiles` are by path inside `tokensFolder`,
  * the shape `build_tokens` takes; `otherFiles` are by path from the project
  * root. Nothing is written to the caller's machine; the caller saves the files.
  */
 export async function scaffoldDesignSystem(options: ScaffoldOptions, base = todaeTokensDir()) {
-  const { name, colors, buttonVariants = [], densities = [] } = options;
+  const { name, colors, buttonVariants = [], densities = [], core = {}, contract = {} } = options;
   checkName('name', name);
   unique('button variant', buttonVariants);
   unique('density', densities);
@@ -128,54 +133,32 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     }
   }
 
-  const drafted: ScaffoldFile[] = [];
-  const modifiers: Record<string, unknown> = {};
-  const order: { $ref: string }[] = [];
-
+  const tokens: PackageToken[] = [];
+  const seeds: PackageSeed[] = [];
   if (colors) {
-    drafted.push({ path: 'appearance/light.json', contents: colorFile(colors.light) });
-    drafted.push({ path: 'appearance/dark.json', contents: colorFile(colors.dark) });
-    modifiers.appearance = {
-      contexts: { light: [{ $ref: './appearance/light.json' }], dark: [{ $ref: './appearance/dark.json' }] },
-      $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-appearance', root: true, colorScheme: true } },
-    };
-    order.push({ $ref: '#/modifiers/appearance' });
+    for (const context of ['light', 'dark'] as const) {
+      for (const [path, components] of Object.entries(colors[context])) {
+        tokens.push({ path, type: 'color', value: { colorSpace: 'oklch', components }, entry: { kind: 'modifier', name: 'appearance', context } });
+      }
+    }
   }
   if (densities.length > 0) {
-    const comfortable = await readFile(join(base, 'density', 'comfortable.json'), 'utf8');
-    for (const density of densities) drafted.push({ path: `density/${density}.json`, contents: comfortable });
-    modifiers.density = {
-      contexts: Object.fromEntries(densities.map((density) => [density, [{ $ref: `./density/${density}.json` }]])),
-      $extensions: { 'dev.todae': { layer: 'density', rules: ['density-space'], attribute: 'data-density', root: true } },
-    };
-    order.push({ $ref: '#/modifiers/density' });
+    const text = await readFile(join(base, 'density', 'comfortable.json'), 'utf8');
+    const comfortable = JSON.parse(text) as Record<string, unknown>;
+    for (const density of densities) seeds.push({ entry: { kind: 'modifier', name: 'density', context: density }, tree: comfortable, text });
   }
   if (buttonVariants.length > 0) {
     const secondary = JSON.parse(await readFile(join(base, 'components', 'button.secondary.json'), 'utf8')) as {
       button: { secondary: unknown };
     };
     for (const variant of buttonVariants) {
-      drafted.push({ path: `button.${variant}.json`, contents: json({ button: { [variant]: secondary.button.secondary } }) });
+      seeds.push({ entry: { kind: 'modifier', name: 'buttonVariant', context: variant }, tree: { button: { [variant]: secondary.button.secondary } } });
     }
-    modifiers.buttonVariant = {
-      contexts: Object.fromEntries(buttonVariants.map((variant) => [variant, [{ $ref: `./button.${variant}.json` }]])),
-      $extensions: { 'dev.todae': { layer: 'contract', attribute: 'data-button-variant', alias: true } },
-    };
-    order.push({ $ref: '#/modifiers/buttonVariant' });
   }
+  tokens.push(...layerTokens('core', core, []), ...layerTokens('contract', contract, buttonVariants));
 
-  const resolver = {
-    $schema: 'https://www.designtokens.org/schemas/2025.10/resolver.json',
-    name,
-    version: '2025.10',
-    sets: {},
-    modifiers,
-    resolutionOrder: order,
-  };
-  drafted.unshift({ path: 'resolver.json', contents: json(resolver) });
-
-  const tokens = Object.fromEntries(drafted.map((file) => [file.path, file.contents]));
-  const build: BuildResult = await buildTokenFiles(tokens, { base });
+  const files = tokenPackage({ name, tokens, seeds });
+  const build: BuildResult = await buildTokenFiles(files, { base });
 
   const otherFiles: ScaffoldFile[] = [];
   if (buttonVariants.length > 0 || densities.length > 0) {
@@ -183,11 +166,11 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
   }
 
   return {
-    tokensFolder: 'tokens',
-    tokenFiles: tokens,
+    tokensFolder: TOKENS_FOLDER,
+    tokenFiles: files,
     otherFiles,
     build: build.ok ? { ok: true as const } : { ok: false as const, error: build.error },
-    command: 'npx --no todae-tokens build --resolver ./tokens/resolver.json',
+    command: BUILD_COMMAND,
     docsUrl: `${DOCS_ORIGIN}/guides/build-on-todae`,
     source: SOURCE,
   };
@@ -203,6 +186,8 @@ function scaffoldNext(options: ScaffoldOptions, cursor: { offset: number; char?:
   if (options.colors) args.colors = options.colors;
   if (options.buttonVariants) args.buttonVariants = options.buttonVariants;
   if (options.densities) args.densities = options.densities;
+  if (options.core) args.core = options.core;
+  if (options.contract) args.contract = options.contract;
   return {
     tool: 'scaffold_design_system',
     arguments: args,

@@ -97,6 +97,41 @@ describe('Playground', () => {
     expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.077, 165] });
   });
 
+  // Four exports of the whole playground, so it gets more room than the describe's default.
+  it('downloads the theme as a token package with its edits and their appearance', { timeout: 40_000 }, async () => {
+    const created: Blob[] = [];
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      created.push(blob);
+      return 'blob:package';
+    });
+    URL.revokeObjectURL = vi.fn();
+    const names: string[] = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      names.push(this.download);
+    });
+    const page = within(render(<Playground locale="en" />).container);
+    fireEvent.click(screen.getByLabelText('Porcelain'));
+    fireEvent.change(screen.getByLabelText('color.accent.default'), { target: { value: 'oklch(0.3 0.1 160)' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
+    await waitFor(() => expect(names).toEqual(['porcelain-tokens.zip']));
+    expect(await page.findByText('Downloaded porcelain-tokens.zip. Its README says how to build it.')).toBeTruthy();
+    // jsdom's Blob has no arrayBuffer, so read it the old way.
+    const text = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.readAsText(created[0] as Blob);
+    });
+    for (const file of ['tokens/resolver.json', 'tokens/appearance/light.json', 'tokens/appearance/dark.json', 'tokens/README.md']) expect(text).toContain(file);
+    // Stored, so the edit's light value is readable in the archive.
+    expect(text).toContain('0.3,\n');
+    // Copy, then download the same theme: the line shows the download, then the copy again.
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
+    expect(await page.findByText('Copied theme override JSON.')).toBeTruthy();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
+    expect(await page.findByText('Downloaded porcelain-tokens.zip. Its README says how to build it.')).toBeTruthy();
+    click.mockRestore();
+  });
+
   it('shows when the copy fails', async () => {
     writeText.mockRejectedValue(new Error('denied'));
     const page = within(render(<Playground locale="en" />).container);

@@ -95,6 +95,9 @@ export type Dictionary = {
     | 'copyCode'
     | 'copied'
     | 'copyFailed'
+    | 'downloadPackage'
+    | 'downloaded'
+    | 'downloadFailed'
     | 'stage',
     string
   >;
@@ -212,7 +215,7 @@ const en: Dictionary = {
     icons: 'Icons',
     rail: 'Theme controls',
     title: 'Playground',
-    lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides.',
+    lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides or download it as a token package.',
     presets: 'Presets',
     tokens: 'Tokens',
     editTheme: 'Edit theme',
@@ -225,11 +228,15 @@ const en: Dictionary = {
     color: 'color',
     reset: 'Reset',
     export: 'Copy JSON',
-    exportHint: 'Edits apply to the appearance you make them in. When light and dark differ, the JSON holds both; pass the one that matches the appearance.',
+    exportHint:
+      'Edits apply to the appearance you make them in. When light and dark differ, the JSON holds both; pass the one that matches the appearance. The token package is the same theme as DTCG token files and a resolver, which todae-tokens build turns into your theme CSS.',
     code: 'Overrides',
     copyCode: 'Copy overrides',
     copied: 'Copied theme override JSON.',
     copyFailed: 'Could not copy. Clipboard permission was denied.',
+    downloadPackage: 'Download token package',
+    downloaded: 'Downloaded {file}. Its README says how to build it.',
+    downloadFailed: 'Could not make the token package. Reload the page and try again.',
     stage: 'Preview',
   },
   motionLab: {
@@ -349,7 +356,7 @@ const ko: Dictionary = {
     icons: '아이콘',
     rail: '테마 컨트롤',
     title: '플레이그라운드',
-    lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하세요.',
+    lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하거나 토큰 패키지로 내려받으세요.',
     presets: '프리셋',
     tokens: '토큰',
     editTheme: '테마 편집',
@@ -362,11 +369,15 @@ const ko: Dictionary = {
     color: '색상',
     reset: '초기화',
     export: 'JSON 복사',
-    exportHint: '수정은 그때의 외관(라이트 또는 다크)에만 적용됩니다. 라이트와 다크가 다르면 JSON에 둘 다 담기니, 현재 외관에 맞는 쪽을 전달하세요.',
+    exportHint:
+      '수정은 그때의 외관(라이트 또는 다크)에만 적용됩니다. 라이트와 다크가 다르면 JSON에 둘 다 담기니, 현재 외관에 맞는 쪽을 전달하세요. 토큰 패키지는 같은 테마를 DTCG 토큰 파일과 리졸버로 담은 것으로, todae-tokens build가 테마 CSS로 만들어 줍니다.',
     code: '오버라이드',
     copyCode: '오버라이드 복사',
     copied: '테마 오버라이드 JSON을 복사했습니다.',
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
+    downloadPackage: '토큰 패키지 다운로드',
+    downloaded: '{file}을(를) 내려받았습니다. 빌드하는 방법은 README에 있습니다.',
+    downloadFailed: '토큰 패키지를 만들지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.',
     stage: '미리보기',
   },
   motionLab: {
