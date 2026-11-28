@@ -1,4 +1,5 @@
 import { childLinks, SITE_GROUPS, type SiteHref } from '../../components/siteGroups';
+import type { PackageNameProblem } from '../token-package/packageName';
 import { localizePath, type Locale } from './config';
 
 type GroupId = (typeof SITE_GROUPS)[number]['id'];
@@ -95,9 +96,15 @@ export type Dictionary = {
     | 'copyCode'
     | 'copied'
     | 'copyFailed'
+    | 'downloadPackage'
+    | 'packageName'
+    | 'downloaded'
+    | 'downloadFailed'
     | 'stage',
     string
   >;
+  /** Why npm would refuse the Playground's package name, one sentence per rule `packageNameProblem` checks. */
+  packageNameProblems: Record<PackageNameProblem, string>;
   /** The Playground stage's motion replay. Todae's part names in the readout stay in English. The label lists name the replay's tabs, steps and options. */
   motionLab: Record<
     | 'title'
@@ -212,7 +219,7 @@ const en: Dictionary = {
     icons: 'Icons',
     rail: 'Theme controls',
     title: 'Playground',
-    lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides.',
+    lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides or download it as a token package.',
     presets: 'Presets',
     tokens: 'Tokens',
     editTheme: 'Edit theme',
@@ -225,12 +232,28 @@ const en: Dictionary = {
     color: 'color',
     reset: 'Reset',
     export: 'Copy JSON',
-    exportHint: 'Edits apply to the appearance you make them in. When light and dark differ, the JSON holds both; pass the one that matches the appearance.',
+    exportHint:
+      'Edits apply to the appearance you make them in. When light and dark differ, the JSON holds both; pass the one that matches the appearance. The token package is the same theme as DTCG token files and a resolver, which todae-tokens build turns into your theme CSS.',
     code: 'Overrides',
     copyCode: 'Copy overrides',
     copied: 'Copied theme override JSON.',
     copyFailed: 'Could not copy. Clipboard permission was denied.',
+    downloadPackage: 'Download token package',
+    packageName: 'Package name',
+    downloaded: 'Downloaded {file}. Its README says how to build it.',
+    downloadFailed: 'Could not make the token package. Reload the page and try again.',
     stage: 'Preview',
+  },
+  packageNameProblems: {
+    empty: 'Enter a package name, such as acme-tokens or @acme/tokens.',
+    'too-long': 'npm takes at most 214 characters. Shorten the name.',
+    uppercase: 'npm takes lowercase names only. Use lowercase letters.',
+    spaces: 'npm takes no spaces in a name. Remove them, or use a hyphen.',
+    'leading-dot-or-underscore': 'npm takes no name that starts with a dot or an underscore. Start it with a letter or digit.',
+    'special-character': "npm takes none of ~ ' ! ( ) * in a name. Remove them.",
+    'bad-scope': 'Write a scoped name as @scope/name, with one slash. An unscoped name has no slash.',
+    'not-url-safe': 'npm takes only lowercase letters, digits, hyphens, dots and underscores. Remove the other characters.',
+    reserved: 'npm keeps this name for Node itself. Pick another, such as acme-tokens.',
   },
   motionLab: {
     title: 'Motion replay',
@@ -240,7 +263,7 @@ const en: Dictionary = {
     slow: 'Slow motion (×4)',
     slowNote: 'Slow motion plays each one four times as long as listed. It is for watching, so the JSON keeps the listed values.',
     optIn: 'Opt-in motion',
-    optInHint: 'Turns on the motions Todae ships at 0: popover and tip slides, the tab panel and step fades, and checks that grow in. While it is on, the copied JSON includes them.',
+    optInHint: 'Turns on the motions Todae ships at 0: popover and tip slides, the tab panel and step fades, and checks that grow in. While it is on, the copied JSON and the downloaded token package include them.',
     reduced: 'Your device asks for reduced motion, so everything here only fades: nothing slides, rises or grows.',
     playDialog: 'Play dialog',
     dialogNote: 'A dialog takes focus while it shows, so it has its own button: Play dialog opens it, closes it, and gives focus back to the button. Escape closes it sooner.',
@@ -349,7 +372,7 @@ const ko: Dictionary = {
     icons: '아이콘',
     rail: '테마 컨트롤',
     title: '플레이그라운드',
-    lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하세요.',
+    lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하거나 토큰 패키지로 내려받으세요.',
     presets: '프리셋',
     tokens: '토큰',
     editTheme: '테마 편집',
@@ -362,12 +385,28 @@ const ko: Dictionary = {
     color: '색상',
     reset: '초기화',
     export: 'JSON 복사',
-    exportHint: '수정은 그때의 외관(라이트 또는 다크)에만 적용됩니다. 라이트와 다크가 다르면 JSON에 둘 다 담기니, 현재 외관에 맞는 쪽을 전달하세요.',
+    exportHint:
+      '수정은 그때의 외관(라이트 또는 다크)에만 적용됩니다. 라이트와 다크가 다르면 JSON에 둘 다 담기니, 현재 외관에 맞는 쪽을 전달하세요. 토큰 패키지는 같은 테마를 DTCG 토큰 파일과 리졸버로 담은 것으로, todae-tokens build가 테마 CSS로 만들어 줍니다.',
     code: '오버라이드',
     copyCode: '오버라이드 복사',
     copied: '테마 오버라이드 JSON을 복사했습니다.',
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
+    downloadPackage: '토큰 패키지 다운로드',
+    packageName: '패키지 이름',
+    downloaded: '{file}을(를) 내려받았습니다. 빌드하는 방법은 README에 있습니다.',
+    downloadFailed: '토큰 패키지를 만들지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.',
     stage: '미리보기',
+  },
+  packageNameProblems: {
+    empty: '패키지 이름을 입력하세요. 예: acme-tokens, @acme/tokens.',
+    'too-long': 'npm 이름은 214자까지입니다. 이름을 줄이세요.',
+    uppercase: 'npm 이름은 소문자만 받습니다. 소문자로 쓰세요.',
+    spaces: 'npm 이름에는 공백을 쓸 수 없습니다. 공백을 빼거나 하이픈으로 바꾸세요.',
+    'leading-dot-or-underscore': 'npm 이름은 점이나 밑줄로 시작할 수 없습니다. 글자나 숫자로 시작하세요.',
+    'special-character': "npm 이름에는 ~ ' ! ( ) * 를 쓸 수 없습니다. 빼 주세요.",
+    'bad-scope': '스코프가 있는 이름은 @scope/name처럼 슬래시 하나로 씁니다. 스코프가 없는 이름에는 슬래시가 없습니다.',
+    'not-url-safe': 'npm 이름에는 소문자, 숫자, 하이픈, 점, 밑줄만 쓸 수 있습니다. 다른 문자를 빼세요.',
+    reserved: 'Node가 쓰는 이름이라 npm에서 쓸 수 없습니다. acme-tokens 같은 다른 이름을 쓰세요.',
   },
   motionLab: {
     title: '모션 재생',
@@ -377,7 +416,7 @@ const ko: Dictionary = {
     slow: '슬로 모션 (×4)',
     slowNote: '슬로 모션에서는 각각 표의 네 배 길이로 재생됩니다. 보기 위한 기능이라 JSON에는 표의 값이 그대로 들어갑니다.',
     optIn: '옵트인 모션',
-    optInHint: 'Todae가 0으로 내보내는 모션을 켭니다. 팝오버와 툴팁의 슬라이드, 탭 패널과 단계의 페이드, 커지며 나타나는 체크입니다. 켜져 있는 동안에는 복사한 JSON에도 들어갑니다.',
+    optInHint: 'Todae가 0으로 내보내는 모션을 켭니다. 팝오버와 툴팁의 슬라이드, 탭 패널과 단계의 페이드, 커지며 나타나는 체크입니다. 켜져 있는 동안에는 복사한 JSON과 내려받은 토큰 패키지에도 들어갑니다.',
     reduced: '기기가 동작 줄이기를 요청하고 있어, 여기서는 모두 페이드만 합니다. 미끄러지거나 떠오르거나 커지는 동작은 없습니다.',
     playDialog: '다이얼로그 재생',
     dialogNote: '다이얼로그는 보이는 동안 포커스를 가져가므로 버튼을 따로 둡니다. 다이얼로그 재생을 누르면 열었다가 닫고, 포커스를 버튼에 돌려줍니다. Escape를 누르면 더 일찍 닫힙니다.',

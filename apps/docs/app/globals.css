@@ -1053,6 +1053,15 @@ table {
   flex: 1 1 0;
 }
 
+/* The token package download takes its own row under Reset and Copy JSON. */
+.pg-actions {
+  flex-wrap: wrap;
+}
+
+.pg-actions > .pg-download {
+  flex-basis: 100%;
+}
+
 .pg-hint {
   margin: -1rem 0 1rem;
   color: var(--todae-color-fg-muted);

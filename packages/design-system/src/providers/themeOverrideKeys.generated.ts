@@ -2394,6 +2394,7 @@ export const CONTRAST_PAIRS: readonly { fg: string; bg: string; min: number; ove
   { fg: 'nav.item.fg.current', bg: 'nav.item.bg.current', min: 60, over: ['color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },
   { fg: 'option.fg.selected', bg: 'option.bg.selected', min: 60, over: ['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },
   { fg: 'option.fg.selected', bg: 'option.bg.selected-highlighted', min: 60, over: ['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },
+  { fg: 'calendar.day.fg.range', bg: 'calendar.day.bg.range', min: 60, over: ['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },
   { fg: 'tree.item.fg.selected', bg: 'tree.item.bg.selected', min: 60, over: ['color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },
   { fg: 'table.fg', bg: 'table.row.bg.selected', min: 60, over: ['color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },
   { fg: 'table.header.fg', bg: 'table.row.bg.selected', min: 60, over: ['color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'] },

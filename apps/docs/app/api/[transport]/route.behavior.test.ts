@@ -101,6 +101,9 @@ describe('route regressions', () => {
       colors: { light: colors, dark: colors },
       buttonVariants: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8'],
       densities: ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8'],
+      // The next calls carry core and contract values too, so the paged files match the draft.
+      core: { 'radius.md': { value: 0.625, unit: 'rem' }, 'motion.duration.fast': { value: 120, unit: 'ms' } },
+      contract: { 'card.shadow': { $ref: '#/shadow/none/$value' }, 'button.v1.bg.default': { $ref: '#/color/accent/default/$value' } },
     };
     const drafted = await scaffoldDesignSystem(options);
     const tokenFiles: Record<string, string> = {};
@@ -145,8 +148,10 @@ describe('route regressions', () => {
   }, 120_000);
 
   it('returns a small scaffold in the library shape', async () => {
-    const drafted = await scaffoldDesignSystem({ name: 'acme' });
-    const { error, body } = await tool('scaffold_design_system', { name: 'acme' });
+    const options = { name: 'acme', core: { 'font.family.sans': ['Inter', 'sans-serif'] }, contract: { 'button.base.radius': { $ref: '#/radius/full/$value' } } };
+    const drafted = await scaffoldDesignSystem(options);
+    expect(drafted.build.ok).toBe(true);
+    const { error, body } = await tool('scaffold_design_system', options);
     expect(error).toBeNull();
     if (!body) throw new Error('expected a scaffold');
     const { nav, ...rest } = body;
