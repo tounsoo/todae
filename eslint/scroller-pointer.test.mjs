@@ -172,6 +172,8 @@ function effect(own: HTMLElement, el: HTMLElement) {
     { code: `function attach(arrow: HTMLElement, el: HTMLElement) { let a: EventTarget; let b: EventTarget; a = b; a = arrow; b = a ?? window; a.addEventListener('pointermove', () => { el.scrollTop += 4; }); b.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error, error] },
     // Two bindings that only hold each other are no window.
     { code: `function attach(el: HTMLElement) { const w = w2; const w2 = w; w.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    // A closed cycle settles as no window, so pairing it with the window doesn't make one (Neon round 2 on #537).
+    { code: `function attach(el: HTMLElement) { const w = w2; const w2 = w; (w ?? window).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // A binding that only ever holds itself is no window.
     { code: `function attach(el: HTMLElement) { let w: EventTarget; w = w; w.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
   ],
