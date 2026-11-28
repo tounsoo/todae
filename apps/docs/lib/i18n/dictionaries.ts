@@ -1,4 +1,5 @@
 import { childLinks, SITE_GROUPS, type SiteHref } from '../../components/siteGroups';
+import type { PackageNameProblem } from '../token-package/packageName';
 import { localizePath, type Locale } from './config';
 
 type GroupId = (typeof SITE_GROUPS)[number]['id'];
@@ -97,12 +98,13 @@ export type Dictionary = {
     | 'copyFailed'
     | 'downloadPackage'
     | 'packageName'
-    | 'packageNameInvalid'
     | 'downloaded'
     | 'downloadFailed'
     | 'stage',
     string
   >;
+  /** Why npm would refuse the Playground's package name, one sentence per rule `packageNameProblem` checks. */
+  packageNameProblems: Record<PackageNameProblem, string>;
   /** The Playground stage's motion replay. Todae's part names in the readout stay in English. The label lists name the replay's tabs, steps and options. */
   motionLab: Record<
     | 'title'
@@ -238,10 +240,20 @@ const en: Dictionary = {
     copyFailed: 'Could not copy. Clipboard permission was denied.',
     downloadPackage: 'Download token package',
     packageName: 'Package name',
-    packageNameInvalid: 'Use a name npm accepts, such as acme-tokens or @acme/tokens: lowercase, with no spaces, at most 214 characters.',
     downloaded: 'Downloaded {file}. Its README says how to build it.',
     downloadFailed: 'Could not make the token package. Reload the page and try again.',
     stage: 'Preview',
+  },
+  packageNameProblems: {
+    empty: 'Enter a package name, such as acme-tokens or @acme/tokens.',
+    'too-long': 'npm takes at most 214 characters. Shorten the name.',
+    uppercase: 'npm takes lowercase names only. Use lowercase letters.',
+    spaces: 'npm takes no spaces in a name. Remove them, or use a hyphen.',
+    'leading-dot-or-underscore': 'npm takes no name that starts with a dot or an underscore. Start it with a letter or digit.',
+    'special-character': "npm takes none of ~ ' ! ( ) * in a name. Remove them.",
+    'bad-scope': 'Write a scoped name as @scope/name, with one slash. An unscoped name has no slash.',
+    'not-url-safe': 'npm takes only lowercase letters, digits, hyphens, dots and underscores. Remove the other characters.',
+    reserved: 'npm keeps this name for Node itself. Pick another, such as acme-tokens.',
   },
   motionLab: {
     title: 'Motion replay',
@@ -381,10 +393,20 @@ const ko: Dictionary = {
     copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
     downloadPackage: '토큰 패키지 다운로드',
     packageName: '패키지 이름',
-    packageNameInvalid: 'npm이 받는 이름을 쓰세요. 예: acme-tokens, @acme/tokens. 소문자로, 공백 없이, 214자 이하로 씁니다.',
     downloaded: '{file}을(를) 내려받았습니다. 빌드하는 방법은 README에 있습니다.',
     downloadFailed: '토큰 패키지를 만들지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.',
     stage: '미리보기',
+  },
+  packageNameProblems: {
+    empty: '패키지 이름을 입력하세요. 예: acme-tokens, @acme/tokens.',
+    'too-long': 'npm 이름은 214자까지입니다. 이름을 줄이세요.',
+    uppercase: 'npm 이름은 소문자만 받습니다. 소문자로 쓰세요.',
+    spaces: 'npm 이름에는 공백을 쓸 수 없습니다. 공백을 빼거나 하이픈으로 바꾸세요.',
+    'leading-dot-or-underscore': 'npm 이름은 점이나 밑줄로 시작할 수 없습니다. 글자나 숫자로 시작하세요.',
+    'special-character': "npm 이름에는 ~ ' ! ( ) * 를 쓸 수 없습니다. 빼 주세요.",
+    'bad-scope': '스코프가 있는 이름은 @scope/name처럼 슬래시 하나로 씁니다. 스코프가 없는 이름에는 슬래시가 없습니다.',
+    'not-url-safe': 'npm 이름에는 소문자, 숫자, 하이픈, 점, 밑줄만 쓸 수 있습니다. 다른 문자를 빼세요.',
+    reserved: 'Node가 쓰는 이름이라 npm에서 쓸 수 없습니다. acme-tokens 같은 다른 이름을 쓰세요.',
   },
   motionLab: {
     title: '모션 재생',

@@ -1,8 +1,8 @@
 /**
  * Why npm would refuse a new package name, after npm's own rules
- * (validate-npm-package-name): lowercase, at most 214 characters, URL-safe,
- * no leading dot or underscore, no ~'!()*, not a Node core module, and a
- * scope written as `@scope/name`.
+ * (validate-npm-package-name, for new packages): lowercase, at most 214
+ * characters, URL-safe, no leading dot or underscore, no ~'!()* after the
+ * scope, not a Node core module, and a scope written as `@scope/name`.
  */
 export type PackageNameProblem =
   | 'empty'
@@ -32,7 +32,9 @@ export function packageNameProblem(name: string): PackageNameProblem | null {
   if (name.length > MAX_LENGTH) return 'too-long';
   if (name !== name.toLowerCase()) return 'uppercase';
   if (/\s/.test(name)) return 'spaces';
-  if (/[~'!()*]/.test(name)) return 'special-character';
+  if (name.startsWith('.') || name.startsWith('_')) return 'leading-dot-or-underscore';
+  // As npm does: the scope may hold these, the name after it may not.
+  if (/[~'!()*]/.test(name.split('/').at(-1) ?? '')) return 'special-character';
   if (RESERVED.has(name)) return 'reserved';
   let parts = [name];
   if (name.startsWith('@')) {
@@ -42,7 +44,6 @@ export function packageNameProblem(name: string): PackageNameProblem | null {
   } else if (name.includes('/')) {
     return 'bad-scope';
   }
-  if (parts.some((part) => part.startsWith('.') || part.startsWith('_'))) return 'leading-dot-or-underscore';
   if (parts.some((part) => encodeURIComponent(part) !== part)) return 'not-url-safe';
   return null;
 }

@@ -136,7 +136,7 @@ function anvilAppearance(c: {
   accent: [ThemeColorValue, ThemeColorValue, ThemeColorValue, ThemeColorValue];
   tint: ThemeColorValue;
   tintStrong: ThemeColorValue;
-  /** Text on a selected option. Anvil's accent, unless that misses Lc 60 on the tints. */
+  /** Text on a selected option and on a calendar range, over the tints. Anvil's accent, unless that misses Lc 60 there. */
   selectedFg: ThemeColorValue;
   danger: ThemeColorValue;
   tint1: number;
@@ -203,7 +203,7 @@ function anvilAppearance(c: {
     'option.bg.selected-highlighted': c.tintStrong,
     'option.fg.selected': c.selectedFg,
     'calendar.day.bg.range': c.tint,
-    'calendar.day.fg.range': c.accent[0],
+    'calendar.day.fg.range': c.selectedFg,
     'steps.marker.border.current': c.accent[0],
     'steps.marker.border.pending': c.control,
     // Toggle groups are Anvil's segmented control. Segments that match Button
@@ -495,11 +495,12 @@ export const PRESETS: readonly ThemePreset[] = [
         tint: alpha(oklch(0.749, 0.132, 254), 0.2),
         tintStrong: alpha(oklch(0.749, 0.132, 254), 0.3),
         // Anvil's blue on its own tints reaches Lc 43 to 51, under Todae's 60,
-        // so a selected option's text is a lighter blue of the same hue.
-        selectedFg: oklch(0.843, 0.081, 254),
+        // so selected-option and range text is a lighter blue of the same hue,
+        // with the chroma the sRGB gamut keeps at that lightness.
+        selectedFg: oklch(0.843, 0.079, 254),
         // Anvil's red reaches Lc 42 on the raised surface, under Todae's 60,
         // so it is lighter, with the chroma the sRGB gamut keeps at that lightness.
-        danger: oklch(0.793, 0.122, 33),
+        danger: oklch(0.792, 0.121, 33),
         tint1: 0.08,
         wash: oklch(1, 0, 0),
         focus: oklch(0.749, 0.132, 254),

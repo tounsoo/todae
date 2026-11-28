@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ThemeColorValue, ThemeOverride } from '@tounsoo/todae';
-import { apcaContrast, compositeSrgb, oklchToSrgb, type Rgba } from '../../../../packages/design-system/src/color/apca';
+import { apcaContrast, compositeSrgb, oklchToSrgb, type Rgb, type Rgba } from '../../../../packages/design-system/src/color/apca';
 import { PRESETS } from './presets';
 
 const STEP = 0.005;
@@ -40,10 +40,23 @@ function declaredPairs(declarer: unknown, name: string): Pair[] {
   });
 }
 
-/** The pairs the token build checks: the contract set's and the appearance modifier's, one per surface under a translucent background. */
+const SURFACES = ['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'];
+
+/**
+ * Pairs a preset sets that Todae's contract does not list, measured as the
+ * contract's would be. A calendar range's text sits on a translucent tint,
+ * like a selected option's, inside a picker popover or on the page.
+ */
+export const PLAYGROUND_PAIRS: readonly Pair[] = SURFACES.map((over) => ({ fg: 'calendar.day.fg.range', bg: 'calendar.day.bg.range', min: 60, over }));
+
+/** The pairs the token build checks, the contract set's and the appearance modifier's, one per surface under a translucent background, then the Playground's own. */
 function contractPairs(resolver: unknown): Pair[] {
   if (!isRecord(resolver) || !isRecord(resolver.sets) || !isRecord(resolver.modifiers)) throw new Error('resolver.json has no sets or modifiers');
-  return [...declaredPairs(resolver.sets.contract, 'contract set'), ...declaredPairs(resolver.modifiers.appearance, 'appearance modifier')];
+  return [
+    ...declaredPairs(resolver.sets.contract, 'contract set'),
+    ...declaredPairs(resolver.modifiers.appearance, 'appearance modifier'),
+    ...PLAYGROUND_PAIRS,
+  ];
 }
 
 function tokenRows(catalog: unknown): Row[] {
@@ -124,9 +137,17 @@ function rgba(color: Oklch): Rgba {
 }
 
 function pairLc(pair: Pair, mode: Mode, overrides: ThemeOverride, rows: readonly Row[]): number {
-  // As the token build does: a translucent background over its listed surface. Any other sits on the canvas, which an opaque one hides.
-  const surface = oklchToSrgb(resolveColor(pair.over ?? 'color.bg.canvas', mode, overrides, rows));
-  const bg = compositeSrgb(rgba(resolveColor(pair.bg, mode, overrides, rows)), surface);
+  // As the token build does: a translucent background over its listed surface, and every other one opaque.
+  const back = resolveColor(pair.bg, mode, overrides, rows);
+  let bg: Rgb;
+  if (pair.over === undefined) {
+    if (back.alpha !== 1) throw new Error(`"${pair.bg}" must be opaque, or list the surfaces it sits on in "over"`);
+    bg = oklchToSrgb(back);
+  } else {
+    const surface = resolveColor(pair.over, mode, overrides, rows);
+    if (surface.alpha !== 1) throw new Error(`surface "${pair.over}" under "${pair.bg}" must be opaque`);
+    bg = compositeSrgb(rgba(back), oklchToSrgb(surface));
+  }
   const fg = compositeSrgb(rgba(resolveColor(pair.fg, mode, overrides, rows)), bg);
   return Math.abs(apcaContrast(fg, bg));
 }

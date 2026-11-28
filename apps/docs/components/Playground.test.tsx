@@ -148,26 +148,34 @@ describe('Playground', () => {
     expect(field().value).toBe('graphite-tokens');
     fireEvent.click(screen.getByLabelText('Riso'));
     expect(field().value).toBe('riso-tokens');
-    fireEvent.change(field(), { target: { value: 'Acme Tokens' } });
-    expect(field().getAttribute('aria-invalid')).toBe('true');
-    const error = 'Use a name npm accepts, such as acme-tokens or @acme/tokens: lowercase, with no spaces, at most 214 characters.';
-    expect(screen.getByText(error)).toBeTruthy();
-    expect(field().getAttribute('aria-describedby')).toContain(screen.getByText(error).id);
+    // A download's status line lasts only while the name it used stays.
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
-    expect(names).toEqual([]);
+    const done = 'Downloaded riso-tokens.zip. Its README says how to build it.';
+    expect(await screen.findByText(done)).toBeTruthy();
+    // The error names the rule the name breaks.
+    fireEvent.change(field(), { target: { value: 'Acme Tokens' } });
+    expect(screen.queryByText(done)).toBeNull();
+    expect(field().getAttribute('aria-invalid')).toBe('true');
+    const uppercase = 'npm takes lowercase names only. Use lowercase letters.';
+    expect(screen.getByText(uppercase)).toBeTruthy();
+    expect(field().getAttribute('aria-describedby')).toContain(screen.getByText(uppercase).id);
+    fireEvent.change(field(), { target: { value: 'fs' } });
+    expect(screen.getByText('npm keeps this name for Node itself. Pick another, such as acme-tokens.')).toBeTruthy();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
+    expect(names).toEqual(['riso-tokens.zip']);
     expect(document.activeElement).toBe(field());
     fireEvent.change(field(), { target: { value: '@acme/tokens' } });
     expect(field().getAttribute('aria-invalid')).toBeNull();
-    expect(screen.queryByText(error)).toBeNull();
+    expect(screen.queryByText(uppercase)).toBeNull();
     // A typed name stays when the preset changes.
     fireEvent.click(screen.getByLabelText('Bloom'));
     expect(field().value).toBe('@acme/tokens');
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download token package' })));
-    await waitFor(() => expect(names).toEqual(['acme-tokens.zip']));
+    await waitFor(() => expect(names).toEqual(['riso-tokens.zip', 'acme-tokens.zip']));
     const text = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
-      reader.readAsText(created[0] as Blob);
+      reader.readAsText(created[1] as Blob);
     });
     expect(text).toContain('"name": "@acme/tokens"');
     click.mockRestore();

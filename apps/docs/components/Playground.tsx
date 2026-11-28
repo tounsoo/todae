@@ -308,10 +308,11 @@ export function Playground({ locale }: { locale: Locale }) {
   // The package name follows the preset until the reader types one.
   const [typedPackageName, setTypedPackageName] = useState<string | null>(null);
   const packageName = typedPackageName ?? `${preset?.id ?? 'theme'}-tokens`;
-  const packageNameInvalid = packageNameProblem(packageName) !== null;
+  const packageNameError = packageNameProblem(packageName);
+  const packageNameInvalid = packageNameError !== null;
 
-  // Which theme the last download was for, so its status clears once the theme changes, like the copy status.
-  const [downloaded, setDownloaded] = useState<{ json: string; status: string } | null>(null);
+  // Which theme and package name the last download was for, so its status clears once either changes, like the copy status.
+  const [downloaded, setDownloaded] = useState<{ json: string; packageName: string; status: string } | null>(null);
 
   function exportOverrides() {
     // Whichever export ran last owns the status line.
@@ -337,15 +338,15 @@ export function Playground({ locale }: { locale: Locale }) {
       link.click();
       // Some browsers drop a download whose URL is revoked at once.
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setDownloaded({ json: exportJson, status: t.downloaded.replace('{file}', result.fileName) });
+      setDownloaded({ json: exportJson, packageName, status: t.downloaded.replace('{file}', result.fileName) });
     } catch {
-      setDownloaded({ json: exportJson, status: t.downloadFailed });
+      setDownloaded({ json: exportJson, packageName, status: t.downloadFailed });
     }
   }
 
   // The result shows only for the JSON it was for, so it clears once the theme changes.
   const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
-  const downloadStatus = downloaded?.json === exportJson ? downloaded.status : null;
+  const downloadStatus = downloaded?.json === exportJson && downloaded.packageName === packageName ? downloaded.status : null;
   const exportStatus = clipboard.text === exportJson ? copyResult : downloadStatus;
   const exportStatusLine = exportStatus ? <p className="pg-hint">{exportStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
@@ -412,7 +413,9 @@ export function Playground({ locale }: { locale: Locale }) {
           onChange={(event) => setTypedPackageName(event.target.value)}
         />
       </Field.Root>
-      {packageNameInvalid ? <ErrorMessage.Root id={packageNameErrorId}>{t.packageNameInvalid}</ErrorMessage.Root> : null}
+      {packageNameError ? (
+        <ErrorMessage.Root id={packageNameErrorId}>{DICTIONARIES[locale].packageNameProblems[packageNameError]}</ErrorMessage.Root>
+      ) : null}
     </Field.Group>
   );
 
