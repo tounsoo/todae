@@ -1,5 +1,7 @@
 /* How far toward its trigger a cold tip sits before it has entered, from
-   tooltip.motion.offset, else 0. Registered, so it alone transitions. */
+   tooltip.motion.offset, else 0. The margins that read it transition, as on
+   Popover, since WebKit lays out a box with position-try fallbacks from a
+   registered length's end value while it animates. */
 @property --_tooltip-slide {
   syntax: '<length>';
   inherits: false;
@@ -32,7 +34,8 @@
        trigger with tooltip.motion.offset, by layout. */
     transition:
       opacity var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter),
-      --_tooltip-slide var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
+      margin-block-start var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter),
+      margin-block-end var(--todae-tooltip-motion-duration-enter) var(--todae-tooltip-motion-easing-enter);
   }
 
   .content:not([data-open]) {

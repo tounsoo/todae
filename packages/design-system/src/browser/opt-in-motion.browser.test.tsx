@@ -97,8 +97,6 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
   });
 
   it.each([false, true])('slides from its trigger by the offset, by layout, above %s', async (above) => {
-    // Motion only has to work in Chrome (ARCHITECTURE "Motion").
-    if (server.browser !== 'chromium') return;
     render(<Slide above={above} style={{ ...slow, ['--_todae-popover-motion-offset' as string]: '12px' }} />);
     const content = screen.getByRole('dialog', { name: 'Slide' });
     const gaps = await sample(() => gap(above));
@@ -113,8 +111,10 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     expect(getComputedStyle(content).transform).toBe('none');
   });
 
-  it('slides back toward its trigger as it closes, staying inert', async () => {
-    if (server.browser !== 'chromium') return;
+  it('slides back toward its trigger as it closes, from where it rests, staying inert', async () => {
+    // Every engine: WebKit, which drops an animating registered length from
+    // a margin on a box with position-try fallbacks, jumped it the whole
+    // offset onto its trigger as the close began, then faded it there.
     function Closing() {
       const [open, setOpen] = useState(true);
       const popover = usePopover({ open, onOpenChange: setOpen });
@@ -141,6 +141,11 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
       await frame();
       if (content.matches(':popover-open')) gaps.push(gap(false));
     }
+    // It leaves from where it rests, a frame's travel at most, not the whole offset at once.
+    expect(gaps[0]).toBeGreaterThan(rest - 3);
+    // It moves step by step, the open played back: never a jump of half the offset in a frame.
+    const steps = gaps.slice(1).map((g, i) => gaps[i]! - g);
+    expect(Math.max(...steps)).toBeLessThan(6);
     expect(Math.min(...gaps)).toBeLessThan(rest - 2);
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(rest - 12.5);
   });
@@ -204,7 +209,6 @@ describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
   });
 
   it('slides a cold tip in from its trigger by the offset', async () => {
-    if (server.browser !== 'chromium') return;
     await openCold({ ...slow, ['--_todae-tooltip-motion-offset' as string]: '8px' });
     const tip = screen.getByRole('tooltip', { name: 'Tip A' });
     const gaps = (await sample(() => gap('A'))).filter((g) => !Number.isNaN(g));

@@ -1,7 +1,9 @@
 /* How far toward its trigger the popover sits, from popover.motion.offset
-   before it has entered and as it exits, else 0. Registered, so it is the one
-   value that transitions: the margins that read it change at once whenever
-   anything else changes them, such as a position try. */
+   before it has entered and as it exits, else 0. The margins that read it
+   transition, not this length: WebKit lays out a box with position-try
+   fallbacks from a registered length's end value while it animates, so a
+   close jumped the whole offset onto the trigger at once. Registered so it
+   never inherits into a popover inside. */
 @property --_popover-slide {
   syntax: '<length>';
   inherits: false;
@@ -61,7 +63,8 @@
     transition:
       opacity var(--_motion-duration-enter) var(--_motion-easing-enter),
       scale var(--_motion-duration-enter) var(--_motion-easing-enter),
-      --_popover-slide var(--_motion-duration-enter) var(--_motion-easing-enter);
+      margin-block-start var(--_motion-duration-enter) var(--_motion-easing-enter),
+      margin-block-end var(--_motion-duration-enter) var(--_motion-easing-enter);
   }
 
   /* Its first frames as it shows, and its fade as it closes. */
