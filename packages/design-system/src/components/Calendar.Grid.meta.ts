@@ -10,7 +10,7 @@ export const meta = {
       type: '(day: CalendarDayState) => React.ReactNode',
       required: false,
       description:
-        "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop and keeps the full date as its name, and the content is read as the day's description. The content is not interactive. Ignored while the years show.",
+        "Renders inside each day button the grid draws, called with the day's date and whether it is outside the shown month, today, selected, or cannot be picked. The button stays the one Tab stop. Its name is the full date, then the content, so it holds every word the day shows. The content is not interactive. Ignored while the years show.",
     },
     {
       name: 'showOutsideDays',

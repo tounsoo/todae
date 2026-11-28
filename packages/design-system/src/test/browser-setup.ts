@@ -1,6 +1,8 @@
 import './temporal.js';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
+import { server } from 'vitest/browser';
+import { skipOnMacosHost } from '../../../../browser.host';
 import { resetInputModality } from '../internal/inputModality.js';
 import { resetTooltipWarmth } from '../overlay/tooltipWarmth.js';
 import { blurBeforeCleanup } from './focus.js';
@@ -17,6 +19,10 @@ afterEach(() => {
   resetTooltipWarmth();
   resetInputModality();
 });
+
+// On macOS, a test that browser.host.ts lists as failing there because of macOS itself is skipped, with why.
+// CI's Linux runs it.
+beforeEach((context) => skipOnMacosHost(context, server));
 
 // One page runs every file, and the frame of the file before is removed with focus in it. Firefox can leave this
 // frame's window unfocused, so typed keys and the first Tab would go to the top page.

@@ -120,7 +120,7 @@ function useOptionPart(): OptionPartContextValue {
   return part;
 }
 
-/** Title text for typeahead and the option name. The detail line is not part of it. */
+/** Title text for typeahead and for the title an option with a detail is checked by. The detail line is not part of it. */
 function optionTitle(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
   if (
@@ -134,14 +134,9 @@ function optionTitle(node: Node): string {
   return [...node.childNodes].map(optionTitle).join('');
 }
 
-/** The option's name. Callers concatenate adjacent text first, then this collapses whitespace to match the row. */
+/** The title as the row shows it. Callers concatenate adjacent text first, then this collapses whitespace. */
 function optionName(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
-}
-
-function joinIds(...groups: (string | undefined)[]): string | undefined {
-  const ids = [...new Set(groups.flatMap((group) => group?.split(/\s+/) ?? []).filter(Boolean))];
-  return ids.length > 0 ? ids.join(' ') : undefined;
 }
 
 type OptionContent = {
@@ -192,7 +187,14 @@ function titleString(title: ReactNode[]): string {
 
 function OptionListOptionDetail({ id, className, ...props }: OptionListOptionDetailProps) {
   const part = useOptionPart();
-  return <span {...props} id={id ?? part.detailId} data-todae-option-detail="" className={cx(styles.detail, className)} />;
+  // The space keeps the title and the detail two words apart in the option's
+  // name and in its text, as they show on two lines.
+  return (
+    <>
+      {' '}
+      <span {...props} id={id ?? part.detailId} data-todae-option-detail="" className={cx(styles.detail, className)} />
+    </>
+  );
 }
 
 function OptionListOption({
@@ -255,11 +257,14 @@ function OptionListOption({
   }, [children, content.foreign]);
   const selected = ctx.selected.has(value);
   const { check } = useGlyphs();
-  const describedId = direct ? directId : wrapped?.id;
+  const detailLineId = direct ? directId : wrapped?.id;
   const title = direct ? directTitle : (wrapped?.title ?? '');
   const named = ariaLabel != null || labelledBy != null;
   const part = useMemo(() => ({ detailId }), [detailId]);
-  const stacked = Boolean(describedId);
+  const stacked = Boolean(detailLineId);
+  // A stacked option is named by both lines, title then detail, so its name
+  // holds all the text it shows (WCAG 2.5.3, Label in Name).
+  const labelId = `${optionDomId(ctx.listId, value)}_label`;
   return (
     <OptionPartContext.Provider value={part}>
       <div
@@ -269,9 +274,9 @@ function OptionListOption({
         role="option"
         aria-selected={selected}
         aria-disabled={disabled || unavailable || undefined}
-        aria-label={named ? ariaLabel : stacked && title ? title : undefined}
-        aria-labelledby={named ? labelledBy : undefined}
-        aria-describedby={joinIds(describedBy, describedId)}
+        aria-label={named ? ariaLabel : undefined}
+        aria-labelledby={named ? labelledBy : stacked && title ? labelId : undefined}
+        aria-describedby={describedBy}
         data-selected={selected ? '' : undefined}
         data-highlighted={ctx.highlighted === value ? '' : undefined}
         className={cx(styles.option, className)}
@@ -281,12 +286,19 @@ function OptionListOption({
         })}
         onClick={composeHandlers(onClick, () => ctx.select(value, true))}
       >
-        {selected ? (
-          <span className={styles.check} data-todae-glyph="" aria-hidden="true">
-            {glyphOr(check, <CheckGlyph />)}
+        {/* The box is always there, so the check grows in only as the option
+            is picked, as Menu's does, not each time a list that holds it
+            shows. Only a selected option draws the glyph. */}
+        <span className={styles.check} data-todae-glyph="" aria-hidden="true">
+          {selected ? glyphOr(check, <CheckGlyph />) : null}
+        </span>
+        {stacked ? (
+          <span id={labelId} className={styles.copy}>
+            {children}
           </span>
-        ) : null}
-        {stacked ? <span className={styles.copy}>{children}</span> : children}
+        ) : (
+          children
+        )}
       </div>
     </OptionPartContext.Provider>
   );

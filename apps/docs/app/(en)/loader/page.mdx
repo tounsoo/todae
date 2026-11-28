@@ -1,4 +1,5 @@
 import SkeletonProfile from '../../../examples/loader/SkeletonProfile';
+import SkeletonShimmer from '../../../examples/loader/SkeletonShimmer';
 import LoaderDots from '../../../examples/loader/LoaderDots';
 import LoaderLabelled from '../../../examples/loader/LoaderLabelled';
 
@@ -22,11 +23,17 @@ Either variant draws in the text color, so it shows on any surface, a primary bu
 
 ## Skeleton
 
-`Skeleton.Root` stands in for content before it arrives. It is at least one line high, and elements inside it only give it a size: they are hidden. It pulses, and holds still under reduced motion.
+`Skeleton.Root` stands in for content before it arrives. It is at least one line high, and elements inside it only give it a size: they are hidden. By default, as `variant="pulse"`, it pulses, and it holds still under reduced motion.
 
 <Example of={SkeletonProfile} block />
 
 A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and say what is loading in text. Restyle it through `skeleton.bg`, `skeleton.radius`, `skeleton.motion.duration`, `skeleton.motion.easing` and `skeleton.pulse.opacity`, the opacity the pulse fades to.
+
+### Shimmer
+
+`variant="shimmer"` sweeps a band of `skeleton.shimmer.color` across the block, from the side the text starts on, once per `skeleton.motion.duration`. Only a background moves, so the block and what sits around it stay put. Under reduced motion it holds still as the plain block, as the pulse does.
+
+<Example of={SkeletonShimmer} block />
 
 ## Accessible composition
 

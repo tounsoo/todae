@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'OptionList.Option',
-  description: 'Option inside OptionList.Root. The title is the name. OptionList.OptionDetail is the description.',
+  description: 'Option inside OptionList.Root. The title names it; with an OptionList.OptionDetail, the name is the title, then the detail.',
   props: [
     {
       name: 'value',

@@ -82,11 +82,12 @@ it('paints the detail in the appearance color', () => {
 describe.each(['light', 'dark'] as const)('%s appearance', (appearance) => {
   describe.each(['en', 'ko'] as const)('%s', (locale) => {
     describe.each(['single', 'multiple'] as const)('%s selection', (mode) => {
-      it('stacks the detail under the title, names the title, and selects the row', async () => {
+      it('stacks the detail under the title, names the option by both lines, and selects the row', async () => {
         const copy = COPY[locale];
         render(<Rows locale={locale} mode={mode} appearance={appearance} />);
-        const option = screen.getByRole('option', { name: copy.apple });
-        const detail = document.getElementById(option.getAttribute('aria-describedby') ?? '');
+        // Label in Name: the option is named by its title, then its detail, and has no description.
+        const option = screen.getByRole('option', { name: `${copy.apple} ${copy.appleDetail}`, description: '' });
+        const detail = option.querySelector<HTMLElement>('[data-todae-option-detail]');
         expect(detail?.textContent).toBe(copy.appleDetail);
         const title = [...(option.querySelector('[class*="copy"]')?.childNodes ?? [])].find(
           (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.includes(copy.apple),
@@ -129,7 +130,7 @@ describe.each(['light', 'dark'] as const)('%s appearance', (appearance) => {
         screen.getByRole('listbox').focus();
         await userEvent.keyboard('{ArrowDown}');
         expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe(
-          screen.getByRole('option', { name: copy.pear }).id,
+          screen.getByRole('option', { name: `${copy.pear} ${copy.pearDetail}` }).id,
         );
       });
     });

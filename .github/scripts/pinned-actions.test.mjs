@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -133,6 +133,23 @@ test('the repository pins every action, from any working directory', () => {
   assert.deepEqual(scan(files), []);
   const run = spawnSync(process.execPath, [script], { cwd: tmpdir(), encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
+});
+
+// macOS's tmpdir() is under /var, a symlink to /private/var, and a child's cwd is the real path. This builds
+// the same shape on any system, so Linux CI fails the way the Air did when the names come out as ../../var/...
+test('names a file reached through a symlink relative to the working directory', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'pinned-actions-')));
+  try {
+    const real = join(dir, 'real');
+    mkdirSync(real);
+    symlinkSync(real, join(dir, 'link'));
+    writeFileSync(join(real, 'ci.yml'), workflow('- uses: actions/checkout@v4'));
+    const run = spawnSync(process.execPath, [script, join(dir, 'link', 'ci.yml')], { cwd: join(dir, 'link'), encoding: 'utf8' });
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /^ci\.yml:6: actions\/checkout@v4$/m);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('the command names each unpinned file and line and exits 1', () => {

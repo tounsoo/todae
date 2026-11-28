@@ -18,7 +18,7 @@ Options are `OptionList.Option` parts inside `OptionList.Root`.
 
 ## Detail
 
-`OptionList.OptionDetail` is a second line under the title. The title is the option's name. The detail is the description, through `aria-describedby`. Typing and the arrow keys still use the title.
+`OptionList.OptionDetail` is a second line under the title. The option's name is the title, then the detail, so it holds every word the option shows and a speech user can say what they see (WCAG 2.5.3, Label in Name). Typing and the arrow keys still use the title.
 
 ```tsx
 <OptionList.Option value="apple">
@@ -33,7 +33,7 @@ A combobox can pass `id`, `activeValue`, `onActiveValueChange`, and `tabIndex={-
 
 ## Icons
 
-A selected option shows the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. In a multiple list it sits inside the box.
+A selected option shows the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. In a multiple list it sits inside the box. The check shows at once as an option is picked. A brand can grow it in with `option.check.motion.duration` (0ms by default) and `option.check.motion.easing`, as [Checkbox](/checkbox)'s check grows; it still goes at once, and under reduced motion it only fades, since a fade moves nothing. The highlight moves at once. A list that shows again, as a popover opens, draws its check at rest.
 
 ```tsx
 import { Check } from 'lucide-react';
@@ -48,9 +48,9 @@ import { Check } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. `OptionList.OptionDetail` is that option's description through `aria-describedby`. The arrow keys, Home and End skip disabled options and stop at the ends. Typing moves to the next option whose title starts with what was typed: one letter, or the same letter again, cycles through those options, and a pause of half a second starts a new search. The detail is not part of that search. A Space joins a search under way, and otherwise selects. Keys with Ctrl, Meta or Alt, and the move keys with Shift, are left to the page, and a key pressed in a field inside the list stays with that field. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
+**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. With an `OptionList.OptionDetail`, the option is named by its title and then its detail, through `aria-labelledby`. The arrow keys, Home and End skip disabled options and stop at the ends. Typing moves to the next option whose title starts with what was typed: one letter, or the same letter again, cycles through those options, and a pause of half a second starts a new search. The detail is not part of that search. A Space joins a search under way, and otherwise selects. Keys with Ctrl, Meta or Alt, and the move keys with Shift, are left to the page, and a key pressed in a field inside the list stays with that field. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
 
-**You supply:** A name with `aria-label`, or `aria-labelledby` pointing at a visible label; the type does not require one. A title that reads well on its own, since it is the option's name. The detail is the description, not part of the name. When an input owns focus, wire it with [useCombobox](/utilities/use-combobox), which gives the list `tabIndex={-1}` and puts `aria-activedescendant`, `aria-controls` and `aria-expanded` on the input.
+**You supply:** A name with `aria-label`, or `aria-labelledby` pointing at a visible label; the type does not require one. A title that reads well on its own, since the name starts with it. A detail that reads well after the title, since the name goes on with it. When an input owns focus, wire it with [useCombobox](/utilities/use-combobox), which gives the list `tabIndex={-1}` and puts `aria-activedescendant`, `aria-controls` and `aria-expanded` on the input.
 
 **Watch for:** Escape is not handled, so a list in your own overlay needs something else to close on Escape, such as Popover. Two lists with the same `id` give their options the same ids. `tabIndex={-1}` without an input that carries `aria-activedescendant` leaves the list out of keyboard reach.
 

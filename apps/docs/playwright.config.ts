@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3100;
+// The verify helper passes a free port, since another checkout's server often holds 3100.
+const PORT = Number(process.env.TODAE_DOCS_TEST_PORT) || 3100;
 
 // axe over the built docs site's Korean pages, in light and dark, at desktop and phone width, and
 // a smoke run over every English page with an example, in light at desktop width.

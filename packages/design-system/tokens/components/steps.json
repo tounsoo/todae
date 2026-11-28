@@ -47,6 +47,11 @@
       "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
       "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
       "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
+    "motion": {
+      "$description": "The color fade as a step changes status, on paint properties only. 0ms by default, so a status changes its colors at once; a brand opts in.",
+      "duration": { "$type": "duration", "$value": { "value": 0, "unit": "ms" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
     }
   }
 }

@@ -35,7 +35,14 @@
     },
     "motion": {
       "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
-      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } }
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+      "panel": {
+        "duration": {
+          "$type": "duration",
+          "$value": { "value": 0, "unit": "ms" },
+          "$description": "How long a newly selected Tabs.Panel fades in, by opacity alone, on tabs.motion.easing. 0 swaps panels at once."
+        }
+      }
     }
   }
 }

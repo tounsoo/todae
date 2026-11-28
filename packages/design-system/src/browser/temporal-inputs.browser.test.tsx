@@ -92,7 +92,7 @@ describe('Field.Picker with times in a browser', () => {
     const button = screen.getByRole('button', { name: 'Choose date and time' });
     await userEvent.click(button);
     screen.getByRole('dialog', { name: 'Choose date and time' });
-    await expect.poll(() => document.activeElement?.textContent).toBe('7');
+    await expect.poll(() => (document.activeElement?.querySelector('[aria-hidden="true"]') ?? document.activeElement)?.textContent).toBe('7');
     // A new date keeps the time, and the picker stays open.
     await userEvent.keyboard('{ArrowRight}{Enter}');
     expect(output()).toBe('2026-10-08T01:30:00');

@@ -364,8 +364,19 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
   const handoff = useFocusHandoff({ to: shared.landing });
   const at = laneOf(talk.at!);
   const verdict = verdictFor(shared.talks, talk.id, at);
-  // The name starts with what the talk shows, in its order: the title, then its time and speakers.
-  const name = [talk.title, during(talk.at!, shared.locale), talk.speakers.join(', '), talk.track, stageOf(at.lane).name, verdict ? `warning: ${verdict.reason}` : null].filter(Boolean).join(', ');
+  // The name starts with what the talk shows, word for word and in its order: the title, its start
+  // time and its speakers (WCAG 2.5.3, Label in Name). The day, end, track, stage and warning follow.
+  const name = [
+    talk.title,
+    clock(talk.at!.starts, shared.locale),
+    talk.speakers.join(', '),
+    `${dayLabel(talk.at!.starts.toPlainDate(), shared.locale)}, until ${clock(talk.at!.ends, shared.locale)}`,
+    talk.track,
+    stageOf(at.lane).name,
+    verdict ? `warning: ${verdict.reason}` : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
   return (
     <li
       ref={handoff}
@@ -390,7 +401,7 @@ function Block({ talk, highlight, ...shared }: Shared & { talk: Talk; highlight:
         <span className={styles.body}>
           <Text.Root as="span" lang="en" lines={2} weight="medium" className={styles.title}>
             {talk.title}
-          </Text.Root>
+          </Text.Root>{' '}
           <Text.Root as="span" lines={1} tooltip={false} tone="muted" className={styles.meta}>
             {clock(talk.at!.starts, shared.locale)} · {talk.speakers.join(', ')}
           </Text.Root>

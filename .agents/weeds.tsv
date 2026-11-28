@@ -33,3 +33,13 @@ date	class	ref	caught_by	note
 2026-11-18	month-today-mark-overlap	#488	review	The today circle was absolute and reserved no row, so it covered that day's bars and at a narrow width hid the event.
 2026-11-23	ci-apt-install	#505	ben	The apt check matched a whole line, so a semicolon, a path, a quoted sentence, or workflow_call slipped through.
 2026-11-23	ci-apt-install	#505	ben	The apt check took the program as the last path segment, so npx @playwright/test install --with-deps read as test and was missed.
+2026-11-08	readme-claim-drift	a35f010a	ben	The package README said a tap never opens a tooltip and that the schema has every exact name, more than the code does.
+2026-11-09	readme-claim-drift	981e50ff	ben	The root README and platform page listed the exports that read Temporal without formatRelativeTime.
+2026-11-09	readme-claim-drift	bc1daea1	ben	The Temporal list in both READMEs and the platform page still left out formatDateRange after the first fix.
+2026-11-27	readme-mcp-guide	#520	ben	The package README said get_docs_page returns each example's code, so agents skipped get_example.
+2026-11-27	shell-bash32	#518	ben	Local verify on the Air was BLOCKED on forbidden-paths, which used bash 4 lowercasing on macOS bash 3.2; CI passed.
+2026-11-27	macos-host	#522	ben	Local verify on the Air failed on scroll-lock (overlay scrollbars), EventCalendar 1px, Firefox peek launch and pageMetadata timeouts; CI passed.
+2026-11-27	macos-host	#523	ben	Local verify on the Air failed on the same scroll-lock, EventCalendar and pageMetadata cases, and axe hit a busy port 3100; CI passed.
+2026-11-27	macos-host	#524	ben	Local verify on the Air failed on scroll-lock and EventCalendar, and peek reported Firefox as not installed; CI passed.
+2026-11-27	browser-editing-keys	#525	ben	Local verify on the Air failed 33 browser tests that pressed Control for select all, copy, paste and undo, which are Meta on macOS; CI passed.
+2026-11-27	verify-node-icu	#525	ben	Local verify on the Air failed 5 date tests under Homebrew node, which links macOS's ICU; CI's official Node passed.

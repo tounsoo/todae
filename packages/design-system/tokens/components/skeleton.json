@@ -1,6 +1,6 @@
 {
   "skeleton": {
-    "$description": "Skeleton.Root: a pulsing placeholder in the shape of content that is still loading.",
+    "$description": "Skeleton.Root: a placeholder in the shape of content that is still loading, which pulses or shimmers.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "motion": {
@@ -9,6 +9,10 @@
     },
     "pulse": {
       "opacity": { "$type": "number", "$value": 0.5 }
+    },
+    "shimmer": {
+      "$description": "Skeleton.Root variant=\"shimmer\": the band that sweeps across the block, once per skeleton.motion.duration.",
+      "color": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } }
     }
   }
 }

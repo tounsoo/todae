@@ -6,6 +6,7 @@ A decision whose Status starts with Active or Partly superseded is live. `pnpm c
 
 Copy [template.md](template.md) for a new decision. Name it `NNNN-short-slug.md` and use the next number. The newest number is first.
 
+- [0019. Day content and option details are part of the accessible name](0019-label-in-name-for-day-content-and-option-details.md). Active, 2026-11-27.
 - [0018. Threads use Matt Pocock's skills in T3 Code, not pstack](0018-drop-pstack-for-matt-skills.md). Active, 2026-11-25.
 - [0017. The base theme ships a critical Button variant](0017-critical-button-variant.md). Active, 2026-11-20.
 - [0016. Shared agent rules live in the home repo](0016-shared-agent-rules-live-in-home.md). Partly superseded, 2026-11-16.

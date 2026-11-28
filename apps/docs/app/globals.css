@@ -1475,3 +1475,71 @@ table {
   color: var(--todae-color-fg-default);
 }
 
+
+/* The stage's motion replay, above the preview and as wide as it. */
+.pg-motion {
+  max-inline-size: 70rem;
+  margin-inline: auto;
+  margin-block-end: 1.5rem;
+}
+
+.pg-motion-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pg-motion-head > div:first-child {
+  flex: 1 1 20rem;
+  max-inline-size: 40rem;
+}
+
+.pg-motion-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.pg-motion-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.pg-motion-note {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-inline-start: 3px solid var(--todae-color-border-default);
+}
+
+.pg-motion-specimens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem 1.5rem;
+}
+
+.pg-motion-panel {
+  padding-block-start: 0.5rem;
+}
+
+/* Holds the skeleton's place, so the row keeps its height while it comes and goes. */
+.pg-motion-skeleton {
+  inline-size: 8rem;
+  min-block-size: 1.25rem;
+}
+
+.pg-motion-table {
+  inline-size: 100%;
+}
+
+.pg-motion-curve {
+  overflow-wrap: anywhere;
+}
+
+.pg-motion-hints {
+  margin: 0;
+}

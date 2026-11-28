@@ -28,8 +28,8 @@ afterEach(cleanup);
 const stage = () => screen.getByRole('region', { name: 'Preview' });
 
 // Each test renders the whole playground, preview included, and every edit re-renders it, which takes
-// seconds in jsdom; the default 5s timeout fails under a loaded parallel run.
-describe('Playground', { timeout: 15_000 }, () => {
+// seconds in jsdom. vitest.config.ts gives the docs unit tests a hang guard sized for that.
+describe('Playground', () => {
   it('paints the stage with a preset and its light or dark overrides', () => {
     render(<Playground locale="en" />);
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('');
@@ -155,6 +155,58 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.6 0.25 350)');
   });
 
+  it('keeps a preset’s own motion, or swaps it for a picked feel on the stage and in the JSON', () => {
+    render(<Playground locale="en" />);
+    const scale = () => stage().style.getPropertyValue('--todae-popover-motion-scale');
+    const exported = () => JSON.parse(screen.getByRole('region', { name: 'Overrides' }).textContent ?? '');
+    expect(screen.getByRole('button', { name: 'preset' }).getAttribute('aria-pressed')).toBe('true');
+    // Graphite has no motion of its own.
+    expect(scale()).toBe('');
+    fireEvent.click(screen.getByLabelText('Y2K Chrome'));
+    expect(scale()).toBe('0.85');
+    expect(exported().light['popover.motion.scale']).toBe(0.85);
+    fireEvent.click(screen.getByRole('button', { name: 'standard' }));
+    expect(scale()).toBe('');
+    expect(exported().light['popover.motion.scale']).toBeUndefined();
+    // Its colors stay; only the motion changes.
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.56 0.18 305)');
+    fireEvent.click(screen.getByRole('button', { name: 'springy' }));
+    expect(scale()).toBe('0.9');
+    expect(exported().dark['popover.motion.scale']).toBe(0.9);
+  });
+
+  it('copies the opt-in motions only while Opt-in motion is on, and never slow motion', async () => {
+    render(<Playground locale="en" />);
+    const exported = () => JSON.parse(screen.getByRole('region', { name: 'Overrides' }).textContent ?? '');
+    fireEvent.click(screen.getByRole('button', { name: 'snappy' }));
+    const OPT_IN = [
+      'popover.motion.offset',
+      'tooltip.motion.offset',
+      'tabs.motion.panel.duration',
+      'steps.motion.duration',
+      'option.check.motion.duration',
+      'menu.item.check.motion.duration',
+    ];
+    for (const key of OPT_IN) expect(exported()[key], key).toBeUndefined();
+    fireEvent.click(screen.getByRole('switch', { name: 'Slow motion (×4)' }));
+    // Slow motion is for watching, so the JSON keeps snappy's own popup timing.
+    expect(exported()['motion.popup.duration.enter']).toEqual({ value: 160, unit: 'ms' });
+    fireEvent.click(screen.getByRole('switch', { name: 'Opt-in motion' }));
+    // Snappy's reveal step is 140ms and its selection step 120ms, unslowed.
+    expect(exported()).toMatchObject({
+      'popover.motion.offset': { value: 0.5, unit: 'rem' },
+      'tooltip.motion.offset': { value: 0.25, unit: 'rem' },
+      'tabs.motion.panel.duration': { value: 140, unit: 'ms' },
+      'steps.motion.duration': { value: 140, unit: 'ms' },
+      'option.check.motion.duration': { value: 120, unit: 'ms' },
+      'menu.item.check.motion.duration': { value: 120, unit: 'ms' },
+    });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
+    expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual(exported());
+    fireEvent.click(screen.getByRole('switch', { name: 'Opt-in motion' }));
+    for (const key of OPT_IN) expect(exported()[key], key).toBeUndefined();
+  });
+
   it('shows the preview and Todae’s own text in the page’s language', () => {
     render(<Playground locale="ko" />);
     const preview = within(screen.getByRole('region', { name: '미리보기' }));
@@ -164,6 +216,7 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(preview.getByRole('cell', { name: '₩2,690,000' })).toBeTruthy();
     expect(preview.queryByRole('dialog', { name: '새 청구서' })).toBeNull();
     expect(screen.getByRole('region', { name: '오버라이드' })).toBeTruthy();
+    expect(screen.getByText('모션 (motion)')).toBeTruthy();
     // Names Todae writes itself come from StringsProvider.
     expect(preview.getByRole('navigation', { name: '이동 경로' })).toBeTruthy();
     expect(preview.getAllByRole('button', { name: '닫기' })).toHaveLength(2);
@@ -192,6 +245,9 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(within(drawer).getByRole('button', { name: 'Mark paid' })).toBeTruthy();
   });
 
+  /** The invoice list's table: the stage's other table is the motion readout, named by its caption. */
+  const invoiceTable = () => within(stage()).getAllByRole('table').find((table) => table.querySelector('caption') === null)!;
+
   it('makes a new invoice only once the form holds a customer and an amount', async () => {
     render(<Playground locale="en" />);
     const preview = within(stage());
@@ -219,7 +275,8 @@ describe('Playground', { timeout: 15_000 }, () => {
     // The dialog plays its exit before it leaves.
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New invoice' })).toBeNull());
     // It starts as a draft, and the list is sorted newest first, so it leads.
-    const first = preview.getAllByRole('row')[1]!;
+    // The invoice list's rows, not the motion replay's readout above it.
+    const first = within(invoiceTable()).getAllByRole('row')[1]!;
     expect(within(first).getByRole('button', { name: 'INV-1046' })).toBeTruthy();
     expect(within(first).getByText('Draft')).toBeTruthy();
   });

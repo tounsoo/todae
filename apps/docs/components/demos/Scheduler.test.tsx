@@ -156,7 +156,7 @@ describe('the schedule', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Whole event' }));
     expect(talksOn('Main stage')).toEqual(['Tokens that travel', 'Motion with purpose', 'Auditing a design system', 'Panel: shipping 1.0', 'Writing UI copy']);
     expect(screen.getByRole('button', { name: /^Research ops at scale,/ }).getAttribute('aria-label')).toBe(
-      'Research ops at scale, Wed, Jun 2, 11:00 AM to 11:30 AM, Priya Nair, Research, Hall B, warning: Expects 350, Hall B seats 300',
+      'Research ops at scale, 11:00 AM, Priya Nair, Wed, Jun 2, until 11:30 AM, Research, Hall B, warning: Expects 350, Hall B seats 300',
     );
   });
 
@@ -212,10 +212,10 @@ describe('the schedule', () => {
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'One day' }));
     const motion = () => screen.getByRole('button', { name: /^Motion with purpose,/ });
-    expect(motion().getAttribute('aria-label')).toContain('Wed, Jun 2, 2:00 PM to 2:40 PM');
+    expect(motion().getAttribute('aria-label')).toContain('Wed, Jun 2, until 2:40 PM');
 
     await choose(motion(), 'Move to Hall B');
-    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Hall B, warning: Expects 400, Hall B seats 300');
+    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, 2:00 PM, Ana Ruiz, Wed, Jun 2, until 2:40 PM, Design, Hall B, warning: Expects 400, Hall B seats 300');
 
     await choose(motion(), 'Change time or stage…');
     const dialog = await screen.findByRole('dialog', { name: 'Move Motion with purpose' });
@@ -225,7 +225,7 @@ describe('the schedule', () => {
     await act(async () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
     });
-    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, Wed, Jun 2, 2:00 PM to 2:40 PM, Ana Ruiz, Design, Main stage');
+    expect(motion().getAttribute('aria-label')).toBe('Motion with purpose, 2:00 PM, Ana Ruiz, Wed, Jun 2, until 2:40 PM, Design, Main stage');
   });
 
   it('shows the day a queued talk lands on and focuses that talk', async () => {
@@ -238,7 +238,7 @@ describe('the schedule', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
     });
     const placed = screen.getByRole('button', { name: /^Dark mode, done right,/ });
-    expect(placed.getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
+    expect(placed.getAttribute('aria-label')).toBe('Dark mode, done right, 11:15 AM, Mira Patel, Wed, Jun 2, until 11:45 AM, Design, Main stage');
     expect(axisHeaders().map((text) => /^(?:Wed|Thu|Fri), Jun \d/.exec(text)?.[0] ?? text)).toEqual(['Wed, Jun 2']);
     await vi.waitFor(() => expect(document.activeElement).toBe(placed));
   });
@@ -249,7 +249,7 @@ describe('the schedule', () => {
     expect(talksOn('Main stage')).toContain('Dark mode, done right');
     // The opening keynote holds 9:00 to 10:00, and Tokens that travel runs 10:15 to 11:00, so 11:00 is
     // allowed but leaves no time to change over. 11:15 is the first time with no warning.
-    expect(screen.getByRole('button', { name: /^Dark mode, done right,/ }).getAttribute('aria-label')).toBe('Dark mode, done right, Wed, Jun 2, 11:15 AM to 11:45 AM, Mira Patel, Design, Main stage');
+    expect(screen.getByRole('button', { name: /^Dark mode, done right,/ }).getAttribute('aria-label')).toBe('Dark mode, done right, 11:15 AM, Mira Patel, Wed, Jun 2, until 11:45 AM, Design, Main stage');
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     });

@@ -8,6 +8,7 @@ import {
   CodeBlock,
   ColorPicker,
   COMPONENT_OVERRIDE_KEYS,
+  createToaster,
   Field,
   RAW_OVERRIDE_KEYS,
   ScrollArea,
@@ -32,9 +33,12 @@ import { useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from '
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
+import { MOTION_CHOICES, withMotion, type MotionChoice } from './playground/motion';
 import { PRESETS, type ThemePreset } from './playground/presets';
 import { ICON_LIBRARIES } from './iconLibraries';
-import { Preview } from './playground/Preview';
+import { MotionStage } from './playground/MotionStage';
+import { optInMotion } from './playground/replay';
+import { Preview, type PreviewToaster } from './playground/Preview';
 
 const LAYERS = {
   raw: RAW_OVERRIDE_KEYS,
@@ -236,11 +240,15 @@ function reserveBar(bar: HTMLElement | null) {
 export function Playground({ locale }: { locale: Locale }) {
   // Option values, layer names and preset names are Todae's own names and stay in English; the preview follows the locale.
   const t = DICTIONARIES[locale].playground;
+  const motionCopy = DICTIONARIES[locale].motionLab;
+  const [toaster] = useState<PreviewToaster>(() => createToaster());
   const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
   const codeId = useId();
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
+  // The preset's own motion, or one feel in its place, to compare motion across presets.
+  const [motion, setMotion] = useState<MotionChoice>('preset');
   // Todae's own glyphs, or one of three icon libraries for the preview's icons and glyphs.
   const [iconsId, setIconsId] = useState('todae');
   const [layer, setLayer] = useState<Layer>('semantic');
@@ -254,9 +262,13 @@ export function Playground({ locale }: { locale: Locale }) {
   const Rail = narrow ? 'div' : 'aside';
   const resolved = useResolvedAppearance(appearance);
   const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
-  // Everything the stage applies in one appearance. The JSON and the token package export the same,
-  // so a new kind of setting added here reaches both.
-  const themeFor = (side: 'light' | 'dark'): ThemeOverride => ({ ...preset?.[side], ...edits[side] });
+  const presetFor = (mode: 'light' | 'dark') => withMotion(preset?.[mode] ?? {}, motion);
+  // The motion replay's Opt-in motion switch. While it is on, the opt-in motions are in the copied JSON too.
+  const [optIn, setOptIn] = useState(false);
+  const withOptIn = (theme: ThemeOverride): ThemeOverride => (optIn ? { ...theme, ...optInMotion(theme) } : theme);
+  // Everything the stage applies in one appearance: the preset with its motion, then the edits.
+  // The JSON and the token package export the same, so a new kind of setting added here reaches both.
+  const themeFor = (side: 'light' | 'dark'): ThemeOverride => ({ ...presetFor(side), ...edits[side] });
   const overrides = themeFor(resolved);
   const paths = LAYERS[layer].filter((path) => path.includes(filter.trim().toLowerCase()));
   const changed = Object.keys(edits.light).length + Object.keys(edits.dark).length;
@@ -269,7 +281,7 @@ export function Playground({ locale }: { locale: Locale }) {
     const next: Partial<Record<ThemeOverrideKey, string>> = {};
     for (const path of LAYERS[layer]) next[path] = style.getPropertyValue(cssVarName(path)).trim();
     setComputed(next);
-  }, [layer, resolved, density, presetId, edits]);
+  }, [layer, resolved, density, presetId, motion, edits]);
 
   function valueFor(path: ThemeOverrideKey): string {
     const typed = overrides[path];
@@ -277,8 +289,9 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
-  const exportLight = themeFor('light');
-  const exportDark = themeFor('dark');
+  // The JSON and the token package carry the opt-in motions too while the switch is on.
+  const exportLight = withOptIn(themeFor('light'));
+  const exportDark = withOptIn(themeFor('dark'));
   // One flat set when light and dark are the same, such as plain Todae with no edits.
   const exportJson = `${JSON.stringify(
     JSON.stringify(exportLight) === JSON.stringify(exportDark) ? exportLight : { light: exportLight, dark: exportDark },
@@ -352,7 +365,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 {paths.length === 0 ? <p className="pg-empty">{t.noMatch}</p> : null}
                 {paths.map((path) => (
                   <TokenField
-                    key={`${presetId}:${resolved}:${path}`}
+                    key={`${presetId}:${resolved}:${motion}:${path}`}
                     path={path}
                     value={valueFor(path)}
                     edited={edits[resolved][path] !== undefined}
@@ -458,6 +471,22 @@ export function Playground({ locale }: { locale: Locale }) {
           </ToggleGroup.Root>
         </div>
         <div>
+          <span className="pg-heading" id="pg-motion">
+            {t.motion}
+          </span>
+          <ToggleGroup.Root
+            aria-labelledby="pg-motion"
+            value={motion}
+            onValueChange={(next) => next && setMotion(next as MotionChoice)}
+          >
+            {MOTION_CHOICES.map((value) => (
+              <ToggleGroup.Item key={value} value={value} lang="en">
+                {value}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup.Root>
+        </div>
+        <div>
           <span className="pg-heading" id="pg-icons">
             {t.icons}
           </span>
@@ -526,7 +555,10 @@ export function Playground({ locale }: { locale: Locale }) {
         >
           {/* The preview is a product in the reader's language, so Todae's own text is too. */}
           <StringsProvider strings={TODAE_STRINGS[locale]}>
-            <Preview locale={locale} library={ICON_LIBRARIES.find((library) => library.id === iconsId)} />
+            {/* The replay lays slow motion and the opt-in motions over the preview too, but not over the stage's own tokens, so the editor never shows them. The JSON carries the opt-in motions while that switch is on. */}
+            <MotionStage overrides={overrides} optIn={optIn} onOptInChange={setOptIn} toaster={toaster} copy={motionCopy}>
+              <Preview locale={locale} library={ICON_LIBRARIES.find((library) => library.id === iconsId)} toaster={toaster} />
+            </MotionStage>
           </StringsProvider>
         </ThemeProvider>
       </div>

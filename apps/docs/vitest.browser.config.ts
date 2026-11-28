@@ -1,7 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { playwright } from '@vitest/browser-playwright';
+import { chromium } from 'playwright';
+import type { BrowserCommand } from 'vitest/node';
 import { defineConfig } from 'vitest/config';
+import { classicScrollbarsOnHost } from '../../playwright.host';
 import { pinTestLocale, testLocaleEnv } from '../../vitest.locale';
 
 if (process.env.VITEST) pinTestLocale();
@@ -10,6 +13,25 @@ const src = (path: string) => fileURLToPath(new URL(`../../packages/design-syste
 
 // The server-safe entries (`@tounsoo/todae/stack` and the rest), so they load the same CSS modules as the main entry.
 const serverEntries = readdirSync(src('server')).map((file) => file.replace(/\.ts$/, ''));
+
+type MediaFeature =
+  | { name: 'prefers-reduced-motion'; value: 'reduce' | 'no-preference' }
+  | { name: 'forced-colors'; value: 'active' | 'none' }
+  | { name: 'prefers-color-scheme'; value: 'light' | 'dark' };
+
+/**
+ * Sets the media features the page reports, as the package's browser config
+ * does, so the package's `emulateMedia` test helper works here too. A feature
+ * the list leaves out goes back to the page's starting value.
+ */
+const emulateMedia: BrowserCommand<[features: MediaFeature[]]> = async ({ page }, features) => {
+  const value = (name: MediaFeature['name']) => features.find((feature) => feature.name === name)?.value;
+  await page.emulateMedia({
+    reducedMotion: (value('prefers-reduced-motion') ?? 'no-preference') as 'reduce' | 'no-preference',
+    forcedColors: (value('forced-colors') ?? 'none') as 'active' | 'none',
+    colorScheme: (value('prefers-color-scheme') ?? 'light') as 'light' | 'dark',
+  });
+};
 
 // Runs every docs demo in headless Chromium against the package source.
 export default defineConfig({
@@ -34,13 +56,15 @@ export default defineConfig({
     // Every test sees the same now, so a picker that opens at today or the next time looks the same whenever CI runs.
     // The hover fade of Button, Chip, Link and Pagination is off, so a check that reads colors right after a
     // theme change or a hover sees the colors it lands on.
-    setupFiles: ['./test/fixedClock.ts', './test/noControlFade.ts'],
+    // On macOS, test/macosHost.ts skips the tests browser.host.ts lists, which macOS itself fails.
+    setupFiles: ['./test/fixedClock.ts', './test/noControlFade.ts', './test/macosHost.ts'],
     include: ['**/*.browser.test.tsx'],
     exclude: ['**/node_modules/**', '.next/**'],
     browser: {
       enabled: true,
       provider: playwright(),
       headless: true,
+      commands: { emulateMedia },
       screenshotFailures: false,
       instances: [
         {
@@ -52,7 +76,8 @@ export default defineConfig({
           browser: 'chromium',
           name: 'scroll-lock',
           include: ['test/scrollLock.browser.test.tsx'],
-          provider: playwright({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } }),
+          // A classic 15px scrollbar, as on Linux. macOS overlays them, so they take no width (playwright.host.ts).
+          provider: playwright({ launchOptions: classicScrollbarsOnHost(chromium.executablePath(), { ignoreDefaultArgs: ['--hide-scrollbars'] }) }),
         },
       ],
     },

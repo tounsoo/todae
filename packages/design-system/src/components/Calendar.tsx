@@ -22,7 +22,8 @@ import { useAnnouncer } from '../hooks/useAnnouncer.js';
 import { useGlyphs } from '../providers/GlyphsProvider.js';
 import { handledInside, useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useStrings } from '../providers/StringsProvider.js';
-import { domSafe, useDomId } from '../internal/domId.js';
+import { useDomId } from '../internal/domId.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 import { useFieldsetState } from './Fieldset.context.js';
 import { ChevronGlyph, glyphOr } from './glyphs.js';
 import { composeHandlers, cx, useComposedRefs } from '../internal/props.js';
@@ -110,8 +111,8 @@ export type CalendarGridProps = Omit<ComponentPropsWithRef<'table'>, 'children' 
   showOutsideDays?: boolean;
   /**
    * Draws inside each day button the grid draws. The button stays the one Tab
-   * stop and keeps the full date as its name, and the content is read as the
-   * day's description. The content is not a link, a button, or an element with
+   * stop. Its name is the full date, then the content, so it holds every word
+   * the day shows. The content is not a link, a button, or an element with
    * a tabindex. That markup is invalid inside the day button, and this slot
    * gives it no keyboard path. Ignored while the years show.
    */
@@ -583,7 +584,7 @@ function Header({ className, ...props }: CalendarHeaderProps) {
         >
           {focused
             ? years
-              ? yearFormat(cal.locale).formatRange(page!, page! + YEARS_PER_PAGE - 1)
+              ? numberFormat(cal.locale).formatRange(page!, page! + YEARS_PER_PAGE - 1)
               : dateText(focused, cal.locale, MONTH_NAME)
             : null}
           <span className={styles.headingGlyph} data-todae-glyph="" aria-hidden="true">
@@ -612,12 +613,12 @@ const LAST_DAY = '+275760-08-31';
 /** The first year of the page of years that holds the year. */
 const yearPage = (year: number) => year - (((year % YEARS_PER_PAGE) + YEARS_PER_PAGE) % YEARS_PER_PAGE);
 
-const yearFormats = /* @__PURE__ */ new Map<string, Intl.NumberFormat>();
-function yearFormat(locale: string) {
-  let format = yearFormats.get(locale);
+const numberFormats = /* @__PURE__ */ new Map<string, Intl.NumberFormat>();
+function numberFormat(locale: string) {
+  let format = numberFormats.get(locale);
   if (!format) {
     format = new Intl.NumberFormat(locale, { useGrouping: false });
-    yearFormats.set(locale, format);
+    numberFormats.set(locale, format);
   }
   return format;
 }
@@ -803,7 +804,6 @@ function DayGrid({
 
 function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: CalendarGridProps['renderDay'] }) {
   const cal = useCalendar('Grid');
-  const contentId = `${cal.headingId}-day-${domSafe(date.toString())}`;
   const contentRef = useRef<HTMLSpanElement>(null);
   const { shown, anchor } = cal;
   const inShown = shown !== null && compare(date, shown.start) >= 0 && compare(date, shown.end) <= 0;
@@ -827,10 +827,11 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
   });
   const content =
     rendered == null || typeof rendered === 'boolean' ? null : (
-      <span id={contentId} ref={contentRef} className={styles.dayContent}>
+      <span ref={contentRef} className={styles.dayContent}>
         {rendered}
       </span>
     );
+  const name = dateText(date, cal.locale, DAY_NAME);
   useEffect(() => {
     const root = contentRef.current;
     if (!root?.querySelector('a[href], button, input, select, textarea, [tabindex], [contenteditable]')) return;
@@ -852,8 +853,6 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
         disabled={cal.disabled || outOfRange}
         aria-disabled={(unavailable && !outOfRange) || unreachable ? true : undefined}
         aria-current={isToday ? 'date' : undefined}
-        aria-describedby={content ? contentId : undefined}
-        aria-label={dateText(date, cal.locale, DAY_NAME)}
         data-selected={selected ? '' : undefined}
         data-in-range={range && inShown && !rangeStart && !rangeEnd ? '' : undefined}
         data-range-start={range && rangeStart ? '' : undefined}
@@ -871,7 +870,13 @@ function Day({ date, renderDay }: { date: Temporal.PlainDate; renderDay?: Calend
           event.currentTarget.focus();
         }}
       >
-        {date.day}
+        {/* Named by its content, so the name holds everything the day shows: the
+            full date, then what renderDay drew. The date is hidden on screen and
+            the number is hidden from the name, as the date already says it, in
+            the locale's own digits. */}
+        <VisuallyHidden.Root>{name}</VisuallyHidden.Root>
+        <span aria-hidden="true">{numberFormat(cal.locale).format(date.day)}</span>
+        {content ? ' ' : null}
         {content}
       </button>
     </td>
@@ -995,7 +1000,7 @@ function Year({ year }: { year: number }) {
           cal.setView('days');
         }}
       >
-        {yearFormat(cal.locale).format(year)}
+        {numberFormat(cal.locale).format(year)}
       </button>
     </td>
   );

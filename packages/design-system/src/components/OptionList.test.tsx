@@ -612,16 +612,18 @@ describe('OptionList inline, with its requested option arriving after mount', ()
 
     const detailOf = (name: string) => screen.getByRole('option', { name }).querySelector('[data-todae-option-detail]');
 
-    it.each(['single', 'multiple'] as const)('names the title and describes the detail in %s mode', (mode) => {
+    // Label in Name: an option is named by all it shows, the title and then the detail.
+    it.each(['single', 'multiple'] as const)('names the option by its title, then its detail, in %s mode', (mode) => {
       render(<Fruit mode={mode} />);
-      const apple = screen.getByRole('option', { name: 'Apple' });
-      expect(detailOf('Apple')?.textContent).toBe('Keeps for weeks');
-      expect(apple.getAttribute('aria-describedby')).toBe(detailOf('Apple')?.id);
-      expect(screen.getByRole('option', { name: 'Pear' })).toBeTruthy();
-      expect(detailOf('Pear')?.textContent).toBe('Apple butter');
+      const apple = screen.getByRole('option', { name: 'Apple Keeps for weeks', description: '' });
+      expect(detailOf('Apple Keeps for weeks')?.textContent).toBe('Keeps for weeks');
+      expect(apple.hasAttribute('aria-label')).toBe(false);
+      expect(apple.hasAttribute('aria-describedby')).toBe(false);
+      expect(screen.getByRole('option', { name: 'Pear Apple butter' })).toBeTruthy();
+      expect(detailOf('Pear Apple butter')?.textContent).toBe('Apple butter');
     });
 
-    it('keeps a caller description id beside the detail', () => {
+    it('keeps a caller description', () => {
       render(
         <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
           <OptionList.Option value="apple" aria-describedby="hint">
@@ -630,16 +632,13 @@ describe('OptionList inline, with its requested option arriving after mount', ()
           </OptionList.Option>
         </OptionList.Root>,
       );
-      expect(screen.getByRole('option', { name: 'Apple' }).getAttribute('aria-describedby')?.split(' ')).toEqual([
-        'hint',
-        detailOf('Apple')?.id,
-      ]);
+      expect(screen.getByRole('option', { name: 'Apple Keeps for weeks' }).getAttribute('aria-describedby')).toBe('hint');
     });
 
     it.each(['single', 'multiple'] as const)('selects by the title when the detail is clicked in %s mode', (mode) => {
       const onValueChange = vi.fn();
       render(<Fruit mode={mode} onValueChange={onValueChange} />);
-      fireEvent.click(detailOf('Pear')!);
+      fireEvent.click(detailOf('Pear Apple butter')!);
       expect(onValueChange).toHaveBeenCalledWith(mode === 'multiple' ? ['pear'] : 'pear');
     });
 
@@ -648,7 +647,7 @@ describe('OptionList inline, with its requested option arriving after mount', ()
       render(<Fruit onValueChange={onValueChange} />);
       const list = screen.getByRole('listbox');
       fireEvent.keyDown(list, { key: 'ArrowDown' });
-      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: 'Pear' }).id);
+      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: 'Pear Apple butter' }).id);
       fireEvent.keyDown(list, { key: 'Enter' });
       expect(onValueChange).toHaveBeenCalledWith('pear');
     });
@@ -699,8 +698,8 @@ describe('OptionList inline, with its requested option arriving after mount', ()
       const event = createEvent.keyDown(list, { key: '사' });
       Object.defineProperty(event, 'timeStamp', { value: 1000 });
       fireEvent(list, event);
-      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: '사과' }).id);
-      expect(screen.getByRole('option', { name: '배' }).getAttribute('aria-describedby')).toBeTruthy();
+      expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', { name: '사과 달콤함' }).id);
+      expect(screen.getByRole('option', { name: '배 아삭함' })).toBeTruthy();
     });
 
     it('reads a wrapped detail after commit', () => {
@@ -715,11 +714,11 @@ describe('OptionList inline, with its requested option arriving after mount', ()
           </OptionList.Option>
         </OptionList.Root>,
       );
-      expect(screen.getByRole('option', { name: 'Apple' }).getAttribute('aria-describedby')).toBe(detailOf('Apple')?.id);
-      expect(detailOf('Apple')?.textContent).toBe('Keeps for weeks');
+      expect(screen.getByRole('option', { name: 'Apple Keeps for weeks', description: '' })).toBeTruthy();
+      expect(detailOf('Apple Keeps for weeks')?.textContent).toBe('Keeps for weeks');
     });
 
-    it('names the title the way the row shows it when the title is more than one text node', () => {
+    it('names the title the way the row shows it, then the detail, when the title is more than one text node', () => {
       render(
         <OptionList.Root value={null} onValueChange={() => undefined} aria-label="Fruit">
           <OptionList.Option value="joined">
@@ -732,16 +731,14 @@ describe('OptionList inline, with its requested option arriving after mount', ()
           </OptionList.Option>
         </OptionList.Root>,
       );
-      for (const [name, detail] of [
+      for (const [title, detail] of [
         ['Apple', 'Fruit'],
         ['Apple (3)', 'In stock'],
       ] as const) {
-        const option = screen.getByRole('option', { name });
+        const option = screen.getByRole('option', { name: `${title} ${detail}` });
         const shown = option.cloneNode(true) as HTMLElement;
         shown.querySelector('[data-todae-option-detail]')?.remove();
-        expect(shown.textContent?.replace(/\s+/g, ' ').trim()).toBe(name);
-        expect(option.getAttribute('aria-label')).toBe(name);
-        expect(option.getAttribute('aria-describedby')).toBe(option.querySelector('[data-todae-option-detail]')?.id);
+        expect(shown.textContent?.replace(/\s+/g, ' ').trim()).toBe(title);
         expect(option.querySelector('[data-todae-option-detail]')?.textContent).toBe(detail);
       }
     });

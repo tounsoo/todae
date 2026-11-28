@@ -1,7 +1,6 @@
 /// <reference types="@vitest/browser-playwright" />
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { cdp, page, userEvent } from 'vitest/browser';
-import axe from 'axe-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import '../app/globals.css';
@@ -16,7 +15,7 @@ import schema from '@tounsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { Sidebar } from './Sidebar';
 import { SiteFooter } from './SiteFooter';
-import { AXE_OPTIONS, describeViolations } from '../test/axe';
+import { axeViolations } from '../test/axeRun';
 import { clippedRings } from '../test/clippedRings';
 
 afterEach(cleanup);
@@ -32,7 +31,7 @@ const path = vi.hoisted(() => ({ current: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
 async function violations(): Promise<string[]> {
-  return describeViolations(await axe.run(document.body, AXE_OPTIONS));
+  return axeViolations();
 }
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));

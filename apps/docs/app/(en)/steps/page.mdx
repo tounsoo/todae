@@ -12,7 +12,7 @@ import StepsExample from '../../../examples/steps/StepsExample';
 - `Steps.Root` is an `ol` with `role="list"`, so Safari keeps it a list without its markers.
 - `Steps.Item` is an `li` with a marker, then its content. Its `status` sets `data-status` and the marker: a `done` step shows the `check` glyph on a filled circle, the `current` step takes `aria-current="step"`, a `pending` step shows an empty circle, and a step with an `error` shows the `error` glyph in the critical colors. `pending` is the default.
 
-The markers and their colors come from the `steps.marker.*` tokens, the progress variant's current marker from `steps.marker.progress.*`, the text colors from `steps.fg.*`, the line from `steps.line.*`, and the space between steps from `steps.gap`.
+The markers and their colors come from the `steps.marker.*` tokens, the progress variant's current marker from `steps.marker.progress.*`, the text colors from `steps.fg.*`, the line from `steps.line.*`, and the space between steps from `steps.gap`. When a step's status changes, its text and marker colors change at once. A brand can fade them with `steps.motion.duration` (0ms by default) and `steps.motion.easing`; the glyph and the status word still change at once, and the fade stays under reduced motion, since nothing moves.
 
 ## Variants
 

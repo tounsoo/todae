@@ -995,6 +995,17 @@ function clockLabel(at: Temporal.ZonedDateTime, locale: string, withDay: boolean
   return withDay ? `${dayHeading(at.toPlainDate(), locale)}, ${time}` : time;
 }
 
+// The day number in the locale's digits, as Calendar.Grid writes the number the mark covers.
+const dayDigitFormats = new Map<string, Intl.NumberFormat>();
+function dayDigits(locale: string): Intl.NumberFormat {
+  let format = dayDigitFormats.get(locale);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, { useGrouping: false });
+    dayDigitFormats.set(locale, format);
+  }
+  return format;
+}
+
 function percent(fraction: number): string {
   return `${Math.round(fraction * 1e6) / 1e4}%`;
 }
@@ -1036,10 +1047,11 @@ function eventRangeLabel(event: CalendarEvent, locale: string, timeZone: string)
 
 function barLabel(event: CalendarEvent, locale: string, timeZone: string): string {
   const range = eventRangeLabel(event, locale, timeZone);
-  const base = event.allDay
-    ? `${event.title}, ${range}`
-    : `${event.title}, ${range}, ${formatTime(event.start.withTimeZone(timeZone).toPlainTime(), { locale })} to ${formatTime(event.end.withTimeZone(timeZone).toPlainTime(), { locale })}`;
-  return event.repeats ? `${base}, repeats` : base;
+  // The bar shows the title, then "Repeats", so the name starts with both (WCAG 2.5.3, Label in Name).
+  const title = event.repeats ? `${event.title}, repeats` : event.title;
+  return event.allDay
+    ? `${title}, ${range}`
+    : `${title}, ${range}, ${formatTime(event.start.withTimeZone(timeZone).toPlainTime(), { locale })} to ${formatTime(event.end.withTimeZone(timeZone).toPlainTime(), { locale })}`;
 }
 
 type DrawnBar = WeekBar & { cutStart: boolean; cutEnd: boolean };
@@ -1177,6 +1189,8 @@ function EventBlock({ span, segment, shared }: { span: VisibleSpan & { left: num
             <Text.Root as="span" weight="medium" lines={1}>
               {span.event.title}
             </Text.Root>
+            {/* The lines stack as blocks. The space keeps the title and the time two words apart in the text
+                the button shows, which its name starts with (WCAG 2.5.3, Label in Name). */}{' '}
           </span>
           {short ? null : (
             <Text.Root as="span" variant="label" tone="muted" lines={1}>
@@ -1255,7 +1269,12 @@ function StripBar({ bar, segment, shared }: { bar: DrawnBar; segment: DaySegment
             <Text.Root as="span" weight="medium" lines={1}>
               {bar.event.title}
             </Text.Root>
-            {bar.event.repeats ? <span className={styles.repeats}>Repeats</span> : null}
+            {bar.event.repeats ? (
+              <>
+                {' '}
+                <span className={styles.repeats}>Repeats</span>
+              </>
+            ) : null}
           </span>
           {bar.cutEnd ? (
             <span aria-hidden="true" className={styles.cueEnd}>
@@ -1364,13 +1383,15 @@ function MonthDay({ day, events, timeZone, locale }: { day: Temporal.PlainDate; 
                     </span>
                   ) : null}
                   {index === bar.column ? <span className={styles.barLabel}>{bar.event.title}</span> : <VisuallyHidden.Root>{bar.event.title}</VisuallyHidden.Root>}
-                  <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
+                  {/* "repeats" follows the title, as the bar shows Repeats after it, and the range comes after. */}
                   {bar.event.repeats ? <VisuallyHidden.Root>, repeats</VisuallyHidden.Root> : null}
                   {bar.event.repeats && index === bar.column ? (
                     <span aria-hidden="true" className={styles.repeats}>
+                      {' '}
                       Repeats
                     </span>
                   ) : null}
+                  <VisuallyHidden.Root>{`, ${eventRangeLabel(bar.event, locale, timeZone)}`}</VisuallyHidden.Root>
                   {cutEnd ? (
                     <span aria-hidden="true" className={styles.cueEnd}>
                       …
@@ -1825,7 +1846,7 @@ export function EventCalendarExample({
                 <span className={styles.dateRow}>
                   {day.today ? (
                     <span className={styles.dateMark} aria-hidden="true">
-                      {day.date.day}
+                      {dayDigits(locale).format(day.date.day)}
                     </span>
                   ) : null}
                 </span>

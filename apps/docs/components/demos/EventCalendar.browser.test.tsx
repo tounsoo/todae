@@ -1,7 +1,6 @@
 import { act } from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { cdp, page, userEvent } from 'vitest/browser';
-import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatDate, formatTime } from '@tounsoo/todae';
 import '@tounsoo/todae/todae.css';
@@ -10,7 +9,7 @@ import { paintedContrast } from '../../../../packages/design-system/src/test/pai
 import { settle } from '../../../../packages/design-system/src/test/settle';
 import { Example } from '../Example';
 import { EventCalendarExample } from '../../examples/recipes/event-calendar/EventCalendarExample';
-import { AXE_OPTIONS, describeViolations } from '../../test/axe';
+import { axeViolations } from '../../test/axeRun';
 import { APPEARANCE_KEY } from '../appearanceScript';
 import { Providers } from '../Providers';
 
@@ -109,6 +108,11 @@ function spoken(node: Node): string {
   return [...node.childNodes].map((child) => spoken(child)).join('');
 }
 
+/** A month day's button. A day is named by its full date, then what it shows, a space apart. */
+function dayButton(date: string): HTMLElement {
+  return screen.getByRole('button', { name: (name) => name === date || name.startsWith(`${date} `) });
+}
+
 function planning(): HTMLElement {
   return screen.getByRole('button', { name: `Planning, ${clock('10:00')} to ${clock('12:00')}` });
 }
@@ -121,7 +125,7 @@ describe('the month keyboard', () => {
       </Providers>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
-    screen.getByRole('button', { name: 'Thursday, November 19, 2026' }).focus();
+    dayButton('Thursday, November 19, 2026').focus();
     await userEvent.keyboard('{Enter}');
     expect(document.activeElement).toBe(planning());
   });
@@ -133,7 +137,7 @@ describe('the month keyboard', () => {
       </Providers>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
-    screen.getByRole('button', { name: 'Thursday, November 19, 2026' }).focus();
+    dayButton('Thursday, November 19, 2026').focus();
     await userEvent.keyboard('{Space}');
     expect(document.activeElement).toBe(planning());
   });
@@ -150,14 +154,14 @@ describe('the narrow month', () => {
       </Providers>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
-    const day = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    const day = dayButton('Monday, November 16, 2026');
     const count = day.querySelector<HTMLElement>('[class*="count"]');
     const detail = day.querySelector<HTMLElement>('[class*="detail"]');
     if (!count || !detail) throw new Error('missing narrow month content');
     expect(getComputedStyle(count).display).toBe('flex');
     expect(count.querySelector('[class*="dot"]')).toBeTruthy();
     expect(count.textContent?.replace(/\s/g, '')).toBe('4');
-    expect(day.getAttribute('aria-label')).toBe('Monday, November 16, 2026');
+    expect(spoken(day).startsWith('Monday, November 16, 2026 ')).toBe(true);
     const narrowBar = day.querySelector<HTMLElement>('[data-bar="offsite"]');
     if (!narrowBar) throw new Error('missing narrow bar');
     const narrowBox = narrowBar.getBoundingClientRect();
@@ -165,11 +169,11 @@ describe('the narrow month', () => {
     expect(narrowBox.height).toBeLessThan(12);
     expect(getComputedStyle(narrowBar.querySelector('[class*="barLabel"]')!).position).toBe('absolute');
     const handoffMonday = day.querySelector<HTMLElement>('[data-bar="handoff"]');
-    const handoffTuesday = screen.getByRole('button', { name: 'Tuesday, November 17, 2026' }).querySelector<HTMLElement>('[data-bar="handoff"]');
+    const handoffTuesday = dayButton('Tuesday, November 17, 2026').querySelector<HTMLElement>('[data-bar="handoff"]');
     expect(handoffMonday && handoffTuesday).toBeTruthy();
     expect(Math.abs(handoffMonday!.getBoundingClientRect().top - handoffTuesday!.getBoundingClientRect().top)).toBeLessThan(2);
-    const described = document.getElementById(day.getAttribute('aria-describedby') ?? '');
-    expect(described && spoken(described)).toBe('Offsite, November 16, 2026, Handoff, November 16, 2026 – November 17, 2026, +2 more');
+    // The day is named by its date, then what it shows.
+    expect(spoken(day)).toBe('Monday, November 16, 2026 Offsite, November 16, 2026, Handoff, November 16, 2026 – November 17, 2026, +2 more');
 
     await page.viewport(800, 800);
     await expect.poll(() => getComputedStyle(count).display).toBe('none');
@@ -543,7 +547,7 @@ function longRange(start: string, end: string, locale = 'en-US'): string {
 }
 
 function monthBar(dayName: string, id: string): HTMLElement {
-  const bar = screen.getByRole('button', { name: dayName }).querySelector<HTMLElement>(`[data-bar="${id}"]`);
+  const bar = dayButton(dayName).querySelector<HTMLElement>(`[data-bar="${id}"]`);
   if (!bar) throw new Error(`no ${id} bar on ${dayName}`);
   return bar;
 }
@@ -613,13 +617,13 @@ describe('multi-day bars', () => {
     const handoffMonday = monthBar('Monday, November 16, 2026', 'handoff');
     const handoffTuesday = monthBar('Tuesday, November 17, 2026', 'handoff');
     expect(Math.abs(handoffMonday.getBoundingClientRect().top - handoffTuesday.getBoundingClientRect().top)).toBeLessThan(2);
-    const interview = screen.getByRole('button', { name: 'Tuesday, November 17, 2026' }).querySelector<HTMLElement>('[class*="chip_"]');
+    const interview = dayButton('Tuesday, November 17, 2026').querySelector<HTMLElement>('[class*="chip_"]');
     expect(interview).toBeTruthy();
     expect(interview!.getBoundingClientRect().top).toBeGreaterThan(handoffTuesday.getBoundingClientRect().bottom - 1);
-    const fridayDay = screen.getByRole('button', { name: 'Friday, November 20, 2026' });
-    const saturdayDay = screen.getByRole('button', { name: 'Saturday, November 21, 2026' });
-    expect(spoken(document.getElementById(fridayDay.getAttribute('aria-describedby') ?? '')!)).toContain(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`);
-    expect(spoken(document.getElementById(saturdayDay.getAttribute('aria-describedby') ?? '')!)).toContain('Retreat');
+    const fridayDay = dayButton('Friday, November 20, 2026');
+    const saturdayDay = dayButton('Saturday, November 21, 2026');
+    expect(spoken(fridayDay)).toContain(`Retreat, ${longRange('2026-11-20', '2026-11-22')}`);
+    expect(spoken(saturdayDay)).toContain('Retreat');
     expect(fridayDay.querySelectorAll('[class*="chip_"]')).toHaveLength(1);
   });
 
@@ -679,7 +683,7 @@ describe('multi-day bars', () => {
     );
     const frame = () => document.querySelector('main') ?? document.body;
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
-    const monday = screen.getByRole('button', { name: 'Monday, November 16, 2026' });
+    const monday = dayButton('Monday, November 16, 2026');
     const count = monday.querySelector<HTMLElement>('[class*="count"]');
     if (!count) throw new Error('missing narrow count');
     expect(getComputedStyle(count).display).toBe('flex');
@@ -749,7 +753,7 @@ describe('multi-day bars', () => {
     const sunday = monthBar('Sunday, November 22, 2026', 'demo');
     expect(saturday.getBoundingClientRect().left - friday.getBoundingClientRect().right).toBeLessThan(8);
     expect(sunday.hasAttribute('data-cut-start')).toBe(true);
-    expect(spoken(document.getElementById(screen.getByRole('button', { name: 'Sunday, November 22, 2026' }).getAttribute('aria-describedby') ?? '')!)).toContain('Demo');
+    expect(spoken(dayButton('Sunday, November 22, 2026'))).toContain('Demo');
 
     await userEvent.click(screen.getByRole('button', { name: 'Week' }));
     const demo = [...dayLane('Fri, Nov 20').querySelectorAll('button')].find((button) => button.getAttribute('aria-label')?.startsWith('Demo,'));
@@ -761,8 +765,8 @@ describe('multi-day bars', () => {
     await userEvent.click(within(back).getByRole('button', { name: 'Save' }));
     await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
-    expect(screen.getByRole('button', { name: 'Saturday, November 21, 2026' }).querySelector('[data-bar="demo"]')).toBeNull();
-    expect(spoken(document.getElementById(screen.getByRole('button', { name: 'Friday, November 20, 2026' }).getAttribute('aria-describedby') ?? '')!)).toContain('Demo');
+    expect(dayButton('Saturday, November 21, 2026').querySelector('[data-bar="demo"]')).toBeNull();
+    expect(spoken(dayButton('Friday, November 20, 2026'))).toContain('Demo');
   });
 
   it('keeps each strip bar and its focus ring inside the board', async () => {
@@ -791,11 +795,17 @@ describe('multi-day bars', () => {
   });
 });
 
+/** A month day's full date: the day is named by it, then by what it shows. */
+function dateOf(button: Element | null | undefined): string | undefined {
+  return button?.querySelector(':scope > span:first-child')?.textContent ?? undefined;
+}
+
+/** The box of the day number the grid draws, the button's line hidden from its name. */
 function dayNumberBox(button: HTMLElement): DOMRect {
-  const text = [...button.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && (node.textContent ?? '').trim());
-  if (!text) throw new Error(`no day number on ${button.getAttribute('aria-label')}`);
+  const number = button.querySelector(':scope > [aria-hidden="true"]');
+  if (!number?.textContent?.trim()) throw new Error(`no day number on ${dateOf(button)}`);
   const range = document.createRange();
-  range.selectNodeContents(text);
+  range.selectNodeContents(number);
   return range.getBoundingClientRect();
 }
 
@@ -829,7 +839,7 @@ describe('month day cells', () => {
           const cellBox = cell.getBoundingClientRect();
           const tdBox = td.getBoundingClientRect();
           const tdStyle = getComputedStyle(td);
-          const label = `${width} ${cell.getAttribute('aria-label')}`;
+          const label = `${width} ${dateOf(cell)}`;
           expect(parseFloat(tdStyle.borderTopWidth), label).toBeGreaterThan(0);
           expect(parseFloat(tdStyle.borderInlineStartWidth), label).toBeGreaterThan(0);
           expect(tdStyle.borderTopColor, label).not.toBe('rgba(0, 0, 0, 0)');
@@ -869,7 +879,7 @@ describe('month day cells', () => {
         if (outside && inside) {
           expect(getComputedStyle(outside.closest('td')!).backgroundColor, `${width}`).not.toBe(getComputedStyle(inside.closest('td')!).backgroundColor);
         }
-        const wednesday = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
+        const wednesday = dayButton('Wednesday, November 18, 2026');
         const launch = wednesday.querySelector<HTMLElement>('[data-bar="launch"]');
         const early = [...wednesday.querySelectorAll<HTMLElement>('[class*="chip_"]')].find((event) => event.textContent?.includes('Early sync'));
         if (!launch || !early) throw new Error(`${width}: Wednesday is missing Launch watch or Early sync`);
@@ -940,7 +950,7 @@ describe('month bar polish', () => {
       );
       await userEvent.click(screen.getByRole('button', { name: 'Month' }));
       await settle();
-      const friday = screen.getByRole('button', { name: 'Friday, November 20, 2026' });
+      const friday = dayButton('Friday, November 20, 2026');
       const bar = friday.querySelector<HTMLElement>('[data-bar="retreat"]');
       const label = bar?.querySelector<HTMLElement>('[class*="barLabel"]');
       if (!bar || !label) throw new Error(`${appearance}: Retreat is missing`);
@@ -967,8 +977,8 @@ describe('month bar polish', () => {
       );
       await userEvent.click(screen.getByRole('button', { name: 'Month' }));
       await settle();
-      const today = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
-      const other = screen.getByRole('button', { name: 'Thursday, November 19, 2026' });
+      const today = dayButton('Wednesday, November 18, 2026');
+      const other = dayButton('Thursday, November 19, 2026');
       const todayCell = getComputedStyle(today.closest('td')!);
       const otherCell = getComputedStyle(other.closest('td')!);
       expect(todayCell.borderTopColor, appearance).toBe(otherCell.borderTopColor);
@@ -1023,10 +1033,10 @@ describe('month bar polish', () => {
           ['Friday, November 20, 2026', 'Saturday, November 21, 2026'],
           ['Monday, November 16, 2026', 'Tuesday, November 17, 2026'],
           ['Wednesday, November 18, 2026', 'Thursday, November 19, 2026'],
-        ];
+        ] as const;
         for (const [leftName, rightName] of pairs) {
-          const leftDay = screen.getByRole('button', { name: leftName });
-          const rightDay = screen.getByRole('button', { name: rightName });
+          const leftDay = dayButton(leftName);
+          const rightDay = dayButton(rightName);
           const leftBar = [...leftDay.querySelectorAll<HTMLElement>('[data-bar]')].find((bar) => bar.hasAttribute('data-join-end'));
           const rightBar = [...rightDay.querySelectorAll<HTMLElement>('[data-bar]')].find(
             (bar) => bar.hasAttribute('data-join-start') && bar.getAttribute('data-bar') === leftBar?.getAttribute('data-bar'),
@@ -1068,7 +1078,7 @@ describe('month bar polish', () => {
       </Providers>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
-    const saturday = () => screen.getByRole('button', { name: 'Saturday, November 21, 2026' });
+    const saturday = () => dayButton('Saturday, November 21, 2026');
     const cue = () => saturday().querySelector<HTMLElement>('[class*="cueEnd"]');
     await page.viewport(375, 800);
     await settle();
@@ -1101,7 +1111,7 @@ describe('month bar polish', () => {
       for (const width of [1280, 375]) {
         await page.viewport(width, 900);
         await settle();
-        const today = screen.getByRole('button', { name: 'Wednesday, November 18, 2026' });
+        const today = dayButton('Wednesday, November 18, 2026');
         const mark = today.querySelector<HTMLElement>('[class*="dateMark"]');
         const bar = today.querySelector<HTMLElement>('[data-bar="launch"]');
         if (!mark || !bar) throw new Error(`${width}: today is missing its mark or Launch watch`);
@@ -1122,7 +1132,7 @@ describe('month bar polish', () => {
           const box = item.getBoundingClientRect();
           return box.height > 1 && Math.abs(box.top - barBox.top) < 1;
         });
-        const days = new Set(topBars.map((item) => item.closest('[data-todae-calendar-cell]')?.getAttribute('aria-label')));
+        const days = new Set(topBars.map((item) => dateOf(item.closest('[data-todae-calendar-cell]'))));
         expect(days.has('Monday, November 16, 2026'), `${width} row`).toBe(true);
         expect(days.has('Wednesday, November 18, 2026'), `${width} row`).toBe(true);
         expect(days.has('Friday, November 20, 2026'), `${width} row`).toBe(true);
@@ -1149,7 +1159,7 @@ describe('the month in light and dark', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Month' }));
       await settle();
       expect(document.documentElement.getAttribute('data-appearance')).toBe(appearance);
-      expect(describeViolations(await axe.run(document.body, AXE_OPTIONS))).toEqual([]);
+      expect(await axeViolations()).toEqual([]);
       expect(paintedContrast().low).toEqual([]);
     });
   }
@@ -1423,7 +1433,7 @@ describe('creating an event from empty lane space', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Month' }));
     expect(screen.queryByRole('button', { name: 'New event' })).toBeNull();
     expect(document.querySelector('[data-create]')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Thursday, November 19, 2026' }));
+    await userEvent.click(dayButton('Thursday, November 19, 2026'));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(planning());
   });
@@ -1992,7 +2002,7 @@ describe('a repeating event from the keyboard', () => {
     expect(daysLabel).toBeVisible();
     expect(endsLabel).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
-    const holiday = await screen.findByRole('button', { name: 'Holiday, November 16, 2026, repeats' });
+    const holiday = await screen.findByRole('button', { name: 'Holiday, repeats, November 16, 2026' });
     expect(within(holiday).getByText('Repeats')).toBeVisible();
   });
 
