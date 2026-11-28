@@ -140,9 +140,11 @@ describe('Popover', () => {
   it('anchors in CSS with the popover.offset gap, at the inline start', () => {
     expect(css).not.toMatch(/--todae-popover-offset:/);
     expect(css).toMatch(/top:\s*calc\(anchor\(bottom\) \+ var\(--todae-popover-offset\)\)/);
-    expect(css).toMatch(/@position-try --todae-popover-flip-block/);
+    // It flips by the flip-block tactic, which mirrors the slide margins too, not by a named try.
+    expect(css).toMatch(/position-try-fallbacks:\s*flip-block,/);
+    expect(css).not.toMatch(/@position-try --todae-popover-flip-block/);
     expect(css).not.toMatch(/\b(left|right):/);
-    expect(css.match(/inset-inline-start:\s*anchor\(self-start\)/g)).toHaveLength(2);
+    expect(css.match(/inset-inline-start:\s*anchor\(self-start\)/g)).toHaveLength(1);
   });
 
   it('owns the pointer on the popover box', () => {

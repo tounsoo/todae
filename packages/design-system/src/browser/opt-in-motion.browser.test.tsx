@@ -59,6 +59,20 @@ async function sample<T>(read: () => T): Promise<T[]> {
   return out;
 }
 
+/**
+ * A slide toward or from a trigger, sampled as gaps from it: it stays between
+ * rest and `offset` closer, never past rest the other way, and moves a little
+ * each frame, never by half the offset at once.
+ */
+function expectSlide(gaps: number[], rest: number, offset: number) {
+  expect(gaps.length).toBeGreaterThan(2);
+  expect(Math.max(...gaps)).toBeLessThanOrEqual(rest + 0.5);
+  expect(Math.min(...gaps)).toBeLessThan(rest - offset / 3);
+  expect(Math.min(...gaps)).toBeGreaterThanOrEqual(rest - offset - 0.5);
+  const steps = gaps.slice(1).map((g, i) => Math.abs(g - gaps[i]!));
+  expect(Math.max(...steps)).toBeLessThan(offset / 2);
+}
+
 describe('Popover slide-in offset (popover.motion.offset)', () => {
   function Slide({ style, above = false }: { style?: CSSProperties; above?: boolean }) {
     const popover = usePopover({ defaultOpen: true });
@@ -102,25 +116,28 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     const gaps = await sample(() => gap(above));
     await waitFor(() => expect(content.hasAttribute('data-todae-settled')).toBe(true));
     const rest = gap(above);
-    // It starts closer to its trigger, by up to the offset, and ends at rest.
-    expect(Math.min(...gaps)).toBeLessThan(rest - 4);
-    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(rest - 12.5);
+    // It starts closer to its trigger, by up to the offset, and moves only toward rest:
+    // Firefox once slid a flipped one in from the far side when its margins transitioned.
+    expectSlide(gaps, rest, 12);
     expect(gaps.at(-1)).toBeCloseTo(rest, 0);
     // No transform: a tip inside stays by its trigger's laid-out box.
     expect(getComputedStyle(content).translate).toBe('none');
     expect(getComputedStyle(content).transform).toBe('none');
   });
 
-  it('slides back toward its trigger as it closes, from where it rests, staying inert', async () => {
+  it.each([false, true])('slides back toward its trigger as it closes, from where it rests, staying inert, above %s', async (above) => {
     // Every engine: WebKit, which drops an animating registered length from
     // a margin on a box with position-try fallbacks, jumped it the whole
     // offset onto its trigger as the close began, then faded it there.
     function Closing() {
       const [open, setOpen] = useState(true);
       const popover = usePopover({ open, onOpenChange: setOpen });
+      const trigger = popover.getTriggerProps();
       return (
         <Themed style={{ ...slow, ['--_todae-popover-motion-duration-exit' as string]: '600ms', ['--_todae-popover-motion-offset' as string]: '12px' }}>
-          <Button.Root {...popover.getTriggerProps()}>Open</Button.Root>
+          <Button.Root {...trigger} style={above ? { ...trigger.style, position: 'fixed', insetBlockEnd: 16, insetInlineStart: 48 } : trigger.style}>
+            Open
+          </Button.Root>
           <Button.Root onClick={() => setOpen(false)}>Close it</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Slide">
             <div style={{ inlineSize: 160, blockSize: 80 }}>Body</div>
@@ -131,7 +148,7 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
     render(<Closing />);
     const content = screen.getByRole('dialog', { name: 'Slide' });
     await waitFor(() => expect(content.hasAttribute('data-todae-settled')).toBe(true), { timeout: 3000 });
-    const rest = gap(false);
+    const rest = gap(above);
     fireEvent.click(screen.getByRole('button', { name: 'Close it' }));
     await waitFor(() => expect(content.hasAttribute('data-todae-exiting')).toBe(true));
     const gaps: number[] = [];
@@ -139,15 +156,12 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
       // It takes no press or focus while it leaves.
       expect(content.inert).toBe(true);
       await frame();
-      if (content.matches(':popover-open')) gaps.push(gap(false));
+      if (content.matches(':popover-open')) gaps.push(gap(above));
     }
-    // It leaves from where it rests, a frame's travel at most, not the whole offset at once.
+    // It leaves from where it rests, a frame's travel at most, not the whole offset at once,
+    // and goes the way the open came, step by step.
     expect(gaps[0]).toBeGreaterThan(rest - 3);
-    // It moves step by step, the open played back: never a jump of half the offset in a frame.
-    const steps = gaps.slice(1).map((g, i) => gaps[i]! - g);
-    expect(Math.max(...steps)).toBeLessThan(6);
-    expect(Math.min(...gaps)).toBeLessThan(rest - 2);
-    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(rest - 12.5);
+    expectSlide(gaps, rest, 12);
   });
 
   it('holds still under reduced motion, and still fades', async () => {
@@ -160,19 +174,21 @@ describe('Popover slide-in offset (popover.motion.offset)', () => {
       return gap(false);
     });
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
-    // The slide is the registered --_popover-slide length; under reduce it never changes.
+    // Under reduce the slide length never changes, so its margins never transition.
     expect(running.some((p) => p.includes('slide') || p.startsWith('margin'))).toBe(false);
     if (server.browser === 'chromium') expect(running).toContain('opacity');
   });
 });
 
 describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
-  function Tip({ style }: { style?: CSSProperties }) {
+  function Tip({ style, below = false }: { style?: CSSProperties; below?: boolean }) {
     const a = useTooltip();
     const b = useTooltip();
+    const trigger = a.getTriggerProps();
     return (
       <Themed style={{ display: 'flex', gap: 8, ...style }}>
-        <Button.Root tooltip={false} {...a.getTriggerProps()}>
+        {/* At the top of the screen, A's tip has no room above and flips below. */}
+        <Button.Root tooltip={false} {...trigger} style={below ? { ...trigger.style, position: 'fixed', insetBlockStart: 0, insetInlineStart: 48 } : trigger.style}>
           A
         </Button.Root>
         <Tooltip.Root {...a.getTooltipProps()}>Tip A</Tooltip.Root>
@@ -189,15 +205,17 @@ describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
     ['--_todae-tooltip-motion-easing-enter' as string]: 'linear',
   };
 
-  /** The tip sits above its trigger: how far its bottom is from the trigger's top. */
-  function gap(name: 'A' | 'B') {
+  /** How far the tip's near edge is from its trigger: above it, or below it once flipped. */
+  function gap(name: 'A' | 'B', below = false) {
     const t = screen.getByRole('button', { name }).getBoundingClientRect();
     const tip = screen.queryByRole('tooltip', { name: `Tip ${name}` });
-    return tip ? t.top - tip.getBoundingClientRect().bottom : Number.NaN;
+    if (!tip) return Number.NaN;
+    const r = tip.getBoundingClientRect();
+    return below ? r.top - t.bottom : t.top - r.bottom;
   }
 
-  async function openCold(style: CSSProperties) {
-    render(<Tip style={style} />);
+  async function openCold(style: CSSProperties, below = false) {
+    render(<Tip style={style} below={below} />);
     fireEvent.pointerEnter(screen.getByRole('button', { name: 'A' }));
     await screen.findByRole('tooltip', { name: 'Tip A' }, { timeout: 2000 });
   }
@@ -208,15 +226,16 @@ describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
   });
 
-  it('slides a cold tip in from its trigger by the offset', async () => {
-    await openCold({ ...slow, ['--_todae-tooltip-motion-offset' as string]: '8px' });
+  it.each([false, true])('slides a cold tip in from its trigger by the offset, flipped below %s', async (below) => {
+    await openCold({ ...slow, ['--_todae-tooltip-motion-offset' as string]: '8px' }, below);
     const tip = screen.getByRole('tooltip', { name: 'Tip A' });
-    const gaps = (await sample(() => gap('A'))).filter((g) => !Number.isNaN(g));
+    const gaps = (await sample(() => gap('A', below))).filter((g) => !Number.isNaN(g));
     await waitFor(() => expect(tip.hasAttribute('data-todae-settled')).toBe(true));
-    const rest = gap('A');
-    expect(Math.min(...gaps)).toBeLessThan(rest - 2);
-    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(rest - 8.5);
-    expect(gap('A')).toBeCloseTo(rest, 0);
+    const rest = gap('A', below);
+    // Placed on the side it was asked for, not over its trigger.
+    expect(rest).toBeGreaterThan(0);
+    expectSlide(gaps, rest, 8);
+    expect(gap('A', below)).toBeCloseTo(rest, 0);
     expect(getComputedStyle(tip).translate).toBe('none');
   });
 
@@ -246,7 +265,7 @@ describe('Tooltip slide-in offset (tooltip.motion.offset)', () => {
       })
     ).filter((g) => !Number.isNaN(g));
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.5);
-    expect(running.some((p) => p.includes('slide'))).toBe(false);
+    expect(running.some((p) => p.includes('slide') || p.startsWith('margin'))).toBe(false);
   });
 });
 

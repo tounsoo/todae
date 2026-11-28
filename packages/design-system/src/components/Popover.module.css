@@ -109,17 +109,15 @@
     }
   }
 
-  @position-try --todae-popover-flip-block {
-    top: unset;
-    bottom: calc(anchor(top) + var(--todae-popover-offset));
-    inset-inline-start: anchor(self-start);
-    margin-block-start: var(--_popover-slide, 0px);
-    margin-block-end: calc(-1 * var(--_popover-slide, 0px));
-  }
-
+  /* Over its anchor when there is no room under it. flip-block mirrors the
+     inset, the anchor side and the two block margins, so the slide still
+     runs toward the trigger. Not a named @position-try with the same
+     declarations: Firefox transitions a margin that a named try sets from the
+     margin outside the try, so a flipped popover slid in from the far side
+     and jumped as it ended. */
   @supports (position-try-fallbacks: flip-block) {
     .content {
-      position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline;
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
     }
   }
 

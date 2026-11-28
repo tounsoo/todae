@@ -83,23 +83,18 @@
     }
   }
 
-  @position-try --todae-tooltip-flip-block {
-    bottom: unset;
-    top: calc(anchor(bottom) + var(--todae-tooltip-offset));
-    justify-self: anchor-center;
-    margin-block-start: calc(-1 * var(--_tooltip-slide, 0px));
-    margin-block-end: var(--_tooltip-slide, 0px);
-  }
-
+  /* Under its trigger when there is no room over it, by flip-block, as on
+     Popover: a named @position-try that set the margins made Firefox slide a
+     flipped tip in from the far side. */
   @supports (position-try-fallbacks: flip-block) {
     .content {
-      position-try-fallbacks: --todae-tooltip-flip-block, flip-block, flip-inline, flip-block flip-inline;
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
     }
   }
 
   @supports (position-try: bottom) {
     .content {
-      position-try: --todae-tooltip-flip-block, bottom;
+      position-try: flip-block, bottom;
     }
   }
 }
