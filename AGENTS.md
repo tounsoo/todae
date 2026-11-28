@@ -101,6 +101,7 @@ Tier: T0
 | shell-bash32 | Shell scripts run on bash 3.2 | `.github/scripts/shell-compat.test.mjs` | #518 | enforced |
 | browser-editing-keys | Browser tests press ControlOrMeta for editing shortcuts | `eslint:no-restricted-syntax` | #525 | enforced |
 | macos-host | A Mac skips only listed macOS-bound browser tests | `browser.host.ts`, `packages/design-system/scripts/macos-host.test.ts` | #522 | enforced |
+| anchored-overlay-engines | An anchored overlay's browser tests assert in every engine, and its sheet transitions no custom property and sets no margin from a local length in a named @position-try | `eslint:todae/anchored-overlay-engines`, `stylelint/anchored-motion.mjs` | #529 | enforced |
 | verify-node-icu | Verify refuses a Node that links the system ICU | `.claude/skills/verify/verify.mjs` | #525 | enforced |
 | verify-free-port | Verify's docs server starts on a free port it picks | `.claude/skills/verify/verify.test.mjs` | #530 | enforced |
 | self | Rule table, weeds log and suppressions | `pnpm check:self` | a48ac02cb1a90b5225fea99a8daeb618772c27e3 | seeded |
