@@ -112,6 +112,8 @@ function effect(own: HTMLElement, el: HTMLElement) {
     // A window alias on both sides of \`??\`, and a hover that only clears a held handler (Neon round 3 on #535).
     `function watch(el: HTMLElement) { const win = el.ownerDocument.defaultView; const fallback = win; (win ?? fallback).addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
     `function attach(node: HTMLElement, el: HTMLElement) { let pending: (() => void) | null = null; const start = () => { pending = () => { el.scrollTop += 4; }; }; const cancel = () => { pending = null; }; node.addEventListener('click', start); node.addEventListener('pointerleave', cancel); }`,
+    // A long chain of window aliases resolves in linear time (Neon round 2 on #536).
+    `function watch(el: HTMLElement) { ${Array.from({ length: 40 }, (_, i) => `const w${i + 1} = ${i ? `w${i}` : 'window'};`).join(' ')} w40.addEventListener('pointermove', () => { el.scrollTop += 1; }); }`,
   ],
   invalid: [
     { code: before533, errors: [error] },
@@ -139,6 +141,9 @@ function effect(own: HTMLElement, el: HTMLElement) {
     // A parameter that may be set to the window holds what the caller passed until then (Neon round 1 on #536).
     { code: `function attach(target: EventTarget | null, el: HTMLElement) { target ??= window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     { code: `function attach(target: EventTarget, el: HTMLElement, all: boolean) { if (all) target = window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    // A destructured write and an ambient binding bring values this file doesn't show (Neon round 2 on #536).
+    { code: `function attach(el: HTMLElement) { let target: HTMLElement; ({ body: target } = document); target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
+    { code: `declare let target: EventTarget;\nfunction attach(el: HTMLElement, all: boolean) { if (all) target = window; target.addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`arrow ?? window\` may be the arrow.
     { code: `function attach(arrow: HTMLElement | null, el: HTMLElement) { (arrow ?? window).addEventListener('pointermove', () => { el.scrollTop += 4; }); }`, errors: [error] },
     // \`window && arrow\` is the arrow.

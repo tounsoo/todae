@@ -190,12 +190,15 @@ const scrollerPointerRule = {
         // A parameter, a destructured name or an import brings a value this file doesn't show, so it is no window.
         const variable = variableOf(current);
         if (!variable || variable.defs.length === 0) return false;
-        if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier')) return false;
+        // So does an ambient `declare let`, and a write that destructures, whose writeExpr is the whole object.
+        if (variable.defs.some((def) => def.type !== 'Variable' || def.node.id.type !== 'Identifier' || def.parent?.declare)) return false;
         const values = [];
         for (const def of variable.defs) if (def.node.init) values.push(def.node.init);
         for (const reference of variable.references) {
-          if (!reference.isWrite()) continue;
-          if (!reference.writeExpr) return false;
+          // The declaration's own write is its init, already above.
+          if (!reference.isWrite() || reference.init) continue;
+          const parent = reference.identifier.parent;
+          if (!reference.writeExpr || parent?.type !== 'AssignmentExpression' || parent.left !== reference.identifier) return false;
           values.push(reference.writeExpr);
         }
         return values.length > 0 && values.every((value) => isWindowLike(value, seen));
