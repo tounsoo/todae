@@ -481,6 +481,12 @@ describe('committed token graph', () => {
     ]) {
       expect(pairs, pair).toContain(pair);
     }
+    // Calendar range text sits on its tint inside a picker popover or on the page, like a selected option's.
+    const range = results.filter((r) => r.fg === 'calendar.day.fg.range' && r.bg === 'calendar.day.bg.range');
+    expect(new Set(range.map((r) => r.over))).toEqual(
+      new Set(['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated']),
+    );
+    expect(range.map((r) => r.min)).toEqual(Array(10).fill(60));
   });
 
   it('uses a neutral ink accent and a muted color distinct from the default', async () => {
@@ -1629,6 +1635,22 @@ describe('company token build', () => {
     const twiceError = await buildCompanyTokens({ resolver: twice, base: tokensDir }).catch((e: Error) => e.message);
     expect(twiceError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
     expect(twiceError).toContain('over "color.bg.subtle" in appearance "light" is Lc 75.3, below 76');
+  });
+
+  it('holds a company to calendar range text on its tint over every surface, a popover included', async () => {
+    // Range text as pale as the page fails, over a picker's popover too.
+    const pale = await company((r) => {
+      r.sets.contract = {
+        sources: [{ calendar: { day: { fg: { range: { $type: 'color', $value: { $ref: '#/color/bg/subtle/$value' } } } } } }],
+        $extensions: { 'dev.todae': { layer: 'contract' } },
+      };
+      r.resolutionOrder.push({ $ref: '#/sets/contract' });
+    });
+    const error = await buildCompanyTokens({ resolver: pale, base: tokensDir }).then(() => '', (e: Error) => e.message);
+    expect(error).toMatch(/^contrast: \d+ pair\(s\) fail APCA/);
+    for (const over of ['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated']) {
+      expect(error).toContain(`"calendar.day.fg.range" on "calendar.day.bg.range" over "${over}" in appearance "light"`);
+    }
   });
 
   it('composites a translucent text color and checks a translucent background over its surfaces', async () => {

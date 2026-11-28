@@ -40,23 +40,10 @@ function declaredPairs(declarer: unknown, name: string): Pair[] {
   });
 }
 
-const SURFACES = ['popover.bg', 'color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated'];
-
-/**
- * Pairs a preset sets that Todae's contract does not list, measured as the
- * contract's would be. A calendar range's text sits on a translucent tint,
- * like a selected option's, inside a picker popover or on the page.
- */
-export const PLAYGROUND_PAIRS: readonly Pair[] = SURFACES.map((over) => ({ fg: 'calendar.day.fg.range', bg: 'calendar.day.bg.range', min: 60, over }));
-
-/** The pairs the token build checks, the contract set's and the appearance modifier's, one per surface under a translucent background, then the Playground's own. */
+/** The pairs the token build checks, the contract set's and the appearance modifier's, one per surface under a translucent background. */
 function contractPairs(resolver: unknown): Pair[] {
   if (!isRecord(resolver) || !isRecord(resolver.sets) || !isRecord(resolver.modifiers)) throw new Error('resolver.json has no sets or modifiers');
-  return [
-    ...declaredPairs(resolver.sets.contract, 'contract set'),
-    ...declaredPairs(resolver.modifiers.appearance, 'appearance modifier'),
-    ...PLAYGROUND_PAIRS,
-  ];
+  return [...declaredPairs(resolver.sets.contract, 'contract set'), ...declaredPairs(resolver.modifiers.appearance, 'appearance modifier')];
 }
 
 function tokenRows(catalog: unknown): Row[] {
